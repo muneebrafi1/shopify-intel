@@ -62,9 +62,11 @@ void SectionFocus;
     totalEl.textContent = Number(grid.dataset.total ?? 0).toLocaleString('en-US');
     const pad = (n: number) => String(n).padStart(2, '0');
 
-    /** Section links in grid order (one per card). */
+    // One link per card (grid view) or per row (index view).
+    const ITEMS = '.section-card a.crop, [data-sgrid-index] .irow__link';
+    /** Section links in grid order. */
     const links = () =>
-      Array.from(grid.querySelectorAll<HTMLAnchorElement>('.section-card a.crop')).map((a) =>
+      Array.from(grid.querySelectorAll<HTMLAnchorElement>(ITEMS)).map((a) =>
         new URL(a.href, location.href).pathname,
       );
 
@@ -160,7 +162,7 @@ void SectionFocus;
     });
 
     grid.addEventListener('click', (event) => {
-      const a = (event.target as HTMLElement).closest<HTMLAnchorElement>('.section-card a');
+      const a = (event.target as HTMLElement).closest<HTMLAnchorElement>('.section-card a, .irow__link');
       if (!a || !wide.matches) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
       event.preventDefault();

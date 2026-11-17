@@ -22,16 +22,36 @@ interface Props {
   nextHref: string | null;
   firstHref: string;
   clearHref: string;
+  /** Grid ↔ index toggle. */
+  view: { current: 'grid' | 'index'; gridHref: string; indexHref: string };
   class?: string;
 }
-const { rail, groups, items, total, meta, page, pageSize, nextHref, firstHref, clearHref, class: className } =
-  Astro.props;
+const {
+  rail,
+  groups,
+  items,
+  total,
+  meta,
+  page,
+  pageSize,
+  nextHref,
+  firstHref,
+  clearHref,
+  view,
+  class: className,
+} = Astro.props;
 ---
 
 <div class:list={['book', { 'book--typed': rail.groups.some((g) => g.types.some((t) => t.current)) }, className]}>
   <ContentsRail rail={rail} class="book__rail" />
   <div class="book__main" id="results">
-    <FilterBar groups={groups} total={total} noun={total === 1 ? 'section' : 'sections'} clearHref={clearHref} />
+    <FilterBar
+      groups={groups}
+      total={total}
+      noun={total === 1 ? 'section' : 'sections'}
+      clearHref={clearHref}
+      view={view}
+    />
     <div class="book__grid">
       <SectionGrid
         items={items}
@@ -42,6 +62,7 @@ const { rail, groups, items, total, meta, page, pageSize, nextHref, firstHref, c
         nextHref={nextHref}
         firstHref={firstHref}
         clearHref={clearHref}
+        view={view.current}
       />
     </div>
   </div>

@@ -8,6 +8,9 @@
 import SectionCard from '~/components/domain/SectionCard.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
+import IndexList from '~/components/ui/IndexList.astro';
+import IndexRow from '~/components/ui/IndexRow.astro';
+import { pageTypeName } from '~/lib/taxonomy';
 import type { SectionCard as Card } from '~/server/api/v1/types';
 import { cardMeta } from './library';
 
@@ -24,8 +27,29 @@ interface Props {
   clearHref: string;
   /** Eager-load the first row. */
   eager?: number;
+  /** Visual grid (default) or numbered index rows. */
+  view?: 'grid' | 'index';
 }
-const { items, total, meta, page, pageSize, nextHref, firstHref, clearHref, eager = 3 } = Astro.props;
+const {
+  items,
+  total,
+  meta,
+  page,
+  pageSize,
+  nextHref,
+  firstHref,
+  clearHref,
+  eager = 3,
+  view = 'grid',
+} = Astro.props;
+// Index columns: N° · store · [type] · page · device · theme · app.
+const withType = meta.includes('type');
+const indexCols = withType
+  ? '64px minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,0.8fr) 84px minmax(0,0.9fr) minmax(0,1fr)'
+  : '64px minmax(0,1.6fr) minmax(0,0.9fr) 84px minmax(0,1fr) minmax(0,1fr)';
+const indexHead = withType
+  ? ['N°', 'Store', 'Type', 'Page', 'Device', 'Theme', 'App']
+  : ['N°', 'Store', 'Page', 'Device', 'Theme', 'App'];
 const fmt = (n: number) => n.toLocaleString('en-US');
 const from = (page - 1) * pageSize + 1;
 const to = from + items.length - 1;
@@ -44,20 +68,43 @@ const to = from + items.length - 1;
     </EmptyState>
   ) : (
     <div class="sgrid" data-sgrid data-total={total}>
-      <div class="grid grid--sections sgrid__cards" data-sgrid-cards>
-        {items.map((s, i) => (
-          <SectionCard
-            href={s.href}
-            crop={s.crop}
-            device={s.device}
-            typeName={s.type.name}
-            storeLabel={s.store.display_name}
-            meta={cardMeta(s, meta)}
-            app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
-            eager={page === 1 && i < eager}
-          />
-        ))}
-      </div>
+      {view === 'index' ? (
+        <div class="sgrid__index" data-sgrid-index>
+          <IndexList columns={indexCols} head={indexHead} label="Sections">
+            {items.map((s, i) => (
+              <IndexRow
+                n={from + i}
+                href={s.href}
+                title={s.store.display_name}
+                subtitle={cardMeta(s, withType ? ['type', 'page', 'device'] : ['page', 'device', 'theme'])}
+                preview={{ src: s.crop.src, width: s.crop.width, height: s.crop.height, device: s.device }}
+                cells={[
+                  ...(withType ? [{ value: s.type.name }] : []),
+                  { value: pageTypeName(s.page_type), muted: true },
+                  { value: s.device === 'mobile' ? 'Mobile' : 'Desktop', mono: true, muted: true },
+                  { value: s.theme?.name ?? 'Custom theme' },
+                  { value: s.app?.short_name ?? '—', muted: !s.app, mobile: !!s.app },
+                ]}
+              />
+            ))}
+          </IndexList>
+        </div>
+      ) : (
+        <div class="grid grid--sections sgrid__cards" data-sgrid-cards>
+          {items.map((s, i) => (
+            <SectionCard
+              href={s.href}
+              crop={s.crop}
+              device={s.device}
+              typeName={s.type.name}
+              storeLabel={s.store.display_name}
+              meta={cardMeta(s, meta)}
+              app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
+              eager={page === 1 && i < eager}
+            />
+          ))}
+        </div>
+      )}
 
       <div class="sgrid__foot" data-sgrid-foot>
         <p class="sgrid__status mlabel" aria-live="polite" data-sgrid-status data-from={from}>
@@ -90,9 +137,11 @@ const to = from + items.length - 1;
 <script>
   // Progressive "Load more": fetch the next page and append its cards in place.
   const parser = new DOMParser();
+  // Grid cards, or the rows of the index view.
+  const LIST = '[data-sgrid-cards], [data-sgrid-index] .index__list';
   async function loadMore(link: HTMLAnchorElement): Promise<boolean> {
     const root = link.closest<HTMLElement>('[data-sgrid]');
-    const cards = root?.querySelector<HTMLElement>('[data-sgrid-cards]');
+    const cards = root?.querySelector<HTMLElement>(LIST);
     if (!root || !cards || link.dataset.busy) return false;
     link.dataset.busy = '1';
     link.setAttribute('aria-busy', 'true');
@@ -102,7 +151,7 @@ const to = from + items.length - 1;
       const res = await fetch(link.href, { headers: { Accept: 'text/html' } });
       if (!res.ok) throw new Error(String(res.status));
       const doc = parser.parseFromString(await res.text(), 'text/html');
-      const incoming = doc.querySelector('[data-sgrid-cards]');
+      const incoming = doc.querySelector(LIST);
       if (!incoming) throw new Error('no cards');
       const first = incoming.firstElementChild;
       const before = cards.children.length;

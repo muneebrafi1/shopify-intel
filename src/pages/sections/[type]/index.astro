@@ -234,7 +234,12 @@ const jsonLd = [
       pageSize={PAGE_SIZE}
       nextHref={nextHref}
       firstHref={libraryHref(type, filters)}
-      clearHref={canonical}
+      clearHref={libraryHref(type, { view: filters.view })}
+      view={{
+        current: filters.view ?? 'grid',
+        gridHref: libraryHref(type, { ...filters, view: undefined }),
+        indexHref: libraryHref(type, { ...filters, view: 'index' }),
+      }}
     />
   </div>
 </BaseLayout>

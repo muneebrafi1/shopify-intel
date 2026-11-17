@@ -25,6 +25,8 @@ export interface LibraryFilters {
   device?: Device | undefined;
   theme?: string | undefined;
   app?: string | undefined;
+  /** Display mode, kept across filter links (not a filter). */
+  view?: 'index' | undefined;
 }
 
 const PAGE_SLUGS = PAGE_TYPES.map((p) => p.slug) as readonly string[];
@@ -47,6 +49,7 @@ export function readFilters(url: URL): LibraryFilters {
     device: device && DEVICE_SLUGS.includes(device) ? (device as Device) : undefined,
     theme: theme && SLUG_RE.test(theme) ? theme : undefined,
     app: app && SLUG_RE.test(app) ? app : undefined,
+    view: q.get('view') === 'index' ? 'index' : undefined,
   };
 }
 
@@ -60,12 +63,13 @@ export function filterQuery(f: LibraryFilters, extra: Record<string, string | un
   if (f.device) q.set('device', f.device);
   if (f.theme) q.set('theme', f.theme);
   if (f.app) q.set('app', f.app);
+  if (f.view) q.set('view', f.view);
   for (const [k, v] of Object.entries(extra)) if (v) q.set(k, v);
   const s = q.toString();
   return s ? `?${s}` : '';
 }
 
-/** Library URL for a type (or all types) with the given filters. */
+/** Library URL for a type (or all types) with the given filters (and view). */
 export const libraryHref = (type: SectionType | null, f: LibraryFilters = {}) =>
   `${type ? `/sections/${type}` : '/sections'}${filterQuery(f)}`;
 
