@@ -80,6 +80,22 @@ owner who asks to be listed again) is a manual, audited database change for now.
   (`dry_run: true` to preview). No Cron Trigger exists yet; `wrangler.jsonc` has a commented
   example for when the Worker gets a `scheduled()` handler. The privacy page should state the same
   period.
+- **Admin notification** (owner decision, draft): every stored removal request (form or
+  `POST /api/v1/removal-requests`; honeypot hits are not stored) calls
+  `notifier.removalRequestCreated()` from `src/server/notify.ts`. It runs after the response via
+  `waitUntil` (from `cloudflare:workers`; awaited with a catch where there is none) and can never
+  fail or slow the request. The recipient is `ADMIN_NOTIFY_EMAIL` (a placeholder for now; name in
+  `.env.example`, value as a Wrangler secret/var). **No mail transport is configured**, so it fails
+  safe: nothing is sent and one structured line is logged, with no personal data (no email, name,
+  reason or domain):
+  `removal_request.created id=123 scope=screenshots notify=skipped reason=no_transport`.
+- **Plugging a provider later**: implement `NotifyTransport` (`{ name, send({ to, subject, text })
+}`), e.g. a `fetch` to a transactional-mail API whose key is a Wrangler secret
+  (`npx wrangler secret put <PROVIDER>_API_KEY`, added to `Cloudflare.Env` in
+  `src/server/env.d.ts` and `.env.example`), and pass it as `transport` to `createNotifier()` in
+  `workerDeps()` (`src/server/api/index.ts`). The message carries the `RR-…` reference, store
+  domain, scope and the admin link, never the requester's details. Errors are swallowed and logged
+  as `notify=failed transport=<name>` without the provider's error text.
 
 ## Local development and CI
 

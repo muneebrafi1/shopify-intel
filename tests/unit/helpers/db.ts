@@ -11,6 +11,7 @@ import { createApiClient } from '../../../src/server/api/v1/client.ts';
 import type { ApiDeps } from '../../../src/server/api/v1/execute.ts';
 import { createApiHandler } from '../../../src/server/api/v1/router.ts';
 import { openNodeDb, type NodeDb } from '../../../src/server/db/node-sqlite.ts';
+import { createNotifier } from '../../../src/server/notify.ts';
 
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
@@ -44,6 +45,8 @@ export function testDeps(db: NodeDb, overrides: Partial<ApiDeps> = {}): ApiDeps 
     env: { IP_HASH_SALT: 'test-salt' },
     now: () => FIXED_NOW,
     validateOutput: true,
+    // Log-only notifier with a silent log (tests that check notifications pass their own).
+    notifier: createNotifier({ log: () => {} }),
     ...overrides,
   };
 }

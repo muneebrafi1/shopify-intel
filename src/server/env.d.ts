@@ -7,5 +7,13 @@ declare namespace Cloudflare {
     MEDIA: R2Bucket;
     IP_HASH_SALT?: string;
     MEDIA_BASE_URL?: string;
+    /** Recipient of admin notifications (new removal requests). */
+    ADMIN_NOTIFY_EMAIL?: string;
+    /** Bearer token for scripts calling /api/v1/admin (32+ chars). Unset = token auth off. */
+    ADMIN_API_TOKEN?: string;
+    ADMIN_PASSWORD?: string;
+    ADMIN_SESSION_SECRET?: string;
+    CF_ACCESS_TEAM_DOMAIN?: string;
+    CF_ACCESS_AUD?: string;
   }
 }

@@ -10,3 +10,7 @@ ADMIN_SESSION_SECRET=
 IP_HASH_SALT=
 # Optional: serve captured media from an absolute origin instead of /media/<key>.
 # MEDIA_BASE_URL=
+
+# Optional: recipient of admin notifications (new removal requests). Without a mail transport
+# nothing is sent; one line without personal data is logged instead.
+# ADMIN_NOTIFY_EMAIL=

@@ -44,7 +44,7 @@ export interface RemovalInput {
 export async function createRemovalRequest(
   ctx: Ctx,
   input: RemovalInput,
-): Promise<{ receipt: RemovalRequestReceipt; stored: boolean }> {
+): Promise<{ receipt: RemovalRequestReceipt; stored: boolean; id: number | null }> {
   const domain = normalizeDomain(input.domain);
   if (!domain) {
     throw new ApiError('validation_error', 'Enter the store’s domain, like example.com', {
@@ -60,7 +60,7 @@ export async function createRemovalRequest(
     received_at: now.toISOString(),
   };
   // Honeypot: bots fill every field. Pretend success so they learn nothing; store nothing.
-  if (input.website && input.website.trim() !== '') return { receipt, stored: false };
+  if (input.website && input.website.trim() !== '') return { receipt, stored: false, id: null };
 
   const ipHash = ctx.request?.ip ? await hashIp(ctx.request.ip, ctx.env.IP_HASH_SALT) : null;
   const hourAgo = new Date(now.getTime() - 3600_000).toISOString();
@@ -85,7 +85,7 @@ export async function createRemovalRequest(
       headers: { 'Retry-After': '3600' },
     });
   }
-  await ctx.db.run(
+  const inserted = await ctx.db.run(
     `INSERT INTO removal_requests (reference, domain, email, name, reason, scope, status, ip_hash, created_at)
      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
     [
@@ -99,7 +99,7 @@ export async function createRemovalRequest(
       receipt.received_at,
     ],
   );
-  return { receipt, stored: true };
+  return { receipt, stored: true, id: inserted.lastRowId };
 }
 
 // ---------------------------------------------------------------------------------------------
