@@ -45,7 +45,7 @@ const APP_COLS = `a.id, ${APP_REF_COLS}, a.developer, a.tagline, a.rating, a.rev
   a.free_plan, a.from_price_cents, a.trial_days, a.built_for_shopify, a.profile,
   a.app_store_url, a.website_url, a.category_id,
   COALESCE(st.store_count, 0) AS store_count, st.denominator, st.rank_overall,
-  COALESCE(st.section_count, 0) AS section_count`;
+  st.rank_in_category, COALESCE(st.section_count, 0) AS section_count`;
 const APP_FROM = `FROM apps a
 LEFT JOIN app_categories ac ON ac.id = a.category_id
 LEFT JOIN app_stats st ON st.app_id = a.id`;
@@ -68,6 +68,7 @@ export interface AppRow extends AppRefRow {
   store_count: number;
   denominator: number | null;
   rank_overall: number | null;
+  rank_in_category: number | null;
   section_count: number;
 }
 
@@ -87,6 +88,7 @@ export async function hydrateApps(ctx: Ctx, rows: AppRow[]): Promise<AppListItem
     built_for_shopify: boolOrNull(r.built_for_shopify),
     profile: r.profile,
     usage: usageStat(ctx, r.store_count, r.denominator, r.rank_overall),
+    category_rank: r.store_count > 0 && r.category_id !== null ? r.rank_in_category : null,
     cta: buildCta({
       linkId: links.get(r.id),
       officialUrl: r.app_store_url ?? r.website_url,
@@ -142,8 +144,9 @@ function appWhere(p: ListAppsParams, omitCategory = false) {
   return { sql: where.join(' AND '), params };
 }
 
+// Ties in usage share a rank (app_stats); their display order is the name, then the slug.
 const APP_ORDER = {
-  usage: 'store_count DESC, a.name',
+  usage: 'store_count DESC, a.name COLLATE NOCASE, a.slug',
   rating: 'a.rating IS NULL, a.rating DESC, a.reviews DESC, a.name',
   reviews: 'a.reviews IS NULL, a.reviews DESC, a.name',
   name: 'a.name',

@@ -50,6 +50,11 @@ export const AppListItemSchema = named(
     built_for_shopify: z.boolean().nullable(),
     profile: z.enum(['full', 'basic']),
     usage: UsageStatSchema,
+    category_rank: int()
+      .nullable()
+      .describe(
+        'Competition rank by usage within its category (ties share a rank: 1, 2, 2, 4). Null when not detected. usage.rank is the overall rank.',
+      ),
     cta: CtaSchema.nullable(),
   }),
 );

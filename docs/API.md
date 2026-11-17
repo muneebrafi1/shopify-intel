@@ -83,6 +83,11 @@ immutable caching). The `href`s the API returns are defined in one place,
 - **Every number has a source and date.** Usage stats are `UsageStat { stores, share, denominator,
 rank, source, as_of }`; `source` is a key of `meta.sources`. App Store facts carry
   `facts_source` + `checked_on`; comparison rows carry `source`.
+- **Ranks are competition ranks** (owner decision): equal usage shares a rank and the next rank
+  skips (1, 2, 2, 4). `usage.rank` is the overall rank among public apps (or themes); app list
+  items also carry `category_rank` (same rule, within the app's category). Hidden apps/themes take
+  no rank. Ties are listed by name (case-insensitive), then slug. Pages that number a list in
+  memory use `competitionRanks()` from `src/lib/rank.ts` instead of the row index.
 - Errors: `{ "error": { "code", "message", "details?" } }` with 400 (`validation_error`,
   `bad_request`), 404, 405 (+`Allow`), 413, 415, 429 (+`Retry-After`), 500.
 - GET: `Cache-Control: public, max-age=60, s-maxage=600, stale-while-revalidate=86400`,

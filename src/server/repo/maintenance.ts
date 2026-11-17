@@ -31,12 +31,18 @@ const STORE_STATE = [
   ) AS r WHERE r.id = stores.id`,
 ];
 
+/**
+ * Ranks are standard competition ranks ("1224"): equal usage shares a rank and the next rank
+ * skips (SQL RANK()). Only public (active) apps and themes take part, so hiding one never leaves
+ * a gap; hidden ones are ranked among themselves and never shown. Display order for ties is the
+ * name (see the list queries); the rank itself never depends on it.
+ */
 const APP_STATS = [
   `DELETE FROM app_stats`,
   `INSERT INTO app_stats (app_id, store_count, curated_store_count, denominator, section_count, rank_overall, rank_in_category, as_of)
   WITH active AS (SELECT id, is_curated FROM stores WHERE status = 'active'),
   counts AS (
-    SELECT a.id AS app_id, a.category_id AS category_id,
+    SELECT a.id AS app_id, a.category_id AS category_id, a.status = 'active' AS listed,
       COUNT(act.id) AS store_count,
       COALESCE(SUM(act.is_curated), 0) AS curated_store_count
     FROM apps a
@@ -51,8 +57,8 @@ const APP_STATS = [
   )
   SELECT c.app_id, c.store_count, c.curated_store_count, (SELECT COUNT(*) FROM active),
     COALESCE(secs.n, 0),
-    RANK() OVER (ORDER BY c.store_count DESC),
-    RANK() OVER (PARTITION BY c.category_id ORDER BY c.store_count DESC),
+    RANK() OVER (PARTITION BY c.listed ORDER BY c.store_count DESC),
+    RANK() OVER (PARTITION BY c.listed, c.category_id ORDER BY c.store_count DESC),
     ${AS_OF}
   FROM counts c LEFT JOIN secs ON secs.app_id = c.app_id`,
 ];
@@ -62,7 +68,8 @@ const THEME_STATS = [
   `INSERT INTO theme_stats (theme_id, store_count, curated_store_count, denominator, section_count, screenshot_count, avg_app_count, rank_overall, as_of)
   WITH active AS (SELECT * FROM stores WHERE status = 'active'),
   counts AS (
-    SELECT t.id AS theme_id, COUNT(s.id) AS store_count, COALESCE(SUM(s.is_curated), 0) AS curated_store_count,
+    SELECT t.id AS theme_id, t.status = 'active' AS listed,
+      COUNT(s.id) AS store_count, COALESCE(SUM(s.is_curated), 0) AS curated_store_count,
       AVG(s.app_count) AS avg_app_count
     FROM themes t LEFT JOIN active s ON s.current_theme_id = t.id
     GROUP BY t.id
@@ -79,7 +86,7 @@ const THEME_STATS = [
   )
   SELECT c.theme_id, c.store_count, c.curated_store_count, (SELECT COUNT(*) FROM active),
     COALESCE(secs.n, 0), COALESCE(shots.n, 0), c.avg_app_count,
-    RANK() OVER (ORDER BY c.store_count DESC),
+    RANK() OVER (PARTITION BY c.listed ORDER BY c.store_count DESC),
     ${AS_OF}
   FROM counts c
   LEFT JOIN secs ON secs.theme_id = c.theme_id

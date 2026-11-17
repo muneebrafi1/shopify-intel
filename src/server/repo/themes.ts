@@ -175,8 +175,9 @@ function themeWhere(p: ListThemesParams, omit: ReadonlyArray<'vendor' | 'price_b
   return { sql: where.join(' AND '), params };
 }
 
+// Ties in usage share a rank (theme_stats); their display order is the name, then the slug.
 const THEME_ORDER = {
-  usage: 'store_count DESC, t.name',
+  usage: 'store_count DESC, t.name COLLATE NOCASE, t.slug',
   name: 't.name',
   price: 't.price_cents IS NULL, t.price_cents, t.name',
 } as const;
