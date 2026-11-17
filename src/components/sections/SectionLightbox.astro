@@ -1,0 +1,349 @@
+---
+/**
+ * Lightbox for the library grid (progressive enhancement, ≥768px wide). A click on a card opens
+ * a native <dialog> with the same "section in focus" markup the detail page renders (fetched
+ * from that page), and pushes the section's URL so back/forward, reload and sharing all work.
+ * ← → step through the grid in order (loading the next page at the end), Esc closes.
+ * Without JavaScript, or on small screens, cards are plain links to the detail page.
+ */
+import Icon from '~/components/ui/Icon.astro';
+import Kbd from '~/components/ui/Kbd.astro';
+import SectionFocus from './SectionFocus.astro';
+
+// The fetched fragment is SectionFocus markup: keep the component in this page's module graph
+// so its styles (and those of the components it uses) ship with the library pages too.
+void SectionFocus;
+---
+
+<dialog class="lb" aria-label="Section" data-lb>
+  <div class="lb__bar">
+    <p class="lb__count mlabel">
+      <span class="num" data-lb-pos>
+        01
+      </span>
+      <span class="lb__of">of</span>
+      <span class="num" data-lb-total>
+        —
+      </span>
+    </p>
+    <p class="lb__keys" aria-hidden="true">
+      <Kbd>←</Kbd>
+      <Kbd>→</Kbd> browse <span class="lb__sep">·</span> <Kbd>Esc</Kbd> close
+    </p>
+    <button type="button" class="lb__close" data-lb-close aria-label="Close">
+      <Icon name="x" size={18} />
+    </button>
+  </div>
+  <div class="lb__frame">
+    <button type="button" class="lb__nav lb__nav--prev" data-lb-prev aria-label="Previous section">
+      <Icon name="caret-left" size={18} />
+    </button>
+    <div class="lb__body" data-lb-body aria-live="polite" tabindex="-1" autofocus></div>
+    <button type="button" class="lb__nav lb__nav--next" data-lb-next aria-label="Next section">
+      <Icon name="caret-right" size={18} />
+    </button>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-lb]');
+  const grid = document.querySelector<HTMLElement>('[data-sgrid]');
+  const wide = matchMedia('(min-width: 768px)');
+
+  if (dialog && grid) {
+    const body = dialog.querySelector<HTMLElement>('[data-lb-body]')!;
+    const pos = dialog.querySelector<HTMLElement>('[data-lb-pos]')!;
+    const totalEl = dialog.querySelector<HTMLElement>('[data-lb-total]')!;
+    const prevBtn = dialog.querySelector<HTMLButtonElement>('[data-lb-prev]')!;
+    const nextBtn = dialog.querySelector<HTMLButtonElement>('[data-lb-next]')!;
+    const parser = new DOMParser();
+    const cache = new Map<string, Promise<Element | null>>();
+    const baseTitle = document.title;
+    let current = '';
+    let pushed = false;
+    let closingFromHistory = false;
+    let returnFocus: HTMLElement | null = null;
+
+    totalEl.textContent = Number(grid.dataset.total ?? 0).toLocaleString('en-US');
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    // One link per card (grid view) or per row (index view).
+    const ITEMS = '.section-card a.crop, [data-sgrid-index] .irow__link';
+    /** Section links in grid order. */
+    const links = () =>
+      Array.from(grid.querySelectorAll<HTMLAnchorElement>(ITEMS)).map(
+        (a) => new URL(a.href, location.href).pathname,
+      );
+
+    const fetchFocus = (href: string) => {
+      let hit = cache.get(href);
+      if (!hit) {
+        hit = fetch(href, { headers: { Accept: 'text/html' } })
+          .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+          .then((html) =>
+            parser.parseFromString(html, 'text/html').querySelector('[data-section-focus]'),
+          )
+          .catch(() => null);
+        cache.set(href, hit);
+      }
+      return hit;
+    };
+
+    const adopt = (el: Element) => {
+      const node = document.importNode(el, true) as HTMLElement;
+      // One h1 per page: inside the dialog the title is a section heading.
+      node.querySelectorAll('h1').forEach((h1) => {
+        const h2 = document.createElement('h2');
+        for (const attr of Array.from(h1.attributes)) h2.setAttribute(attr.name, attr.value);
+        for (const child of Array.from(h1.childNodes)) h2.appendChild(child);
+        h1.replaceWith(h2);
+      });
+      return node;
+    };
+
+    const syncNav = () => {
+      const list = links();
+      const i = list.indexOf(current);
+      pos.textContent = pad(i + 1);
+      prevBtn.disabled = i <= 0;
+      nextBtn.disabled = i >= list.length - 1 && !grid.querySelector('[data-sgrid-more]');
+      return { list, i };
+    };
+
+    async function show(href: string, mode: 'push' | 'replace' | 'none') {
+      current = href;
+      const { list, i } = syncNav();
+      body.setAttribute('aria-busy', 'true');
+      if (!dialog!.open) {
+        dialog!.showModal();
+        document.documentElement.classList.add('lb-open');
+      }
+      if (mode === 'push') {
+        history.pushState({ lb: href }, '', href);
+        pushed = true;
+      } else if (mode === 'replace') {
+        history.replaceState({ lb: href }, '', href);
+      }
+      const el = await fetchFocus(href);
+      if (current !== href) return;
+      if (!el) {
+        location.href = href;
+        return;
+      }
+      const node = adopt(el);
+      body.replaceChildren(node);
+      body.removeAttribute('aria-busy');
+      body.scrollTop = 0;
+      document.title = `${node.dataset.title ?? 'Section'} · ${baseTitle.split(' · ').pop()}`;
+      // Warm the neighbours so stepping feels instant.
+      [list[i - 1], list[i + 1]].forEach((h) => h && void fetchFocus(h));
+    }
+
+    function step(dir: -1 | 1) {
+      const { list, i } = syncNav();
+      const target = list[i + dir];
+      if (target) return void show(target, 'replace');
+      if (dir === 1 && grid!.querySelector('[data-sgrid-more]')) {
+        nextBtn.disabled = true;
+        document.dispatchEvent(
+          new CustomEvent('sgrid:more', {
+            detail: { done: (ok: boolean) => ok && step(1) },
+          }),
+        );
+      }
+    }
+
+    function close() {
+      if (dialog!.open) dialog!.close();
+    }
+
+    dialog.addEventListener('close', () => {
+      document.documentElement.classList.remove('lb-open');
+      document.title = baseTitle;
+      body.replaceChildren();
+      current = '';
+      if (pushed && !closingFromHistory) history.back();
+      pushed = false;
+      closingFromHistory = false;
+      returnFocus?.focus({ preventScroll: true });
+    });
+
+    grid.addEventListener('click', (event) => {
+      const a = (event.target as HTMLElement).closest<HTMLAnchorElement>(
+        '.section-card a, .irow__link',
+      );
+      if (!a || !wide.matches) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
+        return;
+      event.preventDefault();
+      returnFocus = a;
+      void show(new URL(a.href, location.href).pathname, 'push');
+    });
+
+    dialog.addEventListener('click', (event) => {
+      const t = event.target as HTMLElement;
+      if (t === dialog || t.closest('[data-lb-close]')) close();
+      else if (t.closest('[data-lb-prev]')) step(-1);
+      else if (t.closest('[data-lb-next]')) step(1);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (!dialog.open || event.metaKey || event.ctrlKey || event.altKey) return;
+      if ((event.target as HTMLElement).closest('input, textarea, select')) return;
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        step(-1);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        step(1);
+      }
+    });
+
+    window.addEventListener('popstate', (event) => {
+      const href = (event.state as { lb?: string } | null)?.lb;
+      if (href) {
+        void show(href, 'none');
+        pushed = true;
+      } else if (dialog.open) {
+        closingFromHistory = true;
+        close();
+      }
+    });
+
+    document.addEventListener('sgrid:append', () => {
+      if (dialog.open) syncNav();
+    });
+  }
+</script>
+
+<style>
+  .lb {
+    width: calc(100vw - 48px);
+    max-width: 1480px;
+    height: calc(100dvh - 48px);
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xl);
+    background: var(--bg);
+    color: var(--ink);
+    box-shadow: var(--shadow-float);
+    overflow: hidden;
+    flex-direction: column;
+  }
+  .lb[open] {
+    display: flex;
+    animation: lb-in var(--dur-base) var(--ease-out);
+  }
+  .lb::backdrop {
+    background: rgb(25 24 22 / 0.55);
+  }
+  @keyframes lb-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.995);
+    }
+  }
+  :global(html.lb-open) {
+    overflow: hidden;
+  }
+  .lb__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6);
+    border-bottom: 1px solid var(--line);
+  }
+  .lb__count {
+    gap: 6px;
+    color: var(--ink);
+  }
+  .lb__of {
+    color: var(--ink-3);
+  }
+  .lb__keys {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .lb__sep {
+    margin-inline: 4px;
+  }
+  .lb__close {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-pill);
+    color: var(--ink-2);
+  }
+  .lb__close:hover {
+    background: var(--fill);
+    color: var(--ink);
+  }
+  .lb__frame {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 64px;
+    align-items: start;
+  }
+  .lb__body {
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-6) var(--space-4);
+    scrollbar-width: thin;
+  }
+  .lb__body:focus {
+    outline: none;
+  }
+  .lb__body[aria-busy='true'] {
+    opacity: 0.55;
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+  .lb__nav {
+    align-self: center;
+    justify-self: center;
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow: var(--shadow-float);
+    color: var(--ink);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .lb__nav:hover {
+    background: var(--fill);
+  }
+  .lb__nav:disabled {
+    opacity: 0.35;
+    box-shadow: var(--shadow-hairline);
+    cursor: default;
+  }
+  .lb__nav:focus-visible {
+    border-radius: var(--radius-pill);
+  }
+  /* The fragment's own type-order stepper is replaced by the grid-order arrows here. */
+  .lb__body :global([data-sf-seq]),
+  .lb__body :global([data-sf-keys]) {
+    display: none;
+  }
+  /* Inside the dialog the sheet scrolls with the stage instead of sticking to the page header. */
+  .lb__body :global(.sf__sheet) {
+    top: 0;
+  }
+  .lb__body :global(.sf__stage) {
+    --maxh: calc(100dvh - 300px);
+  }
+  .lb__body :global(h2[data-sf-title]) {
+    font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+  }
+</style>
