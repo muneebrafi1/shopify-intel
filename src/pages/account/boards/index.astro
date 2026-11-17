@@ -1,0 +1,182 @@
+---
+/**
+ * Boards (saved collections) — placeholder until accounts open. Shows the empty state a new
+ * account will see, plus example boards built from the library and labelled as examples.
+ * `?save=<type>:<id>` (from SaveButton → sign-in) explains that saving needs an account.
+ * Data model: collections + collection_items (migrations/0001_init.sql).
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Button from '~/components/ui/Button.astro';
+import Count from '~/components/ui/Count.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import AccountShell from '~/components/static/AccountShell.astro';
+import BoardCard from '~/components/static/BoardCard.astro';
+import { EXAMPLE_BOARDS } from '~/components/static/content';
+import { loadExampleItems } from '~/components/static/boards';
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const SAVE_NOUN: Record<string, string> = {
+  screenshot: 'screenshot',
+  section: 'section',
+  store: 'store',
+  theme: 'theme',
+  app: 'app',
+};
+const save = Astro.url.searchParams.get('save') ?? '';
+const [saveType = '', saveId = ''] = save.split(':');
+const saveNoun = /^[\w.-]{1,120}$/.test(saveId) ? (SAVE_NOUN[saveType] ?? null) : null;
+
+const examples = await Promise.all(
+  EXAMPLE_BOARDS.map(async (board) => ({ board, items: await loadExampleItems(board, 24) })),
+);
+const shown = examples.filter((e) => e.items.length > 0);
+---
+
+<BaseLayout
+  title="Boards"
+  description="Save stores, pages and sections to boards."
+  noindex
+  canonical="/account/boards"
+>
+  <AccountShell current="boards" hideNotice={!!saveNoun}>
+    {saveNoun && (
+      <div class="save-note" role="status">
+        <MonoLabel as="p" tone="accent">
+          Not saved
+        </MonoLabel>
+        <p class="save-note__text">
+          <strong>Saving needs an account.</strong> Accounts open with Pro. When they do, this{' '}
+          {saveNoun} goes straight onto a board.
+        </p>
+        <div class="save-note__actions">
+          <Button
+            href={`/sign-in?next=${encodeURIComponent(`/account/boards?save=${save}`)}`}
+            variant="primary"
+            size="sm"
+            rel="nofollow"
+          >
+            Sign in
+          </Button>
+          <Button href="/pro" variant="secondary" size="sm">
+            See Pro
+          </Button>
+        </div>
+      </div>
+    )}
+
+    <header class="bh">
+      <h1 class="bh__title">
+        Boards
+        <Count value={0} label="boards" />
+      </h1>
+      <Button
+        href="/sign-in?next=/account/boards"
+        variant="secondary"
+        size="sm"
+        icon="plus"
+        rel="nofollow"
+      >
+        New board
+      </Button>
+    </header>
+
+    <EmptyState
+      title="No boards yet"
+      body="Save stores, pages and sections to compare them later or share them with a client."
+    >
+      <Button href="/sections" variant="primary" size="sm">
+        Browse sections
+      </Button>
+      <Button href="/stores" variant="secondary" size="sm">
+        Top stores
+      </Button>
+    </EmptyState>
+
+    {shown.length > 0 && (
+      <section class="examples" aria-labelledby="examples-title">
+        <div class="examples__head">
+          <MonoLabel as="h2" tone="ink" id="examples-title">
+            Example boards
+          </MonoLabel>
+          <p class="examples__sub">
+            Made from our library to show how boards work. Not yours, and not saved.
+          </p>
+        </div>
+        <div class="grid grid--shots">
+          {shown.map(({ board, items }) => (
+            <BoardCard
+              href={`/account/boards/${board.id}`}
+              name={board.name}
+              count={items.length}
+              thumbs={items
+                .slice(0, 3)
+                .map((i) => ({ src: i.crop.src, width: i.crop.width, height: i.crop.height }))}
+              example
+            />
+          ))}
+        </div>
+      </section>
+    )}
+  </AccountShell>
+</BaseLayout>
+
+<style>
+  .save-note {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--line);
+  }
+  .save-note__text {
+    color: var(--ink-2);
+    font-size: var(--text-md);
+  }
+  .save-note__text strong {
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+  }
+  .save-note__actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+  }
+  .bh {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-8) var(--space-6);
+  }
+  .bh__title {
+    font-size: var(--text-3xl);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+  }
+  .examples {
+    margin-top: var(--space-16);
+  }
+  .examples__head {
+    margin-bottom: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .examples__head :global(.mlabel) {
+    display: flex;
+  }
+  .examples__sub {
+    margin-top: var(--space-2);
+    color: var(--ink-3);
+  }
+  @media (min-width: 1024px) {
+    .save-note {
+      margin-top: 0;
+    }
+    .bh {
+      padding-top: var(--space-10);
+    }
+  }
+</style>

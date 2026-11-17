@@ -1,0 +1,243 @@
+---
+/**
+ * Sign-in placeholder. Accounts open with Pro (Whop). Both options are designed and routed;
+ * neither signs anyone in yet, and the email typed here is never read or stored.
+ * `next` (a same-site path) is preserved for when sign-in is wired.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Button from '~/components/ui/Button.astro';
+import Field from '~/components/ui/Field.astro';
+import Input from '~/components/ui/Input.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import { safeNext } from '~/components/static/content';
+
+const next = safeNext(Astro.url.searchParams.get('next'));
+const submitted = Astro.request.method === 'POST';
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+// Context-aware headline when we arrive from a "Save" button (/account/boards?save=<type>:<id>).
+const SAVE_NOUN: Record<string, string> = {
+  screenshot: 'this screenshot',
+  section: 'this section',
+  store: 'this store',
+  theme: 'this theme',
+  app: 'this app',
+};
+let saveNoun: string | null = null;
+try {
+  const save = new URL(next, 'http://x').searchParams.get('save');
+  saveNoun = save ? (SAVE_NOUN[save.split(':')[0] ?? ''] ?? null) : null;
+} catch {
+  saveNoun = null;
+}
+const headline = saveNoun
+  ? `Sign in to save ${saveNoun}.`
+  : next === '/pro'
+    ? 'Sign in to get Pro.'
+    : 'Sign in to save boards.';
+const action = `/sign-in?next=${encodeURIComponent(next)}`;
+const backHref = next.startsWith('/account') ? '/' : next;
+---
+
+<BaseLayout
+  title="Sign in"
+  description="Sign in to save stores, pages and sections to boards."
+  noindex
+  chrome="minimal"
+  canonical="/sign-in"
+>
+  <div class="signin container">
+    <div class="signin__panel">
+      <MonoLabel as="p" class="signin__flag">
+        Accounts open with Pro
+      </MonoLabel>
+      <h1 class="signin__title display">{headline}</h1>
+      <p class="signin__sub">
+        Accounts aren’t open yet. They arrive with Pro; until then, everything else is free to
+        browse without one.
+      </p>
+
+      <div class="signin__notice" data-signin-notice role="status" hidden={!submitted}>
+        <p class="signin__notice-title">Nothing was sent.</p>
+        <p>
+          Sign-in links start working when accounts open with Pro. We didn’t keep the address you
+          typed.
+        </p>
+        <p class="signin__notice-links">
+          <a href="/pro">See what Pro includes</a>
+          <a href={backHref}>Keep browsing</a>
+        </p>
+      </div>
+
+      <div class="signin__options">
+        <Button variant="secondary" size="lg" full disabled aria-describedby="whop-note">
+          Continue with Whop
+        </Button>
+        <p class="signin__fine" id="whop-note">
+          Coming soon. Memberships and checkout run on Whop.
+        </p>
+      </div>
+
+      <div class="signin__or" aria-hidden="true">
+        <span>or</span>
+      </div>
+
+      <form class="signin__form" method="post" action={action} novalidate data-signin-form>
+        <input type="hidden" name="next" value={next} />
+        <Field label="Email" for="signin-email">
+          <Input
+            id="signin-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder="you@studio.com"
+          />
+        </Field>
+        <Button type="submit" variant="primary" size="lg" full>
+          Email me a sign-in link
+        </Button>
+      </form>
+
+      <p class="signin__legal">
+        By continuing you agree to the <a href="/terms">Terms</a> and the{' '}
+        <a href="/privacy">Privacy policy</a>.
+      </p>
+    </div>
+    <p class="signin__back">
+      <a href={backHref}>
+        <span aria-hidden="true">←</span> Back
+      </a>
+    </p>
+  </div>
+</BaseLayout>
+
+<script>
+  // Without JS the form posts and the page answers with the same notice; with JS, no round trip.
+  const form = document.querySelector<HTMLFormElement>('[data-signin-form]');
+  const notice = document.querySelector<HTMLElement>('[data-signin-notice]');
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const email = form.querySelector<HTMLInputElement>('input[name="email"]');
+    if (email) email.value = '';
+    if (notice) {
+      notice.hidden = false;
+      notice.setAttribute('tabindex', '-1');
+      notice.focus();
+    }
+  });
+</script>
+
+<style>
+  .signin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100dvh - var(--header-h) - 1px);
+    padding-block: var(--space-12) var(--space-10);
+  }
+  .signin__panel {
+    width: 100%;
+    max-width: 400px;
+  }
+  .signin__panel :global(.signin__flag) {
+    display: flex;
+    margin-bottom: var(--space-5);
+  }
+  .signin__title {
+    font-size: var(--text-4xl);
+    line-height: 1.05;
+  }
+  .signin__sub {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+  .signin__notice {
+    margin-top: var(--space-6);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+  .signin__notice:focus {
+    outline: none;
+  }
+  .signin__notice-title {
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+  }
+  .signin__notice-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+  .signin__notice-links a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .signin__options {
+    margin-top: var(--space-8);
+  }
+  .signin__fine {
+    margin-top: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    text-align: center;
+  }
+  .signin__or {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-block: var(--space-6);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .signin__or::before,
+  .signin__or::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--line);
+  }
+  .signin__form {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .signin__legal {
+    margin-top: var(--space-6);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    text-align: center;
+  }
+  .signin__legal a,
+  .signin__back a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .signin__back {
+    margin-top: var(--space-10);
+    font-size: var(--text-sm);
+  }
+  .signin__back a {
+    text-decoration: none;
+  }
+  @media (max-width: 639px) {
+    .signin {
+      justify-content: flex-start;
+      padding-top: var(--space-10);
+    }
+    .signin__title {
+      font-size: var(--text-3xl);
+    }
+  }
+</style>
