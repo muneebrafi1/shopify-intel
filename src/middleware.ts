@@ -13,6 +13,7 @@
  * Every admin response gets no-store / noindex / no-framing headers. The admin API router checks
  * the same credentials again (defence in depth).
  */
+import { queryMeter } from './server/db/d1.ts';
 import { defineMiddleware } from 'astro:middleware';
 import {
   adminAreaFor,
@@ -26,10 +27,26 @@ import {
 } from './server/auth/guard.ts';
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  if (!import.meta.env.DEV) return route(context, next);
+  // Dev only: report D1 usage per request (free plan limit: 50 queries per invocation).
+  queryMeter.calls = 0;
+  queryMeter.statements = 0;
+  const response = await route(context, next);
+  const used = `${queryMeter.calls}/${queryMeter.statements}`;
+  try {
+    response.headers.set('x-d1-queries', used);
+  } catch {
+    // Immutable headers (e.g. redirects): nothing to annotate.
+  }
+  if (queryMeter.calls > 45) console.warn(`[d1] ${context.url.pathname}: ${used} queries`);
+  return response;
+});
+
+async function route(context: Ctx, next: Next): Promise<Response> {
   const area = adminAreaFor(context.url.pathname);
   if (area === null) return next();
   return withAdminHeaders(await guardAdmin(context, next, area));
-});
+}
 
 type Ctx = Parameters<Parameters<typeof defineMiddleware>[0]>[0];
 type Next = Parameters<Parameters<typeof defineMiddleware>[0]>[1];
