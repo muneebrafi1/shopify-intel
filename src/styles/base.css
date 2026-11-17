@@ -105,6 +105,24 @@ hr {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* Inside scrollers and clipped frames the ring is drawn inside the element, or the container
+   would cut it off (chip rows, side navs, dropdown menus, product windows). Components that
+   set their own offset keep it (higher specificity). */
+:is(
+    .chip-row,
+    .vstrip__list,
+    .cmp,
+    .ch__toc,
+    .fp__list,
+    .fpill__menu,
+    .window__body,
+    .dev__nav-inner,
+    .tdplates__legend,
+    .wall
+  )
+  :focus-visible {
+  outline-offset: -2px;
+}
 [hidden] {
   display: none !important;
 }
