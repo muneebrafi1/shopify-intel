@@ -1,106 +1,221 @@
-# Design direction — "a specimen archive of live storefronts"
+# Visual direction v2 — "product-grade SaaS"
 
-This is the binding visual direction for every page. `docs/DESIGN.md` covers tokens and
-components; this file covers the **idea**, the **signature elements** and the **per-page intent**.
-It comes from a Mobbin study of the best current (2025–26) sites, listed at the bottom.
+_Replaces the v1 "specimen archive" direction (17 Nov 2026, owner decision). Binding for every
+page. If something here conflicts with older docs or component comments, this file wins._
 
-## The idea
+## Goal in one line
 
-We are a catalogue of real Shopify storefronts. Each store, theme and app is a **specimen**:
-numbered, captured, described with a precise spec sheet, and shown at full size. The tone sits
-between a design archive (Are.na, Studio Freight), a museum catalogue (Waka Waka, SSENSE
-editorial) and a technical data sheet (FREITAG, Spade). Calm, exact, slightly literary. Images
-are the loud part. Type and data do the rest.
+The site should feel like a 2026 SaaS product at Linear / Attio / Vercel / Stripe polish. It
+should also be honest and data-dense in the way only this product can be: **the product UI is
+the hero visual.** We never use stock art, mascots or abstract 3D. We show real store captures,
+section tags, theme and app data.
 
-What we are **not**: a SaaS landing page. No pill badge above a centred hero, no gradient text,
-no glass, no bento boxes, no icon-in-circle feature grids, no testimonial carousels, no
-three-card "features", no stock illustrations, no emoji, no "Unlock/Supercharge/Elevate".
-Those patterns are what "AI-made" looks like in 2026.
+## Approved references (Mobbin, 17 Nov 2026)
 
-## Signature elements (use them consistently — they are the brand until there is a brand)
+| Site                         | What we take                                                                                                                                                                                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Linear (linear.app)          | **Dark theme.** Near-black surfaces, 1px hairlines, soft light instead of colour glows. Left-aligned headline with a big product window under it, cropped by the fold. Feature cards that each hold a small piece of **real UI**, not an icon.                                 |
+| Attio (attio.com)            | **Light theme.** Centred hero with a small "New" pill above the headline. Dark primary and outline secondary buttons. Product window rising out of a faint grid. Nav: logo, a few links, "Sign in", one solid button.                                                         |
+| Stripe (stripe.com)          | Faint vertical guide lines framing the content column. **Two-tone headline** (ink sentence, then a muted continuation). Live counter above or under the headline. Logo strip in hairline cells.                                                                               |
+| Vercel (vercel.com/pricing)  | Pricing **comparison table**: the header row with plan name and CTA stays visible, rows are grouped under mono eyebrows, each feature has a one-line explanation, solid check marks.                                                                                           |
+| Cloudflare (cloudflare.com/plans) | **Plan cards** row above the table. The recommended plan gets an accent border and a filled button. "Compare all features" uses collapsible groups, which stack well at 390px.                                                                                        |
+| Dovetail (dovetail.com)      | A step list on the left drives a product visual on the right (the active step expands). We use it for "how it works": capture → slice → tag → compare.                                                                                                                        |
+| Base44 (base44.com)          | **Browse pattern** for index pages: one bar with search, category pills and a sort menu, then cards on a hairline grid with screenshot, title, meta and a price badge.                                                                                                         |
+| Twenty (twenty.com)          | Real product crops with **labels pinned on them**. For us that means section-type tags ("Hero", "Product grid", "Reviews") pinned onto captures, which is the product's core differentiator.                                                                                   |
 
-1. **Specimen numbers.** Stores, themes and apps carry an index number in mono, zero-padded:
-   `N°014`. Used in index rows, detail headers ("N°014 — Store") and captions. Numbers come from
-   rank/order in the current list (they are labels, not IDs).
-2. **Spec labels.** Small mono uppercase labels with a square bullet for metadata and section
-   markers: `■ DETECTED 17 NOV 2026`, `■ THEME`, `■ 11 APPS`. Component: `<MonoLabel>`.
-   Spec rows (label left in mono, value right in sans) replace generic key/value cards.
-3. **Superscript counts.** Counts sit as small mono superscripts after a title or nav item:
-   `Themes²⁰`, `Stores⁹³⁰`. Component: `<Count>` (or the `count` prop on headers).
-4. **Crop marks.** Corner registration ticks around hero visuals, the full-page viewer stage and
-   stat blocks — a capture/print reference that fits "screenshots as plates". Utility: `.marks`.
-5. **Contact-sheet captions.** Under every capture: identity in sans (domain or name), facts in
-   mono (`PRESTIGE 9.3.0 · 11 APPS`), optional frame number `01/08` for sequences.
-6. **Grid ↔ Index.** Every collection page offers a visual grid AND a numbered index view
-   (Waka Waka-style rows with columns). On desktop, hovering an index row floats a live preview
-   of that store's capture next to the cursor. Component: `<IndexList>` / `<IndexRow>`.
-7. **One dark moment per key page.** A near-black band (`--inverse`) used once, on purpose: the
-   home "wall" of captures, the compare verdict-free "side by side" stage, the footer wordmark.
-   Never as a default card style.
-8. **The wordmark sign-off.** Every public page ends with `SITE_NAME` set enormous in Newsreader
-   across the full width (Structured / MOUTHWASH / BAGGU). It scales to any brand length.
-9. **Editorial voice for statements and numbers.** Newsreader for: the home statement, page-level
-   statements on index pages, big stat numerals, theme names on theme pages, teardown titles.
-   Instrument Sans for all interface text. Geist Mono for labels, numbers in tables, versions.
+Never: purple or rainbow glows, gradient text, frosted-glass cards, mascots or illustrations,
+emoji, icon-in-a-circle triplets, fake logos or testimonials, invented metrics, "Unlock the power
+of…" copy, or every section centred. Only the home hero and the pricing header are centred;
+everything else is left-aligned.
 
-## Composition rules
+## Themes
 
-- **Asymmetry over centring.** Default to a 12-column grid with content starting at column 1
-  and statements spanning 7–8 columns; supporting text/specs sit at columns 9–12. Centred
-  layouts only for the 404 and sign-in.
-- **Scale contrast.** Each page has one very large thing (a statement, a capture, a name) and
-  everything else is small and precise. Avoid medium-everything.
-- **Hairlines, not boxes.** Separate with 1px rules and whitespace. Cards with backgrounds only
-  for screenshot wells and floating UI.
-- **Density where it helps.** Index/tables are dense (12–14px), captures are big.
-- **Motion with purpose only:** the home wall drifts slowly (pauses on hover, off with reduced
-  motion); section outlines fade in on hover; index preview follows the cursor. No scroll-jacking,
-  no parallax, no entrance animations on text.
-- **Honest data styling.** Numbers always carry a mono source line. Placeholders are named as
-  previews. Empty states say what to do next.
+- **Light is the default.** Dark follows `prefers-color-scheme`, and a toggle overrides it.
+  The choice is stored in `localStorage['theme']` as `'light' | 'dark' | 'system'`.
+- `<html data-theme="light|dark">` is set by a tiny inline script in `<head>` before first
+  paint, so there is no flash. The CSS works without JS through the media query.
+- Tokens live in `src/styles/tokens.css`. The dark set is applied by `:root[data-theme='dark']`,
+  by `@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) }`, and by **any
+  subtree** carrying `data-theme="dark"`. That last one is used for dark bands inside a light
+  page (home "how it works", the Pro CTA band).
+- `color-scheme` is set to match, so form controls and scrollbars follow the theme.
+- The header has an icon toggle (sun/moon) that flips the effective theme. The footer has a
+  3-way segmented control (System / Light / Dark).
+- Captures are always light store pages. In dark mode they sit in a `--surface-2` well with a
+  `--line-strong` border, so they don't glare.
 
-## Per-page intent
+## Tokens
 
-- **Home:** Statement in Newsreader spanning 8 columns ("Every Shopify theme and app, seen on
-  real stores.") with a live, dated spec line in mono beneath. Immediately a dark **wall** of
-  drifting columns of store captures (desktop + mobile mixed) with domain pills — the product
-  shown, not told. Then: themes as an index with mini decks; most-installed apps as a ranked
-  index; section types as a typographic list with counts and a crop preview; teardowns as an
-  editorial pair; compare/alternatives as a short index; the API/MCP line for builders.
-- **Index pages (stores, themes, apps, sections, teardowns, compare, alternatives):** big title
-  with superscript count, one-line statement, filter bar (chips = URL state), Grid ↔ Index
-  toggle, result count in mono. Never a generic card grid with icons.
-- **Detail pages (store, theme, app):** a "specimen sheet": N° label + name very large (theme
-  names in Newsreader), spec rows block (mono labels), CTA with affiliate label, then the plates
-  (captures) with page-type tabs and device toggle, then relationships as indexes (stores using
-  it, apps with it, alternatives) — each with its own count and source line.
-- **Store detail:** the full-page viewer is the hero: plates per page type, sections rail with
-  N° numbering and app attribution, crop marks around the stage.
-- **Compare:** two specimens side by side at identical scale on a dark stage, then a narrow fact
-  table (✓ in ink, × in light gray). No winners, no colour coding.
-- **Sections library:** Mobbin-like browsing but with our captions; section type list on the
-  left reads like a book's table of contents (type, count, page numbers style).
-- **Teardowns:** long-form editorial. Newsreader title, dek, numbered annotations tied to
-  sections on the capture (the numbers match the sections rail), pull quotes, spec sheet sidebar.
-- **Static/legal:** book-like: narrow column, sticky TOC with numbered headings, Newsreader title.
-- **Pro:** a spec-sheet comparison of plans, not glowing cards. One plan emphasised with an ink
-  rule, not colour.
-- **Admin:** dense, quiet, functional (Linear-like). Signature elements optional.
+### Colour (light → dark)
 
-## References (Mobbin)
+| Token             | Light     | Dark                    | Use                                                        |
+| ----------------- | --------- | ----------------------- | ---------------------------------------------------------- |
+| `--bg`            | `#ffffff` | `#0a0a0b`               | page                                                       |
+| `--bg-subtle`     | `#fafaf9` | `#0e0e10`               | alternating bands, footer                                  |
+| `--surface`       | `#ffffff` | `#131315`               | cards, popovers, windows                                   |
+| `--surface-2`     | `#f5f5f4` | `#18181b`               | screenshot wells, input fill, quiet buttons                |
+| `--surface-3`     | `#eeeeec` | `#202024`               | hover/pressed on surface-2                                 |
+| `--line`          | `#ebebe9` | `rgb(255 255 255/.07)`  | hairlines, card borders                                    |
+| `--line-strong`   | `#dcdcd9` | `rgb(255 255 255/.12)`  | inputs, hovered card borders                               |
+| `--ink`           | `#121211` | `#f2f2f0`               | headings, primary text                                     |
+| `--ink-2`         | `#4b4b48` | `#b3b3ae`               | body, secondary text                                       |
+| `--ink-3`         | `#6b6b67` | `#8d8d88`               | meta, captions (AA on bg and surface-2)                    |
+| `--ink-4`         | `#a6a6a1` | `#5b5b58`               | disabled and decorative only                               |
+| `--accent`        | `#e4572e` | `#ff6b3d`               | vermilion: logo, focus, selected tags, recommended plan    |
+| `--accent-hover`  | `#d64b22` | `#ff815a`               |                                                            |
+| `--accent-text`   | `#c23e17` | `#ff8f6b`               | accent-coloured text (AA)                                  |
+| `--accent-soft`   | `#fdece5` | `rgb(255 107 61/.14)`   | accent pills, selected rows                                |
+| `--btn-bg`        | `#121211` | `#f2f2f0`               | primary button (ink in light, near-white in dark)          |
+| `--btn-fg`        | `#ffffff` | `#0a0a0b`               |                                                            |
 
-- Catalogue index rows — Waka Waka: https://mobbin.com/sites/sections/fe089d5d-5adb-4849-a282-ae46d8fd7eac
-- Year/column index — OpenAI: https://mobbin.com/sites/sections/1e4d6891-db02-4b62-8ae8-8addb56aa87e
-- Index rows with location columns — Escape Cafe: https://mobbin.com/sites/sections/458fe700-42b9-4932-83fc-4f7ceb6db9a8
-- Spec labels with square bullets — FREITAG: https://mobbin.com/sites/sections/cac5c6fe-01b5-4769-8972-a2d70c190673
-- Stat tiles with crop marks + mono labels — Spade: https://mobbin.com/sites/sections/34a2151f-c9b2-4121-b790-8e85202fe9ca
-- Serif numerals — Legora: https://mobbin.com/sites/sections/2cf16054-0dd8-4dcc-8358-a8fbb6dad125
-- Editorial statement — SSENSE: https://mobbin.com/sites/sections/4de98a06-dbff-4e54-83c6-a301c519bba0
-- Wordmark footers — Structured: https://mobbin.com/sites/sections/cf954a98-4f2e-41d3-b2a1-168e4ba0108d · MOUTHWASH: https://mobbin.com/sites/sections/082f5fac-4648-4314-aa7d-a06fe0235b77 · BAGGU: https://mobbin.com/sites/sections/ddfad441-10db-4949-9baa-299e7e0edeee
-- Wall of work on dark — Studio Freight: https://mobbin.com/sites/sections/e17cb69f-b5cd-4aa4-90ca-82838a400641
-- "How it's built" metadata panel — Save.design: https://mobbin.com/sites/sections/5d172c3c-286c-459f-a701-b1ddabdd2324
-- Domain pills under captures — Ploy: https://mobbin.com/sites/sections/e40ee229-9192-4fbd-8978-eae4dc3158ed
-- Gallery tiles — Mobbin Sites: https://mobbin.com/screens/78c8c297-b03a-4030-a8f2-25ab2e9bd133
-- Marketplace detail anatomy — Notion: https://mobbin.com/screens/4d94f414-f33f-4e7b-adf3-e8f58285ffe0 · Vercel: https://mobbin.com/screens/f9ebd5a4-c177-4ad4-badd-c686bd3304cb
-- Mono editorial headline — Sketch: https://mobbin.com/sites/sections/be1166ac-1385-4279-9830-a24faacb1a0b
-- Minimal numbered list — ZARA: https://mobbin.com/screens/b2bbd6ce-b769-48be-916d-6f12efd23b58
+Status colours (`--positive`, `--caution`, `--critical` plus `-soft`) get a dark variant each.
+Keep the v1 names as aliases while pages migrate: `--tile` → `--surface-2`, `--fill` →
+`--surface-2`, `--fill-hover` → `--surface-3`, `--inverse` → `--btn-bg`, `--ink-inverse` →
+`--btn-fg`.
+
+**The accent is a signal, not paint.** Primary buttons are ink, not vermilion. Vermilion fills
+only appear on the Pro CTA (`Button variant="accent"`), the recommended plan, and the live dot.
+
+### Type
+
+- One family for everything: **Instrument Sans Variable** (`--font-sans`). Display sizes use
+  weight 600 and tight tracking. Newsreader is removed (no serif anywhere). **Geist Mono**
+  (`--font-mono`) is for eyebrows, versions, domains, API paths and numbers in tables.
+- Scale (desktop / 390px):
+  - `display-xl` 64/1.02, −0.04em (40) — home hero only
+  - `display-lg` 48/1.05, −0.035em (34) — marketing page titles (Pro, About)
+  - `display-md` 36/1.1, −0.03em (28) — index and detail page titles
+  - `h2` 28/1.15, −0.025em (24)
+  - `h3` 20/1.3, −0.015em
+  - `h4` 16/1.4 at 560
+  - `lead` 18/1.55 (16), `--ink-2`
+  - `body` 15/1.6
+  - `ui` 14/1.45
+  - `sm` 13, `xs` 12
+  - `eyebrow`: mono 12px, uppercase, 0.06em, `--ink-3`
+- **Two-tone headings:** `<h1>Ink sentence. <span class="tone-muted">Muted continuation.</span></h1>`.
+  Use on the home hero, the Pro header and big section heads. Use it at most once per section.
+- Numbers in columns: `.num` (tabular figures).
+
+### Space, layout, radius
+
+- 4px grid (`--space-*` stays).
+- `--page-max: 1200px` for marketing and reading pages. `--page-max-wide: 1440px` for galleries
+  (stores, sections, themes).
+- Gutters are 16 / 24 / 32 at <640 / ≥640 / ≥1024.
+- Section rhythm: marketing blocks 96px (390: 64), app pages 48px (390: 32).
+- Radius:
+  - controls 8px
+  - cards and windows 12px
+  - screenshot wells 10px
+  - big bands 20px
+  - chips, badges and pills 999px
+- Stripe guide lines: `.guides` on a container draws 1px `--line` verticals at the content edges
+  (≥1024 only). Use it on home, Pro and About.
+
+### Depth
+
+Use hairlines first, then shadow.
+
+- **Light:**
+  - `--shadow-xs` = `0 1px 2px rgb(18 18 17/.05)`
+  - `--shadow-sm` = `0 1px 2px rgb(18 18 17/.04), 0 4px 12px -4px rgb(18 18 17/.08)`
+  - `--shadow-md` = `0 2px 4px rgb(18 18 17/.04), 0 12px 32px -12px rgb(18 18 17/.18)` (hovered cards, windows)
+  - `--shadow-lg` = `0 24px 64px -16px rgb(18 18 17/.28)` (dialogs, palette)
+- **Dark:** the same shadows with black at higher alpha, plus `--highlight: inset 0 1px 0 rgb(255 255 255/.05)`
+  on cards and windows (the lit top edge Linear uses).
+- **Gradients** are allowed only as light, never as colour decoration:
+  - the hero spotlight (radial, `--ink` at 4–6%)
+  - a faint grid behind the hero window, masked to fade out
+  - a vermilion bloom at ≤10% under the hero product window in dark mode only
+  - the Pro band edge
+
+## Motion
+
+All motion is quick, physical and optional. Under `prefers-reduced-motion` every duration goes
+to 0.
+
+- Durations: `--dur-fast` 120ms (colour and background), `--dur-base` 180ms (lift, border),
+  `--dur-slow` 320ms (reveals, sheets). Easing: `--ease-out: cubic-bezier(.2,.8,.2,1)`.
+- **Buttons:** background and colour 120ms; a trailing arrow nudges 2px on hover; `:active`
+  scales to .98.
+- **Interactive cards:** border → `--line-strong`, `--shadow-md`, `translateY(-2px)`, image
+  inside scales 1.015.
+- **Tabs and segmented controls:** a sliding indicator (CSS custom properties set from JS, with
+  a static fallback).
+- **Header:** transparent at the top; a hairline and background blur appear once the page has
+  scrolled (`[data-scrolled]`).
+- **Reveal on scroll:** home and Pro only. `.reveal` fades and moves 8px over 320ms, once, via
+  IntersectionObserver. It only activates when `html.js` is set, so content is never hidden
+  without JS.
+- **Cursor spotlight:** home feature cards only. A radial highlight follows the cursor through
+  `--mx/--my`.
+- **Viewer:** hovering a section row outlines that section on the capture, and clicking
+  scrolls to it smoothly.
+
+## Components
+
+| Component                       | Spec                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Header                          | 64px (56 on mobile), sticky, `color-mix(in srgb, var(--bg) 80%, transparent)` + `backdrop-filter: blur(12px)` once scrolled. Left: logo mark + `SITE_NAME`. Nav: Stores, Themes, Apps, Sections, Teardowns, Compare (14px `--ink-2`; hover shows a `--surface-2` pill; current page is `--ink` with `aria-current`). Right: search trigger that looks like an input with a ⌘K kbd (icon-only <1200), theme toggle, "Sign in" (ghost), "Get Pro" (primary). Below 1024: logo, search, menu button → full-height sheet with nav, counts, theme switch and the Pro CTA. |
+| Footer                          | `--bg-subtle`, top hairline. Logo + one-line description + theme segmented control. Columns: Explore, Compare, Product, Company, Legal (mono uppercase heads). Bottom row: "© 2026 Xovist", data date note, "Not affiliated with Shopify Inc."                                                                                                                                                                                |
+| Button                          | Sizes sm 30, md 36, lg 44 (≥44 hit area on touch). Variants: `primary` (`--btn-bg`), `secondary` (surface + `--line-strong` border + `--shadow-xs`), `ghost`, `accent` (vermilion; Pro CTAs only), `link`. Optional leading or trailing Phosphor icon.                                                                                                                                                                  |
+| Badge / Pill                    | 22px, pill radius, 12px/520. Variants: `neutral` (surface-2), `outline`, `accent` (accent-soft + accent-text), `positive`, `caution`. The announcement pill pairs a `New` badge, text and an arrow.                                                                                                                                                                                                                     |
+| Kbd                             | Mono 11px, 1px `--line-strong`, radius 4, `--surface`.                                                                                                                                                                                                                                                                                                                                                                  |
+| Card                            | `--surface`, 1px `--line`, radius 12, `--shadow-xs` (+ `--highlight` in dark). Variants: `static` and `interactive` (hover lift as in Motion). Optional `--surface-2` media well on top with an inset hairline.                                                                                                                                                                                                         |
+| Window (product frame)          | Radius 12, `--line-strong` border, `--shadow-md`. 36px top bar with three neutral dots (`--ink-4` at 50%, **never** red/yellow/green) and a mono URL pill showing the store domain. Body is `--surface-2`.                                                                                                                                                                                                              |
+| Section tag (pinned label)      | The Twenty pattern. A label pill (ink background, `--btn-fg`, mono 11px) pinned at the top-left of a section's rectangle on a capture. The section outline is 1.5px: `--accent` when active or hovered, dashed `--line-strong` otherwise.                                                                                                                                                                                 |
+| Browse bar                      | Sticky below the header on index pages: search input with icon, scrollable filter pills (selected = ink fill), sort select, optional grid/list toggle. One row ≥1024; on 390 it is search on top and a horizontally scrolling pill row under it.                                                                                                                                                                       |
+| Tabs                            | Underline style for page sub-views, sliding 2px `--ink` indicator. Segmented style (pill track on surface-2) for small 2–3-way switches (Desktop/Mobile, Monthly/Yearly, System/Light/Dark).                                                                                                                                                                                                                            |
+| Facts card                      | Side-panel key/value rows: label `--ink-3` 13px, value 14px `--ink` (mono for versions and dates), hairline separators, a source + date footnote.                                                                                                                                                                                                                                                                        |
+| Table                           | 14px rows of 48px, hairline separators, sticky header on `--bg`, numbers right-aligned in tabular figures, row hover `--surface-2`.                                                                                                                                                                                                                                                                                     |
+| Empty state                     | Left-aligned in a dashed-border card: what's missing, why, and one action.                                                                                                                                                                                                                                                                                                                                             |
+| Icons                           | Phosphor (`@phosphor-icons/core`) regular, 16px in UI and 20px in feature cards, `currentColor`. One icon set only.                                                                                                                                                                                                                                                                                                     |
+
+## Page patterns
+
+1. **Home** (light by default):
+   - **Hero** (Attio + Stripe), centred:
+     - announcement pill linking the newest teardown
+     - two-tone H1 using the **existing headline** ("Shopify themes and apps, on the stores that run them.") until the brand is chosen
+     - lead line
+     - `Browse stores` (primary) and `Search ⌘K` (secondary)
+     - a live mono counter: stores scanned, sections tagged, scan date
+   - **Product window** under the hero, 1120px wide: the store viewer with a page-type sidebar, a full-page capture with pinned section tags, and a sections list. At 390px it is the capture plus 3 tags, cropped with a bottom fade.
+   - **Curated store strip** in hairline cells (Stripe).
+   - **"How it works"** in a dark band (Dovetail): steps on the left, a visual on the right.
+   - **Feature bento** (Linear), with real UI fragments: themes, apps ranking, sections grid, compare, teardowns.
+   - **Latest captures** gallery.
+   - **Pro band.**
+2. **Index pages** (stores, themes, apps, categories, sections, teardowns, compare, alternatives) use the Base44 pattern:
+   - page header: eyebrow, `display-md` title, one-line description, total count
+   - the browse bar
+   - a card grid (or table where data is the point, e.g. the full stores index and app rankings)
+   - pagination
+3. **Detail pages** (store, theme, app, section type, compare pair, teardown) feel like an app view:
+   - breadcrumb
+   - identity row (mark or icon, name, domain or link, chips) with actions on the right (Visit ↗, Save, Compare)
+   - tabs
+   - a main column with a sticky facts card on the right at ≥1024
+   - related grids
+   - **Store detail centrepiece:** the viewer (page-type tabs, Desktop/Mobile segmented, full-page capture with pinned tags, sections rail).
+4. **Pricing (/pro)**:
+   - centred header (two-tone `display-lg`)
+   - Monthly / Yearly segmented ("2 months free")
+   - three plan cards (Cloudflare); Pro is recommended
+   - a "Compare all features" table (Vercel) with the plan header row sticky. On 390px a plan switcher shows one plan column at a time.
+   - FAQ accordion
+   - lifetime-deal note
+5. **Reading pages** (teardown, about, methodology, legal, developers):
+   - 680px column
+   - `display-lg` title, dek, byline "Editorial team · date"
+   - sticky table of contents at ≥1200
+   - sans throughout; pull quotes are 22px/500 with a 2px accent rule
+6. **Account and sign-in:** a centred card on `--bg-subtle`, as in app auth screens.
+7. **Admin:** an app shell with a 232px sidebar (sections with counts), a top bar with breadcrumb and user menu, dense 13px tables, cards for metrics, and the same tokens and both themes.
+
+## Copy
+
+Plain, specific and short. Numbers carry a source and a date. Avoid: "unlock", "supercharge",
+"seamless", "powerful", "revolutionise", "AI-powered", exclamation marks. Never hard-code the
+brand; use `SITE_NAME`.
