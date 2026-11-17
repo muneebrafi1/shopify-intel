@@ -72,6 +72,7 @@ test.describe('compare routing', () => {
   test('picking a theme greys out apps in the other select', async ({ page }) => {
     await prepare(page);
     await page.goto('/compare');
+    await expect(page.locator('form[data-picker][data-ready]')).toHaveCount(1);
     await page.locator('#picker-a').selectOption('dawn');
     await expect(page.locator('#picker-b option[value="klaviyo"]')).toBeDisabled();
     await expect(page.locator('#picker-b option[value="horizon"]')).toBeEnabled();

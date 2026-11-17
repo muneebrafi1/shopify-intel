@@ -104,7 +104,8 @@ describe('themes', () => {
     expect(data.items[0]?.price).toEqual({ cents: 0, label: 'Free', is_free: true });
     const prestige = data.items.find((t) => t.slug === 'prestige');
     expect(prestige?.price.cents).toBe(40000);
-    expect(prestige?.previews).toHaveLength(1);
+    // One curated store: its desktop home capture, then its mobile one (cards pair devices).
+    expect(prestige?.previews.map((p) => p.device)).toEqual(['desktop', 'mobile']);
     expect(data.facets.price_bands.find((b) => b.value === 'free')?.count).toBe(2);
     const free = await api.listThemes({ price: 'free' });
     expect(free.data.items.map((t) => t.slug).sort()).toEqual(['dawn', 'horizon']);

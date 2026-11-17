@@ -90,23 +90,26 @@ const jsonLd = {
   jsonLd={jsonLd}
 >
   <header class="lib container">
-    <MonoLabel as="p" class="lib__eyebrow">
-      Library · {typeCount} types in {SECTION_GROUPS.length} groups
-    </MonoLabel>
-    <h1 class="lib__title">Sections<Count value={counts.sections} label="sections" /></h1>
-    <div class="lib__row cols-12">
-      <p class="lib__statement span-7">{statement}</p>
-      <SpecList
-        class="lib__spec start-9"
-        items={[
-          { label: 'Sections', value: fmt(counts.sections) },
-          { label: 'Pages sliced', value: fmt(counts.screenshots) },
-          { label: 'Stores', value: fmt(counts.stores_with_capture_plan), href: '/stores' },
-          { label: 'Devices', value: 'Desktop 1440 · Mobile 390' },
-        ]}
-        source={source}
-      />
+    <div class="lib__top cols-12">
+      <div class="lib__name span-7">
+        <MonoLabel as="p" class="lib__eyebrow">
+          Library · {typeCount} types in {SECTION_GROUPS.length} groups
+        </MonoLabel>
+        <h1 class="lib__title">Sections<Count value={counts.sections} label="sections" /></h1>
+      </div>
+      <p class="lib__statement start-8">{statement}</p>
     </div>
+    <SpecList
+      class="lib__spec"
+      inline
+      items={[
+        { label: 'Sections', value: fmt(counts.sections) },
+        { label: 'Pages sliced', value: fmt(counts.screenshots) },
+        { label: 'Stores', value: fmt(counts.stores_with_capture_plan), href: '/stores' },
+        { label: 'Viewports', value: '1440 · 390 px' },
+      ]}
+      source={source}
+    />
   </header>
 
   <div class="container lib__body">
@@ -129,6 +132,9 @@ const jsonLd = {
   .lib {
     padding-top: var(--space-8);
   }
+  .lib__top {
+    align-items: end;
+  }
   .lib :global(.lib__eyebrow) {
     margin-bottom: var(--space-5);
   }
@@ -146,31 +152,33 @@ const jsonLd = {
     transform: translateY(0.4em);
     color: var(--ink-2);
   }
-  .lib__row {
-    margin-top: var(--space-8);
-    align-items: start;
-  }
   .lib__statement {
-    max-width: 22ch;
+    max-width: 24ch;
     font-family: var(--font-serif);
-    font-size: clamp(1.625rem, 1.1rem + 1.6vw, 2.5rem);
+    font-size: clamp(1.625rem, 1.2rem + 1.2vw, 2.25rem);
     font-weight: 400;
     letter-spacing: -0.015em;
     line-height: 1.12;
     color: var(--ink);
   }
+  .lib :global(.lib__spec) {
+    margin-top: var(--space-8);
+  }
   .lib__body {
-    margin-top: var(--space-12);
+    margin-top: var(--space-10);
   }
   @media (min-width: 1024px) {
     .lib {
       padding-top: var(--space-12);
     }
-    .lib__row {
+    .lib__statement {
+      padding-bottom: 0.35rem;
+    }
+    .lib :global(.lib__spec) {
       margin-top: var(--space-10);
     }
     .lib__body {
-      margin-top: var(--space-16);
+      margin-top: var(--space-12);
     }
   }
 </style>

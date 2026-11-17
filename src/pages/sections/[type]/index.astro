@@ -100,12 +100,11 @@ const apps = whole.data.facets.apps.slice(0, 6).map((a) => ({
 }));
 const attributed = whole.data.facets.apps.reduce((n, a) => n + a.count, 0);
 const appTotal = whole.data.facets.apps.length;
-const attributionNote =
-  attributed === 0
-    ? `The theme itself: no detected app renders these sections.`
-    : attributed >= info.count
-      ? `${appTotal} ${appTotal === 1 ? 'app' : 'apps'} · all ${fmt(info.count)} sections attributed`
-      : `${appTotal} ${appTotal === 1 ? 'app' : 'apps'} · ${fmt(attributed)} of ${fmt(info.count)} sections; the rest are the theme's own`;
+const themeOwn = Math.max(0, info.count - attributed);
+const renderedNote =
+  appTotal === 0
+    ? 'No app detected'
+    : `${appTotal} ${appTotal === 1 ? 'app' : 'apps'} · ${fmt(attributed)} of ${fmt(info.count)}`;
 const devices = whole.data.facets.devices;
 const deviceLine = devices.map((d) => `${d.label} ${fmt(d.count)}`).join(' · ') || '—';
 
@@ -153,24 +152,34 @@ const jsonLd = [
         <div class="chap__apps">
           <p class="chap__apps-head">
             <MonoLabel tone="ink">Rendered by</MonoLabel>
-            <span class="chap__apps-note">{attributionNote}</span>
+            <span class="chap__apps-note">{renderedNote}</span>
           </p>
-          {
-            apps.length > 0 && (
-              <ol class="chap__app-list">
-                {apps.map((a) => (
-                  <li>
-                    <a href={a.href} class="chap__app">
-                      <AppIcon src={a.icon} name={a.name} size={20} />
-                      <span class="chap__app-name">{a.name}</span>
-                      <span class="chap__lead" aria-hidden="true" />
-                      <span class="chap__app-n num">{fmt(a.count)}</span>
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            )
-          }
+          <ol class="chap__app-list">
+            {
+              apps.map((a) => (
+                <li>
+                  <a href={a.href} class="chap__app">
+                    <AppIcon src={a.icon} name={a.name} size={20} />
+                    <span class="chap__app-name">{a.name}</span>
+                    <span class="chap__lead" aria-hidden="true" />
+                    <span class="chap__app-n num">{fmt(a.count)}</span>
+                  </a>
+                </li>
+              ))
+            }
+            {
+              themeOwn > 0 && (
+                <li>
+                  <span class="chap__app chap__app--theme" title="Sections the theme renders itself">
+                    <span class="chap__theme-mark" aria-hidden="true" />
+                    <span class="chap__app-name">The theme itself</span>
+                    <span class="chap__lead" aria-hidden="true" />
+                    <span class="chap__app-n num">{fmt(themeOwn)}</span>
+                  </span>
+                </li>
+              )
+            }
+          </ol>
         </div>
       </div>
 
@@ -298,6 +307,17 @@ const jsonLd = [
     padding: 6px 0;
     border-bottom: 1px solid var(--line);
     font-size: var(--text-base);
+  }
+  .chap__theme-mark {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1px dashed var(--line-strong);
+    background: var(--tile);
+  }
+  .chap__app--theme {
+    color: var(--ink-2);
   }
   .chap__app-name {
     min-width: 0;

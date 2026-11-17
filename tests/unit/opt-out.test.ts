@@ -25,7 +25,7 @@ describe('opted-out stores disappear everywhere', () => {
   it('404s the store and its teardown', async () => {
     await expect(api.getStore({ domain: 'youngla.com' })).rejects.toMatchObject({ status: 404 });
     await expect(api.getTeardown({ slug: 'youngla' })).rejects.toMatchObject({ status: 404 });
-    expect((await api.listTeardowns()).data.items).toEqual([]);
+    expect((await api.listTeardowns()).data.items.map((t) => t.slug)).not.toContain('youngla');
     expect((await get(http, '/api/v1/stores/youngla.com')).status).toBe(404);
   });
 

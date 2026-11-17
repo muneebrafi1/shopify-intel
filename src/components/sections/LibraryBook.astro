@@ -28,7 +28,7 @@ const { rail, groups, items, total, meta, page, pageSize, nextHref, firstHref, c
   Astro.props;
 ---
 
-<div class:list={['book', className]}>
+<div class:list={['book', { 'book--typed': rail.groups.some((g) => g.types.some((t) => t.current)) }, className]}>
   <ContentsRail rail={rail} class="book__rail" />
   <div class="book__main" id="results">
     <FilterBar groups={groups} total={total} noun={total === 1 ? 'section' : 'sections'} clearHref={clearHref} />
@@ -73,6 +73,13 @@ const { rail, groups, items, total, meta, page, pageSize, nextHref, firstHref, c
     }
     /* The rail is the type filter here, so the "Type" pill (first group) steps aside. */
     .book__main :global(details.fpill:first-of-type) {
+      display: none;
+    }
+    /* …and so does the active "Type" chip (the rail marks the current type). */
+    .book--typed .book__main :global(.fbar__active > .chip:first-child) {
+      display: none;
+    }
+    .book--typed .book__main :global(.fbar__active:not(:has(> .chip:nth-child(2)))) {
       display: none;
     }
     /* The grid shares the row with the rail: one column fewer than full width. */
