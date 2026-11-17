@@ -8,3 +8,7 @@ dist/
 !.env.example
 .DS_Store
 *.log
+.dev.vars
+test-results/
+playwright-report/
+.data/
