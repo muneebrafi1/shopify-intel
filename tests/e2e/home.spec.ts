@@ -138,12 +138,13 @@ test.describe('command palette', () => {
     await input.pressSequentially('pre');
     const prestige = dialog.getByRole('option', { name: /Prestige/ }).first();
     await expect(prestige).toBeVisible();
+    // Wait for the search results (not the idle suggestions, which also list Prestige).
+    await expect(dialog.locator('[data-palette-count]')).toContainText(/\d+ results?/);
     // The first result is active and announced through aria-activedescendant.
     await expect(input).toHaveAttribute('aria-expanded', 'true');
     const activeId = await input.getAttribute('aria-activedescendant');
     expect(activeId).toBeTruthy();
     await expect(dialog.locator(`#${activeId}`)).toHaveAttribute('aria-selected', 'true');
-    await expect(dialog.locator('[data-palette-count]')).toContainText(/\d+ results?/);
 
     // Arrow keys move the active row.
     await page.keyboard.press('ArrowDown');

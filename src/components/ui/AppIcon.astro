@@ -13,8 +13,20 @@ const radius = Math.round(size * 0.24);
 
 <span class:list={['app-icon', className]} style={`--s:${size}px;--r:${radius}px`}>
   <!-- The monogram sits underneath: if the remote icon fails to load, it shows through. -->
-  <span class="app-icon__fallback" aria-hidden="true">{initial}</span>
-  {src && <img src={src} alt="" width={size} height={size} loading="lazy" decoding="async" referrerpolicy="no-referrer" />}
+  <span class="app-icon__fallback" aria-hidden="true">
+    {initial}
+  </span>
+  {src && (
+    <img
+      src={src}
+      alt=""
+      width={size}
+      height={size}
+      loading="lazy"
+      decoding="async"
+      referrerpolicy="no-referrer"
+    />
+  )}
 </span>
 
 <style>

@@ -5,6 +5,7 @@ components; this file covers the **idea**, the **signature elements** and the **
 It comes from a Mobbin study of the best current (2025–26) sites, listed at the bottom.
 
 ## The idea
+
 We are a catalogue of real Shopify storefronts. Each store, theme and app is a **specimen**:
 numbered, captured, described with a precise spec sheet, and shown at full size. The tone sits
 between a design archive (Are.na, Studio Freight), a museum catalogue (Waka Waka, SSENSE
@@ -17,6 +18,7 @@ three-card "features", no stock illustrations, no emoji, no "Unlock/Supercharge/
 Those patterns are what "AI-made" looks like in 2026.
 
 ## Signature elements (use them consistently — they are the brand until there is a brand)
+
 1. **Specimen numbers.** Stores, themes and apps carry an index number in mono, zero-padded:
    `N°014`. Used in index rows, detail headers ("N°014 — Store") and captions. Numbers come from
    rank/order in the current list (they are labels, not IDs).
@@ -42,6 +44,7 @@ Those patterns are what "AI-made" looks like in 2026.
    Instrument Sans for all interface text. Geist Mono for labels, numbers in tables, versions.
 
 ## Composition rules
+
 - **Asymmetry over centring.** Default to a 12-column grid with content starting at column 1
   and statements spanning 7–8 columns; supporting text/specs sit at columns 9–12. Centred
   layouts only for the 404 and sign-in.
@@ -57,6 +60,7 @@ Those patterns are what "AI-made" looks like in 2026.
   previews. Empty states say what to do next.
 
 ## Per-page intent
+
 - **Home:** Statement in Newsreader spanning 8 columns ("Every Shopify theme and app, seen on
   real stores.") with a live, dated spec line in mono beneath. Immediately a dark **wall** of
   drifting columns of store captures (desktop + mobile mixed) with domain pills — the product
@@ -84,6 +88,7 @@ Those patterns are what "AI-made" looks like in 2026.
 - **Admin:** dense, quiet, functional (Linear-like). Signature elements optional.
 
 ## References (Mobbin)
+
 - Catalogue index rows — Waka Waka: https://mobbin.com/sites/sections/fe089d5d-5adb-4849-a282-ae46d8fd7eac
 - Year/column index — OpenAI: https://mobbin.com/sites/sections/1e4d6891-db02-4b62-8ae8-8addb56aa87e
 - Index rows with location columns — Escape Cafe: https://mobbin.com/sites/sections/458fe700-42b9-4932-83fc-4f7ceb6db9a8

@@ -5,7 +5,9 @@ const LOCALE = 'en-US';
 /** 50275 → "50,275"; 1234567 → "1.2M" when compact. */
 export function formatCount(n: number, opts: { compact?: boolean } = {}): string {
   if (opts.compact && Math.abs(n) >= 10_000) {
-    return new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+    return new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 1 }).format(
+      n,
+    );
   }
   return n.toLocaleString(LOCALE);
 }
@@ -18,13 +20,24 @@ export function formatPercent(pct: number, digits = 1): string {
 /** "2026-11-17" or ISO → "17 Nov 2026". Dates are shown in UTC so they match the data. */
 export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return '—';
-  const d = typeof value === 'string' ? new Date(value.length === 10 ? `${value}T00:00:00Z` : value) : value;
+  const d =
+    typeof value === 'string'
+      ? new Date(value.length === 10 ? `${value}T00:00:00Z` : value)
+      : value;
   if (Number.isNaN(d.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(d);
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(d);
 }
 
 /** Price in cents → "$400", "$9.99", "Free". */
-export function formatPrice(cents: number | null | undefined, opts: { currency?: string; free?: string } = {}): string {
+export function formatPrice(
+  cents: number | null | undefined,
+  opts: { currency?: string; free?: string } = {},
+): string {
   if (cents === null || cents === undefined) return '—';
   if (cents === 0) return opts.free ?? 'Free';
   const value = cents / 100;
@@ -43,5 +56,8 @@ export function pluralize(n: number, singular: string, plural = `${singular}s`):
 
 /** Strip protocol and trailing slash for display: "https://www.youngla.com/" → "youngla.com". */
 export function displayDomain(urlOrDomain: string): string {
-  return urlOrDomain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+  return urlOrDomain
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/$/, '');
 }

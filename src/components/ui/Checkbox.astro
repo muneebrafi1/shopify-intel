@@ -1,7 +1,11 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 
-type Props = Omit<HTMLAttributes<'input'>, 'type'> & { label: string; hint?: string; type?: 'checkbox' | 'radio' };
+type Props = Omit<HTMLAttributes<'input'>, 'type'> & {
+  label: string;
+  hint?: string;
+  type?: 'checkbox' | 'radio';
+};
 const { label, hint, type = 'checkbox', class: className, ...rest } = Astro.props;
 ---
 

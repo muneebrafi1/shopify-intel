@@ -39,7 +39,17 @@ interface Props {
   class?: string;
 }
 
-const { src, width, height, device, alt, sections, rail = true, eager = false, class: className } = Astro.props;
+const {
+  src,
+  width,
+  height,
+  device,
+  alt,
+  sections,
+  rail = true,
+  eager = false,
+  class: className,
+} = Astro.props;
 const ordered = [...sections].sort((a, b) => a.y - b.y);
 const pct = (n: number) => `${((n / height) * 100).toFixed(4)}%`;
 const pctX = (n: number) => `${((n / width) * 100).toFixed(4)}%`;
@@ -52,50 +62,53 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
 ---
 
 <div class:list={['fp', `fp--${device}`, { 'fp--no-rail': !rail }, className]} data-fullpage>
-  {
-    rail && (
-      <aside class="fp__rail" aria-label="Sections on this page">
-        <p class="fp__rail-title">
-          Sections <span class="num">{ordered.length}</span>
-        </p>
-        <ol class="fp__list">
-          {ordered.map((s, i) => (
-            <li>
-              <a class="fp__item" href={`#section-${s.id}`} data-target={String(s.id)}>
-                <span class="fp__n num">{pad(i)}</span>
-                <span class="fp__name">{s.name}</span>
-                {s.app && (
-                  <span class="fp__app" title={`Rendered by ${s.app.name}`}>
-                    <AppIcon src={s.app.iconUrl} name={s.app.name} size={16} />
-                    <span class="fp__app-name">{s.app.name}</span>
-                  </span>
-                )}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </aside>
-    )
-  }
+  {rail && (
+    <aside class="fp__rail" aria-label="Sections on this page">
+      <p class="fp__rail-title">
+        Sections <span class="num">{ordered.length}</span>
+      </p>
+      <ol class="fp__list">
+        {ordered.map((s, i) => (
+          <li>
+            <a class="fp__item" href={`#section-${s.id}`} data-target={String(s.id)}>
+              <span class="fp__n num">{pad(i)}</span>
+              <span class="fp__name">{s.name}</span>
+              {s.app && (
+                <span class="fp__app" title={`Rendered by ${s.app.name}`}>
+                  <AppIcon src={s.app.iconUrl} name={s.app.name} size={16} />
+                  <span class="fp__app-name">{s.app.name}</span>
+                </span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </aside>
+  )}
 
   <div class="fp__stage marks">
     <div class="fp__canvas" style={`aspect-ratio:${width} / ${height}`}>
-      <img src={src} alt={alt} width={width} height={height} loading={eager ? 'eager' : 'lazy'} decoding="async" />
-      {
-        ordered.map((s, i) => (
-          <div
-            class="fp__region"
-            id={`section-${s.id}`}
-            data-region={String(s.id)}
-            style={regionStyle(s)}
-          >
-            <span class="fp__tag">
-              <span class="num">{pad(i)}</span> {s.name}
-              {s.app && <span class="fp__tag-app">· {s.app.name}</span>}
-            </span>
-          </div>
-        ))
-      }
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+      {ordered.map((s, i) => (
+        <div
+          class="fp__region"
+          id={`section-${s.id}`}
+          data-region={String(s.id)}
+          style={regionStyle(s)}
+        >
+          <span class="fp__tag">
+            <span class="num">{pad(i)}</span> {s.name}
+            {s.app && <span class="fp__tag-app">· {s.app.name}</span>}
+          </span>
+        </div>
+      ))}
     </div>
   </div>
 </div>
@@ -104,8 +117,12 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
   document.querySelectorAll<HTMLElement>('[data-fullpage]').forEach((root) => {
     const items = new Map<string, HTMLElement>();
     const regions = new Map<string, HTMLElement>();
-    root.querySelectorAll<HTMLElement>('[data-target]').forEach((el) => items.set(el.dataset.target!, el));
-    root.querySelectorAll<HTMLElement>('[data-region]').forEach((el) => regions.set(el.dataset.region!, el));
+    root
+      .querySelectorAll<HTMLElement>('[data-target]')
+      .forEach((el) => items.set(el.dataset.target!, el));
+    root
+      .querySelectorAll<HTMLElement>('[data-region]')
+      .forEach((el) => regions.set(el.dataset.region!, el));
 
     const setHover = (id: string | null) => {
       regions.forEach((el, key) => el.classList.toggle('is-hover', key === id));
@@ -120,7 +137,10 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
         event.preventDefault();
         const region = regions.get(id);
         if (!region) return;
-        region.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+        region.scrollIntoView({
+          behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          block: 'start',
+        });
         history.replaceState(null, '', `#section-${id}`);
       });
     });

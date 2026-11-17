@@ -42,10 +42,13 @@ interface Props {
 }
 const { groups, total, noun, sort, view, clearHref, class: className } = Astro.props;
 const active = groups.flatMap((g) =>
-  g.options.filter((o) => o.selected && !/^(all|any)\b/i.test(o.label)).map((o) => ({ group: g, option: o })),
+  g.options
+    .filter((o) => o.selected && !/^(all|any)\b/i.test(o.label))
+    .map((o) => ({ group: g, option: o })),
 );
 // Removing an active filter = following the group's "All" option if present.
-const allHref = (g: FilterGroup) => g.options.find((o) => /^(all|any)\b/i.test(o.label))?.href ?? clearHref ?? '?';
+const allHref = (g: FilterGroup) =>
+  g.options.find((o) => /^(all|any)\b/i.test(o.label))?.href ?? clearHref ?? '?';
 // One filter bar per page.
 const sheetId = 'filter-sheet';
 const currentSort = sort?.find((s) => s.selected) ?? sort?.[0];
@@ -59,81 +62,99 @@ const currentSort = sort?.find((s) => s.selected) ?? sort?.[0];
         Filters
         {active.length > 0 && <span class="fbar__badge num">{active.length}</span>}
       </button>
-      {
-        groups.map((g) => {
-          const selected = g.options.find((o) => o.selected && !/^(all|any)\b/i.test(o.label));
-          return (
-            <details class:list={['fpill', { 'fpill--on': !!selected }]} data-fpill>
-              <summary>
-                <span class="fpill__label">{g.label}</span>
-                {selected && <span class="fpill__value">{selected.label}</span>}
-                <Icon name="caret-down" size={12} />
-              </summary>
-              <div class="fpill__menu" role="list">
-                {g.options.map((o) => (
-                  <a href={o.href} role="listitem" rel="nofollow" aria-current={o.selected ? 'true' : undefined}>
-                    <span>{o.label}</span>
-                    {typeof o.count === 'number' && <span class="fpill__count num">{o.count.toLocaleString('en-US')}</span>}
-                  </a>
-                ))}
-              </div>
-            </details>
-          );
-        })
-      }
+      {groups.map((g) => {
+        const selected = g.options.find((o) => o.selected && !/^(all|any)\b/i.test(o.label));
+        return (
+          <details class:list={['fpill', { 'fpill--on': !!selected }]} data-fpill>
+            <summary>
+              <span class="fpill__label">{g.label}</span>
+              {selected && <span class="fpill__value">{selected.label}</span>}
+              <Icon name="caret-down" size={12} />
+            </summary>
+            <div class="fpill__menu" role="list">
+              {g.options.map((o) => (
+                <a
+                  href={o.href}
+                  role="listitem"
+                  rel="nofollow"
+                  aria-current={o.selected ? 'true' : undefined}
+                >
+                  <span>{o.label}</span>
+                  {typeof o.count === 'number' && (
+                    <span class="fpill__count num">{o.count.toLocaleString('en-US')}</span>
+                  )}
+                </a>
+              ))}
+            </div>
+          </details>
+        );
+      })}
     </div>
     <div class="fbar__right">
       <p class="fbar__total mlabel" aria-live="polite">
         <span class="num">{total.toLocaleString('en-US')}</span>&nbsp;{noun}
       </p>
-      {
-        sort && sort.length > 1 && (
-          <details class="fpill fpill--sort" data-fpill>
-            <summary>
-              <Icon name="arrows-down-up" size={14} />
-              <span class="fpill__value">{currentSort?.label}</span>
-            </summary>
-            <div class="fpill__menu fpill__menu--end" role="list">
-              {sort.map((s) => (
-                <a href={s.href} role="listitem" rel="nofollow" aria-current={s.selected ? 'true' : undefined}>
-                  {s.label}
-                </a>
-              ))}
-            </div>
-          </details>
-        )
-      }
-      {
-        view && (
-          <Segmented
-            label="View"
-            size="sm"
-            items={[
-              { label: 'Grid', value: 'grid', icon: 'squares-four', iconOnly: true, href: view.gridHref, selected: view.current === 'grid' },
-              { label: 'Index', value: 'index', icon: 'rows', iconOnly: true, href: view.indexHref, selected: view.current === 'index' },
-            ]}
-          />
-        )
-      }
+      {sort && sort.length > 1 && (
+        <details class="fpill fpill--sort" data-fpill>
+          <summary>
+            <Icon name="arrows-down-up" size={14} />
+            <span class="fpill__value">{currentSort?.label}</span>
+          </summary>
+          <div class="fpill__menu fpill__menu--end" role="list">
+            {sort.map((s) => (
+              <a
+                href={s.href}
+                role="listitem"
+                rel="nofollow"
+                aria-current={s.selected ? 'true' : undefined}
+              >
+                {s.label}
+              </a>
+            ))}
+          </div>
+        </details>
+      )}
+      {view && (
+        <Segmented
+          label="View"
+          size="sm"
+          items={[
+            {
+              label: 'Grid',
+              value: 'grid',
+              icon: 'squares-four',
+              iconOnly: true,
+              href: view.gridHref,
+              selected: view.current === 'grid',
+            },
+            {
+              label: 'Index',
+              value: 'index',
+              icon: 'rows',
+              iconOnly: true,
+              href: view.indexHref,
+              selected: view.current === 'index',
+            },
+          ]}
+        />
+      )}
     </div>
   </div>
 
-  {
-    active.length > 0 && (
-      <div class="fbar__active">
-        {active.map(({ group, option }) => (
-          <Chip href={allHref(group)} size="sm" selected removable>
-            {group.label}: {option.label}
-          </Chip>
-        ))}
-        {clearHref && active.length > 1 && (
-          <a class="fbar__clear" href={clearHref} rel="nofollow">
-            Clear all
-          </a>
-        )}
-      </div>
-    )
-  }
+  {active.length > 0 && (
+    <div class="fbar__active">
+      {active.map(({ group, option }) => (
+        <Chip href={allHref(group)} size="sm" selected removable>
+          {group.label}: {option.label}
+        </Chip>
+      ))}
+      {clearHref && active.length > 1 && (
+        <a class="fbar__clear" href={clearHref} rel="nofollow">
+          Clear all
+        </a>
+      )}
+    </div>
+  )}
 
   <dialog id={sheetId} class="fsheet" aria-label="Filters">
     <div class="fsheet__head">
@@ -143,37 +164,37 @@ const currentSort = sort?.find((s) => s.selected) ?? sort?.[0];
       </button>
     </div>
     <div class="fsheet__body">
-      {
-        groups.map((g) => (
-          <section class="fsheet__group">
-            <h3 class="mlabel mlabel--bullet">{g.label}</h3>
-            <div class="fsheet__chips">
-              {g.options.map((o) => (
-                <Chip href={o.href} size="sm" selected={o.selected} count={o.count ?? undefined}>
-                  {o.label}
-                </Chip>
-              ))}
-            </div>
-          </section>
-        ))
-      }
-      {
-        sort && sort.length > 1 && (
-          <section class="fsheet__group">
-            <h3 class="mlabel mlabel--bullet">Sort</h3>
-            <div class="fsheet__chips">
-              {sort.map((s) => (
-                <Chip href={s.href} size="sm" selected={s.selected}>
-                  {s.label}
-                </Chip>
-              ))}
-            </div>
-          </section>
-        )
-      }
+      {groups.map((g) => (
+        <section class="fsheet__group">
+          <h3 class="mlabel mlabel--bullet">{g.label}</h3>
+          <div class="fsheet__chips">
+            {g.options.map((o) => (
+              <Chip href={o.href} size="sm" selected={o.selected} count={o.count ?? undefined}>
+                {o.label}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      ))}
+      {sort && sort.length > 1 && (
+        <section class="fsheet__group">
+          <h3 class="mlabel mlabel--bullet">Sort</h3>
+          <div class="fsheet__chips">
+            {sort.map((s) => (
+              <Chip href={s.href} size="sm" selected={s.selected}>
+                {s.label}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
     <div class="fsheet__foot">
-      {clearHref && <a class="fsheet__clear" href={clearHref} rel="nofollow">Clear all</a>}
+      {clearHref && (
+        <a class="fsheet__clear" href={clearHref} rel="nofollow">
+          Clear all
+        </a>
+      )}
       <button type="button" class="fsheet__show" data-dialog-close>
         Show {total.toLocaleString('en-US')} {noun}
       </button>
@@ -184,13 +205,18 @@ const currentSort = sort?.find((s) => s.selected) ?? sort?.[0];
 <script>
   // Only one dropdown open at a time; close on outside click and Escape.
   const pills = () => Array.from(document.querySelectorAll<HTMLDetailsElement>('[data-fpill]'));
-  document.addEventListener('toggle', (event) => {
-    const el = event.target as HTMLElement;
-    if (!(el instanceof HTMLDetailsElement) || !el.matches('[data-fpill]') || !el.open) return;
-    pills().forEach((p) => p !== el && (p.open = false));
-  }, true);
+  document.addEventListener(
+    'toggle',
+    (event) => {
+      const el = event.target as HTMLElement;
+      if (!(el instanceof HTMLDetailsElement) || !el.matches('[data-fpill]') || !el.open) return;
+      pills().forEach((p) => p !== el && (p.open = false));
+    },
+    true,
+  );
   document.addEventListener('click', (event) => {
-    if (!(event.target as HTMLElement).closest('[data-fpill]')) pills().forEach((p) => (p.open = false));
+    if (!(event.target as HTMLElement).closest('[data-fpill]'))
+      pills().forEach((p) => (p.open = false));
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') pills().forEach((p) => (p.open = false));
@@ -200,7 +226,9 @@ const currentSort = sort?.find((s) => s.selected) ?? sort?.[0];
     const target = event.target as HTMLElement;
     const opener = target.closest<HTMLElement>('.fbar [data-dialog-open]');
     if (opener) {
-      (document.getElementById(opener.dataset.dialogOpen ?? '') as HTMLDialogElement | null)?.showModal();
+      (
+        document.getElementById(opener.dataset.dialogOpen ?? '') as HTMLDialogElement | null
+      )?.showModal();
       return;
     }
     if (target.closest('.fsheet [data-dialog-close]')) target.closest('dialog')?.close();

@@ -56,8 +56,27 @@ function stack(layout: Layout): PlaceholderSection[] {
     return s;
   });
 }
-const HOME_D: Layout = [['announcement-bar', 40], ['header', 84], ['hero', 680], ['featured-collection', 640], ['image-with-text', 600], ['logo-list', 200], ['testimonials', 380], ['newsletter', 340], ['footer', 440]];
-const HOME_M: Layout = [['announcement-bar', 36], ['header', 60], ['hero', 600], ['featured-collection', 820], ['image-with-text', 760], ['testimonials', 440], ['newsletter', 400], ['footer', 620]];
+const HOME_D: Layout = [
+  ['announcement-bar', 40],
+  ['header', 84],
+  ['hero', 680],
+  ['featured-collection', 640],
+  ['image-with-text', 600],
+  ['logo-list', 200],
+  ['testimonials', 380],
+  ['newsletter', 340],
+  ['footer', 440],
+];
+const HOME_M: Layout = [
+  ['announcement-bar', 36],
+  ['header', 60],
+  ['hero', 600],
+  ['featured-collection', 820],
+  ['image-with-text', 760],
+  ['testimonials', 440],
+  ['newsletter', 400],
+  ['footer', 620],
+];
 const PRODUCT_D: PlaceholderSection[] = [
   { type: 'header', y: 0, height: 84 },
   { type: 'breadcrumbs', y: 84, height: 48 },
@@ -68,13 +87,28 @@ const PRODUCT_D: PlaceholderSection[] = [
   { type: 'upsell', y: 2152, height: 560 },
   { type: 'footer', y: 2712, height: 440 },
 ];
-const CART_M: Layout = [['header', 60], ['shipping-bar', 96], ['cart-items', 520], ['cart-summary', 420], ['upsell', 560], ['footer', 620]];
+const CART_M: Layout = [
+  ['header', 60],
+  ['shipping-bar', 96],
+  ['cart-items', 520],
+  ['cart-summary', 420],
+  ['upsell', 560],
+  ['footer', 620],
+];
 
 const dataUri = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-function shot(seed: string, label: string, device: 'desktop' | 'mobile', sections: PlaceholderSection[], pageType = 'home') {
+function shot(
+  seed: string,
+  label: string,
+  device: 'desktop' | 'mobile',
+  sections: PlaceholderSection[],
+  pageType = 'home',
+) {
   const width = device === 'desktop' ? 1440 : 390;
   const height = sections.reduce((m, s) => Math.max(m, s.y + s.height), 0);
-  const src = dataUri(renderPlaceholderSvg({ seed, label, device, pageType, width, height, sections }));
+  const src = dataUri(
+    renderPlaceholderSvg({ seed, label, device, pageType, width, height, sections }),
+  );
   return { src, width, height, device, sections };
 }
 const STORES = [
@@ -90,14 +124,40 @@ const mobileShots = STORES.slice(0, 4).map(([d, n]) => shot(d, n, 'mobile', stac
 const product = shot('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'product');
 const cartMobile = shot('negativeunderwear.com', 'Negative', 'mobile', stack(CART_M), 'cart');
 
-function crop(seed: string, label: string, device: 'desktop' | 'mobile', sections: PlaceholderSection[], type: string) {
+function crop(
+  seed: string,
+  label: string,
+  device: 'desktop' | 'mobile',
+  sections: PlaceholderSection[],
+  type: string,
+) {
   const width = device === 'desktop' ? 1440 : 390;
   const height = sections.reduce((m, s) => Math.max(m, s.y + s.height), 0);
   const s = sections.find((x) => x.type === type)!;
-  const svg = renderPlaceholderSvg({ seed, label, device, width, height, sections }, { crop: { y: s.y, height: s.height } });
+  const svg = renderPlaceholderSvg(
+    { seed, label, device, width, height, sections },
+    { crop: { y: s.y, height: s.height } },
+  );
   return { src: dataUri(svg), width, height: s.height };
 }
-const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', 'ink-2', 'ink-3', 'ink-4', 'accent', 'accent-text', 'accent-soft', 'positive', 'caution', 'critical'];
+const COLORS = [
+  'bg',
+  'surface',
+  'tile',
+  'fill',
+  'line',
+  'line-strong',
+  'ink',
+  'ink-2',
+  'ink-3',
+  'ink-4',
+  'accent',
+  'accent-text',
+  'accent-soft',
+  'positive',
+  'caution',
+  'critical',
+];
 ---
 
 <BaseLayout title="Design system" noindex>
@@ -112,19 +172,34 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
       <Breadcrumbs slot="top" items={[{ label: 'Home', href: '/' }, { label: 'Design system' }]} />
     </PageHeader>
 
-
     <section class="ds-block">
-      <SectionHeader label="01 — Signature" title="Specimen archive" count={6} description="Specimen numbers, mono spec labels, superscript counts, crop marks, contact-sheet captions, grid ↔ index. See docs/design/direction.md." rule />
+      <SectionHeader
+        label="01 — Signature"
+        title="Specimen archive"
+        count={6}
+        description="Specimen numbers, mono spec labels, superscript counts, crop marks, contact-sheet captions, grid ↔ index. See docs/design/direction.md."
+        rule
+      />
       <div class="row" style="gap:20px">
         <MonoLabel>Detected 17 Nov 2026</MonoLabel>
         <MonoLabel tone="ink">Theme</MonoLabel>
         <MonoLabel tone="accent">Capture pending</MonoLabel>
         <MonoLabel bullet={false}>N°014 — Store</MonoLabel>
       </div>
-      <p style="margin-top:24px;font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.035em;line-height:1">Themes<Count value={20} /> &nbsp;Stores<Count value={930} /></p>
+      <p style="margin-top:24px;font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.035em;line-height:1">
+        Themes
+        <Count value={20} /> &nbsp;Stores
+        <Count value={930} />
+      </p>
       <div class="marks ds-stats-marks">
         <StatList columns={4}>
-          <Stat display value={930} label="Stores scanned" source="StorePeek scan" asOf="17 Nov 2026" />
+          <Stat
+            display
+            value={930}
+            label="Stores scanned"
+            source="StorePeek scan"
+            asOf="17 Nov 2026"
+          />
           <Stat display value="41.2%" label="Run Klaviyo" source="383 of 930 stores" />
           <Stat display value={20} label="Themes tracked" source="Theme Store" />
           <Stat display value={160} label="Plates queued" source="20 stores × 8" />
@@ -136,16 +211,54 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
         noun="stores"
         clearHref="#"
         groups={[
-          { key: 'theme', label: 'Theme', options: [{ label: 'All themes', href: '#' }, { label: 'Prestige', href: '#', selected: true, count: 13 }, { label: 'Dawn', href: '#', count: 20 }] },
-          { key: 'app', label: 'App', options: [{ label: 'All apps', href: '#', selected: true }, { label: 'Judge.me', href: '#', count: 221 }, { label: 'Klaviyo', href: '#', count: 383 }] },
-          { key: 'category', label: 'Category', options: [{ label: 'All categories', href: '#', selected: true }, { label: 'Apparel', href: '#', count: 4 }] },
-          { key: 'currency', label: 'Currency', options: [{ label: 'Any currency', href: '#', selected: true }, { label: 'USD', href: '#', count: 570 }] },
+          {
+            key: 'theme',
+            label: 'Theme',
+            options: [
+              { label: 'All themes', href: '#' },
+              { label: 'Prestige', href: '#', selected: true, count: 13 },
+              { label: 'Dawn', href: '#', count: 20 },
+            ],
+          },
+          {
+            key: 'app',
+            label: 'App',
+            options: [
+              { label: 'All apps', href: '#', selected: true },
+              { label: 'Judge.me', href: '#', count: 221 },
+              { label: 'Klaviyo', href: '#', count: 383 },
+            ],
+          },
+          {
+            key: 'category',
+            label: 'Category',
+            options: [
+              { label: 'All categories', href: '#', selected: true },
+              { label: 'Apparel', href: '#', count: 4 },
+            ],
+          },
+          {
+            key: 'currency',
+            label: 'Currency',
+            options: [
+              { label: 'Any currency', href: '#', selected: true },
+              { label: 'USD', href: '#', count: 570 },
+            ],
+          },
         ]}
-        sort={[{ label: 'Most apps', href: '#', selected: true }, { label: 'Tranco rank', href: '#' }, { label: 'Domain A–Z', href: '#' }]}
+        sort={[
+          { label: 'Most apps', href: '#', selected: true },
+          { label: 'Tranco rank', href: '#' },
+          { label: 'Domain A–Z', href: '#' },
+        ]}
         view={{ current: 'index', gridHref: '#', indexHref: '#' }}
       />
       <div class="ds-index">
-        <IndexList columns="56px minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,0.8fr) 110px" head={['N°', 'Store', 'Theme', 'Category', 'Market', 'Apps']} label="Stores">
+        <IndexList
+          columns="56px minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,0.8fr) 110px"
+          head={['N°', 'Store', 'Theme', 'Category', 'Market', 'Apps']}
+          label="Stores"
+        >
           {STORES.map(([d, n, meta], i) => (
             <IndexRow
               n={i + 1}
@@ -165,30 +278,42 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
       </div>
     </section>
     <section class="ds-block">
-      <SectionHeader title="Colour" description="Warm neutrals and one accent. The accent marks state, never decoration." />
+      <SectionHeader
+        title="Colour"
+        description="Warm neutrals and one accent. The accent marks state, never decoration."
+      />
       <div class="swatches">
-        {
-          COLORS.map((c) => (
-            <div class="swatch">
-              <span style={`background:var(--${c})`} />
-              <code>--{c}</code>
-            </div>
-          ))
-        }
+        {COLORS.map((c) => (
+          <div class="swatch">
+            <span style={`background:var(--${c})`} />
+            <code>--{c}</code>
+          </div>
+        ))}
       </div>
     </section>
 
     <section class="ds-block">
-      <SectionHeader title="Type" description="Instrument Sans for the interface, Newsreader for editorial headings only, Geist Mono for data." />
+      <SectionHeader
+        title="Type"
+        description="Instrument Sans for the interface, Newsreader for editorial headings only, Geist Mono for data."
+      />
       <div class="type-specimen">
-        <p class="display" style="font-size:var(--text-5xl)">Every theme, on real stores.</p>
-        <p style="font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.02em;line-height:1.1">Prestige on 13 stores</p>
-        <p style="font-size:var(--text-2xl);font-weight:600;letter-spacing:-0.01em">Apps most used with Prestige</p>
-        <p style="font-size:var(--text-md);color:var(--ink-2);max-width:640px">
-          youngla.com runs Prestige 9.3.0 with 11 detected apps. Loox renders the reviews on the product page; Attentive
-          handles SMS signup in the footer.
+        <p class="display" style="font-size:var(--text-5xl)">
+          Every theme, on real stores.
         </p>
-        <p class="muted" style="font-size:var(--text-sm)">Seen on 221 of 930 scanned stores · 17 Nov 2026</p>
+        <p style="font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.02em;line-height:1.1">
+          Prestige on 13 stores
+        </p>
+        <p style="font-size:var(--text-2xl);font-weight:600;letter-spacing:-0.01em">
+          Apps most used with Prestige
+        </p>
+        <p style="font-size:var(--text-md);color:var(--ink-2);max-width:640px">
+          youngla.com runs Prestige 9.3.0 with 11 detected apps. Loox renders the reviews on the
+          product page; Attentive handles SMS signup in the footer.
+        </p>
+        <p class="muted" style="font-size:var(--text-sm)">
+          Seen on 221 of 930 scanned stores · 17 Nov 2026
+        </p>
         <p class="mono">GET /api/v1/stores/youngla.com · prestige@9.3.0</p>
       </div>
     </section>
@@ -200,9 +325,15 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
         <Button>Secondary</Button>
         <Button variant="quiet">Quiet</Button>
         <Button variant="ghost">Ghost</Button>
-        <Button variant="primary" iconRight="arrow-up-right">View on Theme Store</Button>
-        <Button size="sm" icon="sliders-horizontal">Filters</Button>
-        <Button size="lg" variant="primary">Large</Button>
+        <Button variant="primary" iconRight="arrow-up-right">
+          View on Theme Store
+        </Button>
+        <Button size="sm" icon="sliders-horizontal">
+          Filters
+        </Button>
+        <Button size="lg" variant="primary">
+          Large
+        </Button>
         <Button icon="bookmark-simple" label="Save" />
         <Button disabled>Disabled</Button>
         <SaveButton itemType="screenshot" itemId={1} />
@@ -210,14 +341,29 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
     </section>
 
     <section class="ds-block">
-      <SectionHeader title="Filters" description="Filters are URL state: chips are links, so results are shareable and work without JavaScript." />
+      <SectionHeader
+        title="Filters"
+        description="Filters are URL state: chips are links, so results are shareable and work without JavaScript."
+      />
       <ChipRow label="Page type">
-        <Chip href="#" selected count={20}>All pages</Chip>
-        <Chip href="#" count={20}>Home</Chip>
-        <Chip href="#" count={20}>Collection</Chip>
-        <Chip href="#" count={20}>Product</Chip>
-        <Chip href="#" count={20}>Cart</Chip>
-        <Chip href="#" icon="star">Reviews</Chip>
+        <Chip href="#" selected count={20}>
+          All pages
+        </Chip>
+        <Chip href="#" count={20}>
+          Home
+        </Chip>
+        <Chip href="#" count={20}>
+          Collection
+        </Chip>
+        <Chip href="#" count={20}>
+          Product
+        </Chip>
+        <Chip href="#" count={20}>
+          Cart
+        </Chip>
+        <Chip href="#" icon="star">
+          Reviews
+        </Chip>
       </ChipRow>
       <div class="row" style="margin-top:16px">
         <Segmented
@@ -235,9 +381,15 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
             { label: 'List', value: 'list', icon: 'rows', iconOnly: true },
           ]}
         />
-        <Chip size="sm" selected removable>Theme: Prestige</Chip>
-        <Chip size="sm" selected removable>App: Judge.me</Chip>
-        <Button size="sm" variant="ghost">Clear all</Button>
+        <Chip size="sm" selected removable>
+          Theme: Prestige
+        </Chip>
+        <Chip size="sm" selected removable>
+          App: Judge.me
+        </Chip>
+        <Button size="sm" variant="ghost">
+          Clear all
+        </Button>
       </div>
       <Tabs
         class="ds-tabs"
@@ -257,12 +409,15 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
         <Badge>Neutral</Badge>
         <Badge tone="outline">BFS</Badge>
         <Badge tone="accent">Affiliate</Badge>
-        <Badge tone="positive" icon="check">Captured</Badge>
+        <Badge tone="positive" icon="check">
+          Captured
+        </Badge>
         <Badge tone="caution">Pending review</Badge>
         <Badge tone="inverse">Pro</Badge>
         <Rating rating={4.9} reviews={50275} source="Shopify App Store, checked 17 Nov 2026" />
         <Rating rating={null} />
-        <Kbd>⌘</Kbd><Kbd>K</Kbd>
+        <Kbd>⌘</Kbd>
+        <Kbd>K</Kbd>
       </div>
       <StatList class="ds-stats">
         <Stat value={930} label="Stores scanned" source="StorePeek scan" asOf="17 Nov 2026" />
@@ -274,54 +429,182 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
     </section>
 
     <section class="ds-block">
-      <SectionHeader title="Screenshot tiles" description="Top of the full page, inset in a warm well; it bleeds off the bottom because the page continues." />
+      <SectionHeader
+        title="Screenshot tiles"
+        description="Top of the full page, inset in a warm well; it bleeds off the bottom because the page continues."
+      />
       <div class="grid-3">
-        {
-          homeShots.slice(0, 3).map((s, i) => (
-            <StoreCard domain={STORES[i]![0]} name={STORES[i]![1]} meta={STORES[i]![2]} shot={s} href="#" />
-          ))
-        }
+        {homeShots.slice(0, 3).map((s, i) => (
+          <StoreCard
+            domain={STORES[i]![0]}
+            name={STORES[i]![1]}
+            meta={STORES[i]![2]}
+            shot={s}
+            href="#"
+          />
+        ))}
       </div>
       <div class="grid-4" style="margin-top:32px">
-        {mobileShots.map((s, i) => <StoreCard domain={STORES[i]![0]} name={STORES[i]![1]} meta="Home · Mobile" shot={s} href="#" />)}
+        {mobileShots.map((s, i) => (
+          <StoreCard
+            domain={STORES[i]![0]}
+            name={STORES[i]![1]}
+            meta="Home · Mobile"
+            shot={s}
+            href="#"
+          />
+        ))}
       </div>
       <div class="grid-3" style="margin-top:32px">
         <StoreCard domain="aetrio.com" meta="Infinity · not captured" shot={null} href="#" />
-        <Shot src={product.src} width={product.width} height={product.height} device="desktop" alt="Product page" tag="Product" />
-        <Shot src={cartMobile.src} width={cartMobile.width} height={cartMobile.height} device="mobile" alt="Cart page" tag="Cart · Mobile" />
+        <Shot
+          src={product.src}
+          width={product.width}
+          height={product.height}
+          device="desktop"
+          alt="Product page"
+          tag="Product"
+        />
+        <Shot
+          src={cartMobile.src}
+          width={cartMobile.width}
+          height={cartMobile.height}
+          device="mobile"
+          alt="Cart page"
+          tag="Cart · Mobile"
+        />
       </div>
     </section>
 
     <section class="ds-block">
-      <SectionHeader title="Theme cards" description="A theme as a deck of the real stores using it." />
+      <SectionHeader
+        title="Theme cards"
+        description="A theme as a deck of the real stores using it."
+      />
       <div class="grid-3">
-        <ThemeCard slug="prestige" name="Prestige" vendor="Maestrooo" priceLabel="$400" storesCount={13} shots={homeShots.slice(0, 3)} />
-        <ThemeCard slug="dawn" name="Dawn" vendor="Shopify" priceLabel="Free" storesCount={20} shots={homeShots.slice(3, 6)} />
-        <ThemeCard slug="hyper" name="Hyper" vendor="FoxEcom" priceLabel="$400" storesCount={8} shots={homeShots.slice(1, 2)} />
+        <ThemeCard
+          slug="prestige"
+          name="Prestige"
+          vendor="Maestrooo"
+          priceLabel="$400"
+          storesCount={13}
+          shots={homeShots.slice(0, 3)}
+        />
+        <ThemeCard
+          slug="dawn"
+          name="Dawn"
+          vendor="Shopify"
+          priceLabel="Free"
+          storesCount={20}
+          shots={homeShots.slice(3, 6)}
+        />
+        <ThemeCard
+          slug="hyper"
+          name="Hyper"
+          vendor="FoxEcom"
+          priceLabel="$400"
+          storesCount={8}
+          shots={homeShots.slice(1, 2)}
+        />
       </div>
     </section>
 
     <section class="ds-block">
-      <SectionHeader title="App rows" description="Dense and ranked. Numbers right-aligned in tabular figures." />
+      <SectionHeader
+        title="App rows"
+        description="Dense and ranked. Numbers right-aligned in tabular figures."
+      />
       <AppTable>
-        <AppRow rank={1} slug="klaviyo" name="Klaviyo: Email Marketing & SMS" developer="Klaviyo" category="Email & SMS" rating={4.7} reviews={3450} priceLabel="Free plan" storesCount={383} sharePct={41.18} iconUrl="https://cdn.shopify.com/app-store/listing_images/5edd9000b933a8fa88c152d1e498531f/icon/CP6B2OOv3PYCEAE=.png" href="#" />
-        <AppRow rank={2} slug="judgeme" name="Judge.me Product Reviews App" developer="Judge.me" category="Reviews" rating={5} reviews={50275} priceLabel="Free plan" storesCount={221} sharePct={23.76} builtForShopify href="#" />
-        <AppRow rank={3} slug="rebuy" name="Rebuy Personalization Engine" developer="Rebuy" category="Upsell & Bundles" rating={null} priceLabel={null} storesCount={47} sharePct={5.05} href="#" />
+        <AppRow
+          rank={1}
+          slug="klaviyo"
+          name="Klaviyo: Email Marketing & SMS"
+          developer="Klaviyo"
+          category="Email & SMS"
+          rating={4.7}
+          reviews={3450}
+          priceLabel="Free plan"
+          storesCount={383}
+          sharePct={41.18}
+          iconUrl="https://cdn.shopify.com/app-store/listing_images/5edd9000b933a8fa88c152d1e498531f/icon/CP6B2OOv3PYCEAE=.png"
+          href="#"
+        />
+        <AppRow
+          rank={2}
+          slug="judgeme"
+          name="Judge.me Product Reviews App"
+          developer="Judge.me"
+          category="Reviews"
+          rating={5}
+          reviews={50275}
+          priceLabel="Free plan"
+          storesCount={221}
+          sharePct={23.76}
+          builtForShopify
+          href="#"
+        />
+        <AppRow
+          rank={3}
+          slug="rebuy"
+          name="Rebuy Personalization Engine"
+          developer="Rebuy"
+          category="Upsell & Bundles"
+          rating={null}
+          priceLabel={null}
+          storesCount={47}
+          sharePct={5.05}
+          href="#"
+        />
       </AppTable>
     </section>
 
     <section class="ds-block">
-      <SectionHeader title="Section cards" description="Sliced sections in fixed-aspect wells so desktop strips and mobile slices share a grid." />
+      <SectionHeader
+        title="Section cards"
+        description="Sliced sections in fixed-aspect wells so desktop strips and mobile slices share a grid."
+      />
       <div class="grid-4">
-        <SectionCard href="#" device="desktop" typeName="Hero" storeLabel="YoungLA" meta="Hero · Prestige" crop={crop('youngla.com', 'YoungLA', 'desktop', stack(HOME_D), 'hero')} />
-        <SectionCard href="#" device="desktop" typeName="Reviews" storeLabel="YoungLA" meta="Reviews · Product" app={{ name: 'Loox' }} crop={crop('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'reviews')} />
-        <SectionCard href="#" device="mobile" typeName="Featured collection" storeLabel="The Sill" meta="Featured collection · Mobile" crop={crop('thesill.com', 'The Sill', 'mobile', stack(HOME_M), 'featured-collection')} />
-        <SectionCard href="#" device="desktop" typeName="Footer" storeLabel="Koh" meta="Footer · Impact" crop={crop('koh.com', 'Koh', 'desktop', stack(HOME_D), 'footer')} />
+        <SectionCard
+          href="#"
+          device="desktop"
+          typeName="Hero"
+          storeLabel="YoungLA"
+          meta="Hero · Prestige"
+          crop={crop('youngla.com', 'YoungLA', 'desktop', stack(HOME_D), 'hero')}
+        />
+        <SectionCard
+          href="#"
+          device="desktop"
+          typeName="Reviews"
+          storeLabel="YoungLA"
+          meta="Reviews · Product"
+          app={{ name: 'Loox' }}
+          crop={crop('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'reviews')}
+        />
+        <SectionCard
+          href="#"
+          device="mobile"
+          typeName="Featured collection"
+          storeLabel="The Sill"
+          meta="Featured collection · Mobile"
+          crop={crop('thesill.com', 'The Sill', 'mobile', stack(HOME_M), 'featured-collection')}
+        />
+        <SectionCard
+          href="#"
+          device="desktop"
+          typeName="Footer"
+          storeLabel="Koh"
+          meta="Footer · Impact"
+          crop={crop('koh.com', 'Koh', 'desktop', stack(HOME_D), 'footer')}
+        />
       </div>
     </section>
 
     <section class="ds-block">
-      <SectionHeader title="Full-page viewer" description="Sections rail on the left, outlines on the capture. Hover either side; scrolling marks the section in view." />
+      <SectionHeader
+        title="Full-page viewer"
+        description="Sections rail on the left, outlines on the capture. Hover either side; scrolling marks the section in view."
+      />
       <FullPage
         src={product.src}
         width={product.width}
@@ -351,11 +634,25 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
           ]}
         />
         <AffiliateCta class="ds-cta" href="#" label="View on Theme Store" isAffiliate />
-        <AffiliateCta class="ds-cta" href="#" label="View on Theme Store" isAffiliate={false} size="md" />
+        <AffiliateCta
+          class="ds-cta"
+          href="#"
+          label="View on Theme Store"
+          isAffiliate={false}
+          size="md"
+        />
       </div>
       <div>
         <SectionHeader title="Teardown card" level={3} />
-        <TeardownCard slug="youngla" title="How YoungLA runs gymwear on Prestige and eleven apps" dek="A stack built for repeat buyers: photo reviews, SMS and a loyalty program." storeLabel="youngla.com" publishedAt="2026-11-17" shot={homeShots[0]} isSample />
+        <TeardownCard
+          slug="youngla"
+          title="How YoungLA runs gymwear on Prestige and eleven apps"
+          dek="A stack built for repeat buyers: photo reviews, SMS and a loyalty program."
+          storeLabel="youngla.com"
+          publishedAt="2026-11-17"
+          shot={homeShots[0]}
+          isSample
+        />
       </div>
     </section>
 
@@ -363,39 +660,79 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
       <div>
         <SectionHeader title="Forms" level={3} />
         <form class="form-demo" onsubmit="return false">
-          <Field label="Store domain" for="d-domain" hint="The domain customers visit, e.g. example.com">
+          <Field
+            label="Store domain"
+            for="d-domain"
+            hint="The domain customers visit, e.g. example.com"
+          >
             <Input id="d-domain" name="domain" placeholder="example.com" />
           </Field>
-          <Field label="Your email" for="d-email" error="Use an address at the store's domain so we can verify ownership.">
+          <Field
+            label="Your email"
+            for="d-email"
+            error="Use an address at the store's domain so we can verify ownership."
+          >
             <Input id="d-email" type="email" value="someone@gmail.com" />
           </Field>
           <Field label="What should we remove?" for="d-scope">
-            <Input as="select" id="d-scope"><option>Screenshots only</option><option>Everything</option></Input>
+            <Input as="select" id="d-scope">
+              <option>Screenshots only</option>
+              <option>Everything</option>
+            </Input>
           </Field>
           <Field label="Anything else" for="d-note" optional>
             <Input as="textarea" id="d-note" rows="3" />
           </Field>
-          <Checkbox label="I own or manage this store" hint="We may ask for proof before removing anything." />
-          <div class="row"><Button variant="primary" type="submit">Send request</Button><Button variant="ghost">Cancel</Button></div>
+          <Checkbox
+            label="I own or manage this store"
+            hint="We may ask for proof before removing anything."
+          />
+          <div class="row">
+            <Button variant="primary" type="submit">
+              Send request
+            </Button>
+            <Button variant="ghost">Cancel</Button>
+          </div>
         </form>
       </div>
       <div class="stack">
         <SectionHeader title="States" level={3} />
-        <Notice title="Screenshots are placeholders">Drawn from each page's detected sections until the first capture run.</Notice>
+        <Notice title="Screenshots are placeholders">
+          Drawn from each page's detected sections until the first capture run.
+        </Notice>
         <Notice tone="caution">This store hasn't been rescanned in 90 days.</Notice>
         <Notice tone="positive">Request received. Reference R-2026-0012.</Notice>
-        <EmptyState title="No stores match these filters" body="Try removing a filter, or browse all 930 detected stores." size="sm">
+        <EmptyState
+          title="No stores match these filters"
+          body="Try removing a filter, or browse all 930 detected stores."
+          size="sm"
+        >
           <Button size="sm">Clear filters</Button>
         </EmptyState>
-        <div><Skeleton lines={3} /></div>
-        <div class="grid-2"><Skeleton variant="tile" /><Skeleton variant="tile" /></div>
+        <div>
+          <Skeleton lines={3} />
+        </div>
+        <div class="grid-2">
+          <Skeleton variant="tile" />
+          <Skeleton variant="tile" />
+        </div>
         <Pagination page={2} pageSize={24} total={930} hrefFor={(p) => `#p${p}`} noun="stores" />
         <div class="row">
           <Button data-dialog-open="ds-dialog">Open dialog</Button>
         </div>
         <Dialog id="ds-dialog" title="Save to board">
-          <EmptyState title="Boards are a Pro feature" body="Collect screens and sections into boards to share with clients." size="sm" align="start" />
-          <Fragment slot="footer"><Button data-dialog-close>Not now</Button><Button variant="primary" href="/pro">See Pro</Button></Fragment>
+          <EmptyState
+            title="Boards are a Pro feature"
+            body="Collect screens and sections into boards to share with clients."
+            size="sm"
+            align="start"
+          />
+          <Fragment slot="footer">
+            <Button data-dialog-close>Not now</Button>
+            <Button variant="primary" href="/pro">
+              See Pro
+            </Button>
+          </Fragment>
         </Dialog>
       </div>
     </section>

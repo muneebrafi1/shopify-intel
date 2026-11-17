@@ -16,11 +16,22 @@ interface ShotLike {
   height: number;
   page_type: { slug: string };
   store: { domain: string; display_name: string };
-  sections: { type: { slug: string }; rect: { x: number; y: number; w: number; h: number }; hints?: Record<string, unknown> | null }[];
+  sections: {
+    type: { slug: string };
+    rect: { x: number; y: number; w: number; h: number };
+    hints?: Record<string, unknown> | null;
+  }[];
 }
 
 const toSections = (shot: ShotLike): PlaceholderSection[] =>
-  shot.sections.map((s) => ({ type: s.type.slug, y: s.rect.y, height: s.rect.h, x: s.rect.x, w: s.rect.w, hints: s.hints ?? null }));
+  shot.sections.map((s) => ({
+    type: s.type.slug,
+    y: s.rect.y,
+    height: s.rect.h,
+    x: s.rect.x,
+    w: s.rect.w,
+    hints: s.hints ?? null,
+  }));
 
 const svgResponse = (svg: string) =>
   new Response(svg, {
@@ -33,7 +44,8 @@ const svgResponse = (svg: string) =>
     },
   });
 
-const notFound = () => new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain' } });
+const notFound = () =>
+  new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain' } });
 
 export const GET: APIRoute = async ({ params, url }) => {
   const match = /^(\d+)\.svg$/.exec(params.file ?? '');
@@ -45,7 +57,8 @@ export const GET: APIRoute = async ({ params, url }) => {
     if (!res) return notFound();
     const shot = res.data as unknown as ShotLike;
     const h = Number(url.searchParams.get('h'));
-    const crop = Number.isFinite(h) && h > 0 ? { y: 0, height: Math.min(h, shot.height) } : undefined;
+    const crop =
+      Number.isFinite(h) && h > 0 ? { y: 0, height: Math.min(h, shot.height) } : undefined;
     return svgResponse(
       renderPlaceholderSvg(
         {
@@ -80,7 +93,14 @@ export const GET: APIRoute = async ({ params, url }) => {
           height: screenshot.height,
           sections: toSections(screenshot),
         },
-        { crop: { y: section.rect.y, height: section.rect.h, x: section.rect.x, width: section.rect.w } },
+        {
+          crop: {
+            y: section.rect.y,
+            height: section.rect.h,
+            x: section.rect.x,
+            width: section.rect.w,
+          },
+        },
       ),
     );
   }

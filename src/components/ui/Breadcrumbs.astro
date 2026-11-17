@@ -12,17 +12,15 @@ const { items, class: className } = Astro.props;
 
 <nav class:list={['crumbs', className]} aria-label="Breadcrumb">
   <ol>
-    {
-      items.map((item, i) => (
-        <li>
-          {item.href && i < items.length - 1 ? (
-            <a href={item.href}>{item.label}</a>
-          ) : (
-            <span aria-current="page">{item.label}</span>
-          )}
-        </li>
-      ))
-    }
+    {items.map((item, i) => (
+      <li>
+        {item.href && i < items.length - 1 ? (
+          <a href={item.href}>{item.label}</a>
+        ) : (
+          <span aria-current="page">{item.label}</span>
+        )}
+      </li>
+    ))}
   </ol>
 </nav>
 

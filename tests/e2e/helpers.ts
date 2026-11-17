@@ -16,7 +16,8 @@ export async function prepare(page: Page): Promise<string[]> {
   );
   page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`));
   page.on('console', (msg) => {
-    if (msg.type() === 'error' && !/Failed to load resource/.test(msg.text())) errors.push(`console: ${msg.text()}`);
+    if (msg.type() === 'error' && !/Failed to load resource/.test(msg.text()))
+      errors.push(`console: ${msg.text()}`);
   });
   return errors;
 }
@@ -37,7 +38,8 @@ export async function expectNoHorizontalOverflow(page: Page) {
   const offenders = await page.evaluate(() => {
     const vw = document.documentElement.clientWidth;
     const out: string[] = [];
-    if (document.documentElement.scrollWidth > vw + 1) out.push(`document scrollWidth ${document.documentElement.scrollWidth} > ${vw}`);
+    if (document.documentElement.scrollWidth > vw + 1)
+      out.push(`document scrollWidth ${document.documentElement.scrollWidth} > ${vw}`);
     // Name the widest elements that escape the viewport (ignoring ones inside scrollers).
     for (const el of Array.from(document.body.querySelectorAll<HTMLElement>('*'))) {
       const r = el.getBoundingClientRect();
@@ -53,7 +55,9 @@ export async function expectNoHorizontalOverflow(page: Page) {
         p = p.parentElement;
       }
       if (!clipped && getComputedStyle(el).position !== 'fixed') {
-        out.push(`${el.tagName.toLowerCase()}.${[...el.classList].join('.')} right=${Math.round(r.right)}`);
+        out.push(
+          `${el.tagName.toLowerCase()}.${[...el.classList].join('.')} right=${Math.round(r.right)}`,
+        );
       }
       if (out.length > 5) break;
     }
@@ -84,7 +88,15 @@ export async function expectHealthyPage(page: Page, path: string, opts: HealthyO
   const unnamed = await page.evaluate(() =>
     Array.from(document.querySelectorAll<HTMLElement>('a[href], button'))
       .filter((el) => el.offsetParent !== null)
-      .filter((el) => !(el.textContent?.trim() || el.getAttribute('aria-label') || el.getAttribute('title') || el.querySelector('img[alt]:not([alt=""])')))
+      .filter(
+        (el) =>
+          !(
+            el.textContent?.trim() ||
+            el.getAttribute('aria-label') ||
+            el.getAttribute('title') ||
+            el.querySelector('img[alt]:not([alt=""])')
+          ),
+      )
       .map((el) => el.outerHTML.slice(0, 120)),
   );
   expect(unnamed, 'links/buttons without an accessible name').toEqual([]);

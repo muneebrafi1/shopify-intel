@@ -32,6 +32,13 @@ export default defineConfig({
         url: `${baseURL}/`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
-        env: { ASTRO_TELEMETRY_DISABLED: '1', WRANGLER_SEND_METRICS: 'false' },
+        // Astro 7 backgrounds `astro preview` when it detects an AI agent; keep it in the
+        // foreground so Playwright owns the process (no effect in CI).
+        env: {
+          ASTRO_TELEMETRY_DISABLED: '1',
+          WRANGLER_SEND_METRICS: 'false',
+          AI_AGENT: '',
+          CLAUDECODE: '',
+        },
       },
 });

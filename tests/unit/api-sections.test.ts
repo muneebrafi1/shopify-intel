@@ -103,7 +103,10 @@ describe('teardowns', () => {
     const list = await api.listTeardowns();
     expect(list.data.items.map((t) => t.slug).sort()).toEqual(['fishwife', 'thesill', 'youngla']);
     expect(list.data.items.every((t) => t.is_sample)).toBe(true);
-    expect(list.data.items.find((t) => t.slug === 'youngla')).toMatchObject({ is_sample: true, note_count: 5 });
+    expect(list.data.items.find((t) => t.slug === 'youngla')).toMatchObject({
+      is_sample: true,
+      note_count: 5,
+    });
     const { data } = await api.getTeardown({ slug: 'youngla' });
     expect(data.store.store.domain).toBe('youngla.com');
     expect(data.notes.map((n) => n.n)).toEqual([1, 2, 3, 4, 5]);

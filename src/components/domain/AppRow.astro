@@ -54,25 +54,29 @@ const shortName = name.split(/\s[:‑–—-]\s|:\s/)[0] ?? name;
     <span class="app-row__main">
       <span class="app-row__name">
         {shortName}
-        {builtForShopify && <Badge tone="outline" title="Built for Shopify badge on the App Store">BFS</Badge>}
+        {builtForShopify && (
+          <Badge tone="outline" title="Built for Shopify badge on the App Store">
+            BFS
+          </Badge>
+        )}
       </span>
-      <span class="app-row__sub">
-        {[developer, category].filter(Boolean).join(' · ')}
-      </span>
+      <span class="app-row__sub">{[developer, category].filter(Boolean).join(' · ')}</span>
     </span>
-    <span class="app-row__rating"><Rating rating={rating} reviews={reviews} size="sm" source={ratingSource} /></span>
+    <span class="app-row__rating">
+      <Rating rating={rating} reviews={reviews} size="sm" source={ratingSource} />
+    </span>
     <span class="app-row__price">{priceLabel ?? '—'}</span>
     <span class="app-row__usage num">
-      {
-        typeof storesCount === 'number' ? (
-          <>
-            <span class="app-row__count">{storesCount.toLocaleString('en-US')}</span>
-            {typeof sharePct === 'number' && <span class="app-row__share">{sharePct.toFixed(1)}%</span>}
-          </>
-        ) : (
-          '—'
-        )
-      }
+      {typeof storesCount === 'number' ? (
+        <>
+          <span class="app-row__count">{storesCount.toLocaleString('en-US')}</span>
+          {typeof sharePct === 'number' && (
+            <span class="app-row__share">{sharePct.toFixed(1)}%</span>
+          )}
+        </>
+      ) : (
+        '—'
+      )}
     </span>
   </a>
 </li>

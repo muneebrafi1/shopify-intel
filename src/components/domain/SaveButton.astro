@@ -16,12 +16,25 @@ const { itemType, itemId, size = 'sm', iconOnly = false, class: className } = As
 const href = `/sign-in?next=${encodeURIComponent(`/account/boards?save=${itemType}:${itemId}`)}`;
 ---
 
-{
-  iconOnly ? (
-    <Button href={href} variant="secondary" size={size} icon="bookmark-simple" label="Save to board" class={className} rel="nofollow" />
-  ) : (
-    <Button href={href} variant="secondary" size={size} icon="bookmark-simple" class={className} rel="nofollow">
-      Save
-    </Button>
-  )
-}
+{iconOnly ? (
+  <Button
+    href={href}
+    variant="secondary"
+    size={size}
+    icon="bookmark-simple"
+    label="Save to board"
+    class={className}
+    rel="nofollow"
+  />
+) : (
+  <Button
+    href={href}
+    variant="secondary"
+    size={size}
+    icon="bookmark-simple"
+    class={className}
+    rel="nofollow"
+  >
+    Save
+  </Button>
+)}

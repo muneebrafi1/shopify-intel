@@ -7,6 +7,7 @@ component is shown there with fixture data. This document explains the rules beh
 Reference research (Mobbin) is in [`docs/design/research.md`](design/research.md).
 
 ## Principles
+
 1. **Image-first, quiet interface.** Screenshots carry the colour; the UI is warm neutrals with
    one accent. If a page looks busy, remove chrome before adding anything.
 2. **Show, don't claim.** No hero slogans over stock art. Lead with real store pages and real
@@ -20,6 +21,7 @@ Reference research (Mobbin) is in [`docs/design/research.md`](design/research.md
    columns. Accent is for state (focus, selection, current section), not decoration.
 
 ## Tokens (`src/styles/tokens.css`)
+
 - **Colour:** `--bg` page, `--surface` cards/popovers, `--tile` screenshot wells, `--fill`
   inputs/quiet controls, `--line`/`--line-strong` hairlines, `--ink` → `--ink-4` text (never use
   `--ink-4` for readable text), `--accent` (vermilion, UI graphics) and `--accent-text` (accent
@@ -34,6 +36,7 @@ Reference research (Mobbin) is in [`docs/design/research.md`](design/research.md
   things that float (dialogs, palette, menus).
 
 ## Layout
+
 - `BaseLayout` (`src/layouts/BaseLayout.astro`) for every page: pass `title` (no brand),
   `description`, `canonical` when the URL has query params, `noindex` for thin/utility pages,
   `jsonLd` for schema.org.
@@ -48,6 +51,7 @@ Reference research (Mobbin) is in [`docs/design/research.md`](design/research.md
 - Breakpoints: 480, 640, 768, 1024, 1280. Check every page at **390** and **1440**.
 
 ## Components
+
 `src/components/ui/` — generic:
 `Button` (primary = ink pill, secondary, quiet, ghost; sizes sm/md/lg; `href` makes it a link;
 `external` + `rel="sponsored"` for affiliate), `Icon` (Phosphor; add names in `icons.ts`),
@@ -66,6 +70,7 @@ marks), `.cols-12` + `.span-8`/`.start-9` (asymmetric composition), `.rule`. The
 `SectionHeader` takes `label` + `count` + `rule`.
 
 `src/components/media/` — screenshots:
+
 - `Shot`: thumbnail tile (top of a full-page capture in a warm well, bleeding off the bottom).
   Pass the full capture `width/height`; it requests only the top slice.
 - `SectionCrop`: a section slice contained in a fixed 4:3 well (desktop strips and mobile slices
@@ -81,6 +86,7 @@ labels affiliate links under the button), `SaveButton` (Pro boards hook → sign
 `/search`), `Footer`, `Logo` (mark + `SITE_NAME`).
 
 ## Patterns
+
 - **Index pages:** `PageHeader` → filter bar (chips/segmented, all URL params) with result count
   on the right → grid or table → `Pagination`. Empty result → `EmptyState` with a way out.
   Mobile: filters collapse into a single "Filters" button opening a `Dialog` (bottom-sheet
@@ -95,6 +101,7 @@ labels affiliate links under the button), `SaveButton` (Pro boards hook → sign
 - **Brand:** import `SITE_NAME` from `~/config/site`; never type the brand name.
 
 ## Accessibility & performance
+
 - Visible focus (`:focus-visible` ring is global). Icon-only buttons need `label`.
 - Real `alt` on screenshots ("Store home page, desktop"). Decorative images `alt=""`.
 - Images: always `width`/`height`, `loading="lazy"` except the first row (`eager`).

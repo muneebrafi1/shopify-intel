@@ -38,32 +38,44 @@ const {
 
 const iconOnly = !!label && !Astro.slots.has('default');
 const iconSize = size === 'lg' ? 18 : 16;
-const classes = ['btn', `btn--${variant}`, `btn--${size}`, { 'btn--full': full, 'btn--icon': iconOnly }, className];
+const classes = [
+  'btn',
+  `btn--${variant}`,
+  `btn--${size}`,
+  { 'btn--full': full, 'btn--icon': iconOnly },
+  className,
+];
 const relValue = [external ? 'noopener' : '', rel ?? ''].filter(Boolean).join(' ') || undefined;
 ---
 
-{
-  href ? (
-    <a
-      href={href}
-      class:list={classes}
-      aria-label={label}
-      target={external ? '_blank' : undefined}
-      rel={relValue}
-      {...(rest as HTMLAttributes<'a'>)}
-    >
-      {icon && <Icon name={icon} size={iconSize} />}
-      {!iconOnly && <span class="btn__label"><slot /></span>}
-      {iconRight && <Icon name={iconRight} size={iconSize} />}
-    </a>
-  ) : (
-    <button type={type} class:list={classes} aria-label={label} {...rest}>
-      {icon && <Icon name={icon} size={iconSize} />}
-      {!iconOnly && <span class="btn__label"><slot /></span>}
-      {iconRight && <Icon name={iconRight} size={iconSize} />}
-    </button>
-  )
-}
+{href ? (
+  <a
+    href={href}
+    class:list={classes}
+    aria-label={label}
+    target={external ? '_blank' : undefined}
+    rel={relValue}
+    {...(rest as HTMLAttributes<'a'>)}
+  >
+    {icon && <Icon name={icon} size={iconSize} />}
+    {!iconOnly && (
+      <span class="btn__label">
+        <slot />
+      </span>
+    )}
+    {iconRight && <Icon name={iconRight} size={iconSize} />}
+  </a>
+) : (
+  <button type={type} class:list={classes} aria-label={label} {...rest}>
+    {icon && <Icon name={icon} size={iconSize} />}
+    {!iconOnly && (
+      <span class="btn__label">
+        <slot />
+      </span>
+    )}
+    {iconRight && <Icon name={iconRight} size={iconSize} />}
+  </button>
+)}
 
 <style>
   .btn {

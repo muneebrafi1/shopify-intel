@@ -14,14 +14,14 @@ const { items, label, class: className } = Astro.props;
 ---
 
 <nav class:list={['tabs', className]} aria-label={label}>
-  {
-    items.map((item) => (
-      <a href={item.href} class="tabs__item" aria-current={item.selected ? 'page' : undefined}>
-        {item.label}
-        {typeof item.count === 'number' && <span class="tabs__count num">{item.count.toLocaleString('en-US')}</span>}
-      </a>
-    ))
-  }
+  {items.map((item) => (
+    <a href={item.href} class="tabs__item" aria-current={item.selected ? 'page' : undefined}>
+      {item.label}
+      {typeof item.count === 'number' && (
+        <span class="tabs__count num">{item.count.toLocaleString('en-US')}</span>
+      )}
+    </a>
+  ))}
 </nav>
 
 <style>

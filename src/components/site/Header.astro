@@ -31,95 +31,96 @@ const SECONDARY_NAV = [
       <Logo />
     </a>
 
-    {
-      !minimal && (
-        <>
-          <nav class="header__nav" aria-label="Main">
-            {PRIMARY_NAV.map((item) => (
-              <a
-                href={item.href}
-                class="header__link"
-                aria-current={isActive(item.href) ? 'page' : undefined}
-              >
-                {item.label}
-                {typeof counts[item.href] === 'number' && <Count value={counts[item.href]!} />}
-              </a>
-            ))}
-          </nav>
-
-          <a href="/search" class="search-trigger" data-palette-open>
-            <Icon name="magnifying-glass" size={16} />
-            <span class="search-trigger__label">Search stores, themes, apps</span>
-            <span class="search-trigger__kbd" data-kbd-hint>
-              <Kbd>⌘</Kbd>
-              <Kbd>K</Kbd>
-            </span>
-          </a>
-
-          <div class="header__actions">
+    {!minimal && (
+      <>
+        <nav class="header__nav" aria-label="Main">
+          {PRIMARY_NAV.map((item) => (
             <a
-              href="/pro"
-              class="header__link header__pro"
-              aria-current={isActive('/pro') ? 'page' : undefined}
+              href={item.href}
+              class="header__link"
+              aria-current={isActive(item.href) ? 'page' : undefined}
             >
-              Pro
+              {item.label}
+              {typeof counts[item.href] === 'number' && <Count value={counts[item.href]!} />}
             </a>
-            <a href="/sign-in" class="header__signin">
-              Sign in
-            </a>
-            <a href="/search" class="icon-btn header__mobile-only" data-palette-open aria-label="Search">
-              <Icon name="magnifying-glass" size={20} />
-            </a>
-            <button
-              type="button"
-              class="icon-btn header__mobile-only"
-              aria-label="Open menu"
-              aria-haspopup="dialog"
-              data-menu-open
-            >
-              <Icon name="list" size={20} />
-            </button>
-          </div>
-        </>
-      )
-    }
-  </div>
+          ))}
+        </nav>
 
-  {
-    !minimal && (
-      <dialog class="menu" aria-label="Menu" data-menu>
-        <div class="menu__top container">
-          <a href="/" aria-label="Home">
-            <Logo />
+        <a href="/search" class="search-trigger" data-palette-open>
+          <Icon name="magnifying-glass" size={16} />
+          <span class="search-trigger__label">Search stores, themes, apps</span>
+          <span class="search-trigger__kbd" data-kbd-hint>
+            <Kbd>⌘</Kbd>
+            <Kbd>K</Kbd>
+          </span>
+        </a>
+
+        <div class="header__actions">
+          <a
+            href="/pro"
+            class="header__link header__pro"
+            aria-current={isActive('/pro') ? 'page' : undefined}
+          >
+            Pro
           </a>
-          <button type="button" class="icon-btn" aria-label="Close menu" data-menu-close>
-            <Icon name="x" size={20} />
-          </button>
-        </div>
-        <nav class="menu__body container" aria-label="Main">
-          <ul class="menu__primary">
-            {PRIMARY_NAV.map((item) => (
-              <li>
-                <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <ul class="menu__secondary">
-            {SECONDARY_NAV.map((item) => (
-              <li>
-                <a href={item.href}>{item.label}</a>
-              </li>
-            ))}
-          </ul>
-          <a href="/sign-in" class="menu__signin">
+          <a href="/sign-in" class="header__signin">
             Sign in
           </a>
-        </nav>
-      </dialog>
-    )
-  }
+          <a
+            href="/search"
+            class="icon-btn header__mobile-only"
+            data-palette-open
+            aria-label="Search"
+          >
+            <Icon name="magnifying-glass" size={20} />
+          </a>
+          <button
+            type="button"
+            class="icon-btn header__mobile-only"
+            aria-label="Open menu"
+            aria-haspopup="dialog"
+            data-menu-open
+          >
+            <Icon name="list" size={20} />
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+
+  {!minimal && (
+    <dialog class="menu" aria-label="Menu" data-menu>
+      <div class="menu__top container">
+        <a href="/" aria-label="Home">
+          <Logo />
+        </a>
+        <button type="button" class="icon-btn" aria-label="Close menu" data-menu-close>
+          <Icon name="x" size={20} />
+        </button>
+      </div>
+      <nav class="menu__body container" aria-label="Main">
+        <ul class="menu__primary">
+          {PRIMARY_NAV.map((item) => (
+            <li>
+              <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <ul class="menu__secondary">
+          {SECONDARY_NAV.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))}
+        </ul>
+        <a href="/sign-in" class="menu__signin">
+          Sign in
+        </a>
+      </nav>
+    </dialog>
+  )}
 </header>
 
 <script>
@@ -127,7 +128,9 @@ const SECONDARY_NAV = [
   // fall through to the /search page (works without JS too).
   document.querySelectorAll<HTMLAnchorElement>('[data-palette-open]').forEach((el) => {
     el.addEventListener('click', (event) => {
-      const handled = !document.dispatchEvent(new CustomEvent('palette:open', { cancelable: true }));
+      const handled = !document.dispatchEvent(
+        new CustomEvent('palette:open', { cancelable: true }),
+      );
       if (handled) event.preventDefault();
     });
   });
@@ -278,7 +281,21 @@ const SECONDARY_NAV = [
       display: none;
     }
   }
+  .header__signin,
+  .header__link {
+    white-space: nowrap;
+  }
   @media (min-width: 1024px) and (max-width: 1199px) {
+    .header__inner {
+      gap: var(--space-4);
+    }
+    .header__link {
+      padding: 0 var(--space-2);
+    }
+    /* Live counts return at 1200px; at this width the five labels need the room. */
+    .header__nav :global(.count-sup) {
+      display: none;
+    }
     .search-trigger__label {
       font-size: var(--text-sm);
     }

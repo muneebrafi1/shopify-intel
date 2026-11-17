@@ -125,6 +125,23 @@ async function sectionFacets(ctx: Ctx, f: SectionFilters): Promise<ListSectionsO
 const MIX_SQL = '((s.id * 2654435761) % 4294967296)';
 const mixOf = (id: number) => Number((BigInt(id) * 2654435761n) % 4294967296n);
 
+/**
+ * Library ("mixed") order leads with what browses well: visually rich sections before thin
+ * utility strips, desktop before mobile, then a stable shuffle so stores interleave.
+ */
+const THIN_TYPES = [
+  'announcement-bar',
+  'breadcrumbs',
+  'header',
+  'filters',
+  'shipping-bar',
+  'trust-badges',
+  'logo-list',
+];
+const TIER_SQL = `((CASE WHEN s.section_type IN (${THIN_TYPES.map((t) => `'${t}'`).join(', ')}) THEN 2 ELSE 0 END) + (CASE WHEN s.device = 'mobile' THEN 1 ELSE 0 END))`;
+const tierOf = (type: string, device: string) =>
+  (THIN_TYPES.includes(type) ? 2 : 0) + (device === 'mobile' ? 1 : 0);
+
 export interface ListSectionsParams {
   type?: SectionType | undefined;
   group?: string | undefined;
@@ -165,14 +182,18 @@ export async function listSections(ctx: Ctx, p: ListSectionsParams) {
   }
   const w = sectionWhere(f);
   const mixed = p.sort === 'mixed';
-  const seek = p.cursor ? decodeCursor(p.cursor, mixed ? 2 : 1) : null;
-  const seekSql = seek ? (mixed ? ` AND (${MIX_SQL}, s.id) > (?, ?)` : ' AND s.id > ?') : '';
+  const seek = p.cursor ? decodeCursor(p.cursor, mixed ? 3 : 1) : null;
+  const seekSql = seek
+    ? mixed
+      ? ` AND (${TIER_SQL}, ${MIX_SQL}, s.id) > (?, ?, ?)`
+      : ' AND s.id > ?'
+    : '';
   const [items, total, facets, typeInfo] = await Promise.all([
     sectionCards(
       ctx,
       `${w.sql}${seekSql}`,
       seek ? [...w.params, ...seek] : w.params,
-      `ORDER BY ${mixed ? `${MIX_SQL}, s.id` : 's.id'} LIMIT ${p.limit + 1}`,
+      `ORDER BY ${mixed ? `${TIER_SQL}, ${MIX_SQL}, s.id` : 's.id'} LIMIT ${p.limit + 1}`,
     ),
     ctx.db.first<{ n: number }>(`SELECT COUNT(*) AS n ${FROM} WHERE ${w.sql}`, w.params),
     sectionFacets(ctx, f),
@@ -188,7 +209,9 @@ export async function listSections(ctx: Ctx, p: ListSectionsParams) {
       limit: p.limit,
       next_cursor:
         items.length > p.limit && last
-          ? encodeCursor(mixed ? [mixOf(last.id), last.id] : [last.id])
+          ? encodeCursor(
+              mixed ? [tierOf(last.type.slug, last.device), mixOf(last.id), last.id] : [last.id],
+            )
           : null,
       total: total?.n ?? 0,
     },
@@ -296,8 +319,13 @@ async function typeNeighbours(
   id: number,
 ): Promise<SectionDetail['in_type']> {
   const where = `${FROM} WHERE s.is_current = 1 AND s.section_type = ?`;
-  const key = `(${MIX_SQL}, s.id)`;
+  const key = `(${TIER_SQL}, ${MIX_SQL}, s.id)`;
   const mix = mixOf(id);
+  const self = await ctx.db.first<{ tier: number }>(
+    `SELECT ${TIER_SQL} AS tier FROM sections s WHERE s.id = ?`,
+    [id],
+  );
+  const tier = self?.tier ?? 0;
   const row = await ctx.db.first<{
     position: number;
     total: number;
@@ -305,11 +333,11 @@ async function typeNeighbours(
     next: number | null;
   }>(
     `SELECT
-       (SELECT COUNT(*) ${where} AND ${key} <= (?, ?)) AS position,
+       (SELECT COUNT(*) ${where} AND ${key} <= (?, ?, ?)) AS position,
        (SELECT COUNT(*) ${where}) AS total,
-       (SELECT s.id ${where} AND ${key} < (?, ?) ORDER BY ${MIX_SQL} DESC, s.id DESC LIMIT 1) AS prev,
-       (SELECT s.id ${where} AND ${key} > (?, ?) ORDER BY ${MIX_SQL}, s.id LIMIT 1) AS next`,
-    [type, mix, id, type, type, mix, id, type, mix, id],
+       (SELECT s.id ${where} AND ${key} < (?, ?, ?) ORDER BY ${TIER_SQL} DESC, ${MIX_SQL} DESC, s.id DESC LIMIT 1) AS prev,
+       (SELECT s.id ${where} AND ${key} > (?, ?, ?) ORDER BY ${TIER_SQL}, ${MIX_SQL}, s.id LIMIT 1) AS next`,
+    [type, tier, mix, id, type, type, tier, mix, id, type, tier, mix, id],
   );
   const link = (n: number | null | undefined) =>
     n == null ? null : { id: n, href: hrefs.section(type, n) };

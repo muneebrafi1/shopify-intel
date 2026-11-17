@@ -13,22 +13,28 @@ interface Props {
   display?: boolean;
   class?: string;
 }
-const { value, label, source, asOf, size = 'md', display: serif = false, class: className } = Astro.props;
+const {
+  value,
+  label,
+  source,
+  asOf,
+  size = 'md',
+  display: serif = false,
+  class: className,
+} = Astro.props;
 const shown = typeof value === 'number' ? value.toLocaleString('en-US') : value;
 ---
 
 <div class:list={['stat', `stat--${size}`, { 'stat--display': serif }, className]}>
   <dt class="stat__label">{label}</dt>
   <dd class="stat__value num">{shown}</dd>
-  {
-    (source || asOf) && (
-      <dd class="stat__source">
-        {source}
-        {source && asOf && ' · '}
-        {asOf}
-      </dd>
-    )
-  }
+  {(source || asOf) && (
+    <dd class="stat__source">
+      {source}
+      {source && asOf && ' · '}
+      {asOf}
+    </dd>
+  )}
 </div>
 
 <style>

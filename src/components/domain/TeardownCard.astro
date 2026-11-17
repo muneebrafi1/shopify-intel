@@ -13,18 +13,46 @@ interface Props {
   isSample?: boolean;
   class?: string;
 }
-const { slug, title, dek, storeLabel, publishedAt, shot, size = 'md', isSample = false, class: className } = Astro.props;
+const {
+  slug,
+  title,
+  dek,
+  storeLabel,
+  publishedAt,
+  shot,
+  size = 'md',
+  isSample = false,
+  class: className,
+} = Astro.props;
 const href = `/teardowns/${slug}`;
 ---
 
 <article class:list={['td-card', `td-card--${size}`, className]}>
-  {shot && <Shot src={shot.src} width={shot.width} height={shot.height} device="desktop" alt={`${storeLabel} home page`} href={href} ratio="16 / 10" />}
+  {shot && (
+    <Shot
+      src={shot.src}
+      width={shot.width}
+      height={shot.height}
+      device="desktop"
+      alt={`${storeLabel} home page`}
+      href={href}
+      ratio="16 / 10"
+    />
+  )}
   <div class="td-card__body">
     <p class="td-card__kicker">
-      Teardown · {storeLabel}{publishedAt && <> · <span class="num">{formatDate(publishedAt)}</span></>}
+      Teardown · {storeLabel}
+      {publishedAt && (
+        <>
+          {' '}
+          · <span class="num">{formatDate(publishedAt)}</span>
+        </>
+      )}
       {isSample && <> · Sample</>}
     </p>
-    <h3 class="td-card__title display"><a href={href}>{title}</a></h3>
+    <h3 class="td-card__title display">
+      <a href={href}>{title}</a>
+    </h3>
     {dek && <p class="td-card__dek">{dek}</p>}
   </div>
 </article>

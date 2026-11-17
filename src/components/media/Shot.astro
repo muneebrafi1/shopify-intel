@@ -26,7 +26,18 @@ interface Props {
   class?: string;
 }
 
-const { src, width, height, device, alt, href, eager = false, ratio, tag, class: className } = Astro.props;
+const {
+  src,
+  width,
+  height,
+  device,
+  alt,
+  href,
+  eager = false,
+  ratio,
+  tag,
+  class: className,
+} = Astro.props;
 const cropH = thumbCropHeight(width, height, device);
 const thumb = thumbUrl(src, { cropHeight: cropH, width: device === 'desktop' ? 720 : 360 });
 const Tag = href ? 'a' : 'div';

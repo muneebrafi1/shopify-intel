@@ -16,34 +16,44 @@ interface Props {
   eager?: boolean;
   class?: string;
 }
-const { domain, name, href = `/stores/${domain}`, shot, meta, tag, n, eager, class: className } = Astro.props;
+const {
+  domain,
+  name,
+  href = `/stores/${domain}`,
+  shot,
+  meta,
+  tag,
+  n,
+  eager,
+  class: className,
+} = Astro.props;
 const title = name || domain;
 ---
 
 <article class:list={['store-card', className]}>
-  {
-    shot ? (
-      <Shot
-        src={shot.src}
-        width={shot.width}
-        height={shot.height}
-        device={shot.device ?? 'desktop'}
-        alt={`${title} ${shot.device === 'mobile' ? 'mobile' : 'desktop'} home page`}
-        href={href}
-        eager={eager}
-        tag={tag}
-      />
-    ) : (
-      <a href={href} class="store-card__empty">
-        <span class="store-card__empty-domain">{domain}</span>
-        <span class="store-card__empty-note">Not captured yet</span>
-      </a>
-    )
-  }
+  {shot ? (
+    <Shot
+      src={shot.src}
+      width={shot.width}
+      height={shot.height}
+      device={shot.device ?? 'desktop'}
+      alt={`${title} ${shot.device === 'mobile' ? 'mobile' : 'desktop'} home page`}
+      href={href}
+      eager={eager}
+      tag={tag}
+    />
+  ) : (
+    <a href={href} class="store-card__empty">
+      <span class="store-card__empty-domain">{domain}</span>
+      <span class="store-card__empty-note">Not captured yet</span>
+    </a>
+  )}
   <div class="store-card__caption">
     <StoreMark domain={domain} name={name} size={20} />
     <div class="store-card__text">
-      <h3 class="store-card__title"><a href={href}>{title}</a></h3>
+      <h3 class="store-card__title">
+        <a href={href}>{title}</a>
+      </h3>
       {meta && <p class="store-card__meta">{meta}</p>}
     </div>
     {typeof n === 'number' && <span class="store-card__n">N°{String(n).padStart(3, '0')}</span>}

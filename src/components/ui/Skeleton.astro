@@ -14,20 +14,19 @@ const { variant = 'line', width, height, lines = 1, class: className } = Astro.p
 const items = variant === 'line' ? Array.from({ length: lines }, (_, i) => i) : [0];
 ---
 
-{
-  items.map((i) => (
-    <span
-      class:list={['skeleton', `skeleton--${variant}`, className]}
-      style={`${width ? `width:${width};` : variant === 'line' && i === lines - 1 && lines > 1 ? 'width:60%;' : ''}${height ? `height:${height};` : ''}`}
-      aria-hidden="true"
-    />
-  ))
-}
+{items.map((i) => (
+  <span
+    class:list={['skeleton', `skeleton--${variant}`, className]}
+    style={`${width ? `width:${width};` : variant === 'line' && i === lines - 1 && lines > 1 ? 'width:60%;' : ''}${height ? `height:${height};` : ''}`}
+    aria-hidden="true"
+  />
+))}
 
 <style>
   .skeleton {
     display: block;
-    background: linear-gradient(90deg, var(--fill) 0%, var(--fill-hover) 40%, var(--fill) 80%) 0 0 / 300% 100%;
+    background: linear-gradient(90deg, var(--fill) 0%, var(--fill-hover) 40%, var(--fill) 80%) 0 0 /
+      300% 100%;
     animation: shimmer 1.6s linear infinite;
   }
   .skeleton--line {

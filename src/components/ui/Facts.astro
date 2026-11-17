@@ -15,16 +15,14 @@ const { items, class: className } = Astro.props;
 ---
 
 <dl class:list={['facts', className]}>
-  {
-    items.map((f) => (
-      <div class="facts__row">
-        <dt>{f.label}</dt>
-        <dd class:list={[{ mono: f.mono }]} title={f.title}>
-          {f.href ? <a href={f.href}>{f.value}</a> : f.value}
-        </dd>
-      </div>
-    ))
-  }
+  {items.map((f) => (
+    <div class="facts__row">
+      <dt>{f.label}</dt>
+      <dd class:list={[{ mono: f.mono }]} title={f.title}>
+        {f.href ? <a href={f.href}>{f.value}</a> : f.value}
+      </dd>
+    </div>
+  ))}
   <slot />
 </dl>
 

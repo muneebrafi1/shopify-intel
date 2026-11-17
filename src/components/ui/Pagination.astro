@@ -17,40 +17,39 @@ const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
 const to = Math.min(total, page * pageSize);
 ---
 
-{
-  total > 0 && (
-    <nav class:list={['pager', className]} aria-label="Pagination">
-      <p class="pager__status num">
-        {from.toLocaleString('en-US')}–{to.toLocaleString('en-US')} of {total.toLocaleString('en-US')} {noun}
-      </p>
-      {pages > 1 && (
-        <div class="pager__buttons">
-          <Button
-            href={page > 1 ? hrefFor(page - 1) : undefined}
-            disabled={page <= 1}
-            size="sm"
-            icon="caret-left"
-            rel="prev"
-          >
-            Previous
-          </Button>
-          <span class="pager__page num">
-            Page {page} of {pages}
-          </span>
-          <Button
-            href={page < pages ? hrefFor(page + 1) : undefined}
-            disabled={page >= pages}
-            size="sm"
-            iconRight="caret-right"
-            rel="next"
-          >
-            Next
-          </Button>
-        </div>
-      )}
-    </nav>
-  )
-}
+{total > 0 && (
+  <nav class:list={['pager', className]} aria-label="Pagination">
+    <p class="pager__status num">
+      {from.toLocaleString('en-US')}–{to.toLocaleString('en-US')} of {total.toLocaleString('en-US')}{' '}
+      {noun}
+    </p>
+    {pages > 1 && (
+      <div class="pager__buttons">
+        <Button
+          href={page > 1 ? hrefFor(page - 1) : undefined}
+          disabled={page <= 1}
+          size="sm"
+          icon="caret-left"
+          rel="prev"
+        >
+          Previous
+        </Button>
+        <span class="pager__page num">
+          Page {page} of {pages}
+        </span>
+        <Button
+          href={page < pages ? hrefFor(page + 1) : undefined}
+          disabled={page >= pages}
+          size="sm"
+          iconRight="caret-right"
+          rel="next"
+        >
+          Next
+        </Button>
+      </div>
+    )}
+  </nav>
+)}
 
 <style>
   .pager {

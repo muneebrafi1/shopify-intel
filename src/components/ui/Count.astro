@@ -9,4 +9,6 @@ const { value, label, class: className } = Astro.props;
 const text = typeof value === 'number' ? value.toLocaleString('en-US') : value;
 ---
 
-<sup class:list={['count-sup', className]} aria-label={label ? `${text} ${label}` : undefined}>{text}</sup>
+<sup class:list={['count-sup', className]} aria-label={label ? `${text} ${label}` : undefined}>
+  {text}
+</sup>

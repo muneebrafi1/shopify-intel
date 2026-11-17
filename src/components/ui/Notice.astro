@@ -18,11 +18,16 @@ const defaults: Record<Tone, IconName> = {
 };
 ---
 
-<div class:list={['notice', `notice--${tone}`, className]} role={tone === 'critical' ? 'alert' : 'note'}>
+<div
+  class:list={['notice', `notice--${tone}`, className]}
+  role={tone === 'critical' ? 'alert' : 'note'}
+>
   <Icon name={icon ?? defaults[tone]} size={16} class="notice__icon" />
   <div class="notice__body">
     {title && <p class="notice__title">{title}</p>}
-    <div class="notice__text"><slot /></div>
+    <div class="notice__text">
+      <slot />
+    </div>
   </div>
 </div>
 

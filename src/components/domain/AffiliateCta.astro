@@ -30,16 +30,14 @@ const { href, label, isAffiliate, size = 'lg', full = false, class: className } 
     {label}
   </Button>
   <p class="cta__note">
-    {
-      isAffiliate ? (
-        <>
-          Affiliate link. We may earn a commission; it never changes our data.{' '}
-          <a href="/affiliate-disclosure">Disclosure</a>
-        </>
-      ) : (
-        <>Official listing. No affiliate relationship.</>
-      )
-    }
+    {isAffiliate ? (
+      <>
+        Affiliate link. We may earn a commission; it never changes our data.{' '}
+        <a href="/affiliate-disclosure">Disclosure</a>
+      </>
+    ) : (
+      <>Official listing. No affiliate relationship.</>
+    )}
   </p>
 </div>
 

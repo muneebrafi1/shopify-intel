@@ -427,6 +427,8 @@ import Skeleton from '~/components/ui/Skeleton.astro';
       sections.push({ label: 'Jump to', rows: JUMP });
       render(sections, '');
       count.textContent = '';
+      // Like Linear/Raycast, a row is always active so Enter does something useful.
+      setActive(0, false);
     }
 
     function renderResults(q: string, groups: Group[]) {

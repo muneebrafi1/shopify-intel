@@ -52,11 +52,12 @@
   --ph-line: #ddd9d1;
 
   /* Type */
-  --font-sans: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, -apple-system,
+  --font-sans:
+    'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, -apple-system,
     'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-serif: 'Newsreader Variable', 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
-  --font-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas,
-    monospace;
+  --font-mono:
+    'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   --text-2xs: 0.6875rem; /* 11 */
   --text-xs: 0.75rem; /* 12 */
@@ -116,8 +117,8 @@
   /* Elevation: hairlines first, shadow only for things that float */
   --shadow-hairline: 0 0 0 1px var(--line);
   --shadow-shot: 0 0 0 1px rgb(25 24 22 / 0.06), 0 1px 2px rgb(25 24 22 / 0.06);
-  --shadow-float: 0 0 0 1px rgb(25 24 22 / 0.06), 0 2px 4px rgb(25 24 22 / 0.04),
-    0 12px 32px rgb(25 24 22 / 0.12);
+  --shadow-float:
+    0 0 0 1px rgb(25 24 22 / 0.06), 0 2px 4px rgb(25 24 22 / 0.04), 0 12px 32px rgb(25 24 22 / 0.12);
 
   /* Motion */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);

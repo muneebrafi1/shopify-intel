@@ -44,7 +44,10 @@ export interface RenderOptions {
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+  s.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+  );
 
 class Canvas {
   private parts: string[] = [];
@@ -69,7 +72,16 @@ class Canvas {
   path(d: string, fill: string) {
     this.parts.push(`<path d="${d}" fill="${fill}"/>`);
   }
-  text(x: number, y: number, value: string, size: number, fill: string, family: string, anchor = 'start', weight = 600) {
+  text(
+    x: number,
+    y: number,
+    value: string,
+    size: number,
+    fill: string,
+    family: string,
+    anchor = 'start',
+    weight = 600,
+  ) {
     this.parts.push(
       `<text x="${r1(x)}" y="${r1(y)}" font-size="${size}" font-family="${family}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" letter-spacing="-0.02em">${esc(value)}</text>`,
     );
@@ -93,28 +105,50 @@ interface Ctx {
   all: PlaceholderSection[];
 }
 
-const pick = <T,>(rand: () => number, items: readonly T[]): T => items[Math.floor(rand() * items.length)] as T;
+const pick = <T>(rand: () => number, items: readonly T[]): T =>
+  items[Math.floor(rand() * items.length)] as T;
 
 /** Text block: n bars with decreasing last line. Returns the y after the block. */
-function lines(ctx: Ctx, x: number, y: number, w: number, n: number, opts: { h?: number; gap?: number; color?: string; align?: 'start' | 'center' } = {}) {
+function lines(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  w: number,
+  n: number,
+  opts: { h?: number; gap?: number; color?: string; align?: 'start' | 'center' } = {},
+) {
   const h = opts.h ?? (ctx.mobile ? 7 : 9);
   const gap = opts.gap ?? h * 1.25;
   const color = opts.color ?? ctx.t.inkSoft;
   for (let i = 0; i < n; i++) {
-    const lw = i === n - 1 && n > 1 ? w * (0.45 + ctx.rand() * 0.3) : w * (0.88 + ctx.rand() * 0.12);
+    const lw =
+      i === n - 1 && n > 1 ? w * (0.45 + ctx.rand() * 0.3) : w * (0.88 + ctx.rand() * 0.12);
     const lx = opts.align === 'center' ? x + (w - lw) / 2 : x;
     ctx.c.bar(lx, y + i * (h + gap), lw, h, color);
   }
   return y + n * (h + gap);
 }
 
-function heading(ctx: Ctx, x: number, y: number, w: number, opts: { size?: 'sm' | 'md' | 'lg'; align?: 'start' | 'center'; color?: string; lines?: number } = {}) {
+function heading(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  w: number,
+  opts: {
+    size?: 'sm' | 'md' | 'lg';
+    align?: 'start' | 'center';
+    color?: string;
+    lines?: number;
+  } = {},
+) {
   const base = ctx.mobile ? { sm: 12, md: 18, lg: 26 } : { sm: 16, md: 26, lg: 44 };
   const h = base[opts.size ?? 'md'];
   const n = opts.lines ?? 1;
   const color = opts.color ?? ctx.t.ink;
   // Real section titles are short ("Best sellers"), so cap the bar length per size.
-  const cap = (ctx.mobile ? { sm: 150, md: 250, lg: 320 } : { sm: 220, md: 400, lg: 600 })[opts.size ?? 'md'];
+  const cap = (ctx.mobile ? { sm: 150, md: 250, lg: 320 } : { sm: 220, md: 400, lg: 600 })[
+    opts.size ?? 'md'
+  ];
   const span = Math.min(w, cap);
   for (let i = 0; i < n; i++) {
     const lw = Math.min(w, (i === n - 1 && n > 1 ? 0.6 : 1) * span * (0.7 + ctx.rand() * 0.3));
@@ -162,7 +196,15 @@ function image(
     ctx.c.rect(scx - sw * 0.55, scy - sw * 0.4, sw * 1.1, sw * 0.8, ctx.t.tone2, sw * 0.08);
   }
   // Ground shadow keeps the silhouette from floating.
-  ctx.c.rect(scx - sw * 0.5, scy + sw * 0.66, sw, Math.max(2, sw * 0.05), ctx.t.tone2, 2, ' opacity="0.45"');
+  ctx.c.rect(
+    scx - sw * 0.5,
+    scy + sw * 0.66,
+    sw,
+    Math.max(2, sw * 0.05),
+    ctx.t.tone2,
+    2,
+    ' opacity="0.45"',
+  );
 }
 
 function productCard(ctx: Ctx, x: number, y: number, w: number, imgH: number, i: number) {
@@ -212,14 +254,33 @@ const drawers: Record<string, Drawer> = {
     ctx.c.rect(0, y, ctx.W, h, ctx.t.paper);
     ctx.c.line(0, y + h - 0.5, ctx.W, y + h - 0.5, ctx.t.inkSoft);
     const mid = y + h / 2;
-    const family = ctx.t.logoFont === 'serif' ? 'Georgia, Times New Roman, serif' : 'Helvetica Neue, Arial, sans-serif';
+    const family =
+      ctx.t.logoFont === 'serif'
+        ? 'Georgia, Times New Roman, serif'
+        : 'Helvetica Neue, Arial, sans-serif';
     const logo = ctx.label.length > 18 ? `${ctx.label.slice(0, 17)}…` : ctx.label;
     if (ctx.mobile) {
       for (let i = 0; i < 3; i++) ctx.c.bar(ctx.cx, mid - 6 + i * 5.5, 18, 2, ctx.t.ink);
       ctx.c.text(ctx.W / 2, mid + 6, logo, 17, ctx.t.ink, family, 'middle');
       ctx.c.circle(ctx.W - ctx.cx - 34, mid, 7, 'none');
-      ctx.c.rect(ctx.W - ctx.cx - 40, mid - 7, 13, 13, 'none', 7, ` stroke="${ctx.t.ink}" stroke-width="1.6"`);
-      ctx.c.rect(ctx.W - ctx.cx - 16, mid - 7, 15, 14, 'none', 3, ` stroke="${ctx.t.ink}" stroke-width="1.6"`);
+      ctx.c.rect(
+        ctx.W - ctx.cx - 40,
+        mid - 7,
+        13,
+        13,
+        'none',
+        7,
+        ` stroke="${ctx.t.ink}" stroke-width="1.6"`,
+      );
+      ctx.c.rect(
+        ctx.W - ctx.cx - 16,
+        mid - 7,
+        15,
+        14,
+        'none',
+        3,
+        ` stroke="${ctx.t.ink}" stroke-width="1.6"`,
+      );
       return;
     }
     const centered = ctx.rand() > 0.5;
@@ -241,7 +302,15 @@ const drawers: Record<string, Drawer> = {
       }
     }
     for (let i = 0; i < 3; i++) {
-      ctx.c.rect(ctx.cx + ctx.cw - 18 - i * 40, mid - 9, 18, 18, 'none', i === 0 ? 3 : 9, ` stroke="${ctx.t.ink}" stroke-width="1.8"`);
+      ctx.c.rect(
+        ctx.cx + ctx.cw - 18 - i * 40,
+        mid - 9,
+        18,
+        18,
+        'none',
+        i === 0 ? 3 : 9,
+        ` stroke="${ctx.t.ink}" stroke-width="1.8"`,
+      );
     }
   },
 
@@ -276,11 +345,27 @@ const drawers: Record<string, Drawer> = {
       const sw = Math.min(ctx.W, h) * (ctx.mobile ? 0.7 : 0.55);
       ctx.c.circle(ctx.W * (ctx.mobile ? 0.5 : 0.62), y + h * 0.5, sw * 0.5, ctx.t.tone2);
       ctx.c.rect(0, y, ctx.W, h, '#000', 0, ' opacity="0.25"');
-      ctx.c.rect(ctx.W * (ctx.mobile ? 0.3 : 0.2), y + h * 0.62, sw * 0.5, sw * 0.6, '#000', sw * 0.06, ' opacity="0.18"');
+      ctx.c.rect(
+        ctx.W * (ctx.mobile ? 0.3 : 0.2),
+        y + h * 0.62,
+        sw * 0.5,
+        sw * 0.6,
+        '#000',
+        sw * 0.06,
+        ' opacity="0.18"',
+      );
       const tw = ctx.mobile ? ctx.cw : 560;
       const tx = ctx.W / 2 - tw / 2;
-      const after = heading(ctx, tx, y + h * (ctx.mobile ? 0.58 : 0.4), tw, { size: 'lg', align: 'center', color: '#ffffff', lines: 2 });
-      const l = lines(ctx, tx, after + 10, tw, 1, { color: 'rgba(255,255,255,0.45)', align: 'center' });
+      const after = heading(ctx, tx, y + h * (ctx.mobile ? 0.58 : 0.4), tw, {
+        size: 'lg',
+        align: 'center',
+        color: '#ffffff',
+        lines: 2,
+      });
+      const l = lines(ctx, tx, after + 10, tw, 1, {
+        color: 'rgba(255,255,255,0.45)',
+        align: 'center',
+      });
       const bw = ctx.mobile ? 150 : 180;
       ctx.c.rect(ctx.W / 2 - bw / 2, l + 16, bw, ctx.mobile ? 42 : 48, '#ffffff', 24);
       ctx.c.bar(ctx.W / 2 - bw * 0.2, l + 16 + (ctx.mobile ? 21 : 24) - 3, bw * 0.4, 6, '#1d1c1a');
@@ -303,16 +388,41 @@ const drawers: Record<string, Drawer> = {
     const onDark = !!ctx.t.dark;
     if (style === 'center' || ctx.mobile) {
       // Lifestyle scene: a wide photo with two subjects, copy centred over the clear middle.
-      image(ctx, 0, y, ctx.W, h, 0, 0, ctx.mobile ? { x: 0.5, y: 0.32, scale: 0.6 } : { x: 0.18, y: 0.58, scale: 0.5 });
+      image(
+        ctx,
+        0,
+        y,
+        ctx.W,
+        h,
+        0,
+        0,
+        ctx.mobile ? { x: 0.5, y: 0.32, scale: 0.6 } : { x: 0.18, y: 0.58, scale: 0.5 },
+      );
       if (!ctx.mobile) {
         const sw = h * 0.42;
-        ctx.c.rect(ctx.W * 0.82 - sw * 0.35, y + h * 0.58 - sw * 0.62, sw * 0.7, sw * 1.24, ctx.t.tone2, sw * 0.12, ' opacity="0.85"');
+        ctx.c.rect(
+          ctx.W * 0.82 - sw * 0.35,
+          y + h * 0.58 - sw * 0.62,
+          sw * 0.7,
+          sw * 1.24,
+          ctx.t.tone2,
+          sw * 0.12,
+          ' opacity="0.85"',
+        );
       }
       const tw = ctx.mobile ? ctx.cw : 560;
       const tx = ctx.W / 2 - tw / 2;
       const ty = y + h * (ctx.mobile ? 0.66 : 0.38);
-      const after = heading(ctx, tx, ty, tw, { size: 'lg', align: 'center', color: onDark ? '#ffffff' : ctx.t.ink, lines: 2 });
-      const l = lines(ctx, tx, after + 10, tw, 1, { color: onDark ? 'rgba(255,255,255,0.6)' : ctx.t.tone2, align: 'center' });
+      const after = heading(ctx, tx, ty, tw, {
+        size: 'lg',
+        align: 'center',
+        color: onDark ? '#ffffff' : ctx.t.ink,
+        lines: 2,
+      });
+      const l = lines(ctx, tx, after + 10, tw, 1, {
+        color: onDark ? 'rgba(255,255,255,0.6)' : ctx.t.tone2,
+        align: 'center',
+      });
       const bw = ctx.mobile ? 150 : 180;
       button(ctx, ctx.W / 2 - bw / 2, l + 16, bw, ctx.mobile ? 42 : 48);
       return;
@@ -324,15 +434,27 @@ const drawers: Record<string, Drawer> = {
     const tw = Math.min(520, ctx.cw * 0.4);
     const tx = copyLeft ? ctx.cx : ctx.cx + ctx.cw - tw;
     const ty = y + h * 0.4;
-    const after = heading(ctx, tx, ty, tw, { size: 'lg', color: onDark ? '#ffffff' : ctx.t.ink, lines: 2 });
-    const l = lines(ctx, tx, after + 10, tw, 1, { color: onDark ? 'rgba(255,255,255,0.6)' : ctx.t.tone2 });
+    const after = heading(ctx, tx, ty, tw, {
+      size: 'lg',
+      color: onDark ? '#ffffff' : ctx.t.ink,
+      lines: 2,
+    });
+    const l = lines(ctx, tx, after + 10, tw, 1, {
+      color: onDark ? 'rgba(255,255,255,0.6)' : ctx.t.tone2,
+    });
     button(ctx, tx, l + 16, 180, 48);
   },
 
   slideshow: (ctx, y, h) => {
     drawers.hero!(ctx, y, h);
     const n = 3;
-    for (let i = 0; i < n; i++) ctx.c.circle(ctx.W / 2 + (i - 1) * 16, y + h - 22, 4, i === 0 ? '#ffffff' : 'rgba(255,255,255,0.5)');
+    for (let i = 0; i < n; i++)
+      ctx.c.circle(
+        ctx.W / 2 + (i - 1) * 16,
+        y + h - 22,
+        4,
+        i === 0 ? '#ffffff' : 'rgba(255,255,255,0.5)',
+      );
   },
 
   'image-with-text': (ctx, y, h) => {
@@ -358,10 +480,20 @@ const drawers: Record<string, Drawer> = {
 
   video: (ctx, y, h) => {
     const pad = ctx.mobile ? 0 : 40;
-    ctx.c.rect(ctx.mobile ? 0 : ctx.cx, y + pad, ctx.mobile ? ctx.W : ctx.cw, h - pad * 2, ctx.t.dark ? '#2a2a2a' : '#22201d', ctx.mobile ? 0 : 6);
+    ctx.c.rect(
+      ctx.mobile ? 0 : ctx.cx,
+      y + pad,
+      ctx.mobile ? ctx.W : ctx.cw,
+      h - pad * 2,
+      ctx.t.dark ? '#2a2a2a' : '#22201d',
+      ctx.mobile ? 0 : 6,
+    );
     const cy = y + h / 2;
     ctx.c.circle(ctx.W / 2, cy, 28, 'rgba(255,255,255,0.9)');
-    ctx.c.path(`M${ctx.W / 2 - 8},${cy - 12}L${ctx.W / 2 + 14},${cy}L${ctx.W / 2 - 8},${cy + 12}Z`, '#22201d');
+    ctx.c.path(
+      `M${ctx.W / 2 - 8},${cy - 12}L${ctx.W / 2 + 14},${cy}L${ctx.W / 2 - 8},${cy + 12}Z`,
+      '#22201d',
+    );
   },
 
   'logo-list': (ctx, y, h) => {
@@ -370,7 +502,14 @@ const drawers: Record<string, Drawer> = {
     const w = (ctx.cw - gap * (n - 1)) / n;
     heading(ctx, ctx.cx, y + 24, ctx.cw, { size: 'sm', align: 'center', color: ctx.t.inkSoft });
     for (let i = 0; i < n; i++) {
-      ctx.c.rect(ctx.cx + i * (w + gap) + w * 0.15, y + h / 2, w * 0.7, ctx.mobile ? 14 : 20, ctx.t.inkSoft, 4);
+      ctx.c.rect(
+        ctx.cx + i * (w + gap) + w * 0.15,
+        y + h / 2,
+        w * 0.7,
+        ctx.mobile ? 14 : 20,
+        ctx.t.inkSoft,
+        4,
+      );
     }
   },
 
@@ -397,7 +536,13 @@ const drawers: Record<string, Drawer> = {
     for (let i = 0; i < cols; i++) {
       const x = ctx.cx + i * (w + gap);
       image(ctx, x, y + top + (ctx.mobile ? 36 : 60), w, ih, i, 6);
-      ctx.c.bar(x, y + top + (ctx.mobile ? 36 : 60) + ih + 14, w * 0.4, ctx.mobile ? 8 : 10, ctx.t.ink);
+      ctx.c.bar(
+        x,
+        y + top + (ctx.mobile ? 36 : 60) + ih + 14,
+        w * 0.4,
+        ctx.mobile ? 8 : 10,
+        ctx.t.ink,
+      );
     }
   },
 
@@ -405,11 +550,20 @@ const drawers: Record<string, Drawer> = {
     const banner = ctx.rand() > 0.5;
     if (banner) {
       image(ctx, 0, y, ctx.W, h, 1);
-      heading(ctx, ctx.cx, y + h / 2 - 20, ctx.cw, { size: 'lg', align: 'center', color: '#ffffff' });
+      heading(ctx, ctx.cx, y + h / 2 - 20, ctx.cw, {
+        size: 'lg',
+        align: 'center',
+        color: '#ffffff',
+      });
       return;
     }
-    const after = heading(ctx, ctx.cx, y + h * 0.3, ctx.cw, { size: 'lg', align: ctx.mobile ? 'start' : 'center' });
-    lines(ctx, ctx.mobile ? ctx.cx : ctx.W / 2 - 280, after + 10, ctx.mobile ? ctx.cw : 560, 2, { align: ctx.mobile ? 'start' : 'center' });
+    const after = heading(ctx, ctx.cx, y + h * 0.3, ctx.cw, {
+      size: 'lg',
+      align: ctx.mobile ? 'start' : 'center',
+    });
+    lines(ctx, ctx.mobile ? ctx.cx : ctx.W / 2 - 280, after + 10, ctx.mobile ? ctx.cw : 560, 2, {
+      align: ctx.mobile ? 'start' : 'center',
+    });
   },
 
   filters: (ctx, y, h) => {
@@ -417,8 +571,24 @@ const drawers: Record<string, Drawer> = {
     ctx.c.line(ctx.cx, y + h - 0.5, ctx.cx + ctx.cw, y + h - 0.5, ctx.t.inkSoft);
     const mid = y + h / 2;
     if (ctx.mobile) {
-      ctx.c.rect(ctx.cx, mid - 16, ctx.cw / 2 - 5, 32, 'none', 4, ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`);
-      ctx.c.rect(ctx.cx + ctx.cw / 2 + 5, mid - 16, ctx.cw / 2 - 5, 32, 'none', 4, ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`);
+      ctx.c.rect(
+        ctx.cx,
+        mid - 16,
+        ctx.cw / 2 - 5,
+        32,
+        'none',
+        4,
+        ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`,
+      );
+      ctx.c.rect(
+        ctx.cx + ctx.cw / 2 + 5,
+        mid - 16,
+        ctx.cw / 2 - 5,
+        32,
+        'none',
+        4,
+        ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`,
+      );
       ctx.c.bar(ctx.cx + 40, mid - 3, 60, 6, ctx.t.ink);
       ctx.c.bar(ctx.cx + ctx.cw / 2 + 45, mid - 3, 60, 6, ctx.t.ink);
       return;
@@ -431,11 +601,21 @@ const drawers: Record<string, Drawer> = {
       x += w + 10;
     }
     ctx.c.bar(ctx.cx + ctx.cw - 260, mid - 3, 80, 6, ctx.t.inkSoft);
-    ctx.c.rect(ctx.cx + ctx.cw - 160, mid - 16, 160, 32, 'none', 16, ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`);
+    ctx.c.rect(
+      ctx.cx + ctx.cw - 160,
+      mid - 16,
+      160,
+      32,
+      'none',
+      16,
+      ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`,
+    );
   },
 
   'product-grid': (ctx, y, h) => {
-    const cols = ctx.mobile ? 2 : (ctx.section.hints?.columns as number) ?? pick(ctx.rand, [3, 4, 4]);
+    const cols = ctx.mobile
+      ? 2
+      : ((ctx.section.hints?.columns as number) ?? pick(ctx.rand, [3, 4, 4]));
     const gap = ctx.mobile ? 10 : 24;
     const w = (ctx.cw - gap * (cols - 1)) / cols;
     const cardH = w * (ctx.mobile ? 1.55 : 1.45);
@@ -460,19 +640,37 @@ const drawers: Record<string, Drawer> = {
     const pad = ctx.mobile ? 0 : 32;
     if (ctx.mobile) {
       image(ctx, 0, y, ctx.W, h - 24, 0);
-      for (let i = 0; i < 4; i++) ctx.c.circle(ctx.W / 2 + (i - 1.5) * 12, y + h - 12, 3, i === 0 ? ctx.t.ink : ctx.t.inkSoft);
+      for (let i = 0; i < 4; i++)
+        ctx.c.circle(
+          ctx.W / 2 + (i - 1.5) * 12,
+          y + h - 12,
+          3,
+          i === 0 ? ctx.t.ink : ctx.t.inkSoft,
+        );
       return;
     }
     // Desktop: gallery on the left. If no separate buy-box section shares this row, draw it too.
-    const shared = ctx.all.some((s) => s.type === 'buy-box' && s.y < y + h && s.y + s.height > y && s !== ctx.section);
+    const shared = ctx.all.some(
+      (s) => s.type === 'buy-box' && s.y < y + h && s.y + s.height > y && s !== ctx.section,
+    );
     const sx = ctx.section.x ?? null;
     const gx = sx != null && ctx.section.w ? Math.max(ctx.cx, sx) : ctx.cx;
-    const gw = sx != null && ctx.section.w ? Math.min(ctx.section.w, ctx.cx + ctx.cw - gx) : ctx.cw * 0.56;
+    const gw =
+      sx != null && ctx.section.w ? Math.min(ctx.section.w, ctx.cx + ctx.cw - gx) : ctx.cw * 0.56;
     const thumbs = ctx.rand() > 0.5;
     const tw = thumbs ? 72 : 0;
-    image(ctx, gx + (thumbs ? tw + 16 : 0), y + pad, gw - (thumbs ? tw + 16 : 0), h - pad * 2, 0, 4);
+    image(
+      ctx,
+      gx + (thumbs ? tw + 16 : 0),
+      y + pad,
+      gw - (thumbs ? tw + 16 : 0),
+      h - pad * 2,
+      0,
+      4,
+    );
     if (thumbs) {
-      for (let i = 0; i < 4; i++) ctx.c.rect(gx, y + pad + i * 88, tw, 76, i === 0 ? ctx.t.tone2 : ctx.t.tone, 4);
+      for (let i = 0; i < 4; i++)
+        ctx.c.rect(gx, y + pad + i * 88, tw, 76, i === 0 ? ctx.t.tone2 : ctx.t.tone, 4);
     }
     if (!shared) buyBox(ctx, ctx.cx + gw + 56, y + pad, ctx.cw - gw - 56);
   },
@@ -488,14 +686,20 @@ const drawers: Record<string, Drawer> = {
       return;
     }
     const gw = ctx.cw * 0.56;
-    const shared = ctx.all.some((s) => s.type === 'product-gallery' && s.y < y + h && s.y + s.height > y);
+    const shared = ctx.all.some(
+      (s) => s.type === 'product-gallery' && s.y < y + h && s.y + s.height > y,
+    );
     if (shared) buyBox(ctx, ctx.cx + gw + 56, y + 32, ctx.cw - gw - 56);
     else buyBox(ctx, ctx.cx, y + 32, Math.min(560, ctx.cw));
   },
 
-  'product-details': (ctx, y, h) => accordion(ctx, y + (ctx.mobile ? 16 : 32), h - (ctx.mobile ? 32 : 64)),
+  'product-details': (ctx, y, h) =>
+    accordion(ctx, y + (ctx.mobile ? 16 : 32), h - (ctx.mobile ? 32 : 64)),
   faq: (ctx, y, h) => {
-    const after = heading(ctx, ctx.cx, y + (ctx.mobile ? 28 : 56), ctx.cw, { size: 'md', align: ctx.mobile ? 'start' : 'center' });
+    const after = heading(ctx, ctx.cx, y + (ctx.mobile ? 28 : 56), ctx.cw, {
+      size: 'md',
+      align: ctx.mobile ? 'start' : 'center',
+    });
     accordion(ctx, after + 16, h - (after - y) - 40, ctx.mobile ? undefined : 760);
   },
 
@@ -527,8 +731,21 @@ const drawers: Record<string, Drawer> = {
 
   testimonials: (ctx, y, h) => {
     const mid = y + h / 2;
-    ctx.c.text(ctx.W / 2, mid - (ctx.mobile ? 30 : 50), '“', ctx.mobile ? 56 : 88, ctx.t.inkSoft, 'Georgia, serif', 'middle', 400);
-    heading(ctx, ctx.mobile ? ctx.cx : ctx.W / 2 - 360, mid - 10, ctx.mobile ? ctx.cw : 720, { size: 'md', align: 'center', lines: 2 });
+    ctx.c.text(
+      ctx.W / 2,
+      mid - (ctx.mobile ? 30 : 50),
+      '“',
+      ctx.mobile ? 56 : 88,
+      ctx.t.inkSoft,
+      'Georgia, serif',
+      'middle',
+      400,
+    );
+    heading(ctx, ctx.mobile ? ctx.cx : ctx.W / 2 - 360, mid - 10, ctx.mobile ? ctx.cw : 720, {
+      size: 'md',
+      align: 'center',
+      lines: 2,
+    });
     ctx.c.bar(ctx.W / 2 - 50, mid + (ctx.mobile ? 50 : 70), 100, 7, ctx.t.inkSoft);
   },
 
@@ -539,7 +756,8 @@ const drawers: Record<string, Drawer> = {
     const gap = ctx.mobile ? 4 : 8;
     const w = (ctx.W - gap * (n - 1)) / n;
     const ih = Math.min(w * (ctx.mobile ? 1.6 : 1.25), h - top - (ctx.mobile ? 50 : 90));
-    for (let i = 0; i < n; i++) image(ctx, i * (w + gap), y + top + (ctx.mobile ? 34 : 60), w, ih, i);
+    for (let i = 0; i < n; i++)
+      image(ctx, i * (w + gap), y + top + (ctx.mobile ? 34 : 60), w, ih, i);
   },
 
   'trust-badges': (ctx, y, h) => {
@@ -547,7 +765,15 @@ const drawers: Record<string, Drawer> = {
     const w = ctx.cw / n;
     for (let i = 0; i < n; i++) {
       const cx = ctx.cx + i * w + w / 2;
-      ctx.c.rect(cx - 14, y + h / 2 - 26, 28, 28, 'none', 14, ` stroke="${ctx.t.ink}" stroke-width="1.5"`);
+      ctx.c.rect(
+        cx - 14,
+        y + h / 2 - 26,
+        28,
+        28,
+        'none',
+        14,
+        ` stroke="${ctx.t.ink}" stroke-width="1.5"`,
+      );
       ctx.c.bar(cx - w * 0.3, y + h / 2 + 12, w * 0.6, 7, ctx.t.inkSoft);
     }
   },
@@ -555,13 +781,33 @@ const drawers: Record<string, Drawer> = {
   newsletter: (ctx, y, h) => {
     ctx.c.rect(0, y, ctx.W, h, ctx.t.surface);
     const mid = y + h / 2;
-    const after = heading(ctx, ctx.cx, mid - (ctx.mobile ? 56 : 70), ctx.cw, { size: 'md', align: 'center' });
-    lines(ctx, ctx.mobile ? ctx.cx : ctx.W / 2 - 220, after + 4, ctx.mobile ? ctx.cw : 440, 1, { align: 'center' });
+    const after = heading(ctx, ctx.cx, mid - (ctx.mobile ? 56 : 70), ctx.cw, {
+      size: 'md',
+      align: 'center',
+    });
+    lines(ctx, ctx.mobile ? ctx.cx : ctx.W / 2 - 220, after + 4, ctx.mobile ? ctx.cw : 440, 1, {
+      align: 'center',
+    });
     const fw = ctx.mobile ? ctx.cw : 440;
     const fx = ctx.W / 2 - fw / 2;
     const fy = after + (ctx.mobile ? 30 : 36);
-    ctx.c.rect(fx, fy, fw, ctx.mobile ? 42 : 48, ctx.t.paper, 4, ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`);
-    ctx.c.rect(fx + fw - (ctx.mobile ? 100 : 120), fy, ctx.mobile ? 100 : 120, ctx.mobile ? 42 : 48, ctx.t.button, 4);
+    ctx.c.rect(
+      fx,
+      fy,
+      fw,
+      ctx.mobile ? 42 : 48,
+      ctx.t.paper,
+      4,
+      ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`,
+    );
+    ctx.c.rect(
+      fx + fw - (ctx.mobile ? 100 : 120),
+      fy,
+      ctx.mobile ? 100 : 120,
+      ctx.mobile ? 42 : 48,
+      ctx.t.button,
+      4,
+    );
   },
 
   'shipping-bar': (ctx, y, h) => {
@@ -573,7 +819,14 @@ const drawers: Record<string, Drawer> = {
   },
 
   loyalty: (ctx, y, h) => {
-    ctx.c.rect(ctx.mobile ? 0 : ctx.cx, y + 24, ctx.mobile ? ctx.W : ctx.cw, h - 48, ctx.t.tone, ctx.mobile ? 0 : 10);
+    ctx.c.rect(
+      ctx.mobile ? 0 : ctx.cx,
+      y + 24,
+      ctx.mobile ? ctx.W : ctx.cw,
+      h - 48,
+      ctx.t.tone,
+      ctx.mobile ? 0 : 10,
+    );
     const after = heading(ctx, ctx.cx + 24, y + 64, ctx.cw - 48, { size: 'md', align: 'center' });
     const n = ctx.mobile ? 1 : 3;
     const gap = 20;
@@ -600,7 +853,15 @@ const drawers: Record<string, Drawer> = {
       const tx = ctx.cx + (ctx.mobile ? 96 : 124);
       ctx.c.bar(tx, ry + 24, w * 0.32, 9, ctx.t.ink);
       ctx.c.bar(tx, ry + 44, w * 0.18, 7, ctx.t.inkSoft);
-      ctx.c.rect(tx, ry + (ctx.mobile ? 70 : 80), 96, 30, 'none', 4, ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`);
+      ctx.c.rect(
+        tx,
+        ry + (ctx.mobile ? 70 : 80),
+        96,
+        30,
+        'none',
+        4,
+        ` stroke="${ctx.t.inkSoft}" stroke-width="1.5"`,
+      );
       ctx.c.bar(ctx.cx + w - 60, ry + 24, 60, 9, ctx.t.ink);
     }
   },
@@ -616,7 +877,16 @@ const drawers: Record<string, Drawer> = {
     const by = top + h - 32 - (ctx.mobile ? 130 : 140);
     button(ctx, x + 20, by, w - 40, 48);
     const ew = (w - 40 - 16) / 3;
-    for (let i = 0; i < 3; i++) ctx.c.rect(x + 20 + i * (ew + 8), by + 62, ew, 40, i === 0 ? '#5a31f4' : ctx.t.ink, 4, ' opacity="0.9"');
+    for (let i = 0; i < 3; i++)
+      ctx.c.rect(
+        x + 20 + i * (ew + 8),
+        by + 62,
+        ew,
+        40,
+        i === 0 ? '#5a31f4' : ctx.t.ink,
+        4,
+        ' opacity="0.9"',
+      );
   },
 
   'rich-text': (ctx, y, h) => {
@@ -656,16 +926,32 @@ const drawers: Record<string, Drawer> = {
       for (let col = 0; col < cols; col++) {
         const x = ctx.cx + col * w;
         ctx.c.bar(x, top, w * 0.4, 9, ctx.t.footerInk);
-        for (let i = 0; i < 5; i++) ctx.c.bar(x, top + 30 + i * 22, w * (0.35 + ctx.rand() * 0.3), 7, ctx.t.footerSoft);
+        for (let i = 0; i < 5; i++)
+          ctx.c.bar(x, top + 30 + i * 22, w * (0.35 + ctx.rand() * 0.3), 7, ctx.t.footerSoft);
       }
       const nx = ctx.cx + cols * w;
       ctx.c.bar(nx, top, w * 0.6, 9, ctx.t.footerInk);
-      ctx.c.rect(nx, top + 30, w, 40, 'none', 4, ` stroke="${ctx.t.footerSoft}" stroke-width="1.5"`);
+      ctx.c.rect(
+        nx,
+        top + 30,
+        w,
+        40,
+        'none',
+        4,
+        ` stroke="${ctx.t.footerSoft}" stroke-width="1.5"`,
+      );
     }
     const by = y + h - (ctx.mobile ? 56 : 64);
     ctx.c.line(ctx.cx, by - 16, ctx.cx + ctx.cw, by - 16, ctx.t.footerSoft);
     for (let i = 0; i < (ctx.mobile ? 5 : 7); i++) {
-      ctx.c.rect((ctx.mobile ? ctx.cx : ctx.cx + ctx.cw - 7 * 44) + i * 44, by, 36, 22, ctx.t.footerSoft, 3);
+      ctx.c.rect(
+        (ctx.mobile ? ctx.cx : ctx.cx + ctx.cw - 7 * 44) + i * 44,
+        by,
+        36,
+        22,
+        ctx.t.footerSoft,
+        3,
+      );
     }
     if (!ctx.mobile) ctx.c.bar(ctx.cx, by + 7, 180, 7, ctx.t.footerSoft);
   },
@@ -680,7 +966,16 @@ function buyBox(ctx: Ctx, x: number, y: number, w: number) {
   let yy = after + 66;
   ctx.c.bar(x, yy, 60, 7, ctx.t.inkSoft);
   yy += 18;
-  for (let i = 0; i < 5; i++) ctx.c.rect(x + i * 54, yy, 46, 36, 'none', 4, ` stroke="${i === 1 ? ctx.t.ink : ctx.t.inkSoft}" stroke-width="1.5"`);
+  for (let i = 0; i < 5; i++)
+    ctx.c.rect(
+      x + i * 54,
+      yy,
+      46,
+      36,
+      'none',
+      4,
+      ` stroke="${i === 1 ? ctx.t.ink : ctx.t.inkSoft}" stroke-width="1.5"`,
+    );
   yy += 56;
   button(ctx, x, yy, w, ctx.mobile ? 46 : 52);
   yy += ctx.mobile ? 58 : 64;
@@ -705,7 +1000,13 @@ function accordion(ctx: Ctx, y: number, h: number, maxW?: number) {
 
 const fallback: Drawer = (ctx, y, h) => {
   const after = heading(ctx, ctx.cx, y + Math.min(48, h * 0.2), ctx.cw, { size: 'md' });
-  lines(ctx, ctx.cx, after + 8, ctx.cw * 0.6, Math.max(1, Math.min(4, Math.floor((h - (after - y)) / 30))));
+  lines(
+    ctx,
+    ctx.cx,
+    after + 8,
+    ctx.cw * 0.6,
+    Math.max(1, Math.min(4, Math.floor((h - (after - y)) / 30))),
+  );
 };
 
 /* ------------------------------------------------------------------ entry point */

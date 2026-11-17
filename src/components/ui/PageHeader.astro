@@ -26,20 +26,23 @@ const { title, lede, eyebrow, count, serif = false, size = 'md', class: classNam
   <slot name="top" />
   <div class="ph__grid cols-12">
     <div class="ph__text span-8">
-      {eyebrow && <MonoLabel as="p" class="ph__eyebrow">{eyebrow}</MonoLabel>}
+      {eyebrow && (
+        <MonoLabel as="p" class="ph__eyebrow">
+          {eyebrow}
+        </MonoLabel>
+      )}
       <h1 class:list={['ph__title', { display: serif }]}>
-        {title}{count !== undefined && <Count value={count} />}
+        {title}
+        {count !== undefined && <Count value={count} />}
       </h1>
       {lede && <p class="ph__lede">{lede}</p>}
       <slot name="meta" />
     </div>
-    {
-      Astro.slots.has('actions') && (
-        <div class="ph__actions start-9">
-          <slot name="actions" />
-        </div>
-      )
-    }
+    {Astro.slots.has('actions') && (
+      <div class="ph__actions start-9">
+        <slot name="actions" />
+      </div>
+    )}
   </div>
   <slot />
 </header>

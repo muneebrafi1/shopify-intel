@@ -18,19 +18,21 @@ const { columns, head, label, class: className } = Astro.props;
 ---
 
 <div class:list={['index', className]} style={`--index-cols:${columns}`} data-index-list>
-  {
-    head && (
-      <div class="index__head" aria-hidden="true">
-        {head.map((h, i) => (
-          <span class:list={['mlabel', { 'index__head--end': i === head.length - 1 && i > 1 }]}>{h}</span>
-        ))}
-      </div>
-    )
-  }
+  {head && (
+    <div class="index__head" aria-hidden="true">
+      {head.map((h, i) => (
+        <span class:list={['mlabel', { 'index__head--end': i === head.length - 1 && i > 1 }]}>
+          {h}
+        </span>
+      ))}
+    </div>
+  )}
   <ol class="index__list" aria-label={label}>
     <slot />
   </ol>
-  <div class="index__preview" aria-hidden="true"><img alt="" decoding="async" /></div>
+  <div class="index__preview" aria-hidden="true">
+    <img alt="" decoding="async" />
+  </div>
 </div>
 
 <script>

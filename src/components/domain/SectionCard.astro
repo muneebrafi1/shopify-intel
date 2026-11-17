@@ -15,7 +15,17 @@ interface Props {
   eager?: boolean;
   class?: string;
 }
-const { href, crop, device, typeName, storeLabel, meta, app, eager, class: className } = Astro.props;
+const {
+  href,
+  crop,
+  device,
+  typeName,
+  storeLabel,
+  meta,
+  app,
+  eager,
+  class: className,
+} = Astro.props;
 ---
 
 <article class:list={['section-card', className]}>
@@ -30,16 +40,16 @@ const { href, crop, device, typeName, storeLabel, meta, app, eager, class: class
   />
   <div class="section-card__caption">
     <div class="section-card__text">
-      <h3 class="section-card__title"><a href={href}>{storeLabel}</a></h3>
+      <h3 class="section-card__title">
+        <a href={href}>{storeLabel}</a>
+      </h3>
       <p class="section-card__meta">{meta ?? typeName}</p>
     </div>
-    {
-      app && (
-        <span class="section-card__app" title={`Rendered by ${app.name}`}>
-          <AppIcon src={app.iconUrl} name={app.name} size={20} />
-        </span>
-      )
-    }
+    {app && (
+      <span class="section-card__app" title={`Rendered by ${app.name}`}>
+        <AppIcon src={app.iconUrl} name={app.name} size={20} />
+      </span>
+    )}
   </div>
 </article>
 

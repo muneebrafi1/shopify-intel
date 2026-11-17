@@ -13,7 +13,14 @@ const { source, asOf, href = '/methodology', class: className } = Astro.props;
 <p class:list={['source-note', className]}>
   <Icon name="info" size={12} />
   <span>
-    Source: {source}{asOf && <> · <span class="num">{asOf}</span></>}.
+    Source: {source}
+    {asOf && (
+      <>
+        {' '}
+        · <span class="num">{asOf}</span>
+      </>
+    )}
+    .{href && ' '}
     {href && <a href={href}>How we detect</a>}
   </span>
 </p>

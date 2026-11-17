@@ -14,24 +14,22 @@ const { rating, reviews, source, size = 'md', class: className } = Astro.props;
 const hasRating = typeof rating === 'number' && rating > 0;
 ---
 
-{
-  hasRating ? (
-    <span class:list={['rating', `rating--${size}`, className]} title={source}>
-      <Icon name="star-fill" size={size === 'sm' ? 12 : 14} class="rating__star" />
-      <span class="rating__value num">{rating!.toFixed(1)}</span>
-      {typeof reviews === 'number' && (
-        <span class="rating__reviews num">
-          {formatCount(reviews)}
-          <span class="visually-hidden"> reviews</span>
-        </span>
-      )}
-    </span>
-  ) : (
-    <span class:list={['rating', 'rating--none', `rating--${size}`, className]} title={source}>
-      No rating yet
-    </span>
-  )
-}
+{hasRating ? (
+  <span class:list={['rating', `rating--${size}`, className]} title={source}>
+    <Icon name="star-fill" size={size === 'sm' ? 12 : 14} class="rating__star" />
+    <span class="rating__value num">{rating!.toFixed(1)}</span>
+    {typeof reviews === 'number' && (
+      <span class="rating__reviews num">
+        {formatCount(reviews)}
+        <span class="visually-hidden"> reviews</span>
+      </span>
+    )}
+  </span>
+) : (
+  <span class:list={['rating', 'rating--none', `rating--${size}`, className]} title={source}>
+    No rating yet
+  </span>
+)}
 
 <style>
   .rating {

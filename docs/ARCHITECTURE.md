@@ -4,25 +4,28 @@ This describes what the base build implements. The original proposal is kept at 
 where we diverged, the reason is given here.
 
 ## Stack
-| Layer | Choice | Why |
-|---|---|---|
-| Web app | **Astro 7, server-rendered on Cloudflare Workers** (`@astrojs/cloudflare` 14) | Content-heavy, image-first site: HTML from the edge, almost no client JS (vanilla `<script>` islands, no UI framework). Dev runs *inside workerd* via the Cloudflare Vite plugin, so local == production runtime. |
-| Data | **D1** (`DB` binding), SQL migrations in `migrations/` | Free tier, SQLite semantics, FTS5 for search. Plain SQL behind a tiny `Db` interface (no ORM) so the same queries run on D1 and on `node:sqlite` in tests/scripts. |
-| Screenshots | **R2** (`MEDIA` binding) served by `/media/<key>`; drawn placeholders at `/media/placeholder/...` | See "Screenshot pipeline". |
-| API | **`/api/v1/*`**: typed endpoint definitions (zod in → handler → zod out) | One definition serves three transports: HTTP (`/api/v1`), the in-process client used by every page, and (later) the MCP server. OpenAPI 3.1 is generated from the same definitions at `/api/v1/openapi.json`. Details: [`API.md`](API.md). |
-| Search | D1 **FTS5** `search_index`, prefix queries, grouped results | Works at 50K+ rows without a build step (Pagefind would need re-indexing on every ingest). Palette (⌘K) + `/search`. |
-| Admin | `src/middleware.ts` guards `/admin` and `/api/v1/admin`: **Cloudflare Access JWT** in production or a **signed session cookie** (password) locally | Server-side only; same-origin check on writes; audit log. |
-| Affiliate | `/go/:id` → counts the click per day (no personal data) → 302 | Links live in the DB (`affiliate_links`), labelled in the UI, `rel="sponsored"`. |
-| Payments (later) | Whop | Stripe isn't available in Pakistan. Accounts/boards tables exist; UI slots are routed. |
+
+| Layer            | Choice                                                                                                                                             | Why                                                                                                                                                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Web app          | **Astro 7, server-rendered on Cloudflare Workers** (`@astrojs/cloudflare` 14)                                                                      | Content-heavy, image-first site: HTML from the edge, almost no client JS (vanilla `<script>` islands, no UI framework). Dev runs _inside workerd_ via the Cloudflare Vite plugin, so local == production runtime.                          |
+| Data             | **D1** (`DB` binding), SQL migrations in `migrations/`                                                                                             | Free tier, SQLite semantics, FTS5 for search. Plain SQL behind a tiny `Db` interface (no ORM) so the same queries run on D1 and on `node:sqlite` in tests/scripts.                                                                         |
+| Screenshots      | **R2** (`MEDIA` binding) served by `/media/<key>`; drawn placeholders at `/media/placeholder/...`                                                  | See "Screenshot pipeline".                                                                                                                                                                                                                 |
+| API              | **`/api/v1/*`**: typed endpoint definitions (zod in → handler → zod out)                                                                           | One definition serves three transports: HTTP (`/api/v1`), the in-process client used by every page, and (later) the MCP server. OpenAPI 3.1 is generated from the same definitions at `/api/v1/openapi.json`. Details: [`API.md`](API.md). |
+| Search           | D1 **FTS5** `search_index`, prefix queries, grouped results                                                                                        | Works at 50K+ rows without a build step (Pagefind would need re-indexing on every ingest). Palette (⌘K) + `/search`.                                                                                                                       |
+| Admin            | `src/middleware.ts` guards `/admin` and `/api/v1/admin`: **Cloudflare Access JWT** in production or a **signed session cookie** (password) locally | Server-side only; same-origin check on writes; audit log.                                                                                                                                                                                  |
+| Affiliate        | `/go/:id` → counts the click per day (no personal data) → 302                                                                                      | Links live in the DB (`affiliate_links`), labelled in the UI, `rel="sponsored"`.                                                                                                                                                           |
+| Payments (later) | Whop                                                                                                                                               | Stripe isn't available in Pakistan. Accounts/boards tables exist; UI slots are routed.                                                                                                                                                     |
 
 ### Why the website calls the API in-process instead of over HTTP
+
 A Worker fetching its own public URL adds a network hop and double billing, and on Workers
-self-fetches are awkward. The in-process client calls the *same endpoint definitions* the HTTP
+self-fetches are awkward. The in-process client calls the _same endpoint definitions_ the HTTP
 router uses (same input validation, same output schema), so the site is guaranteed to see
 exactly what API/MCP consumers see, without the hop. The MCP server will import the same
 definitions (or call the HTTP API from elsewhere).
 
 ## Screenshot pipeline (designed now, captures later)
+
 - Every capture is a row in `screenshots` (page × device) with its sections in `sections`
   (`section_type`, `y`, `height`, optional `app_id`). Real captures have an `r2_key`
   (`shots/{domain}/{page_type}/{device}/{captured_at}.webp`).
@@ -39,6 +42,7 @@ definitions (or call the HTTP API from elsewhere).
   screenshots are previews until the first capture run.
 
 ## Local development and CI
+
 - `npm run setup` builds seed SQL from `data/seed/*.json` + `data/curation/*` and loads it into
   the local D1 (`wrangler d1 ... --local`). No cloud resources are created.
 - CI (`.github/workflows/ci.yml`): seed JSON validation, project lint rules
@@ -49,6 +53,7 @@ definitions (or call the HTTP API from elsewhere).
   controls, alt text).
 
 ## Deploying (for the owner — nothing has been deployed)
+
 1. `npx wrangler d1 create shopify-intel` → put the real `database_id` in `wrangler.jsonc`.
 2. `npx wrangler r2 bucket create shopify-intel-media`.
 3. `npx wrangler d1 migrations apply DB --remote`, then load seed/ingest data.
@@ -57,6 +62,7 @@ definitions (or call the HTTP API from elsewhere).
 5. Set `SITE_NAME`/`SITE_DOMAIN` in `src/config/site.ts`, then `npm run build && npx wrangler deploy`.
 
 ## Scaling notes
+
 Unchanged from the proposal below: append-only detection history, precomputed summary tables at
 ingest, edge caching keyed by URL + data version, on-demand rendering for the long tail (no
 static store pages, so the 20,000-asset limit doesn't apply), opt-out tombstones.
@@ -68,23 +74,25 @@ in the PR. Constraints: free Cloudflare tier preferred, scales to 50K+ stores an
 one data layer for both the website and a future MCP server.
 
 ## Proposed stack
-| Layer | Proposal | Notes |
-|---|---|---|
-| Web app | Astro (or another SSR/SSG framework that runs on Cloudflare Workers) | Static-render the evergreen pages; render the long tail (store pages) on demand with edge caching. Workers static assets has a 20,000-files-per-version limit. |
-| Hosting | Cloudflare Workers + static assets | Free plan. No deploy yet — config only (`wrangler.toml` / `wrangler.jsonc`). |
-| Relational data | **Cloudflare D1** (SQLite) | Free: 5 GB, 5M rows read/day. Drizzle or plain SQL migrations in `migrations/`. |
-| Screenshots | **Cloudflare R2** | WebP/AVIF, several widths; no egress fees; 10 GB free. Keys like `shots/{store}/{page_type}/{device}/{captured_at}.webp`, sections as crops or rect metadata. |
-| API | Worker routes under `/api/v1/*` (JSON, versioned, documented) | The website reads the same API/service layer. Future MCP server wraps these same functions. |
-| Search | Pagefind (static) or D1 FTS5 | Keyboard-first instant search. |
+
+| Layer                             | Proposal                                                                     | Notes                                                                                                                                                                                      |
+| --------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Web app                           | Astro (or another SSR/SSG framework that runs on Cloudflare Workers)         | Static-render the evergreen pages; render the long tail (store pages) on demand with edge caching. Workers static assets has a 20,000-files-per-version limit.                             |
+| Hosting                           | Cloudflare Workers + static assets                                           | Free plan. No deploy yet — config only (`wrangler.toml` / `wrangler.jsonc`).                                                                                                               |
+| Relational data                   | **Cloudflare D1** (SQLite)                                                   | Free: 5 GB, 5M rows read/day. Drizzle or plain SQL migrations in `migrations/`.                                                                                                            |
+| Screenshots                       | **Cloudflare R2**                                                            | WebP/AVIF, several widths; no egress fees; 10 GB free. Keys like `shots/{store}/{page_type}/{device}/{captured_at}.webp`, sections as crops or rect metadata.                              |
+| API                               | Worker routes under `/api/v1/*` (JSON, versioned, documented)                | The website reads the same API/service layer. Future MCP server wraps these same functions.                                                                                                |
+| Search                            | Pagefind (static) or D1 FTS5                                                 | Keyboard-first instant search.                                                                                                                                                             |
 | Crawler + detection + screenshots | **Outside** the web app: Node/Python + Playwright on a box or GitHub Actions | Reuse StorePeek detection rules (signatures v7). Writes to D1/R2 through an authenticated ingest endpoint or wrangler. Not part of this first build except for the schema/ingest contract. |
-| Auth / payments (later) | Whop for Pro (license/membership checked by a Worker) | No Stripe (not available in Pakistan). Leave clean seams. |
-| Admin | `/admin` behind Cloudflare Access or a server-checked session | Never rely on client-side checks. |
-| Affiliate clicks | `/go/:id` redirect route that logs a click (anonymous) then 302s | Links stored in DB, labelled as affiliate in UI. |
+| Auth / payments (later)           | Whop for Pro (license/membership checked by a Worker)                        | No Stripe (not available in Pakistan). Leave clean seams.                                                                                                                                  |
+| Admin                             | `/admin` behind Cloudflare Access or a server-checked session                | Never rely on client-side checks.                                                                                                                                                          |
+| Affiliate clicks                  | `/go/:id` redirect route that logs a click (anonymous) then 302s             | Links stored in DB, labelled as affiliate in UI.                                                                                                                                           |
 
 For the base build, the app should run fully locally from `data/seed/` (e.g. `wrangler dev` with a
 local D1 seeded by a script), with placeholder screenshots where real ones don't exist yet.
 
 ## Schema sketch
+
 ```sql
 stores(id, domain UNIQUE, name, url, country, currency, category, tranco_rank,
        status, opted_out_at, first_seen, last_seen, created_at, updated_at)
@@ -122,6 +130,7 @@ removal_requests(id, domain, email, reason, status, created_at, handled_at)
 ```
 
 ## Scaling notes
+
 - Detections are append-only history; "current" views are derived (`last_seen` within N days).
   This powers "recently switched" feeds and trends without schema changes.
 - Precompute heavy aggregates (stores per theme, co-installs) into summary tables during ingest,
@@ -136,4 +145,5 @@ removal_requests(id, domain, email, reason, status, created_at, handled_at)
   tombstone so the crawler never re-adds it.
 
 ## Seed data
+
 See `data/seed/README.md`. Seed shapes are inputs, not the final schema — map them in a seed script.

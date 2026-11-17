@@ -29,7 +29,10 @@ interface Props {
 const { n, href, title, subtitle, cells = [], preview, class: className } = Astro.props;
 const device = preview?.device ?? 'desktop';
 const previewSrc = preview
-  ? thumbUrl(preview.src, { cropHeight: thumbCropHeight(preview.width, preview.height, device), width: 600 })
+  ? thumbUrl(preview.src, {
+      cropHeight: thumbCropHeight(preview.width, preview.height, device),
+      width: 600,
+    })
   : undefined;
 const num = `N°${String(n).padStart(3, '0')}`;
 ---
@@ -45,24 +48,22 @@ const num = `N°${String(n).padStart(3, '0')}`;
       <span class="irow__name">{title}</span>
       {subtitle && <span class="irow__sub">{subtitle}</span>}
     </span>
-    {
-      cells.map((c, i) => (
-        <span
-          class:list={[
-            'irow__cell',
-            {
-              'irow__cell--mono': c.mono,
-              'irow__cell--serif': c.serif,
-              'irow__cell--muted': c.muted,
-              'irow__cell--mobile': c.mobile,
-              'irow__cell--end': i === cells.length - 1,
-            },
-          ]}
-        >
-          {c.value}
-        </span>
-      ))
-    }
+    {cells.map((c, i) => (
+      <span
+        class:list={[
+          'irow__cell',
+          {
+            'irow__cell--mono': c.mono,
+            'irow__cell--serif': c.serif,
+            'irow__cell--muted': c.muted,
+            'irow__cell--mobile': c.mobile,
+            'irow__cell--end': i === cells.length - 1,
+          },
+        ]}
+      >
+        {c.value}
+      </span>
+    ))}
   </a>
 </li>
 

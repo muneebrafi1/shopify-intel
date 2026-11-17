@@ -17,7 +17,17 @@ interface Props {
   eager?: boolean;
   class?: string;
 }
-const { src, width, height, device, alt, href, ratio, eager = false, class: className } = Astro.props;
+const {
+  src,
+  width,
+  height,
+  device,
+  alt,
+  href,
+  ratio,
+  eager = false,
+  class: className,
+} = Astro.props;
 const Tag = href ? 'a' : 'div';
 const tall = height / width > 1.1;
 // The well's inner box is 86% x 61% of its width (4:3 well, 7% padding). Fill whichever side

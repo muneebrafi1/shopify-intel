@@ -37,25 +37,28 @@ const H = `h${level}` as 'h2' | 'h3';
 
 <div class:list={['sh', { 'sh--rule': rule }, className]}>
   <div class="sh__text">
-    {label && <MonoLabel as="p" class="sh__label">{label}</MonoLabel>}
+    {label && (
+      <MonoLabel as="p" class="sh__label">
+        {label}
+      </MonoLabel>
+    )}
     <H class="sh__title" id={id}>
-      {title}{typeof count === 'number' && <Count value={count} />}
+      {title}
+      {typeof count === 'number' && <Count value={count} />}
     </H>
     {description && <p class="sh__desc">{description}</p>}
   </div>
-  {
-    (href || Astro.slots.has('default')) && (
-      <div class="sh__actions">
-        <slot />
-        {href && (
-          <a class="sh__link" href={href}>
-            {linkLabel}
-            <span aria-hidden="true">→</span>
-          </a>
-        )}
-      </div>
-    )
-  }
+  {(href || Astro.slots.has('default')) && (
+    <div class="sh__actions">
+      <slot />
+      {href && (
+        <a class="sh__link" href={href}>
+          {linkLabel}
+          <span aria-hidden="true">→</span>
+        </a>
+      )}
+    </div>
+  )}
 </div>
 
 <style>

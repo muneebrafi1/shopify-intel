@@ -11,7 +11,11 @@ interface Props {
 const { label, wrap = false, class: className } = Astro.props;
 ---
 
-<div class:list={['chip-row', { 'chip-row--wrap': wrap }, className]} role="group" aria-label={label}>
+<div
+  class:list={['chip-row', { 'chip-row--wrap': wrap }, className]}
+  role="group"
+  aria-label={label}
+>
   <slot />
 </div>
 

@@ -10,7 +10,12 @@ const { ranked = true, usageLabel = 'Stores', class: className } = Astro.props;
 
 <div class:list={['app-table', { 'app-table--ranked': ranked }, className]}>
   <div class="app-table__head" aria-hidden="true">
-    <span>#</span><span></span><span>App</span><span>Rating</span><span>Price from</span><span>{usageLabel}</span>
+    <span>#</span>
+    <span></span>
+    <span>App</span>
+    <span>Rating</span>
+    <span>Price from</span>
+    <span>{usageLabel}</span>
   </div>
   <ol class="app-table__list">
     <slot />

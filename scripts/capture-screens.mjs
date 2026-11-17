@@ -21,11 +21,21 @@ const widths = opt('widths', '390,1440').split(',').map(Number);
 const routes = args.length ? args : ['/'];
 mkdirSync(out, { recursive: true });
 
-const slug = (route) => route.replace(/^\/$/, 'home').replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') || 'home';
+const slug = (route) =>
+  route
+    .replace(/^\/$/, 'home')
+    .replace(/^\//, '')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/-+$/, '') || 'home';
 const browser = await chromium.launch();
 for (const width of widths) {
-  const page = await browser.newPage({ viewport: { width, height: width < 600 ? 844 : 900 }, deviceScaleFactor: width < 600 ? 2 : 1 });
-  await page.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, (r) => (r.request().resourceType() === 'image' ? r.fulfill({ status: 404 }) : r.abort()));
+  const page = await browser.newPage({
+    viewport: { width, height: width < 600 ? 844 : 900 },
+    deviceScaleFactor: width < 600 ? 2 : 1,
+  });
+  await page.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, (r) =>
+    r.request().resourceType() === 'image' ? r.fulfill({ status: 404 }) : r.abort(),
+  );
   for (const route of routes) {
     const res = await page.goto(base + route, { waitUntil: 'networkidle' });
     await page.evaluate(async () => {

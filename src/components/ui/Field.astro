@@ -17,8 +17,16 @@ const { label, for: htmlFor, hint, error, optional = false, class: className } =
     {optional && <span class="field__optional">Optional</span>}
   </label>
   <slot />
-  {hint && !error && <p class="field__hint" id={`${htmlFor}-hint`}>{hint}</p>}
-  {error && <p class="field__error" id={`${htmlFor}-error`}>{error}</p>}
+  {hint && !error && (
+    <p class="field__hint" id={`${htmlFor}-hint`}>
+      {hint}
+    </p>
+  )}
+  {error && (
+    <p class="field__error" id={`${htmlFor}-error`}>
+      {error}
+    </p>
+  )}
 </div>
 
 <style>

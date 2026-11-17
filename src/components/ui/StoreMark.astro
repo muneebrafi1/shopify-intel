@@ -20,8 +20,10 @@ const tone = toneFor(domain);
 <span
   class:list={['store-mark', className]}
   style={`--s:${size}px;--bg:${tone.mark};--fg:${tone.markInk}`}
-  aria-hidden="true">{initial}</span
+  aria-hidden="true"
 >
+  {initial}
+</span>
 
 <style>
   .store-mark {

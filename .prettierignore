@@ -5,3 +5,9 @@ node_modules
 data/seed
 package-lock.json
 docs/design/research.md
+# Owner-written docs and inputs: keep their formatting.
+CLAUDE.md
+AGENTS.md
+docs/BRIEF.md
+data/seed
+tools

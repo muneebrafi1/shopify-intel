@@ -23,8 +23,17 @@ interface Props {
   eager?: boolean;
   class?: string;
 }
-const { slug, name, vendor, priceLabel, storesCount, shots, href = `/themes/${slug}`, eager = false, class: className } =
-  Astro.props;
+const {
+  slug,
+  name,
+  vendor,
+  priceLabel,
+  storesCount,
+  shots,
+  href = `/themes/${slug}`,
+  eager = false,
+  class: className,
+} = Astro.props;
 const desktops = shots.filter((s) => (s.device ?? 'desktop') === 'desktop');
 const mobile = shots.find((s) => s.device === 'mobile');
 const deck = desktops.slice(0, 3).map((s) => {
@@ -32,53 +41,58 @@ const deck = desktops.slice(0, 3).map((s) => {
   return { ...s, thumb: thumbUrl(s.src, { cropHeight: h, width: 640 }), cropH: h };
 });
 // One store only: pair its desktop and mobile home pages instead of a lonely single capture.
-const pair = deck.length < 2 && mobile
-  ? (() => {
-      const h = thumbCropHeight(mobile.width, mobile.height, 'mobile');
-      return { ...mobile, thumb: thumbUrl(mobile.src, { cropHeight: h, width: 240 }), cropH: h };
-    })()
-  : null;
+const pair =
+  deck.length < 2 && mobile
+    ? (() => {
+        const h = thumbCropHeight(mobile.width, mobile.height, 'mobile');
+        return { ...mobile, thumb: thumbUrl(mobile.src, { cropHeight: h, width: 240 }), cropH: h };
+      })()
+    : null;
 // Front card last in the DOM so it paints on top.
 const ordered = [...deck].reverse();
 ---
 
 <article class:list={['theme-card', className]}>
-  <a href={href} class:list={['theme-card__well', { 'theme-card__well--pair': !!pair }]} aria-label={`${name} theme`}>
-    {
-      deck.length === 0 ? (
-        <span class="theme-card__none">No captured stores yet</span>
-      ) : (
-        ordered.map((s, i) => (
-          <img
-            class={`theme-card__img theme-card__img--${deck.length - 1 - i}`}
-            src={s.thumb}
-            alt={i === ordered.length - 1 ? (s.alt ?? `${name} on a live store`) : ''}
-            width={s.width}
-            height={s.cropH}
-            loading={eager ? 'eager' : 'lazy'}
-            decoding="async"
-          />
-        ))
-      )
-    }
-    {
-      pair && (
+  <a
+    href={href}
+    class:list={['theme-card__well', { 'theme-card__well--pair': !!pair }]}
+    aria-label={`${name} theme`}
+  >
+    {deck.length === 0 ? (
+      <span class="theme-card__none">No captured stores yet</span>
+    ) : (
+      ordered.map((s, i) => (
         <img
-          class="theme-card__mobile"
-          src={pair.thumb}
-          alt=""
-          width={pair.width}
-          height={pair.cropH}
+          class={`theme-card__img theme-card__img--${deck.length - 1 - i}`}
+          src={s.thumb}
+          alt={i === ordered.length - 1 ? (s.alt ?? `${name} on a live store`) : ''}
+          width={s.width}
+          height={s.cropH}
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
         />
-      )
-    }
+      ))
+    )}
+    {pair && (
+      <img
+        class="theme-card__mobile"
+        src={pair.thumb}
+        alt=""
+        width={pair.width}
+        height={pair.cropH}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    )}
   </a>
   <div class="theme-card__caption">
     <div class="theme-card__text">
-      <h3 class="theme-card__name display"><a href={href}>{name}</a></h3>
-      <p class="theme-card__meta">{vendor} · {priceLabel}</p>
+      <h3 class="theme-card__name display">
+        <a href={href}>{name}</a>
+      </h3>
+      <p class="theme-card__meta">
+        {vendor} · {priceLabel}
+      </p>
     </div>
     <p class="theme-card__count">
       <span class="theme-card__count-n">{storesCount.toLocaleString('en-US')}</span>

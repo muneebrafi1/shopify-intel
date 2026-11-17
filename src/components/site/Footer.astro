@@ -54,38 +54,39 @@ const year = new Date().getFullYear();
 <footer class="footer">
   <div class="container footer__grid">
     <div class="footer__brand">
-      <a href="/" aria-label="Home"><Logo /></a>
+      <a href="/" aria-label="Home">
+        <Logo />
+      </a>
       <p class="footer__pitch">
         Real Shopify stores, page by page. See every theme and app on live storefronts before you
         buy or install.
       </p>
       {dataNote && <p class="footer__data num">{dataNote}</p>}
     </div>
-    {
-      COLUMNS.map((col) => (
-        <nav class="footer__col" aria-label={col.title}>
-          <h2 class="footer__title mlabel mlabel--bullet">{col.title}</h2>
-          <ul>
-            {col.links.map((link) => (
-              <li>
-                <a href={link.href}>{link.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ))
-    }
+    {COLUMNS.map((col) => (
+      <nav class="footer__col" aria-label={col.title}>
+        <h2 class="footer__title mlabel mlabel--bullet">{col.title}</h2>
+        <ul>
+          {col.links.map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    ))}
   </div>
   <div class="container footer__mark">
     <Wordmark />
   </div>
   <div class="container footer__legal">
-    <p>© {year} {SITE_NAME}</p>
+    <p>
+      © {year} {SITE_NAME}
+    </p>
     <p>
       Independent. Not affiliated with or endorsed by Shopify Inc. Some links are affiliate links;
-      they never influence what we detect or how we rank. <a href="/affiliate-disclosure"
-        >How we make money</a
-      >
+      they never influence what we detect or how we rank.{' '}
+      <a href="/affiliate-disclosure">How we make money</a>
     </p>
   </div>
 </footer>

@@ -86,16 +86,16 @@ const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:type" content="website" />
-    {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site ?? Astro.url).href} />}
+    {ogImage && (
+      <meta property="og:image" content={new URL(ogImage, Astro.site ?? Astro.url).href} />
+    )}
     <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
-    {
-      ldItems.map((item) => (
-        <script
-          type="application/ld+json"
-          set:html={JSON.stringify({ '@context': 'https://schema.org', ...item })}
-        />
-      ))
-    }
+    {ldItems.map((item) => (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify({ '@context': 'https://schema.org', ...item })}
+      />
+    ))}
     <script is:inline>
       // Remote images (app icons from the App Store CDN) can fail; drop them so the monogram
       // underneath shows instead of a broken-image glyph.
@@ -111,7 +111,9 @@ const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     <slot name="head" />
   </head>
   <body class={bodyClass}>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
     {SHOW_CAPTURE_PREVIEW_NOTICE && chrome === 'full' && <PreviewNotice />}
     {chrome !== 'none' && <Header minimal={chrome === 'minimal'} counts={navCounts} />}
     <main id="main" tabindex="-1">

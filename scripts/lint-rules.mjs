@@ -29,18 +29,24 @@ const rules = [
     id: 'affiliate-url',
     test: (rel, line) =>
       rel.startsWith('src/') &&
-      /(shoffi\.app\/r\/|partner\.gorgias|utm_medium=affiliate|[?&]fpr=|partnerstack\.com\/|\?ref=|\?via=)/i.test(line),
+      /(shoffi\.app\/r\/|partner\.gorgias|utm_medium=affiliate|[?&]fpr=|partnerstack\.com\/|\?ref=|\?via=)/i.test(
+        line,
+      ),
     message: 'Affiliate URL in source; keep affiliate links in data (served via /go/:id)',
   },
   {
     id: 'secret',
     test: (_rel, line) =>
-      /(AKIA[0-9A-Z]{16}|sk_(live|test)_[0-9a-zA-Z]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|ghp_[0-9A-Za-z]{30,}|xox[baprs]-[0-9A-Za-z-]{10,})/.test(line),
+      /(AKIA[0-9A-Z]{16}|sk_(live|test)_[0-9a-zA-Z]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|ghp_[0-9A-Za-z]{30,}|xox[baprs]-[0-9A-Za-z-]{10,})/.test(
+        line,
+      ),
     message: 'Looks like a secret; use environment variables / Wrangler secrets',
   },
   {
     id: 'personal-email',
-    test: (_rel, line) => /[A-Za-z0-9._%+-]+@(gmail|yahoo|hotmail|outlook|icloud|proton)\.(com|me)\b/i.test(line) && !/example|placeholder|someone@/i.test(line),
+    test: (_rel, line) =>
+      /[A-Za-z0-9._%+-]+@(gmail|yahoo|hotmail|outlook|icloud|proton)\.(com|me)\b/i.test(line) &&
+      !/example|placeholder|someone@/i.test(line),
     message: 'Personal email address in source',
   },
 ];
@@ -70,7 +76,8 @@ for (const file of files) {
   readFileSync(file, 'utf8')
     .split('\n')
     .forEach((line, i) => {
-      for (const rule of rules) if (rule.test(rel, line)) problems.push(`${rel}:${i + 1}  [${rule.id}] ${rule.message}`);
+      for (const rule of rules)
+        if (rule.test(rel, line)) problems.push(`${rel}:${i + 1}  [${rule.id}] ${rule.message}`);
     });
 }
 if (problems.length) {

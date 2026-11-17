@@ -14,7 +14,13 @@ const { bullet = true, tone = 'muted', as: Tag = 'span', class: className, id } 
   id={id}
   class:list={[
     'mlabel',
-    { 'mlabel--bullet': bullet, 'mlabel--ink': tone === 'ink', 'mlabel--accent': tone === 'accent' },
+    {
+      'mlabel--bullet': bullet,
+      'mlabel--ink': tone === 'ink',
+      'mlabel--accent': tone === 'accent',
+    },
     className,
-  ]}><slot /></Tag
+  ]}
 >
+  <slot />
+</Tag>

@@ -15,17 +15,17 @@ const { title, body, align = 'center', size = 'md', class: className } = Astro.p
 
 <div class:list={['empty', `empty--${align}`, `empty--${size}`, className]}>
   <div class="empty__art" aria-hidden="true">
-    <span></span><span></span><span></span>
+    <span></span>
+    <span></span>
+    <span></span>
   </div>
   <h2 class="empty__title">{title}</h2>
   {body && <p class="empty__body">{body}</p>}
-  {
-    Astro.slots.has('default') && (
-      <div class="empty__actions">
-        <slot />
-      </div>
-    )
-  }
+  {Astro.slots.has('default') && (
+    <div class="empty__actions">
+      <slot />
+    </div>
+  )}
 </div>
 
 <style>
