@@ -41,6 +41,33 @@ definitions (or call the HTTP API from elsewhere).
 - A slim sitewide notice (`SHOW_CAPTURE_PREVIEW_NOTICE` in `src/config/site.ts`) says
   screenshots are previews until the first capture run.
 
+### Capture blocks: the contract the capture pipeline must follow
+
+Owner decision (draft): a removal request of scope `screenshots` (and of course `store`) also
+**stops all future captures** of that store. Approving such a request in the admin (or through
+`POST /api/v1/admin/removal-requests/{id}`) writes a row in `capture_blocks`
+(`migrations/0002_capture_block.sql`) in the same batch as the approval, cancels queued capture
+jobs, and makes `queueJob(kind: 'capture')` refuse the domain (`capture_blocked`). Tombstoned
+domains (whole-store opt-outs) count as blocked too. Detection rescans are not blocked for
+`screenshots` requests: the store stays listed with its theme and apps.
+
+The pipeline (a separate job, not part of the Worker) must:
+
+1. Take its work list only from `listCaptureTargets(db, { scope, limit, after })` in
+   `src/server/repo/capture.ts`, or over HTTP `GET /api/v1/admin/capture-targets` (active
+   stores, not tombstoned, not blocked; `scope=curated` by default, `scope=all` for every
+   detected store; keyset paging with `after`).
+2. Re-check right before each capture with `isCaptureBlocked(db, domain)` or
+   `GET /api/v1/admin/capture-status/{domain}` (`{ blocked: true }` → skip): a request can be
+   approved while a run is in progress.
+3. On ingest, re-check `isCaptureBlocked()` once more and discard (never store in R2) anything
+   for a blocked domain.
+
+Blocks are permanent. They hold no personal data and **outlive the removal request record**:
+when the record is purged after two years (below), the block stays, with its `RR-…` reference
+and `removal_request_id` set to NULL. There is no "unblock" action yet; lifting a block (for an
+owner who asks to be listed again) is a manual, audited database change for now.
+
 ## Local development and CI
 
 - `npm run setup` builds seed SQL from `data/seed/*.json` + `data/curation/*` and loads it into
