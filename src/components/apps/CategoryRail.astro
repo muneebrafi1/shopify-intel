@@ -28,17 +28,15 @@ const { all, items, class: className } = Astro.props;
         <span class="rail__count num">{all.count}</span>
       </a>
     </li>
-    {
-      items.map((item, i) => (
-        <li>
-          <a href={item.href} rel="nofollow" aria-current={item.selected ? 'true' : undefined}>
-            <span class="rail__n">{String(i + 1).padStart(2, '0')}</span>
-            <span class="rail__name">{item.label}</span>
-            <span class="rail__count num">{item.count}</span>
-          </a>
-        </li>
-      ))
-    }
+    {items.map((item, i) => (
+      <li>
+        <a href={item.href} rel="nofollow" aria-current={item.selected ? 'true' : undefined}>
+          <span class="rail__n">{String(i + 1).padStart(2, '0')}</span>
+          <span class="rail__name">{item.label}</span>
+          <span class="rail__count num">{item.count}</span>
+        </a>
+      </li>
+    ))}
   </ol>
   <a class="rail__more" href="/apps/categories">
     Categories by reach <span aria-hidden="true">→</span>

@@ -19,6 +19,12 @@ export const ListSectionsInput = z.object({
   theme: z.string().optional().describe('Theme slug.'),
   app: z.string().optional().describe('App slug.'),
   store: z.string().optional().describe('Store domain.'),
+  sort: z
+    .enum(['id', 'mixed'])
+    .default('id')
+    .describe(
+      "'id': ingest order (a page's sections stay together). 'mixed': stable shuffle that interleaves stores — the library's browsing order.",
+    ),
   cursor: z.string().optional(),
   limit: int().min(1).max(60).default(24),
 });
@@ -70,7 +76,9 @@ export const SectionDetailSchema = named(
     more_like_this: z.array(SectionCardSchema),
     in_type: z
       .object({
-        position: int().describe('1-based position among current sections of this type.'),
+        position: int().describe(
+          "1-based position among current sections of this type, in library ('mixed') order.",
+        ),
         total: int(),
         prev: SectionLinkSchema.nullable(),
         next: SectionLinkSchema.nullable(),

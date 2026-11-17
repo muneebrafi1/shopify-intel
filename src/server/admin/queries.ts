@@ -129,10 +129,11 @@ export interface AuditRow {
 
 export async function getRecentAudit(
   db: Db,
-  opts: { limit?: number; targetType?: string; targetId?: string } = {},
+  opts: { limit?: number; targetType?: string; targetId?: string; excludeAuth?: boolean } = {},
 ): Promise<AuditRow[]> {
   const where: string[] = [];
   const params: SqlValue[] = [];
+  if (opts.excludeAuth) where.push("action NOT LIKE 'auth.%'");
   if (opts.targetType) {
     where.push('target_type = ?');
     params.push(opts.targetType);
@@ -148,6 +149,25 @@ export async function getRecentAudit(
      ORDER BY id DESC LIMIT ?`,
     params,
   );
+}
+
+export interface AuthSummary {
+  lastSignIn: string | null;
+  failed24h: number;
+  signIns24h: number;
+}
+
+/** Sign-in activity for the overview (kept out of the content activity feed). */
+export async function getAuthSummary(db: Db, now: Date): Promise<AuthSummary> {
+  const since = new Date(now.getTime() - 86_400_000).toISOString();
+  const row = await db.first<AuthSummary>(
+    `SELECT
+      (SELECT MAX(created_at) FROM admin_audit WHERE action = 'auth.login') AS lastSignIn,
+      (SELECT COUNT(*) FROM admin_audit WHERE action = 'auth.login_failed' AND created_at > ?) AS failed24h,
+      (SELECT COUNT(*) FROM admin_audit WHERE action = 'auth.login' AND created_at > ?) AS signIns24h`,
+    [since, since],
+  );
+  return row ?? { lastSignIn: null, failed24h: 0, signIns24h: 0 };
 }
 
 // ---------------------------------------------------------------------------------------------

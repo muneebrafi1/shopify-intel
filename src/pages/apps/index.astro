@@ -20,7 +20,13 @@ import PlainList from '~/components/apps/PlainList.astro';
 import { api } from '~/server/api';
 import type { AppListItem, SectionCard } from '~/server/api/v1/types';
 import { formatDate } from '~/lib/format';
-import { appStoreSource, intParam, priceFrom, sliceFromCursorList, urlWith } from '~/components/apps/helpers';
+import {
+  appStoreSource,
+  intParam,
+  priceFrom,
+  sliceFromCursorList,
+  urlWith,
+} from '~/components/apps/helpers';
 
 const PAGE_SIZE = 60;
 const SORTS = [
@@ -35,7 +41,10 @@ const RATINGS = ['4.8', '4.5', '4'] as const;
 const url = Astro.url;
 const sp = url.searchParams;
 const category = sp.get('category') || undefined;
-const price = sp.get('price') === 'free' || sp.get('price') === 'paid' ? (sp.get('price') as 'free' | 'paid') : undefined;
+const price =
+  sp.get('price') === 'free' || sp.get('price') === 'paid'
+    ? (sp.get('price') as 'free' | 'paid')
+    : undefined;
 const bfs = sp.get('bfs') === '1';
 const ratingParam = RATINGS.find((r) => r === sp.get('rating'));
 const sort: Sort = SORTS.find((s) => s.value === sp.get('sort'))?.value ?? 'usage';
@@ -63,7 +72,11 @@ const items: AppListItem[] =
         await sliceFromCursorList(
           async (limit, cursor) => {
             const r = await api.listApps({ ...filters, limit, cursor });
-            return { items: r.data.items, next: r.meta.pagination?.next_cursor ?? null, total: r.meta.pagination?.total ?? null };
+            return {
+              items: r.data.items,
+              next: r.meta.pagination?.next_cursor ?? null,
+              total: r.meta.pagination?.total ?? null,
+            };
           },
           (page - 1) * PAGE_SIZE,
           PAGE_SIZE,
@@ -71,7 +84,8 @@ const items: AppListItem[] =
       ).items;
 
 const sources = first.meta.sources;
-const scan = sources[items[0]?.usage.source ?? 'storepeek-scan-2026-11-17'] ?? Object.values(sources)[0];
+const scan =
+  sources[items[0]?.usage.source ?? 'storepeek-scan-2026-11-17'] ?? Object.values(sources)[0];
 const appStore = sources['shopify-app-store'];
 const ratingSource = appStoreSource(appStore?.as_of);
 const denominator = items[0]?.usage.denominator ?? first.data.items[0]?.usage.denominator ?? 0;
@@ -90,7 +104,12 @@ if (view === 'grid') {
     items.map(async (app) => {
       const type = app.category ? surfaceSlug.get(app.category.slug) : undefined;
       if (!type) return sectionsByApp.set(app.slug, null);
-      const r = await api.listSections({ app: app.slug, type: type as never, device: 'desktop', limit: 1 });
+      const r = await api.listSections({
+        app: app.slug,
+        type: type as never,
+        device: 'desktop',
+        limit: 1,
+      });
       let s = r.data.items[0] ?? null;
       if (!s) s = (await api.listSections({ app: app.slug, limit: 1 })).data.items[0] ?? null;
       sectionsByApp.set(app.slug, s);
@@ -98,7 +117,8 @@ if (view === 'grid') {
   );
 }
 
-const surfaceOf = (app: AppListItem) => (app.category ? (surfaceByCategory.get(app.category.slug) ?? null) : null);
+const surfaceOf = (app: AppListItem) =>
+  app.category ? (surfaceByCategory.get(app.category.slug) ?? null) : null;
 const plated = items.filter((a) => sectionsByApp.get(a.slug));
 const unseen = items.filter((a) => !sectionsByApp.get(a.slug) && surfaceOf(a));
 const background = items.filter((a) => !sectionsByApp.get(a.slug) && !surfaceOf(a));
@@ -116,7 +136,12 @@ const groups: FilterGroup[] = [
     key: 'category',
     label: 'Category',
     options: [
-      { label: 'All categories', href: urlWith(url, { category: null }), selected: !category, count: allCount },
+      {
+        label: 'All categories',
+        href: urlWith(url, { category: null }),
+        selected: !category,
+        count: allCount,
+      },
       ...railItems.map((f) => ({
         label: f.label,
         href: urlWith(url, { category: f.value }),
@@ -130,7 +155,11 @@ const groups: FilterGroup[] = [
     label: 'Price',
     options: [
       { label: 'Any price', href: urlWith(url, { price: null }), selected: !price },
-      { label: 'Has a free plan', href: urlWith(url, { price: 'free' }), selected: price === 'free' },
+      {
+        label: 'Has a free plan',
+        href: urlWith(url, { price: 'free' }),
+        selected: price === 'free',
+      },
       { label: 'Paid only', href: urlWith(url, { price: 'paid' }), selected: price === 'paid' },
     ],
   },
@@ -184,13 +213,19 @@ const jsonLd = {
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 ---
 
-<BaseLayout title={title} description={description} canonical="/apps" noindex={hasParams} jsonLd={jsonLd}>
+<BaseLayout
+  title={title}
+  description={description}
+  canonical="/apps"
+  noindex={hasParams}
+  jsonLd={jsonLd}
+>
   <div class="container">
     <PageHeader title="Apps" count={catalogue} eyebrow="Index — ranked by use">
       <Fragment slot="meta">
         <p class="statement display">
-          The apps live Shopify stores actually run, ranked by how many of {denominator.toLocaleString('en-US')} scanned
-          stores we found them on.
+          The apps live Shopify stores actually run, ranked by how many of{' '}
+          {denominator.toLocaleString('en-US')} scanned stores we found them on.
         </p>
         <div class="specline">
           <MonoLabel>Scanned {formatDate(scan?.as_of)}</MonoLabel>
@@ -199,15 +234,24 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         </div>
       </Fragment>
       <Fragment slot="actions">
-        <Button href="/apps/categories" size="sm" iconRight="arrow-right">Browse by category</Button>
-        <Button href="/compare" size="sm" variant="quiet">Compare apps</Button>
+        <Button href="/apps/categories" size="sm" iconRight="arrow-right">
+          Browse by category
+        </Button>
+        <Button href="/compare" size="sm" variant="quiet">
+          Compare apps
+        </Button>
       </Fragment>
     </PageHeader>
 
     <div class="apps-layout">
       <aside class="apps-layout__rail">
         <CategoryRail
-          all={{ label: 'All apps', href: urlWith(url, { category: null }), count: allCount, selected: !category }}
+          all={{
+            label: 'All apps',
+            href: urlWith(url, { category: null }),
+            count: allCount,
+            selected: !category,
+          }}
           items={railItems.map((f) => ({
             label: f.label,
             href: urlWith(url, { category: f.value }),
@@ -231,70 +275,75 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           }}
         />
 
-        {
-          items.length === 0 ? (
-            <EmptyState
-              class="apps-empty"
-              title="No apps match these filters"
-              body={`Try removing a filter, or browse all ${allCount} apps.`}
-            >
-              <Button href={clearHref} size="sm">
-                Clear filters
-              </Button>
-            </EmptyState>
-          ) : view === 'grid' ? (
-            <>
-              <p class="grid-note">
-                Each plate is the app’s own section on a curated store — a layout preview drawn from detected sections
-                until captures land.
+        {items.length === 0 ? (
+          <EmptyState
+            class="apps-empty"
+            title="No apps match these filters"
+            body={`Try removing a filter, or browse all ${allCount} apps.`}
+          >
+            <Button href={clearHref} size="sm">
+              Clear filters
+            </Button>
+          </EmptyState>
+        ) : view === 'grid' ? (
+          <>
+            <p class="grid-note">
+              Each plate is the app’s own section on a curated store — a layout preview drawn from
+              detected sections until captures land.
+            </p>
+            {plated.length > 0 ? (
+              <div class="grid grid--sections apps-grid">
+                {plated.map((app, i) => (
+                  <AppTile
+                    app={app}
+                    section={sectionsByApp.get(app.slug) ?? null}
+                    surface={surfaceOf(app)}
+                    eager={i < 4}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p class="grid-none">
+                None of the apps on this page has been seen rendering a section yet.
               </p>
-              {plated.length > 0 ? (
-                <div class="grid grid--sections apps-grid">
-                  {plated.map((app, i) => (
-                    <AppTile app={app} section={sectionsByApp.get(app.slug) ?? null} surface={surfaceOf(app)} eager={i < 4} />
-                  ))}
-                </div>
-              ) : (
-                <p class="grid-none">None of the apps on this page has been seen rendering a section yet.</p>
-              )}
-              <PlainList
-                class="apps-plain"
-                title="Not on a curated store yet"
-                note="They render a section, but none of our curated stores runs them."
-                apps={unseen}
-                reason={(app) => (surfaceOf(app) ? `Renders as ${surfaceOf(app)}` : null)}
+            )}
+            <PlainList
+              class="apps-plain"
+              title="Not on a curated store yet"
+              note="They render a section, but none of our curated stores runs them."
+              apps={unseen}
+              reason={(app) => (surfaceOf(app) ? `Renders as ${surfaceOf(app)}` : null)}
+            />
+            <PlainList
+              class="apps-plain"
+              title="Works in the background"
+              note="No storefront section to show: scripts, back office, chat widgets."
+              apps={background}
+              reason={(app) => app.category?.name ?? null}
+            />
+          </>
+        ) : (
+          <AppTable class="apps-table" usageLabel="Stores">
+            {items.map((app) => (
+              <AppRow
+                slug={app.slug}
+                href={app.href}
+                name={app.short_name}
+                iconUrl={app.icon_url}
+                developer={app.developer}
+                category={app.category?.name}
+                rating={app.rating}
+                reviews={app.reviews}
+                priceLabel={priceFrom(app.pricing)}
+                storesCount={app.usage.stores}
+                sharePct={app.usage.share * 100}
+                rank={app.usage.rank ?? undefined}
+                builtForShopify={app.built_for_shopify}
+                ratingSource={app.rating ? ratingSource : undefined}
               />
-              <PlainList
-                class="apps-plain"
-                title="Works in the background"
-                note="No storefront section to show: scripts, back office, chat widgets."
-                apps={background}
-                reason={(app) => app.category?.name ?? null}
-              />
-            </>
-          ) : (
-            <AppTable class="apps-table" usageLabel="Stores">
-              {items.map((app) => (
-                <AppRow
-                  slug={app.slug}
-                  href={app.href}
-                  name={app.short_name}
-                  iconUrl={app.icon_url}
-                  developer={app.developer}
-                  category={app.category?.name}
-                  rating={app.rating}
-                  reviews={app.reviews}
-                  priceLabel={priceFrom(app.pricing)}
-                  storesCount={app.usage.stores}
-                  sharePct={app.usage.share * 100}
-                  rank={app.usage.rank ?? undefined}
-                  builtForShopify={app.built_for_shopify}
-                  ratingSource={app.rating ? ratingSource : undefined}
-                />
-              ))}
-            </AppTable>
-          )
-        }
+            ))}
+          </AppTable>
+        )}
 
         <Pagination
           class="apps-pager"
@@ -351,12 +400,12 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       display: block;
     }
   }
-  .apps-table,
   .apps-grid,
-  .apps-empty {
+  :global(.apps-table),
+  :global(.apps-empty) {
     margin-top: var(--space-6);
   }
-  .apps-plain {
+  :global(.apps-plain) {
     margin-top: var(--space-12);
   }
   .grid-none {
@@ -369,7 +418,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     color: var(--ink-3);
     font-size: var(--text-sm);
   }
-  .apps-pager {
+  :global(.apps-pager) {
     margin-top: var(--space-8);
   }
   .apps-sources {

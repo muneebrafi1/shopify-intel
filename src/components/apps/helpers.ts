@@ -30,7 +30,9 @@ export function priceFrom(p: AppPricing): string | null {
 
 /** "Shopify App Store, checked 17 Nov 2026" (rating/price tooltip and source lines). */
 export function appStoreSource(checkedOn: string | null | undefined): string {
-  return checkedOn ? `Shopify App Store, checked ${formatDate(checkedOn)}` : 'Shopify App Store listing';
+  return checkedOn
+    ? `Shopify App Store, checked ${formatDate(checkedOn)}`
+    : 'Shopify App Store listing';
 }
 
 /** "221 of 930 scanned stores" */
@@ -39,7 +41,9 @@ export function usageLine(u: UsageStat): string {
 }
 
 /** Store viewer URL anchored at a section: /stores/<domain>?page=product&device=mobile#section-504 */
-export function sectionViewerHref(s: Pick<SectionCard, 'id' | 'page_type' | 'device' | 'store'>): string {
+export function sectionViewerHref(
+  s: Pick<SectionCard, 'id' | 'page_type' | 'device' | 'store'>,
+): string {
   const q = new URLSearchParams({ page: s.page_type, device: s.device });
   return `${s.store.href}?${q.toString()}#section-${s.id}`;
 }
@@ -61,7 +65,11 @@ export const pageName = (slug: string) => PAGE_NAMES[slug] ?? slug;
  * Builds hrefs for a list page from the current URL: `withParams({ category: 'reviews', p: null })`
  * keeps the other params, drops nulls and the page number by default.
  */
-export function urlWith(url: URL, changes: Record<string, string | null | undefined>, keepPage = false): string {
+export function urlWith(
+  url: URL,
+  changes: Record<string, string | null | undefined>,
+  keepPage = false,
+): string {
   const next = new URLSearchParams(url.searchParams);
   if (!keepPage) next.delete('p');
   for (const [k, v] of Object.entries(changes)) {
@@ -96,7 +104,10 @@ export function breadcrumbLd(base: URL | string, items: Array<{ label: string; h
  * call. Lists only expose opaque cursors, so deep pages walk forward from the start.
  */
 export async function sliceFromCursorList<T>(
-  fetchPage: (limit: number, cursor?: string) => Promise<{ items: T[]; next: string | null; total: number | null }>,
+  fetchPage: (
+    limit: number,
+    cursor?: string,
+  ) => Promise<{ items: T[]; next: string | null; total: number | null }>,
   offset: number,
   size: number,
 ): Promise<{ items: T[]; total: number | null }> {

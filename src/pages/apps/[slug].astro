@@ -1,0 +1,767 @@
+---
+/**
+ * /apps/<slug> — an app as a specimen sheet: N° + name, spec rows from the App Store listing
+ * (with the date we read it), then the dark "where it shows up" stage (its own sections on
+ * curated stores, linked into the store viewer), the stores running it, plans, and its
+ * relationships (co-installs, themes, alternatives, comparisons). Alias slugs 301 to the
+ * canonical slug; unknown slugs are 404s.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Stat from '~/components/ui/Stat.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import IndexList from '~/components/ui/IndexList.astro';
+import IndexRow from '~/components/ui/IndexRow.astro';
+import Pagination from '~/components/ui/Pagination.astro';
+import Badge from '~/components/ui/Badge.astro';
+import AffiliateCta from '~/components/domain/AffiliateCta.astro';
+import AppTable from '~/components/domain/AppTable.astro';
+import AppRow from '~/components/domain/AppRow.astro';
+import SpecRows, { type SpecRow } from '~/components/apps/SpecRows.astro';
+import SeenOn from '~/components/apps/SeenOn.astro';
+import PlanSheet from '~/components/apps/PlanSheet.astro';
+import RankedRefs from '~/components/apps/RankedRefs.astro';
+import CompareList, { type ComparePair } from '~/components/apps/CompareList.astro';
+import { api, orNotFound } from '~/server/api';
+import type { AppStoreRow } from '~/server/api/v1/types';
+import type { Device } from '~/lib/taxonomy';
+import { formatDate, formatPrice } from '~/lib/format';
+import {
+  appStoreSource,
+  breadcrumbLd,
+  intParam,
+  priceFrom,
+  sharePct,
+  sliceFromCursorList,
+  specimen,
+  urlWith,
+} from '~/components/apps/helpers';
+
+const STORES_PAGE = 24;
+const slug = Astro.params.slug ?? '';
+if (!/^[a-z0-9][a-z0-9._-]*$/i.test(slug)) return Astro.rewrite('/404');
+
+const res = await orNotFound(api.getApp({ slug, stores_limit: STORES_PAGE }));
+if (!res) return Astro.rewrite('/404');
+const { data: detail, meta } = res;
+const app = detail.app;
+if (app.slug !== slug) {
+  const qs = Astro.url.search;
+  return Astro.redirect(`${meta.canonical ?? app.href}${qs}`, 301);
+}
+
+const url = Astro.url;
+const device: Device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
+const storesPage = intParam(url.searchParams.get('p'));
+const storesTotal = detail.stores.total;
+const storesPages = Math.max(1, Math.ceil(storesTotal / STORES_PAGE));
+if (storesPage > storesPages) return Astro.redirect(urlWith(url, { p: null }) + '#stores', 302);
+
+let storeRows: AppStoreRow[] = detail.stores.items;
+if (storesPage > 1) {
+  storeRows = (
+    await sliceFromCursorList(
+      async (limit, cursor) => {
+        const r = await api.listAppStores({ slug: app.slug, limit, cursor });
+        return {
+          items: r.data.items,
+          next: r.meta.pagination?.next_cursor ?? null,
+          total: r.meta.pagination?.total ?? null,
+        };
+      },
+      (storesPage - 1) * STORES_PAGE,
+      STORES_PAGE,
+    )
+  ).items;
+}
+
+const alternatives = await api.getAlternatives({ slug: app.slug, kind: 'app' }).catch(() => null);
+
+// ---- Facts ----
+const name = app.short_name;
+const full = app.name !== app.short_name ? app.name : null;
+const isBasic = app.profile === 'basic';
+const listingRead = Boolean(app.checked_on);
+const src = meta.sources;
+const scan = src[app.usage.source];
+const listingSource = appStoreSource(app.checked_on);
+const rank = app.usage.rank;
+const hasRating = typeof app.rating === 'number' && app.rating > 0;
+const yesNo = (v: boolean | null | undefined) => (v === true ? 'Yes' : v === false ? 'No' : null);
+const priceValue = (() => {
+  const p = app.pricing;
+  if (typeof p.from_cents === 'number' && p.from_cents > 0)
+    return `${formatPrice(p.from_cents)} per month`;
+  if (p.free_plan) return 'Free';
+  return null;
+})();
+const missing = listingRead ? 'Not listed' : 'Not checked yet';
+const languages = app.languages;
+const specRows: SpecRow[] = [
+  {
+    label: 'Category',
+    value: app.category?.name ?? null,
+    href: app.category?.href,
+    sub:
+      app.app_store_category && app.app_store_category !== app.category?.name
+        ? `App Store: ${app.app_store_category}`
+        : null,
+  },
+  {
+    label: 'Rating',
+    value: hasRating ? `${app.rating!.toFixed(1)} of 5` : null,
+    sub: hasRating
+      ? `${typeof app.reviews === 'number' ? `${app.reviews.toLocaleString('en-US')} reviews · ` : ''}App Store, checked ${formatDate(app.checked_on)}`
+      : null,
+    missing: listingRead ? 'No rating yet' : 'Not checked yet',
+    title: listingSource,
+  },
+  { label: 'Price from', value: priceValue, missing },
+  { label: 'Free plan', value: yesNo(app.pricing.free_plan), missing },
+  {
+    label: 'Trial',
+    value: app.pricing.trial_days
+      ? `${app.pricing.trial_days} days`
+      : listingRead && app.plans.length
+        ? 'None listed'
+        : null,
+    missing,
+  },
+  { label: 'Built for Shopify', value: yesNo(app.built_for_shopify), missing },
+  { label: 'Launched', value: app.launched_on ? formatDate(app.launched_on) : null, missing },
+  {
+    label: 'Languages',
+    value: languages.length
+      ? languages.length <= 2
+        ? languages.join(', ')
+        : `${languages[0]} + ${languages.length - 1} more`
+      : null,
+    title: languages.join(', '),
+    missing,
+  },
+];
+const known = [
+  app.rating,
+  app.pricing.label,
+  app.launched_on,
+  app.plans.length || null,
+  languages.length || null,
+].filter(Boolean).length;
+
+// ---- Stores running it (hover previews for curated stores) ----
+const previewByDomain = new Map(
+  detail.seen_on.stores.filter((s) => s.preview).map((s) => [s.store.domain, s.preview!]),
+);
+
+// ---- Relationships ----
+const coInstalled = detail.co_installed.slice(0, 10).map((c) => ({
+  href: c.app.href,
+  name: c.app.short_name,
+  sub: c.app.category?.name ?? null,
+  iconUrl: c.app.icon_url,
+  stores: c.stores,
+  share: c.share,
+}));
+const themes = detail.themes.slice(0, 8).map((t) => ({
+  href: t.theme.href,
+  name: t.theme.name,
+  sub: t.theme.vendor,
+  stores: t.stores,
+  share: t.share,
+}));
+const altItems = alternatives?.data.items ?? [];
+const altApps = altItems.length ? altItems.map((i) => i.app!).filter(Boolean) : detail.alternatives;
+const altHref = `/alternatives/${app.slug}`;
+const pairs: ComparePair[] = [];
+const seenPairs = new Set<string>();
+for (const c of detail.comparisons) {
+  if (seenPairs.has(c.href)) continue;
+  seenPairs.add(c.href);
+  const other = c.a.slug === app.slug ? c.b : c.a;
+  const otherItem = altItems.find((i) => i.app?.slug === other.slug);
+  pairs.push({
+    href: c.href,
+    a: { name, iconUrl: app.icon_url },
+    b: { name: otherItem?.app?.short_name ?? other.name, iconUrl: other.icon_url },
+    note: otherItem
+      ? `${otherItem.shared_stores} ${otherItem.shared_stores === 1 ? 'store runs' : 'stores run'} both`
+      : null,
+  });
+}
+for (const i of altItems.slice(0, 4)) {
+  if (!i.app || seenPairs.has(i.compare_href)) continue;
+  seenPairs.add(i.compare_href);
+  pairs.push({
+    href: i.compare_href,
+    a: { name, iconUrl: app.icon_url },
+    b: { name: i.app.short_name, iconUrl: i.app.icon_url },
+    note: `${i.shared_stores} ${i.shared_stores === 1 ? 'store runs' : 'stores run'} both`,
+  });
+}
+
+// ---- Page meta ----
+const crumbs = [
+  { label: 'Apps', href: '/apps' },
+  ...(app.category ? [{ label: app.category.name, href: app.category.href }] : []),
+  { label: name, href: app.href },
+];
+const title = `${name}: where it shows up on real Shopify stores`;
+const description = `${name}${full ? ` (${full})` : ''} runs on ${app.usage.stores} of ${app.usage.denominator} scanned Shopify stores${
+  hasRating ? `, rated ${app.rating!.toFixed(1)} on the App Store` : ''
+}. See its sections on real store pages, plans, co-installed apps and alternatives.`;
+
+const base = Astro.site ?? url;
+const offers = app.plans
+  .filter((p) => typeof p.price_cents === 'number')
+  .map((p) => ({
+    '@type': 'Offer',
+    name: p.name,
+    price: ((p.price_cents ?? 0) / 100).toFixed(2),
+    priceCurrency: 'USD',
+    ...(p.period ? { description: `per ${p.period}` } : {}),
+  }));
+const softwareLd: Record<string, unknown> = {
+  '@type': 'SoftwareApplication',
+  name: app.name,
+  alternateName: full ? name : undefined,
+  url: new URL(app.href, base).href,
+  applicationCategory: 'BusinessApplication',
+  applicationSubCategory: app.category?.name,
+  operatingSystem: 'Shopify',
+  description: app.tagline ?? undefined,
+  image: app.icon_url ?? undefined,
+  datePublished: app.launched_on ?? undefined,
+  author: app.developer ? { '@type': 'Organization', name: app.developer } : undefined,
+  sameAs: app.app_store_url ?? undefined,
+  ...(offers.length ? { offers } : {}),
+};
+if (hasRating && typeof app.reviews === 'number' && app.reviews > 0) {
+  // Only the App Store's own rating and count, cited by the listing URL and the date we read it.
+  softwareLd.aggregateRating = {
+    '@type': 'AggregateRating',
+    ratingValue: app.rating,
+    reviewCount: app.reviews,
+    bestRating: 5,
+    worstRating: 1,
+  };
+  softwareLd.isBasedOn = app.app_store_url ?? undefined;
+  softwareLd.dateModified = app.checked_on ?? undefined;
+}
+const jsonLd = [softwareLd, breadcrumbLd(base, crumbs)];
+
+const params = [...url.searchParams.keys()];
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={app.href}
+  noindex={params.length > 0}
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <Breadcrumbs items={crumbs} class="app-crumbs" />
+
+    <header class="head cols-12">
+      <div class="head__id span-8">
+        <MonoLabel as="p" tone="ink">
+          {rank ? specimen(rank) : 'N°—'} — App
+        </MonoLabel>
+        <div class="head__name">
+          <AppIcon src={app.icon_url} name={name} size={84} class="head__icon" />
+          <h1 class="head__title">{name}</h1>
+        </div>
+        <p class="head__full">
+          {full && <span>{full}</span>}
+          {app.developer && <span class="head__dev">by {app.developer}</span>}
+          {app.built_for_shopify && (
+            <Badge tone="outline" title="Built for Shopify badge on the App Store">
+              Built for Shopify
+            </Badge>
+          )}
+        </p>
+        {app.tagline && <p class="head__tagline display">“{app.tagline}”</p>}
+      </div>
+      <aside class="head__side start-9">
+        <dl class="head__stat marks">
+          <Stat
+            display
+            value={app.usage.stores}
+            label={`Stores running ${name}`}
+            source={`${sharePct(app.usage.share)} of ${app.usage.denominator.toLocaleString('en-US')} scanned · ${formatDate(app.usage.as_of)}`}
+          />
+        </dl>
+        {app.cta ? (
+          <AffiliateCta
+            href={app.cta.href}
+            label={app.cta.label}
+            isAffiliate={app.cta.is_affiliate}
+            size="md"
+            class="head__cta"
+          />
+        ) : (
+          <p class="head__nocta">No official listing on file yet.</p>
+        )}
+      </aside>
+    </header>
+
+    <section class="sheet cols-12" aria-labelledby="sheet-title">
+      <div class="sheet__label span-3">
+        <h2 class="mlabel mlabel--bullet mlabel--ink" id="sheet-title">
+          Spec sheet
+        </h2>
+        <p class="sheet__source">
+          {listingRead
+            ? `From the Shopify App Store listing, checked ${formatDate(app.checked_on)}.`
+            : 'Listing not read yet.'}
+        </p>
+      </div>
+      <div class="sheet__rows start-4">
+        <SpecRows rows={specRows} />
+        {isBasic && (
+          <div class="basic">
+            <p class="mlabel mlabel--bullet mlabel--accent">Basic profile</p>
+            <p class="basic__text">
+              We detect {name} on {app.usage.stores.toLocaleString('en-US')} scanned stores, but we
+              have
+              {known > 0 ? ' only partly read ' : ' not read '}
+              its App Store listing yet.{' '}
+              {known > 0
+                ? 'Plans, features and languages'
+                : 'Rating, pricing, plans and languages'}{' '}
+              are missing. Detection data, the stores running it and its co-installs below are
+              complete.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  </div>
+
+  <SeenOn
+    detail={detail}
+    device={device}
+    storesTotal={storesTotal}
+    deviceHref={(d) => `${urlWith(url, { device: d === 'desktop' ? null : d, p: null })}#where`}
+  />
+
+  <div class="container">
+    <section class="page-block" id="stores" aria-labelledby="stores-title">
+      <SectionHeader
+        title={`Stores running ${name}`}
+        id="stores-title"
+        count={storesTotal}
+        label="Detected"
+        description={`Found on ${storesTotal.toLocaleString('en-US')} of ${app.usage.denominator.toLocaleString('en-US')} scanned stores (${sharePct(app.usage.share)}). Curated stores also have page-by-page layout previews.`}
+        rule
+      />
+      <IndexList
+        columns="64px minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 0.8fr) 132px"
+        head={['N°', 'Store', 'Theme', 'Apps', 'Capture']}
+        label={`Stores running ${name}`}
+      >
+        {storeRows.map((row, i) => {
+          const preview = previewByDomain.get(row.store.domain);
+          return (
+            <IndexRow
+              n={(storesPage - 1) * STORES_PAGE + i + 1}
+              href={row.store.href}
+              title={row.store.display_name}
+              subtitle={[row.store.name ? row.store.domain : null, row.theme.label]
+                .filter(Boolean)
+                .join(' · ')}
+              preview={
+                preview
+                  ? {
+                      src: preview.image.src,
+                      width: preview.image.width,
+                      height: preview.image.height,
+                      device: preview.device,
+                    }
+                  : null
+              }
+              cells={[
+                { value: row.theme.label, muted: row.theme.is_custom },
+                { value: `(${row.app_count} apps)`, serif: true },
+                {
+                  value: row.store.is_curated ? 'Layout preview' : 'Scan only',
+                  mono: true,
+                  muted: !row.store.is_curated,
+                  mobile: row.store.is_curated,
+                },
+              ]}
+            />
+          );
+        })}
+      </IndexList>
+      <Pagination
+        class="stores-pager"
+        page={storesPage}
+        pageSize={STORES_PAGE}
+        total={storesTotal}
+        noun="stores"
+        hrefFor={(n) => `${urlWith(url, { p: n > 1 ? String(n) : null })}#stores`}
+      />
+      <SourceNote source={scan?.label ?? 'StorePeek scan'} class="block-source" />
+    </section>
+
+    {app.plans.length > 0 && (
+      <section class="page-block" aria-labelledby="plans-title">
+        <SectionHeader
+          title="Plans"
+          id="plans-title"
+          count={app.plans.length}
+          label="Pricing"
+          description={`As listed on the Shopify App Store, checked ${formatDate(app.checked_on)}. Prices in USD.`}
+        />
+        <PlanSheet plans={app.plans} />
+      </section>
+    )}
+
+    {(app.features.length > 0 || app.works_with.length > 0 || languages.length > 0) && (
+      <section class="page-block" aria-labelledby="listing-title">
+        <SectionHeader
+          title="What the listing says"
+          id="listing-title"
+          label="App Store"
+          description={`Features, integrations and languages from the Shopify App Store listing, checked ${formatDate(app.checked_on)}.`}
+          rule
+        />
+        <div class="lists">
+          {app.features.length > 0 && (
+            <div class="list-col">
+              <h2 class="mlabel mlabel--bullet mlabel--ink">Features</h2>
+              <ol class="features">
+                {app.features.map((f, i) => (
+                  <li>
+                    <span class="features__n">{String(i + 1).padStart(2, '0')}</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {app.works_with.length > 0 && (
+            <div class="list-col">
+              <h2 class="mlabel mlabel--bullet mlabel--ink">
+                Works with · {app.works_with.length}
+              </h2>
+              <ul class="quiet">
+                {app.works_with.map((w) => (
+                  <li>{w}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {languages.length > 0 && (
+            <div class="list-col">
+              <h2 class="mlabel mlabel--bullet mlabel--ink">Languages · {languages.length}</h2>
+              <p class="langs">{languages.join(', ')}.</p>
+            </div>
+          )}
+        </div>
+      </section>
+    )}
+
+    <section class="page-block relations" aria-label="Related apps and themes">
+      {coInstalled.length > 0 && (
+        <div class="relations__col">
+          <SectionHeader
+            title="Installed alongside"
+            level={2}
+            label="Co-installs"
+            description={`Apps most often found on the same stores. Share is of the ${storesTotal.toLocaleString('en-US')} stores running ${name}.`}
+          />
+          <RankedRefs items={coInstalled} kind="app" shareOf={`of ${name} stores`} />
+        </div>
+      )}
+      {themes.length > 0 && (
+        <div class="relations__col">
+          <SectionHeader
+            title={`Themes on stores running ${name}`}
+            level={2}
+            label="Themes"
+            description="Tracked themes only; custom and untracked themes are left out."
+          />
+          <RankedRefs items={themes} kind="theme" shareOf={`of ${name} stores`} />
+        </div>
+      )}
+    </section>
+
+    {altApps.length > 0 && (
+      <section class="page-block" aria-labelledby="alts-title">
+        <SectionHeader
+          title={`Alternatives to ${name}`}
+          id="alts-title"
+          label={app.category ? `Same category — ${app.category.name}` : 'Alternatives'}
+          count={altApps.length}
+          href={altHref}
+          linkLabel={`All ${altApps.length} alternatives`}
+          rule
+        />
+        <AppTable usageLabel="Stores">
+          {altApps.slice(0, 4).map((a) => (
+            <AppRow
+              slug={a.slug}
+              href={a.href}
+              name={a.short_name}
+              iconUrl={a.icon_url}
+              developer={a.developer}
+              category={a.category?.name}
+              rating={a.rating}
+              reviews={a.reviews}
+              priceLabel={priceFrom(a.pricing)}
+              storesCount={a.usage.stores}
+              sharePct={a.usage.share * 100}
+              rank={a.usage.rank ?? undefined}
+              builtForShopify={a.built_for_shopify}
+              ratingSource={a.rating ? appStoreSource(src['shopify-app-store']?.as_of) : undefined}
+            />
+          ))}
+        </AppTable>
+      </section>
+    )}
+
+    {pairs.length > 0 && (
+      <section class="page-block compare cols-12" aria-labelledby="compare-title">
+        <div class="span-4">
+          <MonoLabel as="p">Head to head</MonoLabel>
+          <h2 class="compare__title" id="compare-title">
+            Compare {name}
+          </h2>
+          <p class="compare__text">
+            Side by side at the same scale: where each renders, stores, ratings and plans. No
+            winners.
+          </p>
+        </div>
+        <div class="start-6 compare__list">
+          <CompareList items={pairs.slice(0, 6)} />
+        </div>
+      </section>
+    )}
+
+    <footer class="page-block sources">
+      <SourceNote
+        source={`${scan?.label ?? 'StorePeek scan'}: stores, share, co-installs, themes`}
+      />
+      <SourceNote
+        source={
+          listingRead
+            ? 'Shopify App Store listing: rating, reviews, plans, features, languages'
+            : 'Shopify App Store listing: not read yet for this app'
+        }
+        asOf={listingRead ? `checked ${formatDate(app.checked_on)}` : undefined}
+        href=""
+      />
+    </footer>
+  </div>
+</BaseLayout>
+
+<style>
+  :global(.app-crumbs) {
+    padding-top: var(--space-6);
+  }
+  .head {
+    align-items: end;
+    padding-block: var(--space-8) var(--space-10);
+  }
+  .head__id {
+    min-width: 0;
+  }
+  .head__name {
+    display: flex;
+    align-items: center;
+    gap: clamp(var(--space-4), 2vw, var(--space-6));
+    margin-top: var(--space-5);
+  }
+  .head__name :global(.head__icon) {
+    --s: clamp(56px, 4vw + 32px, 88px) !important;
+    --r: clamp(13px, 1vw + 8px, 20px) !important;
+  }
+  .head__title {
+    min-width: 0;
+    font-size: clamp(2.75rem, 1.4rem + 5.4vw, 6.5rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.045em;
+    line-height: 0.95;
+    overflow-wrap: anywhere;
+  }
+  .head__full {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-5);
+    color: var(--ink-2);
+    font-size: var(--text-lg);
+  }
+  .head__dev {
+    color: var(--ink-3);
+  }
+  .head__tagline {
+    max-width: 34ch;
+    margin-top: var(--space-5);
+    color: var(--ink-2);
+    font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.625rem);
+    font-style: italic;
+    line-height: 1.25;
+  }
+  .head__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+  .head__stat {
+    padding: var(--space-5) var(--space-5) var(--space-4);
+  }
+  .head__nocta {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  @media (max-width: 1023px) {
+    .head {
+      padding-block: var(--space-6) var(--space-8);
+      row-gap: var(--space-8);
+    }
+    .head__stat {
+      padding: var(--space-4);
+    }
+  }
+
+  .sheet {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-12);
+    border-top: 1px solid var(--ink);
+  }
+  @media (min-width: 1024px) {
+    .sheet__label {
+      grid-column: 1 / 4;
+    }
+    .sheet__rows {
+      grid-column: 4 / -1;
+    }
+  }
+  .sheet__source {
+    max-width: 28ch;
+    margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .basic {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 72ch;
+    margin-top: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    border-left: 2px solid var(--accent);
+    background: var(--fill);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .basic__text {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+
+  :global(.stores-pager) {
+    margin-top: var(--space-6);
+  }
+  :global(.block-source) {
+    margin-top: var(--space-4);
+  }
+
+  .lists {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+  }
+  @media (min-width: 1024px) {
+    .lists {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 3fr) minmax(0, 3fr);
+      gap: var(--space-12);
+    }
+  }
+  .list-col h2 {
+    margin-bottom: var(--space-4);
+  }
+  .features li {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-md);
+    line-height: 1.45;
+  }
+  .features li:first-child,
+  .quiet li:first-child {
+    border-top: 1px solid var(--line);
+  }
+  .features__n {
+    padding-top: 3px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .quiet li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .langs {
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: 1.6;
+  }
+
+  .relations {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-12);
+  }
+  @media (min-width: 1024px) {
+    .relations {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-16);
+    }
+  }
+  .relations__col {
+    min-width: 0;
+  }
+
+  .compare {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--ink);
+  }
+  .compare__title {
+    margin-top: var(--space-3);
+    font-size: clamp(1.375rem, 1.1rem + 0.9vw, 1.875rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+  .compare__text {
+    max-width: 36ch;
+    margin-top: var(--space-2);
+    color: var(--ink-3);
+  }
+  @media (min-width: 1024px) {
+    .compare__list {
+      grid-column: 6 / -1;
+    }
+  }
+
+  .sources {
+    display: grid;
+    gap: var(--space-2);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+</style>

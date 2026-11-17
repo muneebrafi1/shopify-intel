@@ -18,7 +18,7 @@ import StoreMark from '~/components/ui/StoreMark.astro';
 import { adminDb } from '~/server/admin/env';
 import { approveRemoval, rejectRemoval, retryRemovalMedia } from '~/server/admin/actions';
 import { checkbox, optionalText, text } from '~/server/admin/forms';
-import { idParam, runAction } from '~/server/admin/page';
+import { idParam, runAction, requireAdmin } from '~/server/admin/page';
 import {
   getRecentAudit,
   getRemoval,
@@ -28,6 +28,9 @@ import {
 } from '~/server/admin/queries';
 import { fullTime, shortDate, timeAgo } from '~/server/admin/format';
 import { normalizeDomain } from '~/server/lib/slug';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 const id = idParam(Astro.params.id);
 
@@ -416,7 +419,7 @@ const approveLabel =
   }
   .effects {
     margin-top: calc(var(--space-2) * -1);
-    padding-left: 1.3em;
+    padding-left: 1.9em;
     list-style: decimal;
     color: var(--ink-2);
     font-size: var(--text-sm);

@@ -1,0 +1,102 @@
+---
+/**
+ * Side-by-side comparisons for a theme: the other theme's name in the serif, "vs <this>" small,
+ * and why the pair is listed. Two columns on wide screens.
+ */
+import type { ComparisonLink } from '~/server/api/v1/types';
+
+interface Props {
+  slug: string;
+  items: ComparisonLink[];
+  class?: string;
+}
+const { slug, items, class: className } = Astro.props;
+const REASONS: Record<string, string> = {
+  'usage-top': 'Both widely used',
+  'same-vendor': 'Same vendor',
+  'similar-price': 'Similar price',
+  'shared-apps': 'Shared apps',
+};
+---
+
+<ul class:list={['cmp', className]}>
+  {
+    items.map((c) => {
+      const other = c.a.slug === slug ? c.b : c.a;
+      const self = c.a.slug === slug ? c.a : c.b;
+      return (
+        <li class="cmp__item">
+          <a href={c.href} class="cmp__link" aria-label={c.title}>
+            <span class="cmp__names">
+              <span class="cmp__other">{other.name}</span>
+              <span class="cmp__vs">vs {self.name}</span>
+            </span>
+            <span class="cmp__why mlabel">{REASONS[c.reason] ?? c.reason.replace(/-/g, ' ')}</span>
+            <span class="cmp__arrow" aria-hidden="true">→</span>
+          </a>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  .cmp {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 768px) {
+    .cmp {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-8);
+    }
+  }
+  .cmp__item {
+    border-bottom: 1px solid var(--line);
+  }
+  .cmp__link {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding: 14px 0;
+    transition: padding var(--dur-base) var(--ease-out);
+  }
+  .cmp__link:hover {
+    padding-left: var(--space-2);
+  }
+  .cmp__names {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0 var(--space-2);
+    min-width: 0;
+  }
+  .cmp__other {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+  .cmp__vs {
+    color: var(--ink-3);
+    font-family: var(--font-serif);
+    font-size: var(--text-md);
+    font-style: italic;
+  }
+  .cmp__arrow {
+    color: var(--ink-3);
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+  }
+  .cmp__link:hover .cmp__arrow {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+  @media (max-width: 479px) {
+    .cmp__why {
+      display: none;
+    }
+  }
+</style>

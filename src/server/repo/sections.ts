@@ -117,6 +117,14 @@ async function sectionFacets(ctx: Ctx, f: SectionFilters): Promise<ListSectionsO
   };
 }
 
+/**
+ * "Mixed" library order: a stable shuffle (Knuth multiplicative hash of the id) so browsing
+ * interleaves stores and pages instead of walking one page at a time. Same order every request;
+ * keyset-paginated on (mix, id).
+ */
+const MIX_SQL = '((s.id * 2654435761) % 4294967296)';
+const mixOf = (id: number) => Number((BigInt(id) * 2654435761n) % 4294967296n);
+
 export interface ListSectionsParams {
   type?: SectionType | undefined;
   group?: string | undefined;
@@ -125,6 +133,7 @@ export interface ListSectionsParams {
   theme?: string | undefined;
   app?: string | undefined;
   store?: string | undefined;
+  sort?: 'id' | 'mixed' | undefined;
   cursor?: string | undefined;
   limit: number;
 }
@@ -155,13 +164,15 @@ export async function listSections(ctx: Ctx, p: ListSectionsParams) {
     f.storeId = s?.id ?? null;
   }
   const w = sectionWhere(f);
-  const seek = p.cursor ? (decodeCursor(p.cursor, 1)[0] ?? null) : null;
+  const mixed = p.sort === 'mixed';
+  const seek = p.cursor ? decodeCursor(p.cursor, mixed ? 2 : 1) : null;
+  const seekSql = seek ? (mixed ? ` AND (${MIX_SQL}, s.id) > (?, ?)` : ' AND s.id > ?') : '';
   const [items, total, facets, typeInfo] = await Promise.all([
     sectionCards(
       ctx,
-      `${w.sql}${seek !== null ? ' AND s.id > ?' : ''}`,
-      seek !== null ? [...w.params, seek] : w.params,
-      `ORDER BY s.id LIMIT ${p.limit + 1}`,
+      `${w.sql}${seekSql}`,
+      seek ? [...w.params, ...seek] : w.params,
+      `ORDER BY ${mixed ? `${MIX_SQL}, s.id` : 's.id'} LIMIT ${p.limit + 1}`,
     ),
     ctx.db.first<{ n: number }>(`SELECT COUNT(*) AS n ${FROM} WHERE ${w.sql}`, w.params),
     sectionFacets(ctx, f),
@@ -175,7 +186,10 @@ export async function listSections(ctx: Ctx, p: ListSectionsParams) {
     section_type: typeInfo[0] ?? null,
     pagination: {
       limit: p.limit,
-      next_cursor: items.length > p.limit && last ? encodeCursor([last.id]) : null,
+      next_cursor:
+        items.length > p.limit && last
+          ? encodeCursor(mixed ? [mixOf(last.id), last.id] : [last.id])
+          : null,
       total: total?.n ?? 0,
     },
   };
@@ -275,13 +289,15 @@ export async function getSectionDetail(ctx: Ctx, id: number): Promise<SectionDet
   return { section: card, screenshot, more_like_this: dedupeByStore(more), in_type: inType };
 }
 
-/** Position of a section within its type in library order (by id), with prev/next links. */
+/** Position of a section within its type in library ("mixed") order, with prev/next links. */
 async function typeNeighbours(
   ctx: Ctx,
   type: SectionType,
   id: number,
 ): Promise<SectionDetail['in_type']> {
   const where = `${FROM} WHERE s.is_current = 1 AND s.section_type = ?`;
+  const key = `(${MIX_SQL}, s.id)`;
+  const mix = mixOf(id);
   const row = await ctx.db.first<{
     position: number;
     total: number;
@@ -289,11 +305,11 @@ async function typeNeighbours(
     next: number | null;
   }>(
     `SELECT
-       (SELECT COUNT(*) ${where} AND s.id <= ?) AS position,
+       (SELECT COUNT(*) ${where} AND ${key} <= (?, ?)) AS position,
        (SELECT COUNT(*) ${where}) AS total,
-       (SELECT MAX(s.id) ${where} AND s.id < ?) AS prev,
-       (SELECT MIN(s.id) ${where} AND s.id > ?) AS next`,
-    [type, id, type, type, id, type, id],
+       (SELECT s.id ${where} AND ${key} < (?, ?) ORDER BY ${MIX_SQL} DESC, s.id DESC LIMIT 1) AS prev,
+       (SELECT s.id ${where} AND ${key} > (?, ?) ORDER BY ${MIX_SQL}, s.id LIMIT 1) AS next`,
+    [type, mix, id, type, type, mix, id, type, mix, id],
   );
   const link = (n: number | null | undefined) =>
     n == null ? null : { id: n, href: hrefs.section(type, n) };

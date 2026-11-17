@@ -1,0 +1,86 @@
+---
+/**
+ * How the two audiences overlap in our scan: A only · both · B only, as serif numerals with
+ * mono labels inside crop marks. Neutral by construction (same weight, same colour).
+ */
+import { formatCount } from '~/lib/format';
+
+export interface OverlapCell {
+  value: number;
+  label: string;
+}
+interface Props {
+  cells: [OverlapCell, OverlapCell, OverlapCell];
+  source: string;
+  class?: string;
+}
+const { cells, source, class: className } = Astro.props;
+---
+
+<figure class:list={['ovl marks', className]}>
+  <dl class="ovl__cells">
+    {
+      cells.map((c, i) => (
+        <div class:list={['ovl__cell', { 'ovl__cell--both': i === 1 }]}>
+          <dt class="ovl__label">{c.label}</dt>
+          <dd class="ovl__value num">{formatCount(c.value)}</dd>
+        </div>
+      ))
+    }
+  </dl>
+  <figcaption class="ovl__source">{source}</figcaption>
+</figure>
+
+<style>
+  .ovl {
+    padding: var(--space-6) var(--space-5);
+  }
+  .ovl__cells {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ovl__cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding-inline: var(--space-3);
+  }
+  .ovl__cell:first-child {
+    padding-left: 0;
+  }
+  .ovl__cell + .ovl__cell {
+    border-left: 1px solid var(--line);
+  }
+  .ovl__value {
+    order: -1;
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(2.25rem, 1.5rem + 2.6vw, 4rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .ovl__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+  .ovl__source {
+    margin-top: var(--space-5);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.02em;
+  }
+  @media (min-width: 768px) {
+    .ovl {
+      padding: var(--space-8);
+    }
+    .ovl__cell {
+      padding-inline: var(--space-6);
+    }
+  }
+</style>

@@ -146,14 +146,10 @@ const first = withPreview.find((t) => t.slug === featured) ?? withPreview[0];
     font-size: var(--text-xs);
     color: var(--ink-3);
   }
-  .toc__item:hover .toc__name,
-  .toc__item.is-current .toc__name {
+  .toc__item:hover .toc__name {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.2em;
-  }
-  .toc__item.is-current .toc__count {
-    color: var(--accent-text);
   }
 
   .toc__preview {
@@ -188,6 +184,14 @@ const first = withPreview.find((t) => t.slug === featured) ?? withPreview[0];
     .toc__list {
       columns: 3;
       column-gap: var(--space-8);
+    }
+    .toc__item.is-current .toc__name {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.2em;
+    }
+    .toc__item.is-current .toc__count {
+      color: var(--accent-text);
     }
     .toc__preview {
       display: block;

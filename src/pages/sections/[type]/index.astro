@@ -1,0 +1,352 @@
+---
+/**
+ * /sections/<type> — one section type as a chapter of the library: the type name set very large,
+ * what it is, how many there are (with source), where it usually appears, which apps render it,
+ * then the same contents rail + filters + crop grid as the library, scoped to the type.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import Count from '~/components/ui/Count.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import LibraryBook from '~/components/sections/LibraryBook.astro';
+import SpecList from '~/components/sections/SpecList.astro';
+import {
+  PAGE_SIZE,
+  activeFilterCount,
+  buildFilterGroups,
+  buildRail,
+  cropSource,
+  filterQuery,
+  isSectionType,
+  libraryHref,
+  readFilters,
+} from '~/components/sections/library';
+import { SECTION_GROUPS, SECTION_TYPES, pageTypeName, type PageType } from '~/lib/taxonomy';
+import { api, isApiError } from '~/server/api';
+
+const slug = Astro.params.type;
+if (!isSectionType(slug)) return Astro.rewrite('/404');
+const type = slug;
+
+const url = Astro.url;
+const filters = readFilters(url);
+const cursor = url.searchParams.get('cursor') || undefined;
+const filtered = activeFilterCount(filters);
+
+let list;
+let whole;
+try {
+  // The grid follows the filters; the chapter header describes the whole type.
+  [list, whole] = await Promise.all([
+    api.listSections({
+      type,
+      page_type: filters.page,
+      device: filters.device,
+      theme: filters.theme,
+      app: filters.app,
+      sort: 'mixed',
+      cursor,
+      limit: PAGE_SIZE,
+    }),
+    api.listSections({ type, sort: 'mixed', limit: 60 }),
+  ]);
+} catch (err) {
+  if (isApiError(err) && err.status === 400) return Astro.redirect(libraryHref(type, filters), 302);
+  throw err;
+}
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+
+const { data, meta } = list;
+const info = whole.data.section_type ?? data.section_type;
+if (!info) return Astro.rewrite('/404');
+
+const taxonomy = SECTION_TYPES.find((t) => t.slug === type)!;
+const typeIndex = SECTION_TYPES.findIndex((t) => t.slug === type) + 1;
+const groupIndex = SECTION_GROUPS.findIndex((g) => g.slug === info.group.slug) + 1;
+const fmt = (n: number) => n.toLocaleString('en-US');
+const total = meta.pagination?.total ?? data.items.length;
+const page = cursor ? Math.max(2, Number.parseInt(url.searchParams.get('p') ?? '', 10) || 2) : 1;
+const nextCursor = meta.pagination?.next_cursor;
+const nextHref = nextCursor
+  ? `/sections/${type}${filterQuery(filters, { cursor: nextCursor, p: String(page + 1) })}`
+  : null;
+const rail = buildRail(data.facets.types, type, filters);
+const groups = buildFilterGroups(data.facets, type, filters);
+const source = cropSource(whole.meta, whole.data.items);
+
+// Where it usually appears: the taxonomy's pages first, then any other page it was seen on.
+const pageFacets = whole.data.facets.page_types;
+const usualPages = [
+  ...taxonomy.pages,
+  ...pageFacets.map((p) => p.value as PageType).filter((p) => !taxonomy.pages.includes(p as never)),
+].map((p) => ({
+  slug: p,
+  name: pageTypeName(p),
+  count: pageFacets.find((f) => f.value === p)?.count ?? 0,
+  href: libraryHref(type, { page: p }),
+}));
+
+// Apps that render it, with icons from the cards we already have.
+const icons = new Map<string, string | null>();
+for (const s of [...whole.data.items, ...data.items]) if (s.app) icons.set(s.app.slug, s.app.icon_url);
+const apps = whole.data.facets.apps.slice(0, 6).map((a) => ({
+  slug: a.value,
+  name: a.label,
+  count: a.count,
+  icon: icons.get(a.value) ?? null,
+  href: `/apps/${a.value}`,
+}));
+const attributed = whole.data.facets.apps.reduce((n, a) => n + a.count, 0);
+const devices = whole.data.facets.devices;
+const deviceLine = devices.map((d) => `${d.label} ${fmt(d.count)}`).join(' · ') || '—';
+
+const lower = info.name.toLowerCase();
+const title = `${info.name} sections on real Shopify stores`;
+const description = `${fmt(info.count)} ${lower} sections from ${info.stores} Shopify stores on ${info.themes} themes. ${info.description} Desktop and mobile, filterable by page type, theme and app.`;
+const canonical = `/sections/${type}`;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Sections', item: new URL('/sections', Astro.site ?? url).href },
+      { '@type': 'ListItem', position: 2, name: info.name, item: new URL(canonical, Astro.site ?? url).href },
+    ],
+  },
+  {
+    '@type': 'CollectionPage',
+    name: `${info.name} sections`,
+    description,
+    url: new URL(canonical, Astro.site ?? url).href,
+  },
+];
+---
+
+<BaseLayout
+  title={page > 1 ? `${info.name} sections — page ${page}` : title}
+  description={description}
+  canonical={canonical}
+  noindex={!!cursor || filtered > 1}
+  jsonLd={jsonLd}
+>
+  <header class="chap container">
+    <Breadcrumbs items={[{ label: 'Sections', href: '/sections' }, { label: info.name }]} />
+
+    <MonoLabel as="p" class="chap__eyebrow">
+      Type {String(typeIndex).padStart(2, '0')} of {SECTION_TYPES.length} · Chapter
+      {String(groupIndex).padStart(2, '0')}, {info.group.name}
+    </MonoLabel>
+    <h1 class="chap__title">{info.name}<Count value={info.count} label="sections" /></h1>
+
+    <div class="chap__row cols-12">
+      <div class="chap__lede span-7">
+        <p class="chap__statement">{info.description}</p>
+        <div class="chap__pages">
+          <MonoLabel as="p">Usually appears on</MonoLabel>
+          <ul class="chap__page-list">
+            {
+              usualPages.map((p) => (
+                <li>
+                  {p.count > 0 ? (
+                    <a href={p.href} rel="nofollow">
+                      {p.name}
+                      <Count value={p.count} />
+                    </a>
+                  ) : (
+                    <span class="chap__page-off" title="Not seen on this page type yet">
+                      {p.name}
+                      <Count value="0" />
+                    </span>
+                  )}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+
+      <div class="chap__side start-9">
+        <SpecList
+          items={[
+            { label: 'Sections', value: fmt(info.count) },
+            { label: 'Stores', value: fmt(info.stores) },
+            { label: 'Themes', value: fmt(info.themes) },
+            { label: 'Devices', value: deviceLine },
+          ]}
+          source={source}
+        />
+
+        <div class="chap__apps">
+          <MonoLabel as="p" tone="ink">Rendered by</MonoLabel>
+          {
+            apps.length > 0 ? (
+              <ol class="chap__app-list">
+                {apps.map((a) => (
+                  <li>
+                    <a href={a.href} class="chap__app">
+                      <AppIcon src={a.icon} name={a.name} size={20} />
+                      <span class="chap__app-name">{a.name}</span>
+                      <span class="chap__lead" aria-hidden="true" />
+                      <span class="chap__app-n num">{fmt(a.count)}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p class="chap__none">
+                The theme itself — no app is attributed to these {lower} sections.
+              </p>
+            )
+          }
+          {
+            apps.length > 0 && (
+              <p class="chap__apps-note">
+                <span class="num">{fmt(attributed)}</span> of <span class="num">{fmt(info.count)}</span>{' '}
+                attributed to a detected app; the rest are theme sections.
+              </p>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container chap__body">
+    <LibraryBook
+      rail={rail}
+      groups={groups}
+      items={data.items}
+      total={total}
+      meta={['page', 'device', 'theme']}
+      page={page}
+      pageSize={PAGE_SIZE}
+      nextHref={nextHref}
+      firstHref={libraryHref(type, filters)}
+      clearHref={canonical}
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .chap {
+    padding-top: var(--space-6);
+  }
+  .chap__eyebrow {
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-4);
+  }
+  .chap__title {
+    font-size: clamp(3rem, 0.9rem + 7.6vw, 8.5rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.05em;
+    line-height: 0.92;
+    margin-left: -0.035em;
+    overflow-wrap: break-word;
+  }
+  .chap__title :global(.count-sup) {
+    margin-left: 0.1em;
+    font-size: max(0.16em, 12px);
+    letter-spacing: 0.02em;
+    transform: translateY(0.4em);
+    color: var(--ink-2);
+  }
+  .chap__row {
+    margin-top: var(--space-8);
+    align-items: start;
+  }
+  .chap__statement {
+    max-width: 24ch;
+    font-family: var(--font-serif);
+    font-size: clamp(1.625rem, 1.1rem + 1.6vw, 2.5rem);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.12;
+  }
+  .chap__pages {
+    margin-top: var(--space-8);
+  }
+  .chap__page-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-6);
+    margin-top: var(--space-3);
+  }
+  .chap__page-list a,
+  .chap__page-off {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-snug);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+  .chap__page-list a:hover {
+    text-decoration-color: currentColor;
+  }
+  .chap__page-off {
+    color: var(--ink-4);
+    text-decoration: none;
+  }
+
+  .chap__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+  .chap__app-list {
+    margin-top: var(--space-3);
+    border-top: 1px solid var(--ink);
+  }
+  .chap__app {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-base);
+  }
+  .chap__app-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .chap__lead {
+    flex: 1;
+    min-width: 12px;
+    border-bottom: 1px dotted var(--line-strong);
+    transform: translateY(4px);
+  }
+  .chap__app-n {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-2);
+  }
+  .chap__app:hover .chap__app-name {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .chap__none,
+  .chap__apps-note {
+    margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .chap__body {
+    margin-top: var(--space-12);
+  }
+  @media (min-width: 1024px) {
+    .chap__eyebrow {
+      margin-top: var(--space-12);
+    }
+    .chap__row {
+      margin-top: var(--space-10);
+    }
+    .chap__body {
+      margin-top: var(--space-16);
+    }
+  }
+</style>

@@ -8,9 +8,12 @@ import StoreMark from '~/components/ui/StoreMark.astro';
 import { adminDb } from '~/server/admin/env';
 import { setTeardownPublished } from '~/server/admin/actions';
 import { int, text } from '~/server/admin/forms';
-import { runAction } from '~/server/admin/page';
+import { runAction, requireAdmin } from '~/server/admin/page';
 import { listTeardowns } from '~/server/admin/queries';
 import { fullTime, shortDate, timeAgo } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 if (Astro.request.method === 'POST') {
   return runAction(Astro, async (form, ctx) => {

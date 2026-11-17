@@ -1,0 +1,313 @@
+---
+/**
+ * A store's stack as spec rows: theme first, then the detected apps grouped by category, each
+ * with where it renders on this store's plates (linking into the viewer at that section), then
+ * detections we have no profile for yet and tracking pixels.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Icon from '~/components/ui/Icon.astro';
+import type { StoreDetail } from '~/server/api/v1/types';
+import { formatDate } from '~/lib/format';
+import { plateHref } from './plates';
+
+interface Props {
+  detail: StoreDetail;
+  basePath: string;
+  class?: string;
+}
+const { detail, basePath, class: className } = Astro.props;
+const { apps, pixels, pages, theme } = detail;
+const hasPlates = pages.length > 0;
+
+interface Placement {
+  type: string;
+  typeSlug: string;
+  page: string;
+  pageSlug: string;
+  device: 'desktop' | 'mobile';
+  id: number;
+}
+// Where each app renders on the plates (desktop first; one entry per section type + page).
+const placements = new Map<string, Placement[]>();
+for (const device of ['desktop', 'mobile'] as const) {
+  for (const p of pages) {
+    for (const s of p.screenshots[device]?.sections ?? []) {
+      if (!s.app) continue;
+      const list = placements.get(s.app.slug) ?? [];
+      if (!list.some((x) => x.typeSlug === s.type.slug && x.pageSlug === p.page_type.slug)) {
+        list.push({ type: s.type.name, typeSlug: s.type.slug, page: p.page_type.name, pageSlug: p.page_type.slug, device, id: s.id });
+      }
+      placements.set(s.app.slug, list);
+    }
+  }
+}
+// Which app holds each section type on this store (for "attributed to …").
+const holder = new Map<string, string>();
+for (const g of apps.groups) for (const a of g.apps) for (const s of a.seen_in) if (!holder.has(s.slug)) holder.set(s.slug, a.short_name);
+
+type Where = { kind: 'link'; items: { label: string; href: string }[] } | { kind: 'text'; text: string };
+const whereFor = (a: StoreDetail['apps']['groups'][number]['apps'][number]): Where => {
+  const placed = placements.get(a.slug) ?? [];
+  if (placed.length) {
+    return {
+      kind: 'link',
+      items: placed.slice(0, 2).map((x) => ({
+        label: `${x.type} on the ${x.page.toLowerCase()} page`,
+        href: plateHref(basePath, x.pageSlug, x.device, `#section-${x.id}`),
+      })),
+    };
+  }
+  const surface = a.surfaces[0];
+  if (!surface) return { kind: 'text', text: 'Not sliced as a section' };
+  const name = surface.name.toLowerCase();
+  if (!hasPlates) return { kind: 'text', text: `Usually renders in the ${name}` };
+  const other = holder.get(surface.slug);
+  if (other && other !== a.short_name) return { kind: 'text', text: `${surface.name}: attributed to ${other}` };
+  return { kind: 'text', text: `Usually in the ${name}, not on this plan` };
+};
+
+const themeInfo = theme.current;
+const replaced = theme.history.filter((h) => h.replaced_at);
+---
+
+<div class:list={['stack', className]}>
+  <div class="stack__group">
+    <p class="stack__cat">Theme</p>
+    <ul class="stack__apps">
+      <li class="stack__app">
+        <span class="stack__name">
+          <span class="stack__glyph" aria-hidden="true">T</span>
+          {
+            themeInfo.theme ? (
+              <a href={themeInfo.theme.href}>{themeInfo.label}</a>
+            ) : (
+              <span class:list={[{ 'stack__muted': !themeInfo.name }]}>{themeInfo.label}</span>
+            )
+          }
+        </span>
+        <span class="stack__where">
+          {themeInfo.theme?.vendor ? `By ${themeInfo.theme.vendor}` : themeInfo.is_custom ? 'Custom theme' : themeInfo.name ? 'No theme profile yet' : 'Not detected on this scan'}
+          {replaced.length > 0 && <> · replaced {replaced.length}×</>}
+        </span>
+      </li>
+    </ul>
+  </div>
+
+  {
+    apps.groups.map((g) => (
+      <div class="stack__group">
+        <p class="stack__cat">
+          {g.category ? <a href={g.category.href}>{g.category.name}</a> : 'Other'}
+          <span class="stack__count num">{g.apps.length}</span>
+        </p>
+        <ul class="stack__apps">
+          {g.apps.map((a) => {
+            const where = whereFor(a);
+            return (
+              <li class="stack__app">
+                <a class="stack__name" href={a.href} title={a.name}>
+                  <AppIcon src={a.icon_url} name={a.short_name} size={20} />
+                  <span>{a.short_name}</span>
+                </a>
+                <span class="stack__where">
+                  {where.kind === 'link'
+                    ? where.items.map((w, i) => (
+                        <>
+                          {i > 0 && <span class="stack__sep">·</span>}
+                          <a href={w.href} class="stack__jump">
+                            {w.label}
+                            <Icon name="arrow-right" size={12} />
+                          </a>
+                        </>
+                      ))
+                    : <span class="stack__muted">{where.text}</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))
+  }
+
+  {
+    apps.unresolved.count > 0 && (
+      <div class="stack__group">
+        <p class="stack__cat">Unresolved</p>
+        <div class="stack__body">
+          <p class="stack__lead">
+            +{apps.unresolved.count} {apps.unresolved.count === 1 ? 'detection' : 'detections'} without a profile yet
+          </p>
+          <p class="stack__slugs mono">{apps.unresolved.slugs.join(' · ')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  <div class="stack__group">
+    <p class="stack__cat">Pixels</p>
+    <div class="stack__body">
+      {
+        pixels.length ? (
+          <ul class="stack__pixels mono">
+            {pixels.map((p) => (
+              <li>{p.name}</li>
+            ))}
+          </ul>
+        ) : (
+          <p class="stack__muted">No tracking pixels detected</p>
+        )
+      }
+    </div>
+  </div>
+  <p class="stack__foot mlabel">
+    Detected {formatDate(detail.detection.last_seen)} · rules {detail.detection.rules_version ?? 'unknown'}
+  </p>
+</div>
+
+<style>
+  .stack {
+    border-top: 1px solid var(--ink);
+  }
+  .stack__group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 768px) {
+    .stack__group {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+      gap: var(--space-6);
+      padding: var(--space-3) 0;
+    }
+  }
+  .stack__cat {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-top: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .stack__cat a:hover {
+    color: var(--ink);
+  }
+  .stack__count {
+    color: var(--ink-4);
+  }
+  .stack__apps {
+    display: grid;
+  }
+  .stack__app {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: 5px 0;
+  }
+  @media (min-width: 640px) {
+    .stack__app {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+      align-items: center;
+      gap: var(--space-4);
+    }
+  }
+  .stack__app + .stack__app {
+    border-top: 1px dashed var(--line);
+  }
+  .stack__name {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+  }
+  .stack__name span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.stack__name:hover span,
+  .stack__name a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .stack__glyph {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    font-family: var(--font-serif);
+    font-size: 13px;
+  }
+  .stack__where {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    padding-left: 30px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  @media (min-width: 640px) {
+    .stack__where {
+      padding-left: 0;
+    }
+  }
+  .stack__jump {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.22em;
+    text-decoration-thickness: 1px;
+  }
+  .stack__jump:hover {
+    text-decoration-color: currentColor;
+  }
+  .stack__jump :global(.icon) {
+    color: var(--ink-3);
+  }
+  .stack__sep {
+    color: var(--ink-4);
+  }
+  .stack__muted {
+    color: var(--ink-3);
+  }
+  .stack__body {
+    padding: 5px 0;
+  }
+  .stack__lead {
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+  }
+  .stack__slugs {
+    margin-top: 4px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+  }
+  .stack__pixels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .stack__foot {
+    margin-top: var(--space-3);
+  }
+</style>

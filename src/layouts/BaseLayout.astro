@@ -11,6 +11,7 @@ import { api } from '~/server/api';
 import { formatDate } from '~/lib/format';
 import Header from '~/components/site/Header.astro';
 import Footer from '~/components/site/Footer.astro';
+import CommandPalette from '~/components/site/CommandPalette.astro';
 
 interface Props {
   /** Page title without the brand. Omit on the home page. */
@@ -118,6 +119,7 @@ const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     </main>
     {chrome === 'full' && <Footer dataNote={dataNote} />}
     <slot name="end" />
+    <CommandPalette />
   </body>
 </html>
 

@@ -262,6 +262,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         )
       }
 
+      {total > PAGE_SIZE && (
       <Pagination
         page={state.p}
         pageSize={PAGE_SIZE}
@@ -270,6 +271,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         noun={total === 1 ? 'theme' : 'themes'}
         class="ti-pager"
       />
+      )}
     </section>
 
     {
@@ -288,7 +290,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     }
 
     <footer class="ti-source">
-      <SourceNote source={source.label} asOf={asOf} href={source.url ?? '/methodology'} />
+      <SourceNote source={source.label} asOf={source.label.includes(asOf) ? undefined : asOf} href={source.url ?? '/methodology'} />
     </footer>
   </div>
 </BaseLayout>
@@ -308,6 +310,11 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     width: 100%;
     max-width: 420px;
   }
+  @media (max-width: 639px) {
+    .ti-specs :global(.specs) {
+      display: none;
+    }
+  }
   .ti-bias {
     margin-top: var(--space-3);
     color: var(--ink-3);
@@ -320,21 +327,21 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   .ti-grid {
     row-gap: var(--space-10);
   }
-  .ti-empty {
+  :global(.ti-empty) {
     margin-top: var(--space-4);
   }
   /* Theme names are set in the serif, as on the theme pages. */
-  .ti-index :global(.irow__name) {
+  :global(.ti-index .irow__name) {
     font-family: var(--font-serif);
     font-size: clamp(1.25rem, 1.05rem + 0.6vw, 1.625rem);
     font-weight: 400;
     letter-spacing: -0.015em;
     line-height: 1.15;
   }
-  .ti-index :global(.irow__link) {
+  :global(.ti-index .irow__link) {
     align-items: center;
   }
-  .ti-pager {
+  :global(.ti-pager) {
     margin-top: var(--space-2);
   }
   .ti-vendors {
@@ -355,7 +362,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     font-size: var(--text-sm);
   }
   @media (min-width: 1024px) {
-    .ti-vendors__strip {
+    :global(.ti-vendors__strip) {
       grid-column: 5 / -1;
     }
   }

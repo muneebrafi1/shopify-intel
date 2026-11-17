@@ -1,0 +1,176 @@
+---
+/**
+ * /sections — the sections library. Every captured page is sliced into typed sections; this is
+ * the Mobbin-style way to browse them: a book-like contents rail of the 31 types, URL-state
+ * filters (page type, device, theme, app), a crop grid with cursor pagination and a lightbox.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Count from '~/components/ui/Count.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import LibraryBook from '~/components/sections/LibraryBook.astro';
+import SpecList from '~/components/sections/SpecList.astro';
+import {
+  PAGE_SIZE,
+  activeFilterCount,
+  buildFilterGroups,
+  buildRail,
+  cropSource,
+  filterQuery,
+  libraryHref,
+  readFilters,
+} from '~/components/sections/library';
+import { SECTION_GROUPS, SECTION_TYPES } from '~/lib/taxonomy';
+import { api, isApiError } from '~/server/api';
+
+const url = Astro.url;
+const filters = readFilters(url);
+const cursor = url.searchParams.get('cursor') || undefined;
+
+let list;
+try {
+  list = await api.listSections({
+    page_type: filters.page,
+    device: filters.device,
+    theme: filters.theme,
+    app: filters.app,
+    sort: 'mixed',
+    cursor,
+    limit: PAGE_SIZE,
+  });
+} catch (err) {
+  // A stale or hand-edited cursor: start the same filters from the top.
+  if (isApiError(err) && err.status === 400) return Astro.redirect(libraryHref(null, filters), 302);
+  throw err;
+}
+const { data: metaData } = await api.getMeta({});
+const { data, meta } = list;
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+
+const counts = metaData.counts;
+const total = meta.pagination?.total ?? data.items.length;
+const page = cursor ? Math.max(2, Number.parseInt(url.searchParams.get('p') ?? '', 10) || 2) : 1;
+const nextCursor = meta.pagination?.next_cursor;
+const nextHref = nextCursor
+  ? `/sections${filterQuery(filters, { cursor: nextCursor, p: String(page + 1) })}`
+  : null;
+const rail = buildRail(data.facets.types, null, filters);
+const groups = buildFilterGroups(data.facets, null, filters);
+const source = cropSource(meta, data.items);
+const fmt = (n: number) => n.toLocaleString('en-US');
+const filtered = activeFilterCount(filters);
+
+const typeCount = counts.section_types || SECTION_TYPES.length;
+const statement = `Every page, sliced. Browse ${typeCount} kinds of section across real Shopify stores.`;
+const description = `${fmt(counts.sections)} page sections — headers, heroes, buy boxes, reviews, carts and more — sliced from ${counts.stores_with_capture_plan} Shopify stores on desktop and mobile. Filter by page type, device, theme and app.`;
+
+const jsonLd = {
+  '@type': 'CollectionPage',
+  name: 'Sections',
+  description,
+  url: new URL('/sections', Astro.site ?? url).href,
+  hasPart: {
+    '@type': 'ItemList',
+    numberOfItems: SECTION_TYPES.length,
+    itemListElement: SECTION_TYPES.map((t, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: t.name,
+      url: new URL(`/sections/${t.slug}`, Astro.site ?? url).href,
+    })),
+  },
+};
+---
+
+<BaseLayout
+  title={page > 1 ? `Sections — page ${page}` : 'Sections library: every Shopify page, sliced'}
+  description={description}
+  canonical="/sections"
+  noindex={!!cursor || filtered > 1}
+  jsonLd={jsonLd}
+>
+  <header class="lib container">
+    <MonoLabel as="p" class="lib__eyebrow">
+      Library · {typeCount} types in {SECTION_GROUPS.length} groups
+    </MonoLabel>
+    <h1 class="lib__title">Sections<Count value={counts.sections} label="sections" /></h1>
+    <div class="lib__row cols-12">
+      <p class="lib__statement span-7">{statement}</p>
+      <SpecList
+        class="lib__spec start-9"
+        items={[
+          { label: 'Sections', value: fmt(counts.sections) },
+          { label: 'Pages sliced', value: fmt(counts.screenshots) },
+          { label: 'Stores', value: fmt(counts.stores_with_capture_plan), href: '/stores' },
+          { label: 'Devices', value: 'Desktop 1440 · Mobile 390' },
+        ]}
+        source={source}
+      />
+    </div>
+  </header>
+
+  <div class="container lib__body">
+    <LibraryBook
+      rail={rail}
+      groups={groups}
+      items={data.items}
+      total={total}
+      meta={['type', 'page', 'theme']}
+      page={page}
+      pageSize={PAGE_SIZE}
+      nextHref={nextHref}
+      firstHref={libraryHref(null, filters)}
+      clearHref="/sections"
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .lib {
+    padding-top: var(--space-8);
+  }
+  .lib__eyebrow {
+    margin-bottom: var(--space-4);
+  }
+  .lib__title {
+    font-size: clamp(3.5rem, 1.2rem + 8.4vw, 9.5rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.055em;
+    line-height: 0.88;
+    margin-left: -0.04em;
+  }
+  .lib__title :global(.count-sup) {
+    margin-left: 0.1em;
+    font-size: max(0.16em, 12px);
+    letter-spacing: 0.02em;
+    transform: translateY(0.4em);
+    color: var(--ink-2);
+  }
+  .lib__row {
+    margin-top: var(--space-8);
+    align-items: start;
+  }
+  .lib__statement {
+    max-width: 22ch;
+    font-family: var(--font-serif);
+    font-size: clamp(1.625rem, 1.1rem + 1.6vw, 2.5rem);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.12;
+    color: var(--ink);
+  }
+  .lib__body {
+    margin-top: var(--space-12);
+  }
+  @media (min-width: 1024px) {
+    .lib {
+      padding-top: var(--space-12);
+    }
+    .lib__row {
+      margin-top: var(--space-10);
+    }
+    .lib__body {
+      margin-top: var(--space-16);
+    }
+  }
+</style>

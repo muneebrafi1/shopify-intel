@@ -12,9 +12,12 @@ import Pagination from '~/components/ui/Pagination.astro';
 import { adminDb } from '~/server/admin/env';
 import { updateApp } from '~/server/admin/actions';
 import { int, oneOf, optionalText, text } from '~/server/admin/forms';
-import { idParam, runAction } from '~/server/admin/page';
+import { idParam, runAction, requireAdmin } from '~/server/admin/page';
 import { getApp, getAppCategories, listApps, PAGE_SIZE } from '~/server/admin/queries';
 import { hrefWith } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 const sp = Astro.url.searchParams;
 const q = (sp.get('q') ?? '').trim().slice(0, 100);

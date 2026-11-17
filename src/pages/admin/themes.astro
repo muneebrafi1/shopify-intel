@@ -10,9 +10,12 @@ import Input from '~/components/ui/Input.astro';
 import { adminDb } from '~/server/admin/env';
 import { updateTheme } from '~/server/admin/actions';
 import { int, oneOf, optionalText, text } from '~/server/admin/forms';
-import { idParam, runAction } from '~/server/admin/page';
+import { idParam, runAction, requireAdmin } from '~/server/admin/page';
 import { listThemes } from '~/server/admin/queries';
 import { hrefWith } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
 const editId = idParam(Astro.url.searchParams.get('edit'));
@@ -136,7 +139,9 @@ const visible = rows.filter((t) => t.status === 'active').length;
           <th scope="col">Theme</th>
           <th scope="col">Vendor</th>
           <th scope="col">Price</th>
-          <th scope="col">Marketplace</th>
+          <th scope="col" class="a-hide-sm">
+            Marketplace
+          </th>
           <th scope="col" class="is-num">
             Stores
           </th>
@@ -164,11 +169,11 @@ const visible = rows.filter((t) => t.status === 'active').length;
               </td>
               <td class="a-muted">{t.vendor ?? '—'}</td>
               <td class="a-nowrap">{t.price_label ?? <span class="a-muted">—</span>}</td>
-              <td class="a-muted">{t.marketplace ?? '—'}</td>
+              <td class="a-muted a-hide-sm">{t.marketplace ?? '—'}</td>
               <td class="is-num">
                 {t.store_count ?? 0}
                 {t.curated_store_count ? (
-                  <span class="a-sub">{t.curated_store_count} curated</span>
+                  <span class="a-sub a-nowrap">{t.curated_store_count} curated</span>
                 ) : null}
               </td>
               <td>

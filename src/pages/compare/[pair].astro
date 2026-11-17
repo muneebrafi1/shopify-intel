@@ -1,0 +1,426 @@
+---
+/**
+ * /compare/<a>-vs-<b> — two apps or two themes side by side. Any valid pair renders; a
+ * non-alphabetical order 301s to the canonical slug the API returns; unknown, identical or
+ * mixed (app + theme) pairs are 404s.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import IndexList from '~/components/ui/IndexList.astro';
+import IndexRow from '~/components/ui/IndexRow.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import CompareHead from '~/components/compare/CompareHead.astro';
+import Stage from '~/components/compare/Stage.astro';
+import FactMatrix, { type ExtraRow } from '~/components/compare/FactMatrix.astro';
+import BlockHead from '~/components/compare/BlockHead.astro';
+import Diptych from '~/components/compare/Diptych.astro';
+import PlanList from '~/components/compare/PlanList.astro';
+import ThemeSpec from '~/components/compare/ThemeSpec.astro';
+import Overlap from '~/components/compare/Overlap.astro';
+import { api, isApiError } from '~/server/api';
+import type { ComparisonDetail, ResponseMeta, StoreListItem } from '~/server/api/v1/types';
+import { formatCount, formatDate } from '~/lib/format';
+import { appStage, pluralStores, sides, themeStage } from '~/components/compare/compare';
+
+const pair = Astro.params.pair ?? '';
+let cmp: ComparisonDetail;
+let meta: ResponseMeta;
+try {
+  ({ data: cmp, meta } = await api.getComparison({ pair }));
+} catch (err) {
+  // Unknown slugs (404), mixed kinds or the same item twice (400) and malformed pairs are all
+  // "no such page" for a visitor.
+  if (isApiError(err) && err.status < 500) return Astro.rewrite('/404');
+  throw err;
+}
+if (!cmp.is_canonical) return Astro.redirect(`${cmp.href}${Astro.url.search}`, 301);
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+
+const [a, b] = sides(cmp);
+const isApp = cmp.kind === 'app';
+const scanKey = Object.keys(meta.sources).find((k) => k.startsWith('storepeek-scan')) ?? 'storepeek-scan';
+const scan = meta.sources[scanKey];
+const asOf = formatDate(meta.data_as_of);
+
+// ---- Stage ----------------------------------------------------------------------------------
+const stage = cmp.apps ? appStage(cmp.apps.a, cmp.apps.b) : themeStage(cmp.themes!.a, cmp.themes!.b);
+const qPage = Astro.url.searchParams.get('page');
+const qDevice = Astro.url.searchParams.get('device');
+
+// ---- Extra fact rows (from our scan, same source as the matrix's usage rows) ------------------
+const extra: ExtraRow[] = [];
+if (cmp.apps) {
+  const other = { a: b.slug, b: a.slug };
+  const top = (side: 'a' | 'b') => {
+    const c = cmp.apps![side].co_installed.find((x) => x.app.slug !== other[side]);
+    return c ? `${c.app.short_name} (${formatCount(c.stores)})` : undefined;
+  };
+  const theme = (side: 'a' | 'b') => {
+    const t = cmp.apps![side].themes[0];
+    return t ? `${t.theme.name} (${formatCount(t.stores)})` : undefined;
+  };
+  extra.push(
+    { source: scanKey, label: 'Run both', both: pluralStores(cmp.shared_stores.total) },
+    { source: scanKey, label: 'Most often installed with', a: top('a'), b: top('b') },
+    { source: scanKey, label: 'Most common theme', a: theme('a'), b: theme('b') },
+  );
+} else {
+  const latest = (side: 'a' | 'b') =>
+    cmp
+      .themes![side].versions.map((v) => v.version)
+      .filter((v): v is string => !!v)
+      .sort((x, y) => y.localeCompare(x, 'en', { numeric: true }))[0];
+  const topApp = (side: 'a' | 'b') => {
+    const t = cmp.themes![side];
+    const x = t.top_apps[0];
+    return x ? `${x.app.short_name} (${formatCount(x.stores)} of ${formatCount(t.theme.usage.stores)})` : undefined;
+  };
+  extra.push(
+    { source: scanKey, label: 'Ran both', both: pluralStores(cmp.shared_stores.total) },
+    { source: scanKey, label: 'Latest version seen', a: latest('a'), b: latest('b') },
+    { source: scanKey, label: 'Most used app on its stores', a: topApp('a'), b: topApp('b') },
+  );
+}
+const appStoreChecked = cmp.apps ? (cmp.apps.a.app.checked_on ?? cmp.apps.b.app.checked_on) : null;
+const notes: Record<string, string> = {};
+for (const key of Object.keys(meta.sources)) {
+  if (key.startsWith('shopify-app-store') && appStoreChecked)
+    notes[key] = `Shopify App Store listings, checked ${formatDate(appStoreChecked)}`;
+}
+
+// ---- Shared stores, enriched with list data (theme, category, preview) where we have it ------
+const lookups = await Promise.all(
+  (cmp.shared_stores.items.length > 0 ? (['a', 'b'] as const) : []).map((side) =>
+    api
+      .listStores(isApp ? { app: sides(cmp)[side === 'a' ? 0 : 1].slug, limit: 60 } : { theme: sides(cmp)[side === 'a' ? 0 : 1].slug, limit: 60 })
+      .then((r) => r.data.items)
+      .catch(() => [] as StoreListItem[]),
+  ),
+);
+const storeInfo = new Map(lookups.flat().map((s) => [s.domain, s]));
+const sharedRows = cmp.shared_stores.items.map((s) => {
+  const info = storeInfo.get(s.domain);
+  return {
+    href: s.href,
+    title: s.display_name,
+    subtitle: info ? [info.theme.label, info.category?.name].filter(Boolean).join(' · ') : s.domain,
+    cells: [
+      { value: info?.theme.label ?? '—', muted: !info },
+      { value: info?.category?.name ?? '—', muted: true },
+      { value: info ? `(${info.app_count} apps)` : '', serif: true, mobile: true },
+    ],
+    preview: info?.preview ? { src: info.preview.image.src, width: info.preview.image.width, height: info.preview.image.height } : null,
+  };
+});
+const onlyA = Math.max(0, a.stores - cmp.shared_stores.total);
+const onlyB = Math.max(0, b.stores - cmp.shared_stores.total);
+
+// ---- JSON-LD ----------------------------------------------------------------------------------
+const abs = (path: string) => new URL(path, Astro.site ?? Astro.url).href;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: abs('/') },
+      { '@type': 'ListItem', position: 2, name: 'Compare', item: abs('/compare') },
+      { '@type': 'ListItem', position: 3, name: cmp.title, item: abs(cmp.href) },
+    ],
+  },
+  {
+    '@type': 'ItemList',
+    name: cmp.title,
+    numberOfItems: 2,
+    itemListElement: [a, b].map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': isApp ? 'SoftwareApplication' : 'CreativeWork',
+        name: s.fullName,
+        url: abs(s.href),
+        ...(isApp ? { applicationCategory: 'BusinessApplication', operatingSystem: 'Shopify' } : {}),
+        ...(s.maker ? { author: { '@type': 'Organization', name: s.maker } } : {}),
+      },
+    })),
+  },
+];
+const description = `${cmp.title}: ${isApp ? 'where each app renders on real Shopify stores' : 'the same pages on real stores using each theme'}, ${isApp ? 'ratings, plans' : 'prices, versions'} and how many of ${formatCount(a.denominator)} scanned stores run them. Facts only, no winner.`;
+let n = 0;
+const blockN = () => String(++n).padStart(2, '0');
+---
+
+<BaseLayout title={`${cmp.title}: side by side on real stores`} description={description} canonical={cmp.href} jsonLd={jsonLd}>
+  <div class="container">
+    <Breadcrumbs
+      class="cmp__crumbs"
+      items={[{ label: 'Home', href: '/' }, { label: 'Compare', href: '/compare' }, { label: cmp.title }]}
+    />
+    <CompareHead cmp={cmp} meta={meta} />
+  </div>
+
+  <div class="cmp__stage">
+    <Stage model={stage} a={a} b={b} page={qPage} device={qDevice} />
+  </div>
+
+  <div class="container">
+    <section class="page-block" aria-labelledby="facts">
+      <BlockHead
+        id="facts"
+        label={`${blockN()} — Facts`}
+        title="Fact by fact"
+        description="Listing facts and what our scan sees, row by row. Ticks are facts, not points: nothing here is scored."
+      />
+      <FactMatrix rows={cmp.matrix} meta={meta} a={a} b={b} extra={extra} notes={notes} />
+    </section>
+
+    <section class="page-block" aria-labelledby="overlap">
+      <BlockHead
+        id="overlap"
+        label={`${blockN()} — Overlap`}
+        title={isApp ? 'Stores running both' : 'Stores that ran both'}
+        count={cmp.shared_stores.total}
+        description={isApp
+          ? `Of ${formatCount(a.denominator)} scanned stores, how many run one, the other, or both at the same time.`
+          : 'Stores we have seen on both themes at some point, for example after a switch.'}
+      />
+      <div class="cmp__overlap">
+        <Overlap
+          cells={isApp
+            ? [
+                { value: onlyA, label: `${a.name} only` },
+                { value: cmp.shared_stores.total, label: 'Both' },
+                { value: onlyB, label: `${b.name} only` },
+              ]
+            : [
+                { value: a.stores, label: `On ${a.name} now` },
+                { value: cmp.shared_stores.total, label: 'Ran both' },
+                { value: b.stores, label: `On ${b.name} now` },
+              ]}
+          source={`${scan?.label ?? 'Our scan'}`}
+        />
+        <div class="cmp__shared">
+          {
+            sharedRows.length > 0 ? (
+              <>
+                <IndexList
+                  columns="52px minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) 96px"
+                  head={['N°', 'Store', 'Theme', 'Category', 'Apps']}
+                  label={`Stores running ${a.name} and ${b.name}`}
+                >
+                  {sharedRows.map((r, i) => (
+                    <IndexRow n={i + 1} {...r} />
+                  ))}
+                </IndexList>
+                {cmp.shared_stores.total > sharedRows.length && (
+                  <p class="cmp__more mono">
+                    Showing {sharedRows.length} of {formatCount(cmp.shared_stores.total)}, highest ranked first
+                  </p>
+                )}
+              </>
+            ) : (
+              <EmptyState
+                size="sm"
+                align="start"
+                title={isApp ? `No scanned store runs both` : 'No scanned store has run both'}
+                body={
+                  isApp
+                    ? `${a.name} and ${b.name} don’t share a store in our scan of ${formatCount(a.denominator)}. Stores usually pick one.`
+                    : `We haven’t seen a store switch between ${a.name} and ${b.name} yet. Switches show up here as scans repeat.`
+                }
+              />
+            )
+          }
+        </div>
+      </div>
+    </section>
+
+    {
+      cmp.themes && cmp.shared_apps.length > 0 && (
+        <section class="page-block" aria-labelledby="shared-apps">
+          <BlockHead
+            id="shared-apps"
+            label={`${blockN()} — Stacks`}
+            title="Apps used on both themes"
+            count={cmp.shared_apps.length}
+            description={`Apps that stores on each theme run, by number of stores. What a store adds on top of ${a.name} or ${b.name}.`}
+          />
+          <IndexList
+            columns="52px minmax(0, 2fr) minmax(0, 1fr) 120px 120px"
+            head={['N°', 'App', 'Category', `On ${a.name}`, `On ${b.name}`]}
+            label={`Apps used on both ${a.name} and ${b.name}`}
+          >
+            {cmp.shared_apps.map((s, i) => (
+              <IndexRow
+                n={i + 1}
+                href={s.app.href}
+                title={s.app.short_name}
+                subtitle={`${a.name} ${s.a_stores} · ${b.name} ${s.b_stores}`}
+                cells={[
+                  { value: s.app.category?.name ?? '—', muted: true },
+                  { value: pluralStores(s.a_stores), mono: true },
+                  { value: pluralStores(s.b_stores), mono: true },
+                ]}
+              />
+            ))}
+          </IndexList>
+          <SourceNote source={scan?.label ?? 'Our scan'} class="cmp__note" />
+        </section>
+      )
+    }
+
+    <section class="page-block" aria-labelledby="pricing">
+      <BlockHead
+        id="pricing"
+        label={`${blockN()} — ${isApp ? 'Plans' : 'Price'}`}
+        title={isApp ? 'Plans side by side' : 'Price and versions'}
+        description={isApp
+          ? `As listed on the Shopify App Store${appStoreChecked ? `, checked ${formatDate(appStoreChecked)}` : ''}. Prices in USD per month.`
+          : 'List price from the vendor, and the versions we detect on live stores.'}
+      />
+      <Diptych>
+        {
+          (['a', 'b'] as const).map((side) => (
+            <div slot={side}>
+              {cmp.apps ? <PlanList app={cmp.apps[side].app} /> : <ThemeSpec detail={cmp.themes![side]} />}
+            </div>
+          ))
+        }
+      </Diptych>
+    </section>
+
+    <section class="page-block cmp__next" aria-labelledby="next">
+      <BlockHead id="next" label={`${blockN()} — Next`} title="Keep comparing" />
+      <div class="cols-12">
+        <div class="span-8">
+          {
+            cmp.related.length > 0 ? (
+              <IndexList
+                columns="52px minmax(0, 2fr) minmax(0, 1fr)"
+                head={['N°', 'Related comparison', 'Run both']}
+                label="Related comparisons"
+              >
+                {cmp.related.map((r, i) => (
+                  <IndexRow
+                    n={i + 1}
+                    href={r.href}
+                    title={r.title}
+                    cells={[{ value: `(${pluralStores(r.shared_stores ?? 0)})`, serif: true, mobile: true }]}
+                  />
+                ))}
+              </IndexList>
+            ) : (
+              <p class="cmp__muted">No other popular comparisons with these two yet. Pick any pair on the compare index.</p>
+            )
+          }
+          <a class="cmp__all" href="/compare">All comparisons →</a>
+        </div>
+        <nav class="start-9 cmp__alts" aria-label="Alternatives">
+          <p class="mlabel mlabel--bullet">Replacements</p>
+          {
+            [a, b].map((s) => (
+              <a href={s.alternativesHref} class="cmp__alt">
+                <span class="cmp__alt-k">Alternatives to</span>
+                <span class="cmp__alt-name">{s.name}</span>
+                <span aria-hidden="true" class="cmp__alt-arrow">→</span>
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </section>
+
+    <div class="page-block cmp__source">
+      <SourceNote source={`${scan?.label ?? 'our scan'}; App Store facts from each listing`} asOf={asOf} />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .cmp__crumbs {
+    padding-top: var(--space-6);
+  }
+  .cmp__stage {
+    margin-top: var(--space-12);
+  }
+  .cmp__overlap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+  }
+  .cmp__more {
+    margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .cmp__note {
+    margin-top: var(--space-4);
+  }
+  .cmp__muted {
+    color: var(--ink-3);
+    font-size: var(--text-base);
+  }
+  .cmp__all {
+    display: inline-block;
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.25em;
+  }
+  .cmp__alts {
+    display: flex;
+    flex-direction: column;
+  }
+  .cmp__alts .mlabel {
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--ink);
+  }
+  .cmp__alt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px var(--space-3);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--line);
+    transition: padding var(--dur-base) var(--ease-out);
+  }
+  .cmp__alt:hover {
+    padding-left: var(--space-2);
+  }
+  .cmp__alt-k {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .cmp__alt-name {
+    grid-column: 1;
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    line-height: 1.1;
+  }
+  .cmp__alt-arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    color: var(--ink-3);
+  }
+  .cmp__source {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 1024px) {
+    .cmp__overlap {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--space-6);
+      align-items: start;
+    }
+    .cmp__overlap > :global(.ovl) {
+      grid-column: span 5;
+    }
+    .cmp__shared {
+      grid-column: 7 / -1;
+    }
+  }
+</style>

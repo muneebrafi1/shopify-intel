@@ -19,36 +19,34 @@ interface Props {
 const { title, note, apps, reason, class: className } = Astro.props;
 ---
 
-{
-  apps.length > 0 && (
-    <section class:list={['plain', className]}>
-      <div class="plain__head">
-        <MonoLabel as="h2" tone="ink">
-          {title} · {apps.length}
-        </MonoLabel>
-        <p class="plain__note">{note}</p>
-      </div>
-      <ol class="plain__list">
-        {apps.map((app) => {
-          const why = reason?.(app);
-          return (
-            <li>
-              <a href={app.href}>
-                <span class="plain__n">{specimen(app.usage.rank ?? 0)}</span>
-                <AppIcon src={app.icon_url} name={app.short_name} size={22} />
-                <span class="plain__name">
-                  {app.short_name}
-                  {why && <span class="plain__why">{why}</span>}
-                </span>
-                <span class="plain__stores num">{app.usage.stores.toLocaleString('en-US')}</span>
-              </a>
-            </li>
-          );
-        })}
-      </ol>
-    </section>
-  )
-}
+{apps.length > 0 && (
+  <section class:list={['plain', className]}>
+    <div class="plain__head">
+      <MonoLabel as="h2" tone="ink">
+        {title} · {apps.length}
+      </MonoLabel>
+      <p class="plain__note">{note}</p>
+    </div>
+    <ol class="plain__list">
+      {apps.map((app) => {
+        const why = reason?.(app);
+        return (
+          <li>
+            <a href={app.href}>
+              <span class="plain__n">{specimen(app.usage.rank ?? 0)}</span>
+              <AppIcon src={app.icon_url} name={app.short_name} size={22} />
+              <span class="plain__name">
+                {app.short_name}
+                {why && <span class="plain__why">{why}</span>}
+              </span>
+              <span class="plain__stores num">{app.usage.stores.toLocaleString('en-US')}</span>
+            </a>
+          </li>
+        );
+      })}
+    </ol>
+  </section>
+)}
 
 <style>
   .plain__head {

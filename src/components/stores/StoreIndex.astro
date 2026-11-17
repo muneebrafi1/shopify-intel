@@ -28,7 +28,7 @@ const step = Math.min(items.length, Math.max(0, total - to));
 <div class="sindex" data-store-index>
   <IndexList
     label={label}
-    columns="64px minmax(0,1.5fr) minmax(0,1.15fr) 52px 72px minmax(0,0.95fr) 108px"
+    columns="64px minmax(0,1.5fr) minmax(0,1.15fr) 72px 72px minmax(0,0.95fr) 108px"
     head={['N°', 'Store', 'Theme', 'Apps', 'Currency', 'Capture', 'Detected']}
   >
     {
@@ -42,15 +42,10 @@ const step = Math.min(items.length, Math.max(0, total - to));
           class:list={['sindex__row', { 'sindex__row--curated': s.is_curated }]}
           cells={[
             { value: s.theme.label, muted: !s.theme.name },
-            { value: String(s.app_count), mono: true },
+            { value: `${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`, mono: true, mobile: true },
             { value: s.currency ?? '—', mono: true, muted: !s.currency },
             { value: s.is_curated ? 'Layout preview' : 'Not captured', muted: !s.is_curated },
-            {
-              value: formatDate(s.first_seen),
-              mono: true,
-              muted: true,
-            },
-            { value: `${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`, mono: true, mobile: true },
+            { value: formatDate(s.first_seen), mono: true, muted: true },
           ]}
         />
       ))

@@ -20,9 +20,12 @@ import {
   updateProgramStatus,
 } from '~/server/admin/actions';
 import { checkbox, httpsUrl, int, optionalText, text } from '~/server/admin/forms';
-import { idParam, runAction } from '~/server/admin/page';
+import { idParam, runAction, requireAdmin } from '~/server/admin/page';
 import { getLink, getLinkTargetOptions, listLinks, listPrograms } from '~/server/admin/queries';
 import { fullTime, timeAgo } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 const editId = idParam(Astro.url.searchParams.get('edit'));
 const creating = Astro.url.searchParams.get('new') === '1';
@@ -251,17 +254,21 @@ const targetHref = (l: (typeof links)[number]) =>
               return (
                 <tr class:list={{ 'is-editing': l.id === editId }}>
                   <td class="target">
-                    <span class="type">{TYPE[l.target_type]}</span>
-                    {href ? (
-                      <a class="a-row-link" href={href}>
-                        {l.target_name}
-                      </a>
-                    ) : (
-                      <span class="a-strong">{l.target_name}</span>
-                    )}
-                    {!l.target_id && l.target_type !== 'vendor' && (
-                      <span class="a-sub">No profile yet</span>
-                    )}
+                    <div class="target__grid">
+                      <span class="type">{TYPE[l.target_type]}</span>
+                      <span>
+                        {href ? (
+                          <a class="a-row-link" href={href}>
+                            {l.target_name}
+                          </a>
+                        ) : (
+                          <span class="a-strong">{l.target_name}</span>
+                        )}
+                        {!l.target_id && l.target_type !== 'vendor' && (
+                          <span class="a-sub">No profile yet</span>
+                        )}
+                      </span>
+                    </div>
                   </td>
                   <td class="a-muted">{l.program_name ?? '—'}</td>
                   <td class="url">
@@ -376,20 +383,19 @@ const targetHref = (l: (typeof links)[number]) =>
     font-size: var(--text-sm) !important;
   }
   .target {
-    min-width: 220px;
+    min-width: 240px;
+  }
+  .target__grid {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: baseline;
   }
   .type {
-    display: inline-block;
-    min-width: 46px;
-    margin-right: 6px;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink-3);
-  }
-  .target .a-sub {
-    padding-left: 52px;
   }
   .url {
     max-width: 320px;

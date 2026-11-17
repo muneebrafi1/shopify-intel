@@ -39,6 +39,14 @@ export async function runAction(astro: AstroGlobal, handler: ActionHandler): Pro
   return astro.redirect(flashHref(back, result), 303);
 }
 
+/**
+ * Defence in depth: the middleware already guards /admin/**, but every admin page checks the
+ * session again so a future routing change can never expose data.
+ */
+export function requireAdmin(astro: AstroGlobal): Response | null {
+  return astro.locals.admin ? null : astro.redirect('/admin/login', 302);
+}
+
 /** Positive integer from a route param or query value, else null. */
 export function idParam(value: string | null | undefined): number | null {
   return value && /^\d{1,12}$/.test(value) ? Number(value) : null;

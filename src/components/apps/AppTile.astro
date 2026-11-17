@@ -28,30 +28,35 @@ const emptyLine = surface ? 'Not seen on a curated store yet' : 'Works in the ba
 ---
 
 <article class="atile">
-  {
-    section ? (
-      <SectionCrop
-        src={section.crop.src}
-        width={section.crop.width}
-        height={section.crop.height}
-        device={section.device}
-        alt={`${app.short_name}: ${section.type.name.toLowerCase()} section on ${section.store.display_name} (${section.device}, layout preview)`}
-        href={app.href}
-        eager={eager}
-      />
-    ) : (
-      <a class="atile__blank" href={app.href} aria-label={`${app.short_name}: ${emptyLine.toLowerCase()}`}>
-        <AppIcon src={app.icon_url} name={app.short_name} size={44} />
-        <span class="atile__blank-line">{emptyLine}</span>
-      </a>
-    )
-  }
+  {section ? (
+    <SectionCrop
+      src={section.crop.src}
+      width={section.crop.width}
+      height={section.crop.height}
+      device={section.device}
+      alt={`${app.short_name}: ${section.type.name.toLowerCase()} section on ${section.store.display_name} (${section.device}, layout preview)`}
+      href={app.href}
+      eager={eager}
+    />
+  ) : (
+    <a
+      class="atile__blank"
+      href={app.href}
+      aria-label={`${app.short_name}: ${emptyLine.toLowerCase()}`}
+    >
+      <AppIcon src={app.icon_url} name={app.short_name} size={44} />
+      <span class="atile__blank-line">{emptyLine}</span>
+    </a>
+  )}
   <div class="atile__cap">
     <span class="atile__n">{specimen(n)}</span>
     <h3 class="atile__name">
       <a href={app.href}>{app.short_name}</a>
     </h3>
-    <span class="atile__stores num" title={`Running on ${app.usage.stores} of ${app.usage.denominator} scanned stores`}>
+    <span
+      class="atile__stores num"
+      title={`Running on ${app.usage.stores} of ${app.usage.denominator} scanned stores`}
+    >
       {app.usage.stores.toLocaleString('en-US')}
       <span class="atile__share">{sharePct(app.usage.share)}</span>
     </span>

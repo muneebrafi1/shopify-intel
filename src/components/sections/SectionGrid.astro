@@ -43,7 +43,7 @@ const to = from + items.length - 1;
       </Button>
     </EmptyState>
   ) : (
-    <div class="sgrid" data-sgrid>
+    <div class="sgrid" data-sgrid data-total={total}>
       <div class="grid grid--sections sgrid__cards" data-sgrid-cards>
         {items.map((s, i) => (
           <SectionCard

@@ -1,0 +1,42 @@
+---
+/** Two equal columns around a hairline axis (same geometry as the compare header). */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<div class:list={['dip', className]}>
+  <div class="dip__side dip__side--a"><slot name="a" /></div>
+  <div class="dip__axis" aria-hidden="true"></div>
+  <div class="dip__side dip__side--b"><slot name="b" /></div>
+</div>
+
+<style>
+  .dip {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+  }
+  .dip__side {
+    min-width: 0;
+  }
+  .dip__axis {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .dip {
+      grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+      gap: var(--space-8);
+    }
+    .dip__axis {
+      display: block;
+      background: var(--line);
+    }
+  }
+  @media (min-width: 1024px) {
+    .dip {
+      gap: var(--space-12);
+    }
+  }
+</style>

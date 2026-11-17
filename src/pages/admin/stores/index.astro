@@ -1,5 +1,6 @@
 ---
 import AdminLayout from '~/layouts/AdminLayout.astro';
+import { requireAdmin } from '~/server/admin/page';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
@@ -19,6 +20,9 @@ import {
   type StoreSort,
 } from '~/server/admin/queries';
 import { hrefWith, shortDate } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 const sp = Astro.url.searchParams;
 const pick = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined =>

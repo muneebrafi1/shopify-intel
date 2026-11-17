@@ -15,7 +15,7 @@ import StoreMark from '~/components/ui/StoreMark.astro';
 import { adminDb } from '~/server/admin/env';
 import { queueJob, updateStore } from '~/server/admin/actions';
 import { checkbox, oneOf, optionalText, text } from '~/server/admin/forms';
-import { runAction } from '~/server/admin/page';
+import { runAction, requireAdmin } from '~/server/admin/page';
 import {
   getRecentAudit,
   getRemovalsForDomain,
@@ -26,6 +26,9 @@ import {
 } from '~/server/admin/queries';
 import { fullTime, shortDate, timeAgo } from '~/server/admin/format';
 import { PAGE_TYPES } from '~/lib/taxonomy';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 const domain = (Astro.params.domain ?? '').toLowerCase();
 

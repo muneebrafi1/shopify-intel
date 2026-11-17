@@ -1,0 +1,174 @@
+---
+/**
+ * "Compare any two": two selects that GET /compare?a=&b=; the index page redirects to the
+ * canonical /compare/<a>-vs-<b>. Works without JS. With JS, choosing one side greys out the
+ * other kind (apps vs themes) in the second select.
+ */
+import Button from '~/components/ui/Button.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+
+export interface PickerOption {
+  value: string;
+  label: string;
+  kind: 'app' | 'theme';
+}
+export interface PickerGroup {
+  label: string;
+  options: PickerOption[];
+}
+
+interface Props {
+  groups: PickerGroup[];
+  a?: string | null;
+  b?: string | null;
+  error?: string | null;
+  class?: string;
+}
+const { groups, a, b, error, class: className } = Astro.props;
+const sides = [
+  { name: 'a', label: 'First app or theme', value: a },
+  { name: 'b', label: 'Second app or theme', value: b },
+] as const;
+---
+
+<form class:list={['picker', className]} action="/compare" method="get" data-picker aria-describedby={error ? 'picker-error' : undefined}>
+  <MonoLabel as="p" tone="ink" class="picker__label">Compare any two</MonoLabel>
+  {
+    sides.map((s, i) => (
+      <>
+        {i === 1 && (
+          <span class="picker__vs" aria-hidden="true">
+            vs
+          </span>
+        )}
+        <label class="visually-hidden" for={`picker-${s.name}`}>
+          {s.label}
+        </label>
+        <select id={`picker-${s.name}`} name={s.name} class="picker__select" required>
+          <option value="" selected={!s.value}>
+            {i === 0 ? 'Choose an app or theme' : 'Compare with…'}
+          </option>
+          {groups.map((g) => (
+            <optgroup label={g.label}>
+              {g.options.map((o) => (
+                <option value={o.value} data-kind={o.kind} selected={o.value === s.value}>
+                  {o.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </>
+    ))
+  }
+  <Button type="submit" variant="primary" iconRight="arrow-right" class="picker__go">Compare</Button>
+  {
+    error ? (
+      <p class="picker__error" id="picker-error" role="alert">
+        {error}
+      </p>
+    ) : (
+      <p class="picker__hint">Two apps or two themes. Any pair works, not only the popular ones.</p>
+    )
+  }
+</form>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('[data-picker]').forEach((form) => {
+    const [first, second] = Array.from(form.querySelectorAll<HTMLSelectElement>('select'));
+    if (!first || !second) return;
+    const kindOf = (sel: HTMLSelectElement) => sel.selectedOptions[0]?.dataset.kind ?? '';
+    const sync = () => {
+      for (const [from, to] of [
+        [first, second],
+        [second, first],
+      ] as const) {
+        const kind = kindOf(from);
+        to.querySelectorAll<HTMLOptionElement>('option[data-kind]').forEach((o) => {
+          o.disabled = (!!kind && o.dataset.kind !== kind) || (o.value === from.value && !!from.value);
+        });
+      }
+    };
+    first.addEventListener('change', sync);
+    second.addEventListener('change', sync);
+    sync();
+  });
+</script>
+
+<style>
+  .picker {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+  .picker__label {
+    margin-bottom: var(--space-2);
+  }
+  .picker__select {
+    width: 100%;
+    height: 44px;
+    padding: 0 36px 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background-color: var(--surface);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%236f6a63'%3E%3Cpath d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink);
+    font-size: var(--text-md);
+    appearance: none;
+    cursor: pointer;
+    transition: box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .picker__select:hover {
+    box-shadow: inset 0 0 0 1px var(--ink-4);
+  }
+  .picker__select:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1px var(--ink),
+      0 0 0 3px var(--accent-wash);
+  }
+  .picker__vs {
+    justify-self: start;
+    padding-left: var(--space-3);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .picker :global(.picker__go) {
+    margin-top: var(--space-2);
+    height: 44px;
+  }
+  .picker__hint,
+  .picker__error {
+    font-size: var(--text-xs);
+    line-height: 1.45;
+    color: var(--ink-3);
+  }
+  .picker__error {
+    color: var(--critical);
+  }
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .picker {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: var(--space-3);
+    }
+    .picker__label,
+    .picker__hint,
+    .picker__error {
+      grid-column: 1 / -1;
+    }
+    .picker__vs {
+      padding-left: 0;
+    }
+    .picker :global(.picker__go) {
+      margin-top: 0;
+    }
+  }
+</style>

@@ -1,0 +1,400 @@
+---
+/**
+ * /stores — the catalogue of stores.
+ * Default: the curated stores as a contact sheet of captures (grid). The index view lists every
+ * detected store as numbered rows. Filters are URL state and open the index, because they reach
+ * stores we have only detected (see components/stores/query.ts).
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Count from '~/components/ui/Count.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Segmented from '~/components/ui/Segmented.astro';
+import FilterBar, { type FilterGroup } from '~/components/ui/FilterBar.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Button from '~/components/ui/Button.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import StoreCard from '~/components/domain/StoreCard.astro';
+import StoreIndex from '~/components/stores/StoreIndex.astro';
+import RestOfArchive from '~/components/stores/RestOfArchive.astro';
+import { api, isApiError } from '~/server/api';
+import type { Facet, ListStoresOutput, PageInfo } from '~/server/api/v1/types';
+import { formatCount, formatDate } from '~/lib/format';
+import {
+  STORE_SORTS,
+  apiFilters,
+  parseStoreQuery,
+  storesHref,
+  type FilterKey,
+  type StoreQuery,
+} from '~/components/stores/query';
+
+const q = parseStoreQuery(Astro.url);
+const PAGE = 60;
+const filters = apiFilters(q.filters);
+
+let all: { data: ListStoresOutput; meta: { pagination?: PageInfo } };
+try {
+  all = await api.listStores({
+    ...filters,
+    sort: q.sort,
+    limit: q.view === 'index' ? PAGE : 1,
+    ...(q.view === 'index' && q.cursor ? { cursor: q.cursor } : {}),
+  });
+} catch (error) {
+  // A stale or hand-edited cursor: start the list again rather than failing.
+  if (isApiError(error) && error.status === 400 && q.cursor) {
+    return Astro.redirect(storesHref(q.filters, { sort: q.sort, view: q.viewParam }), 302);
+  }
+  throw error;
+}
+const [{ data: meta }, curatedRes, restRes] = await Promise.all([
+  api.getMeta({}),
+  q.view === 'grid' ? api.listStores({ ...filters, curated: true, sort: q.sort, limit: PAGE }) : null,
+  q.view === 'grid' && q.filters.capture !== 'planned'
+    ? api.listStores({ ...filters, curated: false, sort: q.sort, limit: 6 })
+    : null,
+]);
+
+const facets = all.data.facets;
+const allTotal = all.meta.pagination?.total ?? all.data.items.length;
+const curatedItems = curatedRes?.data.items ?? [];
+const curatedTotal = facets.curated;
+const counts = meta.counts;
+const hasFilters = Object.keys(q.filters).length > 0;
+const filterCount = Object.keys(q.filters).length;
+
+// ---- Filter groups (links that set/unset one param; they drop view, cursor and page) ------
+const shortAppName = (label: string) => label.split(/\s*[:|]\s*|\s+[‑–-]\s+/)[0]!.trim();
+let regionNames: Intl.DisplayNames | null = null;
+try {
+  regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+} catch {
+  regionNames = null;
+}
+const countryName = (code: string) => {
+  try {
+    return regionNames?.of(code) ?? code;
+  } catch {
+    return code;
+  }
+};
+
+const withFilter = (key: FilterKey, value: string | null): StoreQuery['filters'] => {
+  const next = { ...q.filters };
+  if (value) next[key] = value;
+  else delete next[key];
+  return next;
+};
+const group = (
+  key: FilterKey,
+  label: string,
+  allLabel: string,
+  options: Facet[],
+  format: (f: Facet) => string = (f) => f.label,
+): FilterGroup => {
+  const current = q.filters[key];
+  const list = options.map((f) => ({
+    label: format(f),
+    href: storesHref(withFilter(key, f.value), { sort: q.sort }),
+    selected: current?.toLowerCase() === f.value.toLowerCase(),
+    count: f.count,
+  }));
+  if (current && !list.some((o) => o.selected)) {
+    list.unshift({ label: current, href: storesHref(q.filters, { sort: q.sort }), selected: true, count: allTotal });
+  }
+  return {
+    key,
+    label,
+    options: [{ label: allLabel, href: storesHref(withFilter(key, null), { sort: q.sort }), selected: !current, count: null }, ...list],
+  };
+};
+
+const groups: FilterGroup[] = [
+  group('theme', 'Theme', 'All themes', facets.themes),
+  group('app', 'App', 'All apps', facets.apps, (f) => shortAppName(f.label)),
+  group('category', 'Category', 'All categories', facets.categories),
+  group('currency', 'Currency', 'Any currency', facets.currencies),
+  group('country', 'Country', 'Any country', facets.countries, (f) => countryName(f.value)),
+  group('capture', 'Capture', 'Any', [
+    { value: 'planned', label: 'Layout preview', count: facets.curated },
+    { value: 'captured', label: 'Captured', count: facets.captured },
+  ]),
+];
+const sortOptions = STORE_SORTS.map((s) => ({
+  label: s.label,
+  href: storesHref(q.filters, { sort: s.value, view: q.viewParam }),
+  selected: s.value === q.sort,
+}));
+const gridHref = storesHref(q.filters, { sort: q.sort, view: 'grid' });
+const indexHref = storesHref(q.filters, { sort: q.sort, view: 'index' });
+const clearHref = storesHref({}, { sort: q.sort, view: q.view === 'index' ? 'index' : null });
+
+// ---- Index paging -------------------------------------------------------------------------
+const offset = (q.p - 1) * PAGE;
+const nextCursor = all.meta.pagination?.next_cursor ?? null;
+const nextHref =
+  q.view === 'index' && nextCursor
+    ? storesHref(q.filters, { sort: q.sort, view: q.viewParam, cursor: nextCursor, p: q.p + 1 })
+    : null;
+const firstHref = q.cursor ? storesHref(q.filters, { sort: q.sort, view: q.viewParam }) : null;
+
+// ---- Copy ---------------------------------------------------------------------------------
+const filterSummary = (() => {
+  const parts: string[] = [];
+  const themeLabel = facets.themes.find((f) => f.value === q.filters.theme)?.label ?? q.filters.theme;
+  const appLabel = facets.apps.find((f) => f.value === q.filters.app)?.label;
+  if (q.filters.theme) parts.push(`on ${themeLabel}`);
+  if (q.filters.app) parts.push(`running ${appLabel ? shortAppName(appLabel) : q.filters.app}`);
+  return parts.join(' ');
+})();
+const restCount = Math.max(0, allTotal - curatedTotal);
+
+// ---- SEO ----------------------------------------------------------------------------------
+const singleParam = filterCount === 1 && !q.cursor ? (['theme', 'app', 'category'] as const).find((k) => q.filters[k]) : undefined;
+const canonical = singleParam ? `/stores?${singleParam}=${encodeURIComponent(q.filters[singleParam]!)}` : '/stores';
+const noindex = filterCount >= 2 || q.p > 1 || !!q.cursor || q.filters.capture !== undefined;
+const listed = q.view === 'grid' ? curatedItems : all.data.items;
+const site = Astro.site ?? Astro.url;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: q.view === 'grid' ? 'Curated Shopify stores' : 'Detected Shopify stores',
+  numberOfItems: q.view === 'grid' ? curatedItems.length : allTotal,
+  itemListElement: listed.slice(0, 30).map((s, i) => ({
+    '@type': 'ListItem',
+    position: offset + i + 1,
+    name: s.display_name,
+    url: new URL(s.href, site).href,
+  })),
+};
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+const asOf = formatDate(meta.data_as_of);
+const title = hasFilters ? `Shopify stores ${filterSummary || 'filtered'}`.trim() : 'Shopify stores, page by page';
+---
+
+<BaseLayout
+  title={title}
+  description={`${formatCount(counts.stores_scanned)} Shopify stores with their detected theme and apps. ${counts.stores_curated} curated stores are planned page by page — home, collection, product and cart, on desktop and mobile.`}
+  canonical={canonical}
+  noindex={noindex}
+  jsonLd={jsonLd}
+>
+  <div class="container stores">
+    <header class="shead cols-12">
+      <div class="shead__main span-8">
+        <MonoLabel as="p">Index — Stores</MonoLabel>
+        <h1 class="shead__title">Stores<Count value={counts.stores_scanned} label="stores" /></h1>
+        <p class="shead__statement display">
+          Every store we scanned, read for its theme and apps. The curated ones, page by page.
+        </p>
+      </div>
+      <dl class="shead__specs start-9" aria-label="What the numbers mean">
+        <div>
+          <dt class="mlabel mlabel--bullet mlabel--ink"><span class="num">{formatCount(counts.stores_scanned)}</span>&nbsp;detected</dt>
+          <dd>Theme and apps on file, from the {asOf} scan.</dd>
+        </div>
+        <div>
+          <dt class="mlabel mlabel--bullet mlabel--accent mlabel--ink"><span class="num">{counts.stores_curated}</span>&nbsp;curated</dt>
+          <dd>Every page planned for capture. Shown as layout previews for now.</dd>
+        </div>
+        <div>
+          <dt class="mlabel mlabel--bullet"><span class="num">{counts.stores_captured}</span>&nbsp;captured</dt>
+          <dd>Real screenshots arrive with the first capture run.</dd>
+        </div>
+      </dl>
+    </header>
+
+    <div class="scope">
+      <Segmented
+        label="Which stores"
+        items={[
+          { label: 'Curated', value: 'grid', href: gridHref, selected: q.view === 'grid', count: curatedTotal },
+          { label: 'All detected', value: 'index', href: indexHref, selected: q.view === 'index', count: allTotal },
+        ]}
+      />
+      <p class="scope__note">
+        {
+          q.view === 'grid'
+            ? 'Curated stores, shown as captures. Switch to all detected stores for the full catalogue.'
+            : 'Every detected store as a numbered index. Rows marked with a square are curated: hover to see the home page.'
+        }
+      </p>
+    </div>
+
+    <FilterBar
+      groups={groups}
+      total={q.view === 'grid' ? curatedItems.length : allTotal}
+      noun={q.view === 'grid' ? (curatedItems.length === 1 ? 'curated store' : 'curated stores') : allTotal === 1 ? 'store' : 'stores'}
+      sort={sortOptions}
+      view={{ current: q.view, gridHref, indexHref }}
+      clearHref={clearHref}
+      class="stores__filters"
+    />
+
+    {
+      q.view === 'grid' ? (
+        <section class="stores__results" aria-label="Curated stores">
+          {curatedItems.length > 0 ? (
+            <div class="grid grid--shots stores__grid">
+              {curatedItems.map((s, i) => (
+                <StoreCard
+                  domain={s.domain}
+                  name={s.name}
+                  href={s.href}
+                  shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
+                  meta={`${s.theme.label} · ${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`}
+                  n={i + 1}
+                  eager={i < 3}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No curated store matches"
+              body={
+                restCount > 0
+                  ? `${formatCount(restCount)} detected ${restCount === 1 ? 'store matches' : 'stores match'}, without captures. See them in the index.`
+                  : 'Try removing a filter.'
+              }
+            >
+              {restCount > 0 ? (
+                <Button href={indexHref} size="sm">
+                  Open the index
+                </Button>
+              ) : (
+                <Button href={clearHref} size="sm">
+                  Clear filters
+                </Button>
+              )}
+            </EmptyState>
+          )}
+
+        </section>
+      ) : (
+        <section class="stores__results" aria-label="All detected stores">
+          {all.data.items.length > 0 ? (
+            <StoreIndex
+              items={all.data.items}
+              offset={offset}
+              total={allTotal}
+              nextHref={nextHref}
+              firstHref={firstHref}
+              label="Detected stores"
+            />
+          ) : (
+            <EmptyState
+              title="No stores match these filters"
+              body={
+                q.filters.capture === 'captured'
+                  ? 'No store has real screenshots yet: the first capture run hasn’t happened. Curated stores show layout previews until then.'
+                  : 'Try removing a filter, or browse every detected store.'
+              }
+            >
+              <Button href={clearHref} size="sm">
+                Clear filters
+              </Button>
+            </EmptyState>
+          )}
+        </section>
+      )
+    }
+
+    {q.view === 'index' && <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />}
+  </div>
+
+  {
+    q.view === 'grid' && restCount > 0 && (
+      <RestOfArchive
+        count={restCount}
+        items={restRes?.data.items ?? []}
+        href={indexHref}
+        filterSummary={filterSummary}
+        source={meta.source.label}
+        asOf={asOf}
+      />
+    )
+  }
+  {
+    q.view === 'grid' && restCount === 0 && (
+      <div class="container">
+        <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
+      </div>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .stores {
+    padding-bottom: var(--space-16);
+  }
+  .shead {
+    padding-block: var(--space-10) var(--space-8);
+    align-items: end;
+  }
+  .shead__title {
+    margin-top: var(--space-4);
+    font-size: clamp(3.25rem, 1.8rem + 6vw, 7.5rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.05em;
+    line-height: 0.92;
+  }
+  .shead__title :global(.count-sup) {
+    font-size: max(0.16em, 12px);
+    letter-spacing: 0;
+    transform: translateY(0.6em);
+    margin-left: 0.12em;
+  }
+  .shead__statement {
+    margin-top: var(--space-5);
+    max-width: 30ch;
+    font-size: clamp(1.375rem, 1.1rem + 1vw, 2rem);
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .shead__specs {
+    display: grid;
+    gap: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .shead__specs dd {
+    margin-top: 4px;
+    padding-left: 13px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+  }
+  @media (min-width: 1024px) {
+    .shead {
+      padding-block: var(--space-16) var(--space-10);
+    }
+    .shead__specs {
+      border-top: 0;
+      padding-top: 0;
+      padding-bottom: var(--space-2);
+    }
+  }
+
+  .scope {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    padding-bottom: var(--space-5);
+  }
+  .scope__note {
+    flex: 1 1 280px;
+    max-width: 560px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+  }
+
+  .stores__results {
+    margin-top: var(--space-8);
+  }
+  .stores__source {
+    margin-top: var(--space-12);
+  }
+</style>

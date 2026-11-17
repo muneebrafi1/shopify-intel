@@ -1,0 +1,68 @@
+---
+/**
+ * Block heading for compare/alternatives pages: a numbered mono label, a Newsreader title with
+ * an optional superscript count, and a short description, on an ink rule.
+ */
+import Count from '~/components/ui/Count.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+
+interface Props {
+  label: string;
+  title: string;
+  id: string;
+  count?: number;
+  description?: string;
+  class?: string;
+}
+const { label, title, id, count, description, class: className } = Astro.props;
+---
+
+<div class:list={['bh', className]}>
+  <div class="bh__text">
+    <MonoLabel as="p" class="bh__label">{label}</MonoLabel>
+    <h2 class="bh__title" id={id}>
+      {title}{typeof count === 'number' && <Count value={count} />}
+    </h2>
+  </div>
+  {description && <p class="bh__desc">{description}</p>}
+  <slot />
+</div>
+
+<style>
+  .bh {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3) var(--space-6);
+    align-items: end;
+    padding-top: var(--space-4);
+    margin-bottom: var(--space-8);
+    border-top: 1px solid var(--ink);
+  }
+  .bh__label {
+    margin-bottom: var(--space-3);
+  }
+  .bh__title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(1.75rem, 1.25rem + 1.6vw, 2.75rem);
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+  }
+  .bh__desc {
+    max-width: 440px;
+    color: var(--ink-3);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+  }
+  @media (min-width: 1024px) {
+    .bh {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .bh__text {
+      grid-column: span 8;
+    }
+    .bh__desc {
+      grid-column: 9 / -1;
+    }
+  }
+</style>

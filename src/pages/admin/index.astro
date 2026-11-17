@@ -1,5 +1,6 @@
 ---
 import AdminLayout from '~/layouts/AdminLayout.astro';
+import { requireAdmin } from '~/server/admin/page';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import AuditList from '~/components/admin/AuditList.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
@@ -12,9 +13,13 @@ import {
   getMeta,
   getOverviewCounts,
   getPendingRemovals,
+  getAuthSummary,
   getRecentAudit,
 } from '~/server/admin/queries';
 import { fullTime, shortDate, timeAgo } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 const db = adminDb();
 const [c, meta, jobs, pending, audit] = await Promise.all([
@@ -22,8 +27,9 @@ const [c, meta, jobs, pending, audit] = await Promise.all([
   getMeta(db),
   getJobStatusCounts(db),
   getPendingRemovals(db, 6),
-  getRecentAudit(db, { limit: 14 }),
+  getRecentAudit(db, { limit: 12, excludeAuth: true }),
 ]);
+const auth = await getAuthSummary(db, new Date());
 const pendingTotal =
   (
     await db.first<{ n: number }>(
@@ -98,7 +104,7 @@ const SCOPE: Record<string, string> = {
     {pendingTotal > 0 && (
       <Fragment slot="actions">
         <Button href="/admin/removals" variant="primary" size="sm" icon="flag">
-          Review {pendingTotal} {pendingTotal === 1 ? 'removal' : 'removals'}
+          {`Review ${pendingTotal} ${pendingTotal === 1 ? 'removal' : 'removals'}`}
         </Button>
       </Fragment>
     )}
@@ -150,7 +156,7 @@ const SCOPE: Record<string, string> = {
                   <tr>
                     <td class="a-mono a-nowrap">{r.reference}</td>
                     <td>
-                      <span class="a-strong">{r.domain}</span>
+                      <span class="a-strong a-nowrap">{r.domain}</span>
                       <span class="a-sub">
                         {r.store_id ? (r.store_name ?? 'In the library') : 'Not in the library'}
                       </span>
@@ -222,7 +228,23 @@ const SCOPE: Record<string, string> = {
           Recent activity
         </h2>
       </div>
-      <AuditList rows={audit} />
+      <AuditList
+        rows={audit}
+        empty="No changes yet. Edits, queued jobs and removal decisions appear here."
+      />
+      <p class="security">
+        <span class="security__label">Sign-ins</span>
+        <span>
+          {auth.lastSignIn ? (
+            <span title={fullTime(auth.lastSignIn)}>Last {timeAgo(auth.lastSignIn, now)}</span>
+          ) : (
+            'None yet'
+          )}
+          {' · '}
+          {auth.signIns24h} in 24 h{' · '}
+          <span class:list={{ security__warn: auth.failed24h > 0 }}>{auth.failed24h} failed</span>
+        </span>
+      </p>
     </section>
   </div>
 </AdminLayout>
@@ -295,6 +317,24 @@ const SCOPE: Record<string, string> = {
   }
   .is-zero .jobs__n {
     color: var(--ink-3);
+  }
+  .security {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-3);
+    margin-top: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .security__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .security__warn {
+    color: var(--critical);
   }
   .quiet-empty {
     padding: var(--space-5) 0;

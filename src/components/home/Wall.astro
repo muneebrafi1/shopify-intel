@@ -116,7 +116,7 @@ const allPlaceholders = [...desktop, ...mobile].every((t) => t.isPlaceholder);
   </div>
 
   <div class="wall__caption container">
-    <MonoLabel as="h2" id="wall-label" tone="ink" class="wall__label">
+    <MonoLabel as="h2" id="wall-label" class="wall__label">
       {storeCount} curated stores · home, collection, product · desktop + mobile
     </MonoLabel>
     <p class="wall__note">
@@ -335,7 +335,7 @@ const allPlaceholders = [...desktop, ...mobile].every((t) => t.isPlaceholder);
     padding-block: var(--space-4) var(--space-5);
     border-top: 1px solid var(--line-inverse);
   }
-  .wall__label {
+  .wall .wall__caption :global(.wall__label) {
     color: var(--ink-inverse);
   }
   .wall__note {

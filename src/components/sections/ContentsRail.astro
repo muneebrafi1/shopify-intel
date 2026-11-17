@@ -17,7 +17,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
 <nav class:list={['toc', className]} aria-label="Section types" data-toc>
-  <p class="toc__head mlabel mlabel--bullet">Contents</p>
+  <p class="toc__head">
+    <span class="mlabel mlabel--bullet mlabel--ink">Contents</span>
+    <span class="toc__n">{rail.groups.reduce((n, g) => n + g.types.length, 0)} types</span>
+  </p>
   <a
     class:list={['toc__row', 'toc__all', { 'is-current': rail.all.current }]}
     href={rail.all.href}
@@ -86,9 +89,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
     scrollbar-width: thin;
     scrollbar-color: var(--line-strong) transparent;
   }
+  .toc {
+    border-top: 1px solid var(--ink);
+  }
+  /* Same height as the filter bar row, so the hairlines line up across the two columns. */
   .toc__head {
-    padding-bottom: var(--space-3);
-    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 57px;
+    border-bottom: 1px solid var(--line);
   }
   .toc__groups {
     margin-top: var(--space-2);
@@ -136,7 +146,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
   }
   .toc__all {
     padding-left: 0;
-    border-top: 1px solid var(--ink);
     padding-block: 10px;
     color: var(--ink);
     font-weight: var(--weight-medium);

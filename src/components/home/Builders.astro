@@ -6,18 +6,21 @@
 import MonoLabel from '~/components/ui/MonoLabel.astro';
 
 interface Props {
+  /** Mono label above the statement, e.g. "06 — For builders". */
+  label: string;
   /** Request path for the excerpt, e.g. /api/v1/apps/judgeme. */
   path: string;
   /** Pretty-printed JSON excerpt (already trimmed). */
   excerpt: string;
   endpoints: number;
 }
-const { path, excerpt, endpoints } = Astro.props;
+const { label, path, excerpt, endpoints } = Astro.props;
 ---
 
 <div class="bld cols-12">
   <div class="bld__text span-5">
-    <p class="bld__statement display">Every number here comes from one public API.</p>
+    <MonoLabel as="p" class="bld__label">{label}</MonoLabel>
+    <h2 id="home-builders" class="bld__statement display">Every number here comes from one public API.</h2>
     <p class="bld__body">
       Stores, themes, apps, sections and screenshots as JSON, with a source and a date on every figure.
       Next: an MCP server, so Claude and ChatGPT can pull real store references while they help people
@@ -46,6 +49,9 @@ const { path, excerpt, endpoints } = Astro.props;
   .bld {
     row-gap: var(--space-8);
     align-items: start;
+  }
+  .bld__label {
+    margin-bottom: var(--space-3);
   }
   .bld__statement {
     font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);

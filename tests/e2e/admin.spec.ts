@@ -49,14 +49,17 @@ test.describe('admin guard (signed out)', () => {
 
     const deep = await request.get('/admin/stores?q=youngla', { maxRedirects: 0 });
     expect(deep.status()).toBe(302);
-    expect(deep.headers().location).toMatch(/^\/admin\/login(\?next=%2Fadmin%2Fstores%3Fq%3Dyoungla)?$/);
+    expect(deep.headers().location).toMatch(
+      /^\/admin\/login(\?next=%2Fadmin%2Fstores%3Fq%3Dyoungla)?$/,
+    );
 
     // Other spellings never serve admin content: they redirect to sign-in, or (trailing slash,
     // with trailingSlash: 'never') are not routed at all.
     for (const path of ['/ADMIN', '/%61dmin/stores', '/admin/']) {
       const variant = await request.get(path, { maxRedirects: 0 });
       expect([301, 302, 308, 404], path).toContain(variant.status());
-      if (variant.status() !== 404) expect(variant.headers().location ?? '', path).toMatch(/\/admin/);
+      if (variant.status() !== 404)
+        expect(variant.headers().location ?? '', path).toMatch(/\/admin/);
       expect(await variant.text(), path).not.toContain('admin-shell');
     }
 
@@ -75,7 +78,10 @@ test.describe('admin guard (signed out)', () => {
   });
 
   test('state-changing requests without a same-origin Origin are rejected', async ({ request }) => {
-    const noOrigin = await request.post('/admin/login', { form: { password: PASSWORD }, maxRedirects: 0 });
+    const noOrigin = await request.post('/admin/login', {
+      form: { password: PASSWORD },
+      maxRedirects: 0,
+    });
     expect(noOrigin.status()).toBe(403);
     expect(noOrigin.headers()['set-cookie'] ?? '').not.toContain('admin_session');
 
@@ -101,14 +107,19 @@ test.describe('admin guard (signed out)', () => {
 
 test.describe('admin sign-in', () => {
   test.beforeEach(async ({ request }) => {
-    test.skip(!(await adminConfigured(request)), 'Server has no admin sign-in configured (see .dev.vars.example).');
+    test.skip(
+      !(await adminConfigured(request)),
+      'Server has no admin sign-in configured (see .dev.vars.example).',
+    );
   });
 
   test('a wrong password is refused with a generic message', async ({ page, context }) => {
     await page.goto('/admin/login');
     await page.getByLabel('Password').fill('definitely-not-the-password');
     const [response] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes('/admin/login') && r.request().method() === 'POST'),
+      page.waitForResponse(
+        (r) => r.url().includes('/admin/login') && r.request().method() === 'POST',
+      ),
       page.getByRole('button', { name: 'Sign in' }).click(),
     ]);
     expect(response.status()).toBe(401);
@@ -117,7 +128,10 @@ test.describe('admin sign-in', () => {
     expect((await context.cookies()).some((c) => c.name.endsWith('admin_session'))).toBe(false);
   });
 
-  test('the right password signs in, returns to the page asked for, and signs out', async ({ page, context }) => {
+  test('the right password signs in, returns to the page asked for, and signs out', async ({
+    page,
+    context,
+  }) => {
     await page.goto('/admin/stores?q=youngla');
     await expect(page).toHaveURL(/\/admin\/login\?next=/);
     await page.getByLabel('Password').fill(PASSWORD);
@@ -144,7 +158,10 @@ test.describe('admin sign-in', () => {
 
 test.describe('admin pages (signed in)', () => {
   test.beforeEach(async ({ page, request, baseURL }) => {
-    test.skip(!(await adminConfigured(request)), 'Server has no admin sign-in configured (see .dev.vars.example).');
+    test.skip(
+      !(await adminConfigured(request)),
+      'Server has no admin sign-in configured (see .dev.vars.example).',
+    );
     await signIn(page, baseURL!);
   });
 
@@ -199,7 +216,9 @@ test.describe('admin pages (signed in)', () => {
     expect(await res.text()).toContain('Cross-origin request blocked');
   });
 
-  test('queue a rescan from a store page, then cancel it from the queue', async ({ page }, testInfo) => {
+  test('queue a rescan from a store page, then cancel it from the queue', async ({
+    page,
+  }, testInfo) => {
     const domain = testInfo.project.name.includes('mobile') ? 'lskd.co' : 'thesill.com';
     page.on('dialog', (dialog) => void dialog.accept());
     await page.goto(`/admin/stores/${domain}`);
@@ -211,14 +230,21 @@ test.describe('admin pages (signed in)', () => {
     await expect(row).toHaveCount(1);
     await row.getByRole('button', { name: /Cancel job/ }).click();
     await expect(page.getByRole('status')).toContainText('Job cancelled.');
-    await expect(page.locator('tr', { hasText: domain }).filter({ hasText: 'Rescan' })).toHaveCount(0);
+    await expect(page.locator('tr', { hasText: domain }).filter({ hasText: 'Rescan' })).toHaveCount(
+      0,
+    );
   });
 
   test('review a removal request end to end', async ({ page, request }, testInfo) => {
     const mobile = testInfo.project.name.includes('mobile');
     // A domain that is not in the library, so approving only writes a tombstone.
     const domain = `e2e-${Date.now().toString(36)}-${mobile ? 'm' : 'd'}.example`;
+    // The public endpoint is rate limited per client IP. Local servers (dev, preview) take the
+    // IP from CF-Connecting-IP, so each run uses its own TEST-NET-2 address; on Cloudflare the
+    // edge overwrites this header.
+    const testIp = `198.51.100.${1 + Math.floor(Math.random() * 254)}`;
     const created = await request.post('/api/v1/removal-requests', {
+      headers: { 'CF-Connecting-IP': testIp },
       data: {
         domain,
         email: `owner@${domain}`,
@@ -226,7 +252,10 @@ test.describe('admin pages (signed in)', () => {
         scope: 'store',
       },
     });
-    test.skip(created.status() === 429, 'Removal API rate limit reached for this IP; try again later.');
+    test.skip(
+      created.status() === 429,
+      'Removal API rate limit reached for this IP; try again later.',
+    );
     expect(created.status()).toBe(201);
     const { data } = (await created.json()) as { data: { reference: string } };
 
@@ -265,6 +294,8 @@ test.describe('admin when sign-in is not configured', () => {
     });
     expect(post.status()).toBe(503);
     expect(post.headers()['set-cookie'] ?? '').not.toContain('admin_session');
-    expect((await request.get('/admin', { maxRedirects: 0 })).headers().location).toBe('/admin/login');
+    expect((await request.get('/admin', { maxRedirects: 0 })).headers().location).toBe(
+      '/admin/login',
+    );
   });
 });

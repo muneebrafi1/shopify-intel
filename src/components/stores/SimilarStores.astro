@@ -1,0 +1,69 @@
+---
+/**
+ * Similar stores (same theme / shared apps). Curated ones show their capture as StoreCards;
+ * detected-only ones are numbered index rows, so the grid never fills with empty tiles.
+ */
+import StoreCard from '~/components/domain/StoreCard.astro';
+import IndexList from '~/components/ui/IndexList.astro';
+import IndexRow from '~/components/ui/IndexRow.astro';
+import type { SimilarStore } from '~/server/api/v1/types';
+
+interface Props {
+  items: SimilarStore[];
+}
+const { items } = Astro.props;
+const why = (s: SimilarStore) =>
+  [s.same_theme ? 'Same theme' : null, s.shared_apps ? `${s.shared_apps} shared ${s.shared_apps === 1 ? 'app' : 'apps'}` : null]
+    .filter(Boolean)
+    .join(' · ');
+const curated = items.filter((s) => s.store.is_curated && s.store.preview);
+const detected = items.filter((s) => !(s.store.is_curated && s.store.preview));
+---
+
+{
+  curated.length > 0 && (
+    <div class="grid grid--shots similar__grid">
+      {curated.map((s) => (
+        <StoreCard
+          domain={s.store.domain}
+          name={s.store.name}
+          href={s.store.href}
+          shot={s.store.preview ? { ...s.store.preview.image, device: s.store.preview.device } : null}
+          meta={`${s.store.theme.label} · ${why(s)}`}
+          n={s.store.position}
+        />
+      ))}
+    </div>
+  )
+}
+{
+  detected.length > 0 && (
+    <IndexList
+      label="Similar detected stores"
+      columns="64px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 96px"
+      head={['N°', 'Store', 'Theme', 'Why similar', 'Apps']}
+      class:list={['similar__index', { 'similar__index--after': curated.length > 0 }]}
+    >
+      {detected.map((s) => (
+        <IndexRow
+          n={s.store.position ?? 0}
+          href={s.store.href}
+          title={s.store.domain}
+          subtitle={`${s.store.theme.label} · ${why(s)}`}
+          preview={s.store.preview ? { ...s.store.preview.image, device: s.store.preview.device } : null}
+          cells={[
+            { value: s.store.theme.label, muted: !s.store.theme.name },
+            { value: why(s), mono: true },
+            { value: `${s.store.app_count} apps`, mono: true, mobile: true },
+          ]}
+        />
+      ))}
+    </IndexList>
+  )
+}
+
+<style>
+  :global(.similar__index--after) {
+    margin-top: var(--space-10);
+  }
+</style>

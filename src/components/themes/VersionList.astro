@@ -1,0 +1,100 @@
+---
+/**
+ * Versions seen: a quiet typographic distribution. Version in mono, a hairline track with an
+ * ink bar for its share, and the store count. No chart library.
+ */
+import { formatCount } from '~/lib/format';
+
+interface Props {
+  versions: { version: string | null; stores: number }[];
+  class?: string;
+}
+const { versions, class: className } = Astro.props;
+const total = versions.reduce((n, v) => n + v.stores, 0) || 1;
+// Known versions first (newest first), then the stores whose version was not recorded.
+const parts = (v: string) => v.split(/[.-]/).map((x) => Number.parseInt(x, 10) || 0);
+const cmp = (a: string, b: string) => {
+  const x = parts(a);
+  const y = parts(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    const d = (y[i] ?? 0) - (x[i] ?? 0);
+    if (d) return d;
+  }
+  return 0;
+};
+const rows = [
+  ...versions.filter((v) => v.version).sort((a, b) => cmp(a.version!, b.version!)),
+  ...versions.filter((v) => !v.version),
+];
+---
+
+<ol class:list={['vlist', className]}>
+  {
+    rows.map((v) => {
+      const pct = (v.stores / total) * 100;
+      return (
+        <li class:list={['vlist__row', { 'vlist__row--unknown': !v.version }]}>
+          <span class="vlist__v">{v.version ?? 'Not recorded'}</span>
+          <span class="vlist__track" aria-hidden="true">
+            <span class="vlist__bar" style={`--w:${Math.max(pct, 1.5).toFixed(1)}%`} />
+          </span>
+          <span class="vlist__n num">
+            {formatCount(v.stores)}
+            <span class="vlist__unit">{v.stores === 1 ? 'store' : 'stores'}</span>
+          </span>
+        </li>
+      );
+    })
+  }
+</ol>
+
+<style>
+  .vlist {
+    border-top: 1px solid var(--line);
+  }
+  .vlist__row {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr) 6rem;
+    align-items: center;
+    gap: var(--space-4);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .vlist__v {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .vlist__row--unknown .vlist__v {
+    font-family: var(--font-sans);
+    color: var(--ink-3);
+  }
+  .vlist__track {
+    position: relative;
+    height: 1px;
+    background: var(--line-strong);
+  }
+  .vlist__bar {
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: var(--w);
+    height: 3px;
+    background: var(--ink);
+  }
+  .vlist__row--unknown .vlist__bar {
+    background: var(--ink-4);
+  }
+  .vlist__n {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .vlist__unit {
+    margin-left: 4px;
+    color: var(--ink-3);
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+  }
+</style>

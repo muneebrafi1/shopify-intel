@@ -1,0 +1,335 @@
+---
+/**
+ * /compare — the index of popular pairs (top apps per category, top and same-vendor themes),
+ * set as a typographic catalogue grouped like a table of contents, plus "compare any two".
+ * The picker submits GET /compare?a=&b=, which redirects to the canonical pair page.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import Chip from '~/components/ui/Chip.astro';
+import ChipRow from '~/components/ui/ChipRow.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Button from '~/components/ui/Button.astro';
+import GroupedIndex, { type Group } from '~/components/compare/GroupedIndex.astro';
+import ComparePicker, { type PickerGroup } from '~/components/compare/ComparePicker.astro';
+import { api, isApiError } from '~/server/api';
+import type { AppListItem, ComparisonLink } from '~/server/api/v1/types';
+import { formatCount, formatDate } from '~/lib/format';
+import { pluralStores } from '~/components/compare/compare';
+
+const params = Astro.url.searchParams;
+
+// ---- "Compare any two" (GET handler) --------------------------------------------------------
+const qa = params.get('a')?.trim().toLowerCase() ?? '';
+const qb = params.get('b')?.trim().toLowerCase() ?? '';
+let pickError: string | null = null;
+if (params.has('a') || params.has('b')) {
+  const valid = (s: string) => /^[a-z0-9][a-z0-9.-]*$/.test(s);
+  if (!qa || !qb) pickError = 'Choose two apps or two themes to compare.';
+  else if (qa === qb) pickError = 'Pick two different ones.';
+  else if (!valid(qa) || !valid(qb)) pickError = 'We couldn’t find one of those. Pick from the lists.';
+  else {
+    try {
+      const { data } = await api.getComparison({ pair: `${qa}-vs-${qb}` });
+      return Astro.redirect(data.href, 302);
+    } catch (err) {
+      if (!isApiError(err)) throw err;
+      pickError =
+        err.code === 'not_found'
+          ? 'We couldn’t find one of those. Pick from the lists.'
+          : err.code === 'bad_request' && /different/.test(err.message)
+            ? 'Those are the same app. Pick two different ones.'
+            : 'Compare two apps or two themes, not one of each.';
+    }
+  }
+  Astro.response.status = 400;
+}
+
+// ---- Data -----------------------------------------------------------------------------------
+const kindParam = params.get('kind');
+const kind = kindParam === 'app' || kindParam === 'theme' ? kindParam : null;
+
+const [{ data: list, meta }, appsPage1, { data: themes }] = await Promise.all([
+  api.listComparisons({ limit: 200 }),
+  api.listApps({ limit: 100, sort: 'usage' }),
+  api.listThemes({ limit: 100, sort: 'usage' }),
+]);
+const apps: AppListItem[] = [...appsPage1.data.items];
+let cursor = appsPage1.meta.pagination?.next_cursor ?? null;
+while (cursor && apps.length < 1000) {
+  const next = await api.listApps({ limit: 100, sort: 'usage', cursor });
+  apps.push(...next.data.items);
+  cursor = next.meta.pagination?.next_cursor ?? null;
+}
+const appBySlug = new Map(apps.map((a) => [a.slug, a]));
+const themeBySlug = new Map(themes.items.map((t) => [t.slug, t]));
+
+const all = list.items;
+const counts = { all: all.length, app: all.filter((c) => c.kind === 'app').length, theme: all.filter((c) => c.kind === 'theme').length };
+const shown = kind ? all.filter((c) => c.kind === kind) : all;
+
+const storesOf = (c: ComparisonLink, side: 'a' | 'b') =>
+  c.kind === 'app' ? appBySlug.get(c[side].slug)?.usage.stores : themeBySlug.get(c[side].slug)?.usage.stores;
+const row = (c: ComparisonLink, subtitle: string) => {
+  const sa = storesOf(c, 'a');
+  const sb = storesOf(c, 'b');
+  return {
+    href: c.href,
+    title: c.title,
+    subtitle,
+    cells: [
+      { value: sa !== undefined && sb !== undefined ? `${formatCount(sa)} · ${formatCount(sb)}` : '—', mono: true, muted: true },
+      { value: `(${pluralStores(c.shared_stores ?? 0)})`, serif: true, mobile: true },
+    ],
+  };
+};
+
+// App pairs grouped by category, busiest categories first.
+const appGroups = new Map<string, { label: string; href?: string; weight: number; links: ComparisonLink[] }>();
+for (const c of shown.filter((x) => x.kind === 'app')) {
+  const cat = appBySlug.get(c.a.slug)?.category ?? appBySlug.get(c.b.slug)?.category ?? null;
+  const key = cat?.slug ?? 'other';
+  const g = appGroups.get(key) ?? { label: cat?.name ?? 'Other apps', href: cat?.href, weight: 0, links: [] };
+  g.weight = Math.max(g.weight, storesOf(c, 'a') ?? 0, storesOf(c, 'b') ?? 0);
+  g.links.push(c);
+  appGroups.set(key, g);
+}
+const appSection: Group[] = [...appGroups.entries()]
+  .sort((x, y) => y[1].weight - x[1].weight)
+  .map(([key, g]) => ({
+    id: `apps-${key}`,
+    label: g.label,
+    href: g.href,
+    note: 'Top apps in category',
+    rows: g.links.map((c) => row(c, g.label)),
+  }));
+
+// Theme pairs: the most used, then same-vendor pairs grouped by vendor.
+const themeGroups = new Map<string, { label: string; note: string; href?: string; links: ComparisonLink[] }>();
+for (const c of shown.filter((x) => x.kind === 'theme')) {
+  const vendor = themeBySlug.get(c.a.slug)?.vendor_info ?? null;
+  const key = c.reason === 'same-vendor' && vendor ? `vendor-${vendor.slug}` : 'most-used';
+  const g =
+    themeGroups.get(key) ??
+    (key === 'most-used'
+      ? { label: 'Most used themes', note: 'Top themes by usage', links: [] }
+      : { label: vendor!.name, note: 'Same vendor', href: vendor!.href, links: [] });
+  g.links.push(c);
+  themeGroups.set(key, g);
+}
+const themeSection: Group[] = [...themeGroups.entries()].map(([key, g]) => ({
+  id: `themes-${key}`,
+  label: g.label,
+  note: g.note,
+  href: g.href,
+  rows: g.links.map((c) => row(c, g.note === 'Same vendor' ? `Same vendor · ${g.label}` : g.label)),
+}));
+
+// Picker options: themes first (short list), then apps by category.
+const pickerGroups: PickerGroup[] = [
+  {
+    label: 'Themes',
+    options: themes.items.map((t) => ({ value: t.slug, label: t.name, kind: 'theme' as const })),
+  },
+];
+const byCat = new Map<string, AppListItem[]>();
+for (const a of apps) {
+  const k = a.category?.name ?? 'Other apps';
+  byCat.set(k, [...(byCat.get(k) ?? []), a]);
+}
+for (const [label, items] of [...byCat.entries()].sort((x, y) => x[0].localeCompare(y[0]))) {
+  pickerGroups.push({
+    label: `Apps · ${label}`,
+    options: items
+      .slice()
+      .sort((x, y) => x.short_name.localeCompare(y.short_name))
+      .map((a) => ({ value: a.slug, label: a.short_name, kind: 'app' as const })),
+  });
+}
+
+const columns = '52px minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1fr)';
+const head = ['N°', 'Comparison', 'Stores each', 'Run both'];
+const asOf = formatDate(meta.data_as_of);
+const scan = Object.entries(meta.sources).find(([k]) => k.startsWith('storepeek-scan'))?.[1];
+
+const chipHref = (k: string | null) => (k ? `/compare?kind=${k}` : '/compare');
+const jsonLd = [
+  {
+    '@type': 'CollectionPage',
+    name: 'Compare Shopify apps and themes',
+    description: 'Popular side-by-side comparisons of Shopify apps and themes on real stores.',
+  },
+  {
+    '@type': 'ItemList',
+    name: 'Popular comparisons',
+    numberOfItems: shown.length,
+    itemListElement: shown.slice(0, 50).map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.title,
+      url: new URL(c.href, Astro.site ?? Astro.url).href,
+    })),
+  },
+];
+
+if (!pickError) Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+else Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<BaseLayout
+  title="Compare Shopify apps and themes"
+  description="Two apps or two themes, side by side on real stores: where each renders, App Store facts and how many of 930 scanned stores run them. No winners, just evidence."
+  canonical="/compare"
+  noindex={!!kind || !!pickError}
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <PageHeader title="Compare" count={counts.all} eyebrow={`Index · ${counts.all} popular pairs · any two on request`} size="lg">
+      <p slot="meta" class="cmpi__statement display">
+        Two apps or two themes, side by side on real stores. No winners, just evidence.
+      </p>
+      <div slot="actions" class="cmpi__picker">
+        <ComparePicker groups={pickerGroups} a={qa || null} b={qb || null} error={pickError} />
+      </div>
+    </PageHeader>
+
+    <div class="cmpi__bar">
+      <ChipRow label="Kind">
+        <Chip href={chipHref(null)} selected={!kind} count={counts.all}>All</Chip>
+        <Chip href={chipHref('app')} selected={kind === 'app'} count={counts.app}>Apps</Chip>
+        <Chip href={chipHref('theme')} selected={kind === 'theme'} count={counts.theme}>Themes</Chip>
+      </ChipRow>
+      <MonoLabel as="p" bullet={false} class="cmpi__count">
+        {`${shown.length} ${shown.length === 1 ? 'pair' : 'pairs'} · ${asOf}`}
+      </MonoLabel>
+    </div>
+
+    {
+      shown.length === 0 ? (
+        <div class="page-block">
+          <EmptyState title="No popular pairs here yet" body="Pick any two above, or see every comparison.">
+            <Button href="/compare" variant="secondary">
+              All comparisons
+            </Button>
+          </EmptyState>
+        </div>
+      ) : (
+        <>
+          {appSection.length > 0 && (
+            <section class="page-block" aria-labelledby="cmpi-apps">
+              <div class="cmpi__kind">
+                <h2 id="cmpi-apps" class="cmpi__kind-title">
+                  Apps<sup class="count-sup">{counts.app}</sup>
+                </h2>
+                <p class="cmpi__kind-desc">The three most used apps in each category, compared pair by pair.</p>
+              </div>
+              <GroupedIndex groups={appSection} columns={columns} head={head} listLabel={(l) => `${l} comparisons`} />
+            </section>
+          )}
+          {themeSection.length > 0 && (
+            <section class="page-block" aria-labelledby="cmpi-themes">
+              <div class="cmpi__kind">
+                <h2 id="cmpi-themes" class="cmpi__kind-title">
+                  Themes<sup class="count-sup">{counts.theme}</sup>
+                </h2>
+                <p class="cmpi__kind-desc">The most used themes against each other, and themes from the same vendor.</p>
+              </div>
+              <GroupedIndex
+                groups={themeSection}
+                columns={columns}
+                head={head}
+                start={appSection.reduce((n, g) => n + g.rows.length, 0) + 1}
+                listLabel={(l) => `${l} comparisons`}
+              />
+            </section>
+          )}
+        </>
+      )
+    }
+
+    <div class="page-block cmpi__foot">
+      <SourceNote
+        source={`stores each and “run both” from ${scan?.label ?? 'our scan of public storefronts'}. Order is by usage, not quality`}
+        asOf={asOf}
+      />
+      <p class="cmpi__alts">
+        Looking for a replacement rather than a pair? <a href="/alternatives">Browse alternatives</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .cmpi__statement {
+    max-width: 18em;
+    margin-top: var(--space-5);
+    font-size: clamp(1.625rem, 1.1rem + 1.9vw, 2.75rem);
+    line-height: 1.08;
+    color: var(--ink);
+  }
+  .cmpi__picker {
+    width: 100%;
+  }
+  .cmpi__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .cmpi__bar :global(.chip-row) {
+    min-width: 0;
+  }
+  .cmpi__count {
+    flex: none;
+  }
+  .cmpi__kind {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+  .cmpi__kind-title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .cmpi__kind-desc {
+    max-width: 420px;
+    color: var(--ink-3);
+    font-size: var(--text-base);
+  }
+  .cmpi__foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .cmpi__alts {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .cmpi__alts a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  @media (min-width: 1024px) {
+    .cmpi__picker {
+      max-width: 340px;
+      margin-left: auto;
+    }
+  }
+</style>

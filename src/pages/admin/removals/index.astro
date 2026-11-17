@@ -1,5 +1,6 @@
 ---
 import AdminLayout from '~/layouts/AdminLayout.astro';
+import { requireAdmin } from '~/server/admin/page';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
@@ -9,6 +10,9 @@ import Tabs from '~/components/ui/Tabs.astro';
 import { adminDb } from '~/server/admin/env';
 import { getRemovalCounts, listRemovals, PAGE_SIZE, type RemovalTab } from '~/server/admin/queries';
 import { fullTime, hrefWith, timeAgo } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
 
 const raw = Astro.url.searchParams.get('status');
 const tab: RemovalTab = raw === 'approved' || raw === 'rejected' ? raw : 'pending';
@@ -80,7 +84,7 @@ const EMPTY: Record<RemovalTab, string> = {
                   </a>
                 </td>
                 <td>
-                  <span class="a-strong">{r.domain}</span>
+                  <span class="a-strong a-nowrap">{r.domain}</span>
                   <span class="a-sub">
                     {r.store_id
                       ? `In library · ${(r.store_status ?? '').replace('_', ' ')}`

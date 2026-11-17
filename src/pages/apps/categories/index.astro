@@ -1,0 +1,149 @@
+---
+/**
+ * /apps/categories — the app categories as a typographic catalogue, ordered by reach (share of
+ * scanned stores running at least one app in the category), with where on the page each kind
+ * of app shows up and its three most used apps.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import Button from '~/components/ui/Button.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import CategoryEntry from '~/components/apps/CategoryEntry.astro';
+import { api } from '~/server/api';
+import { formatDate } from '~/lib/format';
+import { breadcrumbLd } from '~/components/apps/helpers';
+
+const [{ data, meta }, { data: siteMeta }] = await Promise.all([api.listAppCategories({}), api.getMeta({})]);
+const categories = [...data.items].sort((a, b) => b.store_count - a.store_count || a.name.localeCompare(b.name));
+const denominator = siteMeta.counts.stores_scanned;
+const apps = siteMeta.counts.apps;
+const source = meta.sources[categories[0]?.source ?? ''] ?? siteMeta.source;
+const withSurface = categories.filter((c) => c.surfaces.length > 0).length;
+
+const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen', 'Twenty', 'Twenty-one', 'Twenty-two', 'Twenty-three', 'Twenty-four', 'Twenty-five'];
+const countWord = words[categories.length] ?? String(categories.length);
+
+const crumbs = [
+  { label: 'Apps', href: '/apps' },
+  { label: 'Categories', href: '/apps/categories' },
+];
+const base = Astro.site ?? Astro.url;
+const jsonLd = [
+  {
+    '@type': 'ItemList',
+    name: 'Shopify app categories by reach',
+    numberOfItems: categories.length,
+    itemListElement: categories.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: new URL(c.href, base).href,
+      name: c.name,
+    })),
+  },
+  breadcrumbLd(base, crumbs),
+];
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+---
+
+<BaseLayout
+  title="Shopify app categories"
+  description={`${categories.length} kinds of Shopify app, ordered by how many of ${denominator} scanned stores run one — with where each kind shows up on the page and the most used apps.`}
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <PageHeader title="App categories" count={categories.length} eyebrow="Catalogue — ordered by reach">
+      <Breadcrumbs slot="top" items={crumbs} />
+      <Fragment slot="meta">
+        <p class="statement display">
+          {countWord} kinds of app, ordered by how many of {denominator.toLocaleString('en-US')} scanned stores run at least
+          one — and where on the page each kind shows up.
+        </p>
+        <div class="specline">
+          <MonoLabel>Scanned {formatDate(source?.as_of)}</MonoLabel>
+          <MonoLabel>{apps} apps</MonoLabel>
+          <MonoLabel>{withSurface} render a section</MonoLabel>
+        </div>
+      </Fragment>
+      <Fragment slot="actions">
+        <Button href="/apps" size="sm" iconRight="arrow-right">All apps, ranked</Button>
+        <Button href="/sections" size="sm" variant="quiet">Sections library</Button>
+      </Fragment>
+    </PageHeader>
+
+    <div class="catalogue">
+      <div class="catalogue__head" aria-hidden="true">
+        <span>N°</span>
+        <span>Category · where it shows up</span>
+        <span>Apps</span>
+        <span>Reach</span>
+        <span>Most used</span>
+      </div>
+      <ol class="catalogue__list" aria-label="App categories by reach">
+        {categories.map((c, i) => <CategoryEntry n={i + 1} category={c} denominator={denominator} />)}
+      </ol>
+    </div>
+
+    <div class="cat-sources">
+      <SourceNote source={`${source?.label ?? 'StorePeek scan'}: reach is the share of scanned stores running at least one app in the category`} />
+      <p class="cat-note">
+        “Where it shows up” is the section type apps in a category usually render. Categories without one work as
+        scripts, widgets or in the back office.
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .statement {
+    max-width: 38ch;
+    margin-top: var(--space-5);
+    color: var(--ink-2);
+    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .specline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-5);
+  }
+  .catalogue {
+    margin-top: var(--space-6);
+  }
+  .catalogue__head {
+    display: none;
+  }
+  .catalogue__list {
+    border-top: 1px solid var(--ink);
+  }
+  @media (min-width: 1024px) {
+    .catalogue__head {
+      display: grid;
+      grid-template-columns: 64px minmax(0, 5fr) minmax(0, 1fr) minmax(0, 2.4fr) minmax(0, 2.6fr);
+      gap: var(--space-6);
+      padding-bottom: var(--space-2);
+      color: var(--ink-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-2xs);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .catalogue__head span:last-child {
+      text-align: right;
+    }
+  }
+  .cat-sources {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-8);
+  }
+  .cat-note {
+    max-width: 72ch;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+</style>
