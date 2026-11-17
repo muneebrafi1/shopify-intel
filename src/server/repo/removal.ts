@@ -5,6 +5,7 @@
 import type { Ctx } from '../api/v1/context.ts';
 import { ApiError } from '../api/v1/errors.ts';
 import type { RemovalRequestReceipt, RemovalScope } from '../api/v1/schemas/misc.ts';
+import type { Db, Statement } from '../db/types.ts';
 import { normalizeDomain } from '../lib/slug.ts';
 
 /** Used only when IP_HASH_SALT is unset (local dev and tests). */
@@ -99,4 +100,78 @@ export async function createRemovalRequest(
     ],
   );
   return { receipt, stored: true };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Retention
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Removal-request records (requester email, name, reason, hashed IP) are kept for two years
+ * after the request was closed, then deleted. Owner decision (draft); the privacy page should
+ * say the same.
+ */
+export const REMOVAL_RECORD_RETENTION_DAYS = 730;
+
+export interface PurgeResult {
+  /** Records deleted (or, with dryRun, that would be). */
+  purged: number;
+  /** Records closed before this instant are expired (ISO timestamp). */
+  cutoff: string;
+  retention_days: number;
+  dry_run: boolean;
+}
+
+/** Closed (done / rejected) requests whose decision is older than the retention period. */
+const EXPIRED = `status IN ('done', 'rejected') AND COALESCE(handled_at, created_at) < ?`;
+
+/**
+ * Deletes removal-request records closed more than REMOVAL_RECORD_RETENTION_DAYS ago. Pending
+ * requests and approved ones still waiting for media deletion are never purged. What must
+ * outlive the record is kept: capture blocks and tombstones stay (their removal_request_id is
+ * cleared; the block keeps the public RR- reference). Writes one audit row when it deletes
+ * anything. Safe to run repeatedly (e.g. daily from a Cron Trigger or the admin API).
+ */
+export async function purgeExpiredRemovalRecords(
+  db: Db,
+  now: Date,
+  opts: { actor?: string; dryRun?: boolean } = {},
+): Promise<PurgeResult> {
+  const cutoff = new Date(now.getTime() - REMOVAL_RECORD_RETENTION_DAYS * 86_400_000).toISOString();
+  const result = (purged: number): PurgeResult => ({
+    purged,
+    cutoff,
+    retention_days: REMOVAL_RECORD_RETENTION_DAYS,
+    dry_run: opts.dryRun === true,
+  });
+  const count = await db.first<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM removal_requests WHERE ${EXPIRED}`,
+    [cutoff],
+  );
+  const n = count?.n ?? 0;
+  if (opts.dryRun || n === 0) return result(n);
+
+  const expiredIds = `SELECT id FROM removal_requests WHERE ${EXPIRED}`;
+  const statements: Statement[] = [
+    {
+      sql: `UPDATE capture_blocks SET removal_request_id = NULL WHERE removal_request_id IN (${expiredIds})`,
+      params: [cutoff],
+    },
+    {
+      sql: `UPDATE store_tombstones SET removal_request_id = NULL WHERE removal_request_id IN (${expiredIds})`,
+      params: [cutoff],
+    },
+    { sql: `DELETE FROM removal_requests WHERE ${EXPIRED}`, params: [cutoff] },
+    {
+      sql: `INSERT INTO admin_audit (actor, action, target_type, target_id, detail_json, created_at)
+            VALUES (?, 'removal.purge', 'removal', NULL, ?, ?)`,
+      params: [
+        (opts.actor ?? 'system').slice(0, 200),
+        JSON.stringify({ purged: n, cutoff, retention_days: REMOVAL_RECORD_RETENTION_DAYS }),
+        now.toISOString(),
+      ],
+    },
+  ];
+  const results = await db.batch(statements);
+  return result(results[2]?.changes ?? n);
 }

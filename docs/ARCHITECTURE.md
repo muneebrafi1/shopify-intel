@@ -68,6 +68,19 @@ when the record is purged after two years (below), the block stays, with its `RR
 and `removal_request_id` set to NULL. There is no "unblock" action yet; lifting a block (for an
 owner who asks to be listed again) is a manual, audited database change for now.
 
+## Removal requests: retention and notifications
+
+- **Retention** (owner decision, draft): removal-request records (requester email, name, reason,
+  hashed IP) are kept **two years** after the request is closed (`REMOVAL_RECORD_RETENTION_DAYS =
+730` in `src/server/repo/removal.ts`). `purgeExpiredRemovalRecords(db, now)` deletes `done` and
+  `rejected` requests decided before the cutoff; pending requests and approved ones still waiting
+  for media deletion are never purged. Capture blocks and tombstones are kept (their
+  `removal_request_id` is cleared). Each purge that deletes something writes one `removal.purge`
+  audit row (counts only). Run it with `POST /api/v1/admin/maintenance/purge-removal-records`
+  (`dry_run: true` to preview). No Cron Trigger exists yet; `wrangler.jsonc` has a commented
+  example for when the Worker gets a `scheduled()` handler. The privacy page should state the same
+  period.
+
 ## Local development and CI
 
 - `npm run setup` builds seed SQL from `data/seed/*.json` + `data/curation/*` and loads it into

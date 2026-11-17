@@ -54,6 +54,7 @@ export const AUDIT_LABELS: Record<string, string> = {
   'removal.complete': 'Completed removal',
   'removal.media_deleted': 'Deleted media',
   'removal.media_failed': 'Media deletion failed',
+  'removal.purge': 'Purged expired removal records',
   'affiliate_link.update': 'Edited affiliate link',
   'affiliate_link.create': 'Added affiliate link',
   'affiliate_program.update': 'Changed program status',

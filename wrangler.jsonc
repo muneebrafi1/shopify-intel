@@ -12,4 +12,9 @@
     },
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "shopify-intel-media" }],
+  // Retention (owner decision, draft): removal-request records are purged two years after they
+  // are closed by purgeExpiredRemovalRecords() (src/server/repo/removal.ts). Until the Worker has a
+  // scheduled() handler, run it with POST /api/v1/admin/maintenance/purge-removal-records (admin
+  // API token). A daily Cron Trigger can call it later; not enabled, no resources created:
+  // "triggers": { "crons": ["17 3 * * *"] },
 }
