@@ -17,7 +17,17 @@ interface LinkRow {
   b_name: string;
   b_short: string;
   b_icon: string | null;
+  shared: number | null;
 }
+
+/** Stores running both sides: co-installs for apps, detection history for themes. */
+const SHARED_SQL = {
+  app: `(SELECT ci.store_count FROM app_co_installs ci WHERE ci.app_id = c.a_id AND ci.other_app_id = c.b_id)`,
+  theme: `(SELECT COUNT(DISTINCT x.store_id) FROM store_themes x
+      JOIN store_themes y ON y.store_id = x.store_id AND y.theme_id = c.b_id
+      JOIN stores s ON s.id = x.store_id AND s.status = 'active'
+      WHERE x.theme_id = c.a_id)`,
+} as const;
 
 export function comparisonTitle(a: string, b: string): string {
   return `${a} vs ${b}`;
@@ -42,7 +52,8 @@ export async function comparisonLinks(
       return ctx.db.all<LinkRow>(
         `SELECT c.slug, c.kind, c.reason,
            x.slug AS a_slug, x.name AS a_name, ${short('x')} AS a_short, ${icon('x')} AS a_icon,
-           y.slug AS b_slug, y.name AS b_name, ${short('y')} AS b_short, ${icon('y')} AS b_icon
+           y.slug AS b_slug, y.name AS b_name, ${short('y')} AS b_short, ${icon('y')} AS b_icon,
+           ${SHARED_SQL[kind]} AS shared
          FROM comparisons c
          JOIN ${table} x ON x.id = c.a_id
          JOIN ${table} y ON y.id = c.b_id
@@ -60,5 +71,6 @@ export async function comparisonLinks(
     reason: r.reason,
     a: entityRef(r.kind, { slug: r.a_slug, name: r.a_name, icon_url: r.a_icon }),
     b: entityRef(r.kind, { slug: r.b_slug, name: r.b_name, icon_url: r.b_icon }),
+    shared_stores: r.shared ?? 0,
   }));
 }

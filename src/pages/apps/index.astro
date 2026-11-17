@@ -1,0 +1,382 @@
+---
+/**
+ * /apps — every tracked app, ranked by how many scanned stores run it. Default view is the
+ * dense ranked index (AppTable/AppRow); the grid view shows each app where it renders (its own
+ * section on a curated store). Filters are URL state: category, price, bfs, rating, sort, view, p.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import FilterBar, { type FilterGroup } from '~/components/ui/FilterBar.astro';
+import Pagination from '~/components/ui/Pagination.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Button from '~/components/ui/Button.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import AppTable from '~/components/domain/AppTable.astro';
+import AppRow from '~/components/domain/AppRow.astro';
+import AppTile from '~/components/apps/AppTile.astro';
+import CategoryRail from '~/components/apps/CategoryRail.astro';
+import PlainList from '~/components/apps/PlainList.astro';
+import { api } from '~/server/api';
+import type { AppListItem, SectionCard } from '~/server/api/v1/types';
+import { formatDate } from '~/lib/format';
+import { appStoreSource, intParam, priceFrom, sliceFromCursorList, urlWith } from '~/components/apps/helpers';
+
+const PAGE_SIZE = 60;
+const SORTS = [
+  { value: 'usage', label: 'Most used' },
+  { value: 'rating', label: 'Rating' },
+  { value: 'reviews', label: 'Reviews' },
+  { value: 'name', label: 'Name' },
+] as const;
+type Sort = (typeof SORTS)[number]['value'];
+const RATINGS = ['4.8', '4.5', '4'] as const;
+
+const url = Astro.url;
+const sp = url.searchParams;
+const category = sp.get('category') || undefined;
+const price = sp.get('price') === 'free' || sp.get('price') === 'paid' ? (sp.get('price') as 'free' | 'paid') : undefined;
+const bfs = sp.get('bfs') === '1';
+const ratingParam = RATINGS.find((r) => r === sp.get('rating'));
+const sort: Sort = SORTS.find((s) => s.value === sp.get('sort'))?.value ?? 'usage';
+const view = sp.get('view') === 'grid' ? 'grid' : 'index';
+const page = intParam(sp.get('p'));
+
+const filters = {
+  category,
+  price,
+  built_for_shopify: bfs ? true : undefined,
+  min_rating: ratingParam ? Number(ratingParam) : undefined,
+  sort,
+};
+
+// First page (facets + totals), then the requested slice.
+const first = await api.listApps({ ...filters, limit: PAGE_SIZE });
+const facets = first.data.facets.categories;
+const total = first.meta.pagination?.total ?? first.data.items.length;
+const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+if (page > pages && total > 0) return Astro.redirect(urlWith(url, { p: null }), 302);
+const items: AppListItem[] =
+  page === 1
+    ? first.data.items
+    : (
+        await sliceFromCursorList(
+          async (limit, cursor) => {
+            const r = await api.listApps({ ...filters, limit, cursor });
+            return { items: r.data.items, next: r.meta.pagination?.next_cursor ?? null, total: r.meta.pagination?.total ?? null };
+          },
+          (page - 1) * PAGE_SIZE,
+          PAGE_SIZE,
+        )
+      ).items;
+
+const sources = first.meta.sources;
+const scan = sources[items[0]?.usage.source ?? 'storepeek-scan-2026-11-17'] ?? Object.values(sources)[0];
+const appStore = sources['shopify-app-store'];
+const ratingSource = appStoreSource(appStore?.as_of);
+const denominator = items[0]?.usage.denominator ?? first.data.items[0]?.usage.denominator ?? 0;
+
+// Grid view: one section per app, from the section type its category renders.
+const sectionsByApp = new Map<string, SectionCard | null>();
+const surfaceByCategory = new Map<string, string | null>();
+if (view === 'grid') {
+  const cats = await api.listAppCategories({});
+  const surfaceSlug = new Map<string, string | undefined>();
+  for (const c of cats.data.items) {
+    surfaceByCategory.set(c.slug, c.surfaces[0]?.name ?? null);
+    surfaceSlug.set(c.slug, c.surfaces[0]?.slug);
+  }
+  await Promise.all(
+    items.map(async (app) => {
+      const type = app.category ? surfaceSlug.get(app.category.slug) : undefined;
+      if (!type) return sectionsByApp.set(app.slug, null);
+      const r = await api.listSections({ app: app.slug, type: type as never, device: 'desktop', limit: 1 });
+      let s = r.data.items[0] ?? null;
+      if (!s) s = (await api.listSections({ app: app.slug, limit: 1 })).data.items[0] ?? null;
+      sectionsByApp.set(app.slug, s);
+    }),
+  );
+}
+
+const surfaceOf = (app: AppListItem) => (app.category ? (surfaceByCategory.get(app.category.slug) ?? null) : null);
+const plated = items.filter((a) => sectionsByApp.get(a.slug));
+const unseen = items.filter((a) => !sectionsByApp.get(a.slug) && surfaceOf(a));
+const background = items.filter((a) => !sectionsByApp.get(a.slug) && !surfaceOf(a));
+
+const allCount = facets.reduce((n, f) => n + f.count, 0);
+// Catalogue size for the title count (independent of filters).
+const catalogue = (await api.getMeta({})).data.counts.apps;
+const selectedFacet = facets.find((f) => f.value === category);
+const categoryLabel = selectedFacet?.label ?? (category ? category : undefined);
+const railItems = [...facets];
+if (category && !selectedFacet) railItems.push({ value: category, label: category, count: 0 });
+
+const groups: FilterGroup[] = [
+  {
+    key: 'category',
+    label: 'Category',
+    options: [
+      { label: 'All categories', href: urlWith(url, { category: null }), selected: !category, count: allCount },
+      ...railItems.map((f) => ({
+        label: f.label,
+        href: urlWith(url, { category: f.value }),
+        selected: f.value === category,
+        count: f.count,
+      })),
+    ],
+  },
+  {
+    key: 'price',
+    label: 'Price',
+    options: [
+      { label: 'Any price', href: urlWith(url, { price: null }), selected: !price },
+      { label: 'Has a free plan', href: urlWith(url, { price: 'free' }), selected: price === 'free' },
+      { label: 'Paid only', href: urlWith(url, { price: 'paid' }), selected: price === 'paid' },
+    ],
+  },
+  {
+    key: 'bfs',
+    label: 'Built for Shopify',
+    options: [
+      { label: 'Any', href: urlWith(url, { bfs: null }), selected: !bfs },
+      { label: 'Built for Shopify', href: urlWith(url, { bfs: '1' }), selected: bfs },
+    ],
+  },
+  {
+    key: 'rating',
+    label: 'Rating',
+    options: [
+      { label: 'Any rating', href: urlWith(url, { rating: null }), selected: !ratingParam },
+      ...RATINGS.map((r) => ({
+        label: `${Number(r).toFixed(1)} and up`,
+        href: urlWith(url, { rating: r }),
+        selected: ratingParam === r,
+      })),
+    ],
+  },
+];
+const sortOptions = SORTS.map((s) => ({
+  label: s.label,
+  href: urlWith(url, { sort: s.value === 'usage' ? null : s.value }),
+  selected: s.value === sort,
+}));
+const filtered = Boolean(category || price || bfs || ratingParam);
+const clearHref = urlWith(url, { category: null, price: null, bfs: null, rating: null });
+
+const hasParams = [...sp.keys()].length > 0;
+const title = categoryLabel ? `${categoryLabel} apps` : 'Shopify apps on real stores';
+const description = categoryLabel
+  ? `${categoryLabel} apps for Shopify, ranked by how many of ${denominator} scanned stores run them, with App Store ratings and prices.`
+  : `${total} Shopify apps ranked by how many of ${denominator} scanned stores run them — with App Store ratings, prices, and where each app shows up on real store pages.`;
+
+const jsonLd = {
+  '@type': 'ItemList',
+  name: 'Shopify apps by usage',
+  numberOfItems: total,
+  itemListElement: items.slice(0, 30).map((a, i) => ({
+    '@type': 'ListItem',
+    position: (page - 1) * PAGE_SIZE + i + 1,
+    url: new URL(a.href, Astro.site ?? url).href,
+    name: a.short_name,
+  })),
+};
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+---
+
+<BaseLayout title={title} description={description} canonical="/apps" noindex={hasParams} jsonLd={jsonLd}>
+  <div class="container">
+    <PageHeader title="Apps" count={catalogue} eyebrow="Index — ranked by use">
+      <Fragment slot="meta">
+        <p class="statement display">
+          The apps live Shopify stores actually run, ranked by how many of {denominator.toLocaleString('en-US')} scanned
+          stores we found them on.
+        </p>
+        <div class="specline">
+          <MonoLabel>Scanned {formatDate(scan?.as_of)}</MonoLabel>
+          <MonoLabel>App Store checked {formatDate(appStore?.as_of)}</MonoLabel>
+          <MonoLabel>{facets.length} categories</MonoLabel>
+        </div>
+      </Fragment>
+      <Fragment slot="actions">
+        <Button href="/apps/categories" size="sm" iconRight="arrow-right">Browse by category</Button>
+        <Button href="/compare" size="sm" variant="quiet">Compare apps</Button>
+      </Fragment>
+    </PageHeader>
+
+    <div class="apps-layout">
+      <aside class="apps-layout__rail">
+        <CategoryRail
+          all={{ label: 'All apps', href: urlWith(url, { category: null }), count: allCount, selected: !category }}
+          items={railItems.map((f) => ({
+            label: f.label,
+            href: urlWith(url, { category: f.value }),
+            count: f.count,
+            selected: f.value === category,
+          }))}
+        />
+      </aside>
+
+      <div class="apps-layout__main">
+        <FilterBar
+          groups={groups}
+          total={total}
+          noun={total === 1 ? 'app' : 'apps'}
+          sort={sortOptions}
+          clearHref={clearHref}
+          view={{
+            current: view,
+            gridHref: urlWith(url, { view: 'grid' }, true),
+            indexHref: urlWith(url, { view: null }, true),
+          }}
+        />
+
+        {
+          items.length === 0 ? (
+            <EmptyState
+              class="apps-empty"
+              title="No apps match these filters"
+              body={`Try removing a filter, or browse all ${allCount} apps.`}
+            >
+              <Button href={clearHref} size="sm">
+                Clear filters
+              </Button>
+            </EmptyState>
+          ) : view === 'grid' ? (
+            <>
+              <p class="grid-note">
+                Each plate is the app’s own section on a curated store — a layout preview drawn from detected sections
+                until captures land.
+              </p>
+              {plated.length > 0 ? (
+                <div class="grid grid--sections apps-grid">
+                  {plated.map((app, i) => (
+                    <AppTile app={app} section={sectionsByApp.get(app.slug) ?? null} surface={surfaceOf(app)} eager={i < 4} />
+                  ))}
+                </div>
+              ) : (
+                <p class="grid-none">None of the apps on this page has been seen rendering a section yet.</p>
+              )}
+              <PlainList
+                class="apps-plain"
+                title="Not on a curated store yet"
+                note="They render a section, but none of our curated stores runs them."
+                apps={unseen}
+                reason={(app) => (surfaceOf(app) ? `Renders as ${surfaceOf(app)}` : null)}
+              />
+              <PlainList
+                class="apps-plain"
+                title="Works in the background"
+                note="No storefront section to show: scripts, back office, chat widgets."
+                apps={background}
+                reason={(app) => app.category?.name ?? null}
+              />
+            </>
+          ) : (
+            <AppTable class="apps-table" usageLabel="Stores">
+              {items.map((app) => (
+                <AppRow
+                  slug={app.slug}
+                  href={app.href}
+                  name={app.short_name}
+                  iconUrl={app.icon_url}
+                  developer={app.developer}
+                  category={app.category?.name}
+                  rating={app.rating}
+                  reviews={app.reviews}
+                  priceLabel={priceFrom(app.pricing)}
+                  storesCount={app.usage.stores}
+                  sharePct={app.usage.share * 100}
+                  rank={app.usage.rank ?? undefined}
+                  builtForShopify={app.built_for_shopify}
+                  ratingSource={app.rating ? ratingSource : undefined}
+                />
+              ))}
+            </AppTable>
+          )
+        }
+
+        <Pagination
+          class="apps-pager"
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          noun="apps"
+          hrefFor={(n) => urlWith(url, { p: n > 1 ? String(n) : null })}
+        />
+
+        <div class="apps-sources">
+          <SourceNote source={`${scan?.label ?? 'StorePeek scan'}: stores and share`} />
+          <SourceNote
+            source="Shopify App Store listing: rating, reviews, prices, Built for Shopify"
+            asOf={`checked ${formatDate(appStore?.as_of)}`}
+            href=""
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .statement {
+    max-width: 36ch;
+    margin-top: var(--space-5);
+    color: var(--ink-2);
+    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .specline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-5);
+  }
+  .apps-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    margin-top: var(--space-4);
+  }
+  .apps-layout__rail {
+    display: none;
+  }
+  @media (min-width: 1200px) {
+    .apps-layout {
+      grid-template-columns: 228px minmax(0, 1fr);
+      gap: var(--space-12);
+    }
+    .apps-layout__rail {
+      display: block;
+    }
+  }
+  .apps-table,
+  .apps-grid,
+  .apps-empty {
+    margin-top: var(--space-6);
+  }
+  .apps-plain {
+    margin-top: var(--space-12);
+  }
+  .grid-none {
+    margin-top: var(--space-6);
+    color: var(--ink-3);
+  }
+  .grid-note {
+    max-width: 640px;
+    margin-top: var(--space-5);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .apps-pager {
+    margin-top: var(--space-8);
+  }
+  .apps-sources {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+</style>

@@ -237,7 +237,10 @@ export async function listStores(
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
   const from = 'FROM stores s LEFT JOIN themes t ON t.id = s.current_theme_id';
 
-  const totalRow = await db.first<{ n: number }>(`SELECT COUNT(*) AS n ${from} ${whereSql}`, params);
+  const totalRow = await db.first<{ n: number }>(
+    `SELECT COUNT(*) AS n ${from} ${whereSql}`,
+    params,
+  );
   const total = totalRow?.n ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Math.min(Math.max(1, f.page ?? 1), pages);
@@ -446,8 +449,11 @@ export async function listJobs(
   page = 1,
 ): Promise<{ rows: JobRow[]; total: number; page: number }> {
   const total =
-    (await db.first<{ n: number }>('SELECT COUNT(*) AS n FROM scan_jobs WHERE status = ?', [status]))
-      ?.n ?? 0;
+    (
+      await db.first<{ n: number }>('SELECT COUNT(*) AS n FROM scan_jobs WHERE status = ?', [
+        status,
+      ])
+    )?.n ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const p = Math.min(Math.max(1, page), pages);
   const order =
@@ -685,7 +691,9 @@ export interface TargetOptions {
 export async function getLinkTargetOptions(db: Db): Promise<TargetOptions> {
   const [apps, themes, vendors, programs] = await Promise.all([
     db.all<{ id: number; name: string }>('SELECT id, name FROM apps ORDER BY name COLLATE NOCASE'),
-    db.all<{ id: number; name: string }>('SELECT id, name FROM themes ORDER BY name COLLATE NOCASE'),
+    db.all<{ id: number; name: string }>(
+      'SELECT id, name FROM themes ORDER BY name COLLATE NOCASE',
+    ),
     db.all<{ vendor_slug: string; vendor: string }>(
       `SELECT vendor_slug, MIN(vendor) AS vendor FROM themes
        WHERE vendor_slug IS NOT NULL AND vendor IS NOT NULL GROUP BY vendor_slug ORDER BY vendor COLLATE NOCASE`,
@@ -762,6 +770,7 @@ export interface AppRow {
   id: number;
   slug: string;
   name: string;
+  icon_url: string | null;
   developer: string | null;
   tagline: string | null;
   category_id: number | null;
@@ -804,11 +813,12 @@ export async function listApps(
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
   const from = `FROM apps a LEFT JOIN app_categories c ON c.id = a.category_id
     LEFT JOIN app_stats st ON st.app_id = a.id`;
-  const total = (await db.first<{ n: number }>(`SELECT COUNT(*) AS n ${from} ${whereSql}`, params))?.n ?? 0;
+  const total =
+    (await db.first<{ n: number }>(`SELECT COUNT(*) AS n ${from} ${whereSql}`, params))?.n ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Math.min(Math.max(1, f.page ?? 1), pages);
   const rows = await db.all<AppRow>(
-    `SELECT a.id, a.slug, a.name, a.developer, a.tagline, a.category_id, c.name AS category_name,
+    `SELECT a.id, a.slug, a.name, a.icon_url, a.developer, a.tagline, a.category_id, c.name AS category_name,
        a.profile, a.status, st.store_count, a.updated_at
      ${from} ${whereSql}
      ORDER BY COALESCE(st.store_count, -1) DESC, a.name COLLATE NOCASE
@@ -820,7 +830,7 @@ export async function listApps(
 
 export async function getApp(db: Db, id: number): Promise<AppRow | null> {
   return db.first<AppRow>(
-    `SELECT a.id, a.slug, a.name, a.developer, a.tagline, a.category_id, c.name AS category_name,
+    `SELECT a.id, a.slug, a.name, a.icon_url, a.developer, a.tagline, a.category_id, c.name AS category_name,
        a.profile, a.status, st.store_count, a.updated_at
      FROM apps a LEFT JOIN app_categories c ON c.id = a.category_id
      LEFT JOIN app_stats st ON st.app_id = a.id WHERE a.id = ?`,

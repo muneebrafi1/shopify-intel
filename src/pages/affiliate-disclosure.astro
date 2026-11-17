@@ -7,7 +7,7 @@ import AsideCard from '~/components/static/AsideCard.astro';
 import { CONTACT, SITE_NAME } from '~/config/site';
 import { LEGAL_UPDATED } from '~/components/static/content';
 
-export const prerender = true;
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
 const toc = [
   { id: 'money', label: 'How we make money' },

@@ -1,0 +1,479 @@
+---
+/**
+ * The page's one dark moment: both specimens side by side at identical scale on a full-bleed
+ * near-black stage, with crop marks and contact-sheet captions. Page-type tabs and the device
+ * toggle are links (`?page=&device=`) so they work without JS; with JS they switch in place.
+ */
+import { thumbUrl } from '~/lib/media';
+import { formatCount } from '~/lib/format';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Icon from '~/components/ui/Icon.astro';
+import { frameKey, pageTypeName, type Frame, type SideInfo, type StageModel } from './compare';
+
+interface Props {
+  model: StageModel;
+  a: SideInfo;
+  b: SideInfo;
+  /** Requested view from the query string, if valid. */
+  page?: string | null;
+  device?: string | null;
+}
+const { model, a, b, page, device } = Astro.props;
+const requested = page && device ? frameKey(page, device) : null;
+const current = requested && model.frames.has(requested) ? requested : model.defaultKey;
+const [curPage, curDevice] = current.split(':') as [string, string];
+
+/** Pick the frame key for a tab/toggle: keep the other dimension when it exists. */
+const keyFor = (p: string, d: string) => {
+  if (model.frames.has(frameKey(p, d))) return frameKey(p, d);
+  const other = d === 'desktop' ? 'mobile' : 'desktop';
+  return model.frames.has(frameKey(p, other)) ? frameKey(p, other) : null;
+};
+const hrefFor = (key: string) => {
+  const [p, d] = key.split(':');
+  return `?page=${p}&device=${d}#stage`;
+};
+const tabs = model.pageTypes
+  .map((p) => ({ page: p, key: keyFor(p, curDevice) }))
+  .filter((t): t is { page: (typeof model.pageTypes)[number]; key: string } => !!t.key);
+const toggles = (['desktop', 'mobile'] as const).map((d) => ({ device: d, key: keyFor(curPage, d) }));
+const showControls = model.mode === 'sections' || model.mode === 'pages';
+const total = { a: [...model.frames.values()].filter((f) => f.a).length, b: [...model.frames.values()].filter((f) => f.b).length };
+const order = [...model.frames.keys()];
+const sideInfo = { a, b };
+
+const imgSrc = (f: Frame) =>
+  f.kind === 'page' ? thumbUrl(f.src, { cropHeight: f.height, width: f.device === 'desktop' ? 1200 : 600 }) : f.src;
+const emptyText = (s: SideInfo, key: string) => {
+  const [p, d] = key.split(':');
+  if (model.mode === 'empty' || model.mode === 'stores')
+    return s.kind === 'app' ? `${s.name} isn’t on a curated store yet.` : `No curated store runs ${s.name} yet.`;
+  return s.kind === 'app'
+    ? `${s.name} isn’t attributed on a curated ${pageTypeName(p ?? '').toLowerCase()} page (${d}) yet.`
+    : `No ${pageTypeName(p ?? '').toLowerCase()} page (${d}) captured for ${s.name} yet.`;
+};
+const anyPlaceholder = [...model.frames.values()].some((f) => f.a?.isPlaceholder || f.b?.isPlaceholder);
+---
+
+<section class="stage" id="stage" aria-labelledby="stage-title" data-stage>
+  <div class="stage__inner container">
+    <div class="stage__bar">
+      <div class="stage__heading">
+        <MonoLabel as="p" class="stage__label">Side by side · same scale</MonoLabel>
+        <h2 class="stage__title" id="stage-title">
+          {
+            model.mode === 'sections'
+              ? 'Where each one renders'
+              : model.mode === 'pages'
+                ? 'The same page on each theme'
+                : model.mode === 'stores'
+                  ? 'A store running each'
+                  : 'Nothing to show side by side yet'
+          }
+        </h2>
+      </div>
+      {
+        showControls && (
+          <div class="stage__controls">
+            {tabs.length > 1 && (
+              <nav class="stage__tabs" aria-label="Page type">
+                {tabs.map((t) => (
+                  <a
+                    href={hrefFor(t.key)}
+                    data-stage-key={t.key}
+                    data-stage-page={t.page}
+                    aria-current={t.page === curPage ? 'page' : undefined}
+                    rel="nofollow"
+                  >
+                    {pageTypeName(t.page)}
+                  </a>
+                ))}
+              </nav>
+            )}
+            {model.devices.length > 1 && (
+              <div class="stage__seg" role="group" aria-label="Device">
+                {toggles.map((t) =>
+                  t.key ? (
+                    <a
+                      href={hrefFor(t.key)}
+                      data-stage-key={t.key}
+                      data-stage-device={t.device}
+                      aria-current={t.device === curDevice ? 'true' : undefined}
+                      rel="nofollow"
+                    >
+                      <Icon name={t.device === 'desktop' ? 'desktop' : 'device-mobile'} size={14} />
+                      <span>{t.device === 'desktop' ? 'Desktop' : 'Mobile'}</span>
+                    </a>
+                  ) : (
+                    <span class="stage__seg-off" aria-disabled="true">
+                      <Icon name={t.device === 'desktop' ? 'desktop' : 'device-mobile'} size={14} />
+                      <span>{t.device === 'desktop' ? 'Desktop' : 'Mobile'}</span>
+                    </span>
+                  ),
+                )}
+              </div>
+            )}
+          </div>
+        )
+      }
+    </div>
+
+    {
+      order.map((key) => {
+        const pair = model.frames.get(key)!;
+        const [, d] = key.split(':');
+        return (
+          <div class:list={['stage__pair', `stage__pair--${d}`]} data-stage-frame={key} hidden={key !== current}>
+            {(['a', 'b'] as const).map((side) => {
+              const f = pair[side];
+              const s = sideInfo[side];
+              const n = f ? order.filter((k) => model.frames.get(k)![side]).indexOf(key) + 1 : 0;
+              return (
+                <figure class:list={['plate', `plate--${side}`]}>
+                  <p class="plate__who">
+                    <span class="plate__name">{s.name}</span>
+                    <span class="plate__count mono">{formatCount(s.stores)} stores</span>
+                  </p>
+                  {f ? (
+                    <a href={f.href ?? undefined} class:list={['plate__well marks', `plate__well--${f.kind}`]}>
+                      <img
+                        src={imgSrc(f)}
+                        alt={f.alt}
+                        width={f.width}
+                        height={f.height}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </a>
+                  ) : (
+                    <div class="plate__well plate__well--empty marks">
+                      <p>{emptyText(s, key)}</p>
+                    </div>
+                  )}
+                  {f && (
+                    <figcaption class="plate__cap">
+                      <span class="plate__title">{f.title}</span>
+                      <span class="plate__facts">
+                        {f.facts.join(' · ')}
+                        {f.isPlaceholder && ' · Layout preview'}
+                      </span>
+                      <span class="plate__frame">
+                        {String(n).padStart(2, '0')}/{String(total[side]).padStart(2, '0')}
+                      </span>
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            })}
+            {pair.sectionType && (
+              <p class="stage__same mono">
+                Same section on both: {pair.sectionType}
+              </p>
+            )}
+          </div>
+        );
+      })
+    }
+
+    <p class="stage__note">
+      {model.note}
+      {anyPlaceholder && ' Layout previews are drawn from each page’s detected sections; capture pending.'}
+    </p>
+  </div>
+</section>
+
+<script>
+  // Progressive enhancement: switch frames in place and keep the URL shareable.
+  document.querySelectorAll<HTMLElement>('[data-stage]').forEach((stage) => {
+    stage.addEventListener('click', (event) => {
+      const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[data-stage-key]');
+      if (!link || event.metaKey || event.ctrlKey || event.shiftKey) return;
+      const key = link.dataset.stageKey!;
+      const frame = stage.querySelector<HTMLElement>(`[data-stage-frame="${key}"]`);
+      if (!frame) return;
+      event.preventDefault();
+      const [page, device] = key.split(':');
+      stage.querySelectorAll<HTMLElement>('[data-stage-frame]').forEach((el) => (el.hidden = el !== frame));
+      // Tabs keep the current device when possible; toggles keep the current page.
+      stage.querySelectorAll<HTMLAnchorElement>('a[data-stage-page]').forEach((a) => {
+        const p = a.dataset.stagePage!;
+        const same = stage.querySelector(`[data-stage-frame="${p}:${device}"]`);
+        a.dataset.stageKey = same ? `${p}:${device}` : a.dataset.stageKey;
+        a.href = `?page=${a.dataset.stageKey!.replace(':', '&device=')}#stage`;
+        a.toggleAttribute('aria-current', p === page);
+        if (p === page) a.setAttribute('aria-current', 'page');
+      });
+      stage.querySelectorAll<HTMLAnchorElement>('a[data-stage-device]').forEach((a) => {
+        const d = a.dataset.stageDevice!;
+        const same = stage.querySelector(`[data-stage-frame="${page}:${d}"]`);
+        if (same) {
+          a.dataset.stageKey = `${page}:${d}`;
+          a.href = `?page=${page}&device=${d}#stage`;
+        }
+        if (d === device) a.setAttribute('aria-current', 'true');
+        else a.removeAttribute('aria-current');
+      });
+      const url = new URL(location.href);
+      url.searchParams.set('page', page!);
+      url.searchParams.set('device', device!);
+      history.replaceState(null, '', `${url.pathname}${url.search}#stage`);
+    });
+  });
+</script>
+
+<style>
+  .stage {
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    padding-block: var(--space-10) var(--space-8);
+  }
+  .stage__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5) var(--space-8);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-8);
+    border-bottom: 1px solid var(--line-inverse);
+  }
+  .stage__label {
+    color: var(--ink-inverse-2);
+    margin-bottom: var(--space-3);
+  }
+  .stage__title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  .stage__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-6);
+  }
+  .stage__tabs {
+    display: flex;
+    gap: var(--space-5);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .stage__tabs a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 34px;
+    color: var(--ink-inverse-2);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .stage__tabs a:hover,
+  .stage__tabs a[aria-current] {
+    color: var(--ink-inverse);
+  }
+  .stage__tabs a[aria-current]::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--ink-inverse);
+  }
+  .stage__seg {
+    display: inline-flex;
+    padding: 2px;
+    gap: 2px;
+    border-radius: var(--radius-pill);
+    background: var(--inverse-2);
+  }
+  .stage__seg a,
+  .stage__seg-off {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    color: var(--ink-inverse-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+  .stage__seg a:hover {
+    color: var(--ink-inverse);
+  }
+  .stage__seg a[aria-current] {
+    background: var(--ink-inverse);
+    color: var(--ink);
+  }
+  .stage__seg-off {
+    opacity: 0.4;
+  }
+  .stage a:focus-visible {
+    box-shadow: 0 0 0 2px var(--inverse), 0 0 0 4px var(--accent);
+  }
+
+  /* Two plates, identical width, top-aligned so heights read honestly. */
+  .stage__pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-4);
+    align-items: start;
+  }
+  .stage__pair[hidden] {
+    display: none;
+  }
+  .plate {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .plate__who {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  .plate__name {
+    min-width: 0;
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .plate__count {
+    flex: none;
+    color: var(--ink-inverse-2);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .plate__well {
+    --mark: #6b665e;
+    display: block;
+    background: var(--inverse-2);
+    border-radius: 2px;
+  }
+  .plate__well img {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--surface);
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+  a.plate__well:hover img {
+    opacity: 0.92;
+  }
+  /* Mobile captures: a phone-width plate centred in each half, same width both sides. */
+  .stage__pair--mobile .plate__well:not(.plate__well--empty) {
+    width: min(100%, 300px);
+    margin-inline: auto;
+  }
+  .stage__pair--mobile .plate__well img {
+    border-radius: 14px 14px 0 0;
+  }
+  .plate__well--empty {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    padding: var(--space-6);
+    background:
+      repeating-linear-gradient(135deg, transparent 0 10px, rgb(255 255 255 / 0.025) 10px 11px),
+      var(--inverse);
+    box-shadow: inset 0 0 0 1px var(--line-inverse);
+    text-align: center;
+  }
+  .stage__pair--mobile .plate__well--empty {
+    aspect-ratio: 9 / 16;
+    max-width: 300px;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .plate__well--empty p {
+    max-width: 30ch;
+    color: var(--ink-inverse-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+  .plate__cap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px var(--space-3);
+    margin-top: var(--space-4);
+  }
+  .plate__title {
+    min-width: 0;
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .plate__facts {
+    grid-column: 1;
+    color: var(--ink-inverse-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1.5;
+  }
+  .plate__frame {
+    grid-column: 2;
+    grid-row: 1;
+    color: var(--ink-inverse-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-variant-numeric: tabular-nums;
+  }
+  .stage__same {
+    grid-column: 1 / -1;
+    color: var(--ink-inverse-2);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .stage__note {
+    max-width: 640px;
+    margin-top: var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-inverse);
+    color: var(--ink-inverse-2);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+  }
+
+  @media (min-width: 768px) {
+    .stage {
+      padding-block: var(--space-16) var(--space-12);
+    }
+    .stage__pair {
+      gap: var(--space-10) var(--space-12);
+    }
+  }
+  @media (max-width: 639px) {
+    .plate__count {
+      display: none;
+    }
+    .plate__frame {
+      display: none;
+    }
+    .plate__name {
+      font-size: var(--text-sm);
+    }
+    .stage__controls {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+</style>

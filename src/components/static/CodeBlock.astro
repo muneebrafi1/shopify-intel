@@ -71,14 +71,17 @@ const { code, label, variant = 'block', prompt = false, class: className } = Ast
     text-transform: uppercase;
   }
   .code__body {
-    position: relative;
-  }
-  .code__pre {
-    overflow-x: auto;
-    margin: 0;
-    padding: var(--space-4) 52px var(--space-4) var(--space-4);
+    display: flex;
+    align-items: flex-start;
     border-radius: var(--radius-md);
     background: var(--fill);
+  }
+  .code__pre {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    margin: 0;
+    padding: var(--space-4) var(--space-2) var(--space-4) var(--space-4);
     color: var(--ink);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
@@ -96,28 +99,25 @@ const { code, label, variant = 'block', prompt = false, class: className } = Ast
     color: var(--ink-3);
     user-select: none;
   }
+  .code--line .code__body {
+    align-items: center;
+    border-radius: var(--radius-sm);
+  }
   .code--line .code__pre {
     padding-block: var(--space-2);
-    border-radius: var(--radius-sm);
-    background: var(--fill);
-    color: var(--ink);
+    padding-left: var(--space-3);
     font-size: var(--text-xs);
     line-height: 1.6;
   }
-  .code--line .code__prompt {
-    color: var(--ink-3);
-  }
   .code__copy {
-    position: absolute;
-    top: 8px;
-    right: 8px;
     display: inline-flex;
+    flex: none;
     align-items: center;
     justify-content: center;
     width: 30px;
     height: 30px;
+    margin: 8px 8px 0 0;
     border-radius: var(--radius-sm);
-    background: var(--fill);
     color: var(--ink-3);
     transition:
       background-color var(--dur-fast) var(--ease-out),
@@ -128,12 +128,9 @@ const { code, label, variant = 'block', prompt = false, class: className } = Ast
     color: var(--ink);
   }
   .code--line .code__copy {
-    top: 50%;
-    right: 4px;
     width: 28px;
     height: 28px;
-    transform: translateY(-50%);
-    box-shadow: -12px 0 10px -2px var(--fill);
+    margin: 0 4px 0 0;
   }
   .code__copy :global(.code__icon--done) {
     display: none;

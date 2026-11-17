@@ -8,7 +8,14 @@ type Props =
 const { as = 'input', class: className, ...rest } = Astro.props;
 ---
 
-{as === 'textarea' && <textarea class:list={['input', 'input--textarea', className]} {...(rest as HTMLAttributes<'textarea'>)} />}
+{
+  as === 'textarea' &&
+    (() => {
+      // <textarea> takes its value as content, so a re-rendered form keeps what was typed.
+      const { value, ...attrs } = rest as HTMLAttributes<'textarea'> & { value?: string };
+      return <textarea class:list={['input', 'input--textarea', className]} {...attrs}>{value ?? ''}</textarea>;
+    })()
+}
 {
   as === 'select' && (
     <select class:list={['input', 'input--select', className]} {...(rest as HTMLAttributes<'select'>)}>

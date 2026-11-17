@@ -239,6 +239,11 @@ export const ComparisonLinkSchema = named(
     reason: z.string(),
     a: EntityRefSchema,
     b: EntityRefSchema,
+    shared_stores: int()
+      .optional()
+      .describe(
+        'Active scanned stores running both (apps: co-installed now; themes: ran both at some point).',
+      ),
   }),
 );
 

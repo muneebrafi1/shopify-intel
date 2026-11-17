@@ -30,7 +30,11 @@ export const checkbox = (form: FormData, name: string): boolean => {
   return v === 'on' || v === '1' || v === 'true' || v === 'yes';
 };
 
-export function oneOf<T extends string>(form: FormData, name: string, allowed: readonly T[]): T | null {
+export function oneOf<T extends string>(
+  form: FormData,
+  name: string,
+  allowed: readonly T[],
+): T | null {
   const value = text(form, name, 64);
   return (allowed as readonly string[]).includes(value) ? (value as T) : null;
 }

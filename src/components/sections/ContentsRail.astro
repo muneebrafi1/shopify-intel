@@ -1,0 +1,202 @@
+---
+/**
+ * The sections library's table of contents: every section type, grouped into numbered chapters,
+ * set like a book's contents page (name · dotted leader · count in mono). Counts follow the
+ * active filters and every link keeps them. Desktop only; on smaller screens the same choice
+ * lives in the filter sheet.
+ */
+import type { Rail } from './library';
+
+interface Props {
+  rail: Rail;
+  class?: string;
+}
+const { rail, class: className } = Astro.props;
+const fmt = (n: number) => n.toLocaleString('en-US');
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<nav class:list={['toc', className]} aria-label="Section types" data-toc>
+  <p class="toc__head mlabel mlabel--bullet">Contents</p>
+  <a
+    class:list={['toc__row', 'toc__all', { 'is-current': rail.all.current }]}
+    href={rail.all.href}
+    aria-current={rail.all.current ? 'page' : undefined}
+  >
+    <span class="toc__name">All sections</span>
+    <span class="toc__lead" aria-hidden="true"></span>
+    <span class="toc__n num">{fmt(rail.all.count)}</span>
+  </a>
+  <ol class="toc__groups">
+    {
+      rail.groups.map((g) => (
+        <li class="toc__group">
+          <p class="toc__chapter">
+            <span class="toc__no num">{pad(g.n)}</span>
+            <span class="toc__gname">{g.name}</span>
+            <span class="toc__n num">{fmt(g.count)}</span>
+          </p>
+          <ol class="toc__types">
+            {g.types.map((t) => (
+              <li>
+                {t.count > 0 || t.current ? (
+                  <a
+                    class:list={['toc__row', { 'is-current': t.current }]}
+                    href={t.href}
+                    aria-current={t.current ? 'page' : undefined}
+                  >
+                    <span class="toc__name">{t.name}</span>
+                    <span class="toc__lead" aria-hidden="true" />
+                    <span class="toc__n num">{fmt(t.count)}</span>
+                  </a>
+                ) : (
+                  <span class="toc__row is-empty" title="No sections match the current filters">
+                    <span class="toc__name">{t.name}</span>
+                    <span class="toc__lead" aria-hidden="true" />
+                    <span class="toc__n num">—</span>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ol>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<script>
+  // Bring the current entry into view inside the (independently scrolling) rail.
+  document.querySelectorAll<HTMLElement>('[data-toc]').forEach((toc) => {
+    const current = toc.querySelector<HTMLElement>('.toc__types .is-current');
+    if (!current || toc.scrollHeight <= toc.clientHeight) return;
+    const top = current.offsetTop - toc.clientHeight / 2 + current.offsetHeight / 2;
+    toc.scrollTop = Math.max(0, top);
+  });
+</script>
+
+<style>
+  .toc {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-6));
+    max-height: calc(100dvh - var(--header-h) - var(--space-10));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: var(--space-3);
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .toc__head {
+    padding-bottom: var(--space-3);
+    color: var(--ink);
+  }
+  .toc__groups {
+    margin-top: var(--space-2);
+  }
+  .toc__group {
+    padding-top: var(--space-4);
+  }
+
+  /* Chapter line: 01  NAVIGATION ……… 472 */
+  .toc__chapter {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-2) 0 var(--space-1-5);
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .toc__no {
+    width: 22px;
+    flex: none;
+    color: var(--ink-2);
+  }
+  .toc__gname {
+    flex: 1;
+    min-width: 0;
+    color: var(--ink-2);
+  }
+
+  /* Entry line: name · dotted leader · count */
+  .toc__row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    position: relative;
+    padding: 4px 0 4px 30px;
+    border-radius: var(--radius-xs);
+    color: var(--ink-2);
+    font-size: var(--text-base);
+    line-height: 1.35;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .toc__all {
+    padding-left: 0;
+    border-top: 1px solid var(--ink);
+    padding-block: 10px;
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .toc__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .toc__lead {
+    flex: 1;
+    min-width: 12px;
+    transform: translateY(-3px);
+    border-bottom: 1px dotted var(--line-strong);
+  }
+  .toc__n {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+  }
+  a.toc__row:hover {
+    color: var(--ink);
+  }
+  a.toc__row:hover .toc__lead {
+    border-bottom-color: var(--ink-3);
+  }
+  .toc__row.is-current {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .toc__row.is-current .toc__n {
+    color: var(--ink);
+  }
+  .toc__row.is-current .toc__lead {
+    border-bottom-color: var(--ink-3);
+  }
+  /* The current entry gets the accent square in the chapter-number column. */
+  .toc__types .toc__row.is-current::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin-top: -3px;
+    background: var(--accent);
+  }
+  .toc__row.is-empty {
+    color: var(--ink-4);
+  }
+  .toc__row.is-empty .toc__n {
+    color: var(--ink-4);
+  }
+  .toc__row.is-empty .toc__lead {
+    border-bottom-color: var(--line);
+  }
+  a.toc__row:focus-visible {
+    outline-offset: 2px;
+  }
+</style>

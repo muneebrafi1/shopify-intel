@@ -20,15 +20,15 @@ const fmt = (v: number | string) => (typeof v === 'number' ? v.toLocaleString('e
 
 <div class="metrics-wrap">
   <dl class="metrics" style={`--n:${items.length}`}>
-    {
-      items.map((m) => (
-        <div class="metric">
-          <dt class="metric__label">{m.label}</dt>
-          <dd class="metric__value num">{m.href ? <a href={m.href}>{fmt(m.value)}</a> : fmt(m.value)}</dd>
-          {m.note && <dd class="metric__note">{m.note}</dd>}
-        </div>
-      ))
-    }
+    {items.map((m) => (
+      <div class="metric">
+        <dt class="metric__label">{m.label}</dt>
+        <dd class="metric__value num">
+          {m.href ? <a href={m.href}>{fmt(m.value)}</a> : fmt(m.value)}
+        </dd>
+        {m.note && <dd class="metric__note">{m.note}</dd>}
+      </div>
+    ))}
   </dl>
   {source && <p class="metrics__source">{source}</p>}
 </div>

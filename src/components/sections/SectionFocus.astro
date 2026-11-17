@@ -1,0 +1,389 @@
+---
+/**
+ * One section, in focus: the crop large on a calm stage with crop marks, and a 320px spec sheet
+ * (mono labels, sans values) with the actions. The detail page renders it as its hero; the
+ * library's lightbox fetches the same markup (`[data-section-focus]`) from the detail page, so
+ * there is one source of truth for both.
+ */
+import SaveButton from '~/components/domain/SaveButton.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Button from '~/components/ui/Button.astro';
+import Kbd from '~/components/ui/Kbd.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import { formatDate } from '~/lib/format';
+import { pageTypeName } from '~/lib/taxonomy';
+import type { SectionDetail } from '~/server/api/v1/types';
+import { pagePhrase } from './library';
+
+interface Props {
+  detail: SectionDetail;
+  /** Source line for the capture ("Planned capture layouts …", date). */
+  source: { label: string; asOf: string };
+  class?: string;
+}
+const { detail, source, class: className } = Astro.props;
+const { section: s, screenshot: shot, in_type: seq } = detail;
+
+const ordered = [...shot.sections].sort((a, b) => a.order_index - b.order_index);
+const index = Math.max(0, ordered.findIndex((x) => x.id === s.id));
+const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+const deviceLabel = s.device === 'mobile' ? 'Mobile' : 'Desktop';
+const fullPageHref = `${s.store.href}?page=${s.page_type}&device=${s.device}#section-${s.id}`;
+const captured = shot.captured_at && !s.is_placeholder ? formatDate(shot.captured_at) : null;
+const isMobile = s.device === 'mobile';
+const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.width}px`;
+---
+
+<div
+  class:list={['sf', `sf--${s.device}`, className]}
+  data-section-focus
+  data-id={s.id}
+  data-title={`${s.type.name} on ${s.store.display_name}`}
+>
+  <figure class="sf__stage marks">
+    <div class="sf__plate" style={plateStyle}>
+      <img
+        class="sf__img"
+        src={s.crop.src}
+        alt={`${s.type.name} section on ${s.store.display_name}, ${pagePhrase(s.page_type, s.device)}`}
+        width={s.crop.width}
+        height={s.crop.height}
+        decoding="async"
+        fetchpriority="high"
+      />
+    </div>
+    <figcaption class="sf__cap">
+      <span>{s.store.domain}</span>
+      <span aria-hidden="true">·</span>
+      <span>{pageTypeName(s.page_type)}</span>
+      <span aria-hidden="true">·</span>
+      <span>{deviceLabel}</span>
+      <span class="sf__cap-n num">{pad(index + 1)}/{pad(ordered.length)}</span>
+    </figcaption>
+  </figure>
+
+  <aside class="sf__sheet" aria-label="Section details">
+    <MonoLabel as="p" tone="accent" class="sf__label">
+      Section N°{pad(s.id, 4)} · {s.type.group.name}
+    </MonoLabel>
+    <h1 class="sf__title" data-sf-title>
+      {s.type.name}
+      <span class="sf__on">on {s.store.display_name}</span>
+    </h1>
+
+    <div class="sf__actions">
+      <Button href={fullPageHref} variant="primary" iconRight="arrow-right" class="sf__open">
+        Open in full page
+      </Button>
+      <SaveButton itemType="section" itemId={s.id} size="md" />
+    </div>
+
+    <dl class="sf__rows">
+      <div class="sf__row">
+        <dt>Store</dt>
+        <dd><a href={s.store.href}>{s.store.display_name}</a></dd>
+      </div>
+      <div class="sf__row">
+        <dt>Theme</dt>
+        <dd>
+          {s.theme ? <a href={s.theme.href}>{s.theme.name}</a> : <span class="sf__muted">Custom theme</span>}
+        </dd>
+      </div>
+      <div class="sf__row">
+        <dt>Page type</dt>
+        <dd>{pageTypeName(s.page_type)}</dd>
+      </div>
+      <div class="sf__row">
+        <dt>Device</dt>
+        <dd>
+          {deviceLabel} <span class="sf__mono">{shot.viewport_w}px</span>
+        </dd>
+      </div>
+      <div class="sf__row">
+        <dt>Position</dt>
+        <dd>
+          Section <span class="num">{pad(index + 1)}</span> of <span class="num">{pad(ordered.length)}</span>
+        </dd>
+      </div>
+      {
+        s.app && (
+          <div class="sf__row">
+            <dt>App</dt>
+            <dd>
+              <a href={s.app.href} class="sf__app">
+                <AppIcon src={s.app.icon_url} name={s.app.short_name} size={18} />
+                {s.app.short_name}
+              </a>
+            </dd>
+          </div>
+        )
+      }
+      <div class="sf__row">
+        <dt>Size</dt>
+        <dd class="sf__mono">
+          {s.crop.width} × {s.crop.height}
+        </dd>
+      </div>
+      <div class="sf__row">
+        <dt>Captured</dt>
+        <dd>{captured ?? <span class="sf__muted">Layout preview — capture pending</span>}</dd>
+      </div>
+    </dl>
+
+    <nav class="sf__seq" aria-label={`More ${s.type.name.toLowerCase()} sections`} data-sf-seq>
+      {
+        seq.prev ? (
+          <a class="sf__step" href={seq.prev.href} rel="prev" data-sf-prev>
+            <span aria-hidden="true">←</span> Previous
+          </a>
+        ) : (
+          <span class="sf__step is-off" aria-hidden="true">
+            <span>←</span> Previous
+          </span>
+        )
+      }
+      <span class="sf__count">
+        <span class="num">{pad(seq.position)}</span>
+        <span class="sf__of">/</span>
+        <span class="num">{pad(seq.total)}</span>
+      </span>
+      {
+        seq.next ? (
+          <a class="sf__step" href={seq.next.href} rel="next" data-sf-next>
+            Next <span aria-hidden="true">→</span>
+          </a>
+        ) : (
+          <span class="sf__step is-off" aria-hidden="true">
+            Next <span>→</span>
+          </span>
+        )
+      }
+    </nav>
+    <p class="sf__keys" data-sf-keys>
+      <Kbd>←</Kbd><Kbd>→</Kbd> browse {s.type.name.toLowerCase()} sections
+    </p>
+
+    <SourceNote source={source.label} asOf={source.asOf} class="sf__source" />
+  </aside>
+</div>
+
+<style>
+  .sf {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+  @media (min-width: 1024px) {
+    .sf {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: var(--space-12);
+      align-items: start;
+    }
+  }
+
+  /* Stage: a warm plate with registration marks; the crop sits centred at a readable size. */
+  .sf__stage {
+    --maxh: 72vh;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    border-radius: var(--radius-lg);
+    background: var(--tile);
+  }
+  .sf__plate {
+    display: grid;
+    place-items: center;
+    flex: 1;
+    min-height: clamp(220px, 46vh, 520px);
+    padding: var(--space-6) var(--space-4);
+  }
+  .sf--mobile .sf__stage {
+    --maxh: 70vh;
+  }
+  .sf__img {
+    display: block;
+    width: min(100%, var(--native), calc(var(--maxh) * var(--ar)));
+    height: auto;
+    aspect-ratio: var(--ar);
+    border-radius: var(--radius-xs);
+    background: var(--surface);
+    box-shadow: var(--shadow-shot);
+  }
+  .sf--mobile .sf__img {
+    border-radius: 12px;
+  }
+  .sf__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid color-mix(in srgb, var(--line-strong) 60%, transparent);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .sf__cap > :first-child {
+    color: var(--ink-2);
+    text-transform: none;
+    letter-spacing: 0.01em;
+  }
+  .sf__cap-n {
+    margin-left: auto;
+    color: var(--ink-2);
+  }
+  @media (min-width: 1024px) {
+    .sf__plate {
+      padding: var(--space-12) var(--space-10);
+    }
+    .sf__cap {
+      padding-inline: var(--space-5);
+    }
+  }
+
+  /* Spec sheet */
+  .sf__sheet {
+    min-width: 0;
+  }
+  @media (min-width: 1024px) {
+    .sf__sheet {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+  .sf__label {
+    margin-bottom: var(--space-3);
+  }
+  .sf__title {
+    font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  .sf__on {
+    display: block;
+    margin-top: 4px;
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+  }
+  .sf__actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+  }
+  .sf__actions :global(.sf__open) {
+    flex: 1;
+  }
+  .sf__rows {
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--ink);
+  }
+  .sf__row {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .sf__row dt {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .sf__row dd {
+    min-width: 0;
+    color: var(--ink);
+    font-size: var(--text-base);
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .sf__row a {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+  .sf__row a:hover {
+    text-decoration-color: currentColor;
+  }
+  .sf__app {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sf__mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-2);
+  }
+  .sf__muted {
+    color: var(--ink-3);
+  }
+
+  .sf__seq {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+  .sf__step {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  a.sf__step:hover {
+    background: var(--fill);
+  }
+  .sf__step:focus-visible {
+    border-radius: var(--radius-pill);
+  }
+  .sf__step.is-off {
+    color: var(--ink-4);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .sf__count {
+    display: inline-flex;
+    gap: 4px;
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .sf__of {
+    color: var(--ink-4);
+  }
+  .sf__keys {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .sf__keys :global(.kbd:last-of-type) {
+    margin-right: 4px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sf__keys {
+      display: flex;
+    }
+  }
+  .sf__sheet :global(.sf__source) {
+    margin-top: var(--space-5);
+  }
+</style>

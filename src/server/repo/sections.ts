@@ -190,8 +190,10 @@ export async function sectionTypeInfos(
 ): Promise<SectionTypeInfo[]> {
   const types = only ? SECTION_TYPES.filter((t) => only.includes(t.slug)) : SECTION_TYPES;
   const [counts, previews] = await Promise.all([
-    ctx.db.all<{ section_type: string; n: number }>(
-      `SELECT s.section_type, COUNT(*) AS n ${FROM} WHERE s.is_current = 1 GROUP BY s.section_type`,
+    ctx.db.all<{ section_type: string; n: number; stores: number; themes: number }>(
+      `SELECT s.section_type, COUNT(*) AS n, COUNT(DISTINCT s.store_id) AS stores,
+         COUNT(DISTINCT s.theme_id) AS themes
+       ${FROM} WHERE s.is_current = 1 GROUP BY s.section_type`,
     ),
     sectionCards(
       ctx,
@@ -205,13 +207,16 @@ export async function sectionTypeInfos(
   ]);
   return types.map((t) => {
     const ref = sectionTypeRef(t.slug);
+    const c = counts.find((x) => x.section_type === t.slug);
     return {
       slug: t.slug,
       name: t.name,
       description: t.description,
       group: ref.group,
       href: hrefs.sectionType(t.slug),
-      count: counts.find((c) => c.section_type === t.slug)?.n ?? 0,
+      count: c?.n ?? 0,
+      stores: c?.stores ?? 0,
+      themes: c?.themes ?? 0,
       pages: [...t.pages],
       app_categories: categoriesForSection(t.slug),
       preview: previews.find((p) => p.type.slug === t.slug) ?? null,
@@ -248,7 +253,7 @@ export async function getSectionDetail(ctx: Ctx, id: number): Promise<SectionDet
     theme_id: number | null;
     app_id: number | null;
   }>('SELECT store_id, theme_id, app_id FROM sections WHERE id = ?', [id]);
-  const [screenshot, more] = await Promise.all([
+  const [screenshot, more, inType] = await Promise.all([
     getScreenshot(ctx, card.screenshot.id),
     sectionCards(
       ctx,
@@ -265,8 +270,39 @@ export async function getSectionDetail(ctx: Ctx, id: number): Promise<SectionDet
       `ORDER BY (s.app_id IS ?) DESC, (s.theme_id IS ?) DESC, (s.device = ?) DESC,
         st.list_position, s.id LIMIT 12`,
     ),
+    typeNeighbours(ctx, card.type.slug, id),
   ]);
-  return { section: card, screenshot, more_like_this: dedupeByStore(more) };
+  return { section: card, screenshot, more_like_this: dedupeByStore(more), in_type: inType };
+}
+
+/** Position of a section within its type in library order (by id), with prev/next links. */
+async function typeNeighbours(
+  ctx: Ctx,
+  type: SectionType,
+  id: number,
+): Promise<SectionDetail['in_type']> {
+  const where = `${FROM} WHERE s.is_current = 1 AND s.section_type = ?`;
+  const row = await ctx.db.first<{
+    position: number;
+    total: number;
+    prev: number | null;
+    next: number | null;
+  }>(
+    `SELECT
+       (SELECT COUNT(*) ${where} AND s.id <= ?) AS position,
+       (SELECT COUNT(*) ${where}) AS total,
+       (SELECT MAX(s.id) ${where} AND s.id < ?) AS prev,
+       (SELECT MIN(s.id) ${where} AND s.id > ?) AS next`,
+    [type, id, type, type, id, type, id],
+  );
+  const link = (n: number | null | undefined) =>
+    n == null ? null : { id: n, href: hrefs.section(type, n) };
+  return {
+    position: row?.position ?? 1,
+    total: row?.total ?? 1,
+    prev: link(row?.prev),
+    next: link(row?.next),
+  };
 }
 
 /** Keeps the first card per store so "more like this" shows variety. */

@@ -72,7 +72,9 @@ export async function updateStore(ctx: ActionContext, domain: string, input: Sto
   const country = input.country ? input.country.toUpperCase() : null;
   if (country && !/^[A-Z]{2}$/.test(country)) return fail('bad_country');
   if (input.category) {
-    const cat = await db.first('SELECT 1 AS x FROM store_categories WHERE slug = ?', [input.category]);
+    const cat = await db.first('SELECT 1 AS x FROM store_categories WHERE slug = ?', [
+      input.category,
+    ]);
     if (!cat) return fail('bad_category');
   }
   // Opted-out stores keep that status: only an approved removal sets it, nothing here undoes it.
@@ -92,10 +94,24 @@ export async function updateStore(ctx: ActionContext, domain: string, input: Sto
     {
       sql: `UPDATE stores SET name = ?, category_slug = ?, country = ?, status = ?, is_curated = ?,
               updated_at = ? WHERE id = ?`,
-      params: [next.name, next.category_slug, next.country, next.status, next.is_curated, now.toISOString(), store.id],
+      params: [
+        next.name,
+        next.category_slug,
+        next.country,
+        next.status,
+        next.is_curated,
+        now.toISOString(),
+        store.id,
+      ],
     },
     auditStatement(
-      { actor: ctx.actor, action: 'store.update', targetType: 'store', targetId: domain, detail: changes },
+      {
+        actor: ctx.actor,
+        action: 'store.update',
+        targetType: 'store',
+        targetId: domain,
+        detail: changes,
+      },
       now,
     ),
   ]);
@@ -119,7 +135,9 @@ export async function queueJob(
   if (!domain) return fail('bad_domain');
 
   const [store, tomb] = await Promise.all([
-    db.first<{ id: number; status: string }>('SELECT id, status FROM stores WHERE domain = ?', [domain]),
+    db.first<{ id: number; status: string }>('SELECT id, status FROM stores WHERE domain = ?', [
+      domain,
+    ]),
     db.first('SELECT 1 AS x FROM store_tombstones WHERE domain = ?', [domain]),
   ]);
   if (tomb || store?.status === 'opted_out') return fail('opted_out');
@@ -136,12 +154,24 @@ export async function queueJob(
       sql: `INSERT INTO scan_jobs (store_id, domain, kind, page_types_json, devices_json, priority, status,
               attempts, requested_by, created_at)
             VALUES (?, ?, ?, NULL, NULL, ?, 'queued', 0, ?, ?)`,
-      params: [store?.id ?? null, domain, input.kind, input.priority ?? 10, ctx.actor, now.toISOString()],
+      params: [
+        store?.id ?? null,
+        domain,
+        input.kind,
+        input.priority ?? 10,
+        ctx.actor,
+        now.toISOString(),
+      ],
     },
     auditStatement(
       {
         actor: ctx.actor,
-        action: input.kind === 'capture' ? 'store.queue_capture' : input.kind === 'rescan' ? 'store.queue_rescan' : 'job.queue',
+        action:
+          input.kind === 'capture'
+            ? 'store.queue_capture'
+            : input.kind === 'rescan'
+              ? 'store.queue_rescan'
+              : 'job.queue',
         targetType: 'store',
         targetId: domain,
         detail: { kind: input.kind },
@@ -167,7 +197,13 @@ export async function cancelJob(ctx: ActionContext, id: number): Promise<ActionR
       params: [now.toISOString(), id],
     },
     auditStatement(
-      { actor: ctx.actor, action: 'job.cancel', targetType: 'store', targetId: job.domain, detail: { job: id, kind: job.kind } },
+      {
+        actor: ctx.actor,
+        action: 'job.cancel',
+        targetType: 'store',
+        targetId: job.domain,
+        detail: { job: id, kind: job.kind },
+      },
       now,
     ),
   ]);
@@ -226,7 +262,13 @@ async function deleteStoreMedia(
     if (!ctx.media) {
       await db.batch([
         auditStatement(
-          { actor: ctx.actor, action: 'removal.media_failed', targetType: 'removal', targetId: req.id, detail: { reason: 'MEDIA binding missing', objects: keys.length } },
+          {
+            actor: ctx.actor,
+            action: 'removal.media_failed',
+            targetType: 'removal',
+            targetId: req.id,
+            detail: { reason: 'MEDIA binding missing', objects: keys.length },
+          },
           now,
         ),
       ]);
@@ -238,7 +280,13 @@ async function deleteStoreMedia(
       console.error('admin: R2 delete failed', err);
       await db.batch([
         auditStatement(
-          { actor: ctx.actor, action: 'removal.media_failed', targetType: 'removal', targetId: req.id, detail: { objects: keys.length } },
+          {
+            actor: ctx.actor,
+            action: 'removal.media_failed',
+            targetType: 'removal',
+            targetId: req.id,
+            detail: { objects: keys.length },
+          },
           now,
         ),
       ]);
@@ -248,8 +296,14 @@ async function deleteStoreMedia(
   const statements: Statement[] = [];
   if (storeId) {
     statements.push(
-      { sql: 'UPDATE screenshots SET r2_key = NULL WHERE store_id = ? AND r2_key IS NOT NULL', params: [storeId] },
-      { sql: 'UPDATE sections SET r2_key_crop = NULL WHERE store_id = ? AND r2_key_crop IS NOT NULL', params: [storeId] },
+      {
+        sql: 'UPDATE screenshots SET r2_key = NULL WHERE store_id = ? AND r2_key IS NOT NULL',
+        params: [storeId],
+      },
+      {
+        sql: 'UPDATE sections SET r2_key_crop = NULL WHERE store_id = ? AND r2_key_crop IS NOT NULL',
+        params: [storeId],
+      },
     );
   }
   statements.push(
@@ -258,7 +312,13 @@ async function deleteStoreMedia(
       params: [now.toISOString(), req.id],
     },
     auditStatement(
-      { actor: ctx.actor, action: keys.length ? 'removal.media_deleted' : 'removal.complete', targetType: 'removal', targetId: req.id, detail: { domain, objects: keys.length } },
+      {
+        actor: ctx.actor,
+        action: keys.length ? 'removal.media_deleted' : 'removal.complete',
+        targetType: 'removal',
+        targetId: req.id,
+        detail: { domain, objects: keys.length },
+      },
       now,
     ),
   );
@@ -332,7 +392,13 @@ export async function approveRemoval(
         action: 'removal.approve',
         targetType: 'removal',
         targetId: req.id,
-        detail: { reference: req.reference, domain, scope: req.scope, store_found: !!store, note: input.note },
+        detail: {
+          reference: req.reference,
+          domain,
+          scope: req.scope,
+          store_found: !!store,
+          note: input.note,
+        },
       },
       now,
     ),
@@ -374,7 +440,13 @@ export async function rejectRemoval(
       params: [now.toISOString(), input.note, id],
     },
     auditStatement(
-      { actor: ctx.actor, action: 'removal.reject', targetType: 'removal', targetId: id, detail: { reference: req.reference, domain: req.domain, note: input.note } },
+      {
+        actor: ctx.actor,
+        action: 'removal.reject',
+        targetType: 'removal',
+        targetId: id,
+        detail: { reference: req.reference, domain: req.domain, note: input.note },
+      },
       now,
     ),
   ]);
@@ -392,18 +464,35 @@ export interface LinkInput {
 }
 
 async function programExists(db: Db, id: number | null) {
-  return id === null || !!(await db.first('SELECT 1 AS x FROM affiliate_programs WHERE id = ?', [id]));
+  return (
+    id === null || !!(await db.first('SELECT 1 AS x FROM affiliate_programs WHERE id = ?', [id]))
+  );
 }
 
-export async function updateLink(ctx: ActionContext, id: number, input: LinkInput): Promise<ActionResult> {
+export async function updateLink(
+  ctx: ActionContext,
+  id: number,
+  input: LinkInput,
+): Promise<ActionResult> {
   const { db, now } = ctx;
-  const link = await db.first<{ id: number; url: string; label: string | null; program_id: number | null; active: number; target_name: string }>(
-    'SELECT id, url, label, program_id, active, target_name FROM affiliate_links WHERE id = ?',
-    [id],
-  );
+  const link = await db.first<{
+    id: number;
+    url: string;
+    label: string | null;
+    program_id: number | null;
+    active: number;
+    target_name: string;
+  }>('SELECT id, url, label, program_id, active, target_name FROM affiliate_links WHERE id = ?', [
+    id,
+  ]);
   if (!link) return fail('not_found');
   if (!(await programExists(db, input.programId))) return fail('bad_program');
-  const next = { url: input.url, label: input.label, program_id: input.programId, active: input.active ? 1 : 0 };
+  const next = {
+    url: input.url,
+    label: input.label,
+    program_id: input.programId,
+    active: input.active ? 1 : 0,
+  };
   const changes = diffFields(link, next);
   if (Object.keys(changes).length === 0) return ok('no_changes');
   await db.batch([
@@ -412,7 +501,13 @@ export async function updateLink(ctx: ActionContext, id: number, input: LinkInpu
       params: [next.url, next.label, next.program_id, next.active, now.toISOString(), id],
     },
     auditStatement(
-      { actor: ctx.actor, action: 'affiliate_link.update', targetType: 'affiliate_link', targetId: id, detail: { target: link.target_name, ...changes } },
+      {
+        actor: ctx.actor,
+        action: 'affiliate_link.update',
+        targetType: 'affiliate_link',
+        targetId: id,
+        detail: { target: link.target_name, ...changes },
+      },
       now,
     ),
   ]);
@@ -451,10 +546,26 @@ export async function createLink(
     {
       sql: `INSERT INTO affiliate_links (target_type, target_id, target_name, program_id, url, label, active, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      params: [type, targetId, targetName, input.programId, input.url, input.label, input.active ? 1 : 0, ts, ts],
+      params: [
+        type,
+        targetId,
+        targetName,
+        input.programId,
+        input.url,
+        input.label,
+        input.active ? 1 : 0,
+        ts,
+        ts,
+      ],
     },
     auditStatement(
-      { actor: ctx.actor, action: 'affiliate_link.create', targetType: 'affiliate_link', targetId: null, detail: { target_type: type, target: targetName, url: input.url } },
+      {
+        actor: ctx.actor,
+        action: 'affiliate_link.create',
+        targetType: 'affiliate_link',
+        targetId: null,
+        detail: { target_type: type, target: targetName, url: input.url },
+      },
       now,
     ),
   ]);
@@ -477,7 +588,11 @@ export const PROGRAM_STATUSES = [
   'unreachable',
 ] as const;
 
-export async function updateProgramStatus(ctx: ActionContext, id: number, status: string): Promise<ActionResult> {
+export async function updateProgramStatus(
+  ctx: ActionContext,
+  id: number,
+  status: string,
+): Promise<ActionResult> {
   const { db, now } = ctx;
   if (!/^[a-z][a-z-]{1,30}$/.test(status)) return fail('bad_request');
   const program = await db.first<{ id: number; name: string; status: string }>(
@@ -489,7 +604,13 @@ export async function updateProgramStatus(ctx: ActionContext, id: number, status
   await db.batch([
     { sql: 'UPDATE affiliate_programs SET status = ? WHERE id = ?', params: [status, id] },
     auditStatement(
-      { actor: ctx.actor, action: 'affiliate_program.update', targetType: 'affiliate_program', targetId: id, detail: { program: program.name, status: [program.status, status] } },
+      {
+        actor: ctx.actor,
+        action: 'affiliate_program.update',
+        targetType: 'affiliate_program',
+        targetId: id,
+        detail: { program: program.name, status: [program.status, status] },
+      },
       now,
     ),
   ]);
@@ -499,9 +620,18 @@ export async function updateProgramStatus(ctx: ActionContext, id: number, status
 // ---------------------------------------------------------------------------------------------
 // Teardowns
 // ---------------------------------------------------------------------------------------------
-export async function setTeardownPublished(ctx: ActionContext, id: number, publish: boolean): Promise<ActionResult> {
+export async function setTeardownPublished(
+  ctx: ActionContext,
+  id: number,
+  publish: boolean,
+): Promise<ActionResult> {
   const { db, now } = ctx;
-  const t = await db.first<{ id: number; slug: string; published_at: string | null; store_status: string }>(
+  const t = await db.first<{
+    id: number;
+    slug: string;
+    published_at: string | null;
+    store_status: string;
+  }>(
     `SELECT t.id, t.slug, t.published_at, s.status AS store_status
      FROM teardowns t JOIN stores s ON s.id = t.store_id WHERE t.id = ?`,
     [id],
@@ -516,7 +646,13 @@ export async function setTeardownPublished(ctx: ActionContext, id: number, publi
       params: [publish ? ts.slice(0, 10) : null, ts, id],
     },
     auditStatement(
-      { actor: ctx.actor, action: publish ? 'teardown.publish' : 'teardown.unpublish', targetType: 'teardown', targetId: t.slug, detail: null },
+      {
+        actor: ctx.actor,
+        action: publish ? 'teardown.publish' : 'teardown.unpublish',
+        targetType: 'teardown',
+        targetId: t.slug,
+        detail: null,
+      },
       now,
     ),
   ]);
@@ -529,13 +665,22 @@ export async function setTeardownPublished(ctx: ActionContext, id: number, publi
 export async function updateTheme(
   ctx: ActionContext,
   id: number,
-  input: { name?: string; priceLabel?: string | null; marketplace?: string | null; status?: 'active' | 'hidden' },
+  input: {
+    name?: string;
+    priceLabel?: string | null;
+    marketplace?: string | null;
+    status?: 'active' | 'hidden';
+  },
 ): Promise<ActionResult> {
   const { db, now } = ctx;
-  const theme = await db.first<{ id: number; slug: string; name: string; price_label: string | null; marketplace: string | null; status: string }>(
-    'SELECT id, slug, name, price_label, marketplace, status FROM themes WHERE id = ?',
-    [id],
-  );
+  const theme = await db.first<{
+    id: number;
+    slug: string;
+    name: string;
+    price_label: string | null;
+    marketplace: string | null;
+    status: string;
+  }>('SELECT id, slug, name, price_label, marketplace, status FROM themes WHERE id = ?', [id]);
   if (!theme) return fail('not_found');
   if (input.name !== undefined && !input.name) return fail('name_required');
   const next = {
@@ -551,7 +696,16 @@ export async function updateTheme(
       sql: 'UPDATE themes SET name = ?, price_label = ?, marketplace = ?, status = ?, updated_at = ? WHERE id = ?',
       params: [next.name, next.price_label, next.marketplace, next.status, now.toISOString(), id],
     },
-    auditStatement({ actor: ctx.actor, action: 'theme.update', targetType: 'theme', targetId: theme.slug, detail: changes }, now),
+    auditStatement(
+      {
+        actor: ctx.actor,
+        action: 'theme.update',
+        targetType: 'theme',
+        targetId: theme.slug,
+        detail: changes,
+      },
+      now,
+    ),
   ]);
   if ('status' in changes || 'name' in changes) {
     if (!(await rebuild(db))) return ok('saved_rebuild_failed');
@@ -562,17 +716,28 @@ export async function updateTheme(
 export async function updateApp(
   ctx: ActionContext,
   id: number,
-  input: { name?: string; categoryId?: number | null; tagline?: string | null; status?: 'active' | 'hidden' },
+  input: {
+    name?: string;
+    categoryId?: number | null;
+    tagline?: string | null;
+    status?: 'active' | 'hidden';
+  },
 ): Promise<ActionResult> {
   const { db, now } = ctx;
-  const app = await db.first<{ id: number; slug: string; name: string; category_id: number | null; tagline: string | null; status: string }>(
-    'SELECT id, slug, name, category_id, tagline, status FROM apps WHERE id = ?',
-    [id],
-  );
+  const app = await db.first<{
+    id: number;
+    slug: string;
+    name: string;
+    category_id: number | null;
+    tagline: string | null;
+    status: string;
+  }>('SELECT id, slug, name, category_id, tagline, status FROM apps WHERE id = ?', [id]);
   if (!app) return fail('not_found');
   if (input.name !== undefined && !input.name) return fail('name_required');
   if (input.categoryId) {
-    const cat = await db.first('SELECT 1 AS x FROM app_categories WHERE id = ?', [input.categoryId]);
+    const cat = await db.first('SELECT 1 AS x FROM app_categories WHERE id = ?', [
+      input.categoryId,
+    ]);
     if (!cat) return fail('bad_category');
   }
   const next = {
@@ -588,7 +753,16 @@ export async function updateApp(
       sql: 'UPDATE apps SET name = ?, category_id = ?, tagline = ?, status = ?, updated_at = ? WHERE id = ?',
       params: [next.name, next.category_id, next.tagline, next.status, now.toISOString(), id],
     },
-    auditStatement({ actor: ctx.actor, action: 'app.update', targetType: 'app', targetId: app.slug, detail: changes }, now),
+    auditStatement(
+      {
+        actor: ctx.actor,
+        action: 'app.update',
+        targetType: 'app',
+        targetId: app.slug,
+        detail: changes,
+      },
+      now,
+    ),
   ]);
   if ('status' in changes || 'name' in changes || 'category_id' in changes) {
     if (!(await rebuild(db))) return ok('saved_rebuild_failed');

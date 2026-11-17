@@ -1,0 +1,147 @@
+---
+/**
+ * "For builders": the API that powers every page, shown with a real response excerpt, and the
+ * MCP server that comes next. Mono, quiet, honest about what exists today.
+ */
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+
+interface Props {
+  /** Request path for the excerpt, e.g. /api/v1/apps/judgeme. */
+  path: string;
+  /** Pretty-printed JSON excerpt (already trimmed). */
+  excerpt: string;
+  endpoints: number;
+}
+const { path, excerpt, endpoints } = Astro.props;
+---
+
+<div class="bld cols-12">
+  <div class="bld__text span-5">
+    <p class="bld__statement display">Every number here comes from one public API.</p>
+    <p class="bld__body">
+      Stores, themes, apps, sections and screenshots as JSON, with a source and a date on every figure.
+      Next: an MCP server, so Claude and ChatGPT can pull real store references while they help people
+      build on Shopify.
+    </p>
+    <ul class="bld__spec">
+      <li><MonoLabel>Today</MonoLabel><span>REST · JSON · OpenAPI 3.1 · {endpoints} endpoints</span></li>
+      <li><MonoLabel>Next</MonoLabel><span>MCP server for Claude and ChatGPT</span></li>
+    </ul>
+    <p class="bld__links">
+      <a href="/developers" class="bld__link">API &amp; MCP docs <span aria-hidden="true">→</span></a>
+      <a href="/api/v1/openapi.json" class="bld__link bld__link--quiet">openapi.json</a>
+    </p>
+  </div>
+  <figure class="bld__code start-7">
+    <figcaption class="bld__req">
+      <span class="bld__method">GET</span>
+      <span class="bld__path">{path}</span>
+      <span class="bld__status">200</span>
+    </figcaption>
+    <pre tabindex="0" aria-label={`Example response for ${path}`}><code>{excerpt}</code></pre>
+  </figure>
+</div>
+
+<style>
+  .bld {
+    row-gap: var(--space-8);
+    align-items: start;
+  }
+  .bld__statement {
+    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+  }
+  .bld__body {
+    margin-top: var(--space-4);
+    max-width: 46ch;
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+  .bld__spec {
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--line);
+  }
+  .bld__spec li {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: baseline;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink);
+  }
+  .bld__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+  }
+  .bld__link {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.25em;
+  }
+  .bld__link:hover {
+    text-decoration-color: currentColor;
+  }
+  .bld__link--quiet {
+    font-family: var(--font-mono);
+    font-weight: 450;
+    font-size: var(--text-xs);
+    color: var(--ink-2);
+  }
+  .bld__code {
+    min-width: 0;
+    border-radius: var(--radius-lg);
+    background: var(--tile);
+    overflow: hidden;
+  }
+  .bld__req {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--line-strong);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .bld__method {
+    color: var(--accent-text);
+    font-weight: 500;
+  }
+  .bld__path {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bld__status {
+    color: var(--ink-3);
+  }
+  .bld__code pre {
+    margin: 0;
+    padding: var(--space-4) var(--space-5) var(--space-5);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.65;
+    color: var(--ink-2);
+  }
+  .bld__code pre:focus-visible {
+    border-radius: 0;
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  @media (min-width: 1024px) {
+    .bld__code {
+      grid-column: 7 / -1;
+    }
+  }
+</style>

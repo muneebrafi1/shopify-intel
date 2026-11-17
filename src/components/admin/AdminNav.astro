@@ -5,14 +5,7 @@ import MonoLabel from '~/components/ui/MonoLabel.astro';
 import type { IconName } from '~/components/ui/icons';
 
 export type AdminSection =
-  | 'overview'
-  | 'stores'
-  | 'themes'
-  | 'apps'
-  | 'removals'
-  | 'scans'
-  | 'teardowns'
-  | 'affiliates';
+  'overview' | 'stores' | 'themes' | 'apps' | 'removals' | 'scans' | 'teardowns' | 'affiliates';
 
 interface Item {
   key: AdminSection;
@@ -54,7 +47,13 @@ const groups: Array<{ label: string | null; items: Item[] }> = [
         count: pendingRemovals,
         attention: pendingRemovals > 0,
       },
-      { key: 'scans', href: '/admin/scans', label: 'Scan jobs', icon: 'arrow-clockwise', count: openJobs },
+      {
+        key: 'scans',
+        href: '/admin/scans',
+        label: 'Scan jobs',
+        icon: 'arrow-clockwise',
+        count: openJobs,
+      },
     ],
   },
   {
@@ -68,39 +67,37 @@ const groups: Array<{ label: string | null; items: Item[] }> = [
 ---
 
 <div class:list={['anav', `anav--${variant}`]}>
-  {
-    groups.map((group, gi) => (
-      <div class="anav__group">
-        {group.label && (
-          <MonoLabel as="p" bullet={false} class="anav__label" id={`anav-${variant}-${gi}`}>
-            {group.label}
-          </MonoLabel>
-        )}
-        <ul aria-labelledby={group.label ? `anav-${variant}-${gi}` : undefined}>
-          {group.items.map((item) => (
-            <li>
-              <a
-                href={item.href}
-                class="anav__link"
-                aria-current={item.key === current ? 'page' : undefined}
-              >
-                <Icon name={item.icon} size={16} />
-                <span class="anav__text">{item.label}</span>
-                {typeof item.count === 'number' && item.count > 0 && (
-                  <span
-                    class:list={['anav__count', { 'anav__count--attention': item.attention }]}
-                    aria-label={`${item.count} open`}
-                  >
-                    {item.count.toLocaleString('en-US')}
-                  </span>
-                )}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    ))
-  }
+  {groups.map((group, gi) => (
+    <div class="anav__group">
+      {group.label && (
+        <MonoLabel as="p" bullet={false} class="anav__label" id={`anav-${variant}-${gi}`}>
+          {group.label}
+        </MonoLabel>
+      )}
+      <ul aria-labelledby={group.label ? `anav-${variant}-${gi}` : undefined}>
+        {group.items.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              class="anav__link"
+              aria-current={item.key === current ? 'page' : undefined}
+            >
+              <Icon name={item.icon} size={16} />
+              <span class="anav__text">{item.label}</span>
+              {typeof item.count === 'number' && item.count > 0 && (
+                <span
+                  class:list={['anav__count', { 'anav__count--attention': item.attention }]}
+                  aria-label={`${item.count} open`}
+                >
+                  {item.count.toLocaleString('en-US')}
+                </span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
 </div>
 
 <style>

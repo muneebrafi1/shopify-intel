@@ -110,6 +110,7 @@ export async function hydrateStoreItems(ctx: Ctx, rows: StoreRow[]): Promise<Sto
     preview: previews.get(r.id) ?? null,
     first_seen: r.first_seen,
     last_seen: r.last_seen,
+    position: r.list_position,
   }));
 }
 

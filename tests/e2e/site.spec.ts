@@ -54,7 +54,9 @@ test.describe('site pages are healthy', () => {
 });
 
 test.describe('legal and trust pages', () => {
-  test('methodology has the #screenshots section and a numbered contents list', async ({ page }) => {
+  test('methodology has the #screenshots section and a numbered contents list', async ({
+    page,
+  }) => {
     await prepare(page);
     await page.goto('/methodology');
     await expect(page.locator('h2#screenshots')).toHaveCount(1);
@@ -101,7 +103,9 @@ test.describe('removal form', () => {
     await expect(error).toBeHidden();
   });
 
-  test('a complete request lands on the confirmation (honeypot path, nothing stored)', async ({ page }) => {
+  test('a complete request lands on the confirmation (honeypot path, nothing stored)', async ({
+    page,
+  }) => {
     await prepare(page);
     await page.goto('/opt-out?domain=example.com');
     await expect(page.locator('#domain')).toHaveValue('example.com');
@@ -128,7 +132,9 @@ test.describe('removal form', () => {
       await page.goto('/opt-out');
       await page.locator('#email').fill('owner@example.com');
       const [response] = await Promise.all([
-        page.waitForResponse((r) => r.request().method() === 'POST' && new URL(r.url()).pathname === '/opt-out'),
+        page.waitForResponse(
+          (r) => r.request().method() === 'POST' && new URL(r.url()).pathname === '/opt-out',
+        ),
         page.getByRole('button', { name: 'Send request' }).click(),
       ]);
       expect(response.status()).toBe(400);
@@ -160,15 +166,24 @@ test.describe('pro', () => {
     const page = await context.newPage();
     await page.goto('/pro?billing=yearly');
     await expect(page.locator('[data-plan="pro"] [data-price]')).toHaveText('$96');
-    await expect(page.locator('[data-billing-toggle] a[aria-current="true"]')).toHaveAttribute('data-value', 'yearly');
+    await expect(page.locator('[data-billing-toggle] a[aria-current="true"]')).toHaveAttribute(
+      'data-value',
+      'yearly',
+    );
     await context.close();
   });
 
   test('plan buttons go to sign-in, never to a payment page', async ({ page }) => {
     await prepare(page);
     await page.goto('/pro');
-    await expect(page.locator('[data-plan="pro"] a.btn')).toHaveAttribute('href', '/sign-in?next=/pro');
-    await expect(page.locator('[data-plan="team"] a.btn')).toHaveAttribute('href', '/sign-in?next=/pro');
+    await expect(page.locator('[data-plan="pro"] a.btn')).toHaveAttribute(
+      'href',
+      '/sign-in?next=/pro',
+    );
+    await expect(page.locator('[data-plan="team"] a.btn')).toHaveAttribute(
+      'href',
+      '/sign-in?next=/pro',
+    );
   });
 });
 
@@ -217,7 +232,9 @@ test.describe('accounts', () => {
 });
 
 test.describe('developers', () => {
-  test('lists endpoints with copyable curl examples and links the OpenAPI document', async ({ page }) => {
+  test('lists endpoints with copyable curl examples and links the OpenAPI document', async ({
+    page,
+  }) => {
     await prepare(page);
     await page.goto('/developers');
     await expect(page.locator('a[href="/api/v1/openapi.json"]').first()).toBeVisible();

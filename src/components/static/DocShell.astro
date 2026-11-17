@@ -33,7 +33,9 @@ const hasAside = Astro.slots.has('aside');
 <div class:list={['doc container', { 'doc--numbered': numbered, 'doc--has-aside': hasAside }]}>
   <aside class="doc__rail" aria-label="On this page">
     <div class="doc__rail-inner">
-      <p class="doc__rail-title">On this page</p>
+      <MonoLabel as="p" class="doc__rail-title">
+        On this page
+      </MonoLabel>
       <ol class="doc__toc" data-toc>
         {toc.map((item) => (
           <li>
@@ -43,7 +45,9 @@ const hasAside = Astro.slots.has('aside');
           </li>
         ))}
       </ol>
-      <p class="doc__rail-title doc__rail-title--related">Related</p>
+      <MonoLabel as="p" class="doc__rail-title doc__rail-title--related">
+        Related
+      </MonoLabel>
       <ul class="doc__related">
         {related.map((d) => (
           <li>
@@ -191,13 +195,11 @@ const hasAside = Astro.slots.has('aside');
     overflow-y: auto;
     padding-bottom: var(--space-6);
   }
-  .doc__rail-title {
+  .doc__rail-inner :global(.doc__rail-title) {
+    display: flex;
     margin-bottom: var(--space-3);
-    color: var(--ink-3);
-    font-size: var(--text-xs);
-    font-weight: var(--weight-medium);
   }
-  .doc__rail-title--related {
+  .doc__rail-inner :global(.doc__rail-title--related) {
     margin-top: var(--space-8);
     padding-top: var(--space-6);
     border-top: 1px solid var(--line);
@@ -291,15 +293,14 @@ const hasAside = Astro.slots.has('aside');
 
   .doc__contents {
     margin-bottom: var(--space-8);
-    border-radius: var(--radius-md);
-    background: var(--fill);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
   }
   .doc__contents > summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 44px;
-    padding: 0 var(--space-4);
+    min-height: 48px;
     cursor: pointer;
     list-style: none;
     font-size: var(--text-sm);
@@ -318,7 +319,7 @@ const hasAside = Astro.slots.has('aside');
     content: '−';
   }
   .doc__toc--mobile {
-    margin: 0 var(--space-4) var(--space-4);
+    margin-bottom: var(--space-4);
   }
   .doc__toc--mobile a {
     padding-block: 7px;

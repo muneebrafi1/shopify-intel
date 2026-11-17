@@ -1,0 +1,233 @@
+---
+/**
+ * The library grid: section crops in fixed-aspect wells with contact-sheet captions, then a
+ * cursor "Load more" link. Without JavaScript the link opens the next page (?cursor=…&p=2);
+ * with it, the next page's cards are fetched and appended in place, and the grid becomes the
+ * sequence the lightbox steps through.
+ */
+import SectionCard from '~/components/domain/SectionCard.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Button from '~/components/ui/Button.astro';
+import type { SectionCard as Card } from '~/server/api/v1/types';
+import { cardMeta } from './library';
+
+interface Props {
+  items: Card[];
+  total: number;
+  /** Caption facts per card. */
+  meta: Array<'type' | 'page' | 'device' | 'theme'>;
+  /** 1-based page number of this slice (from ?p=). */
+  page: number;
+  pageSize: number;
+  nextHref: string | null;
+  firstHref: string;
+  clearHref: string;
+  /** Eager-load the first row. */
+  eager?: number;
+}
+const { items, total, meta, page, pageSize, nextHref, firstHref, clearHref, eager = 3 } = Astro.props;
+const fmt = (n: number) => n.toLocaleString('en-US');
+const from = (page - 1) * pageSize + 1;
+const to = from + items.length - 1;
+---
+
+{
+  items.length === 0 ? (
+    <EmptyState
+      title="No sections match these filters"
+      body="Try another page type or device, or clear the theme and app filters."
+      class="sgrid__empty"
+    >
+      <Button href={clearHref} size="sm" variant="secondary">
+        Clear filters
+      </Button>
+    </EmptyState>
+  ) : (
+    <div class="sgrid" data-sgrid>
+      <div class="grid grid--sections sgrid__cards" data-sgrid-cards>
+        {items.map((s, i) => (
+          <SectionCard
+            href={s.href}
+            crop={s.crop}
+            device={s.device}
+            typeName={s.type.name}
+            storeLabel={s.store.display_name}
+            meta={cardMeta(s, meta)}
+            app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
+            eager={page === 1 && i < eager}
+          />
+        ))}
+      </div>
+
+      <div class="sgrid__foot" data-sgrid-foot>
+        <p class="sgrid__status mlabel" aria-live="polite" data-sgrid-status data-from={from}>
+          {page > 1 ? 'Sections' : 'Showing'}{' '}
+          <span class="num" data-sgrid-range>
+            {page > 1 ? `${fmt(from)}–${fmt(to)}` : fmt(to)}
+          </span>{' '}
+          of <span class="num">{fmt(total)}</span>
+        </p>
+        <div class="sgrid__actions">
+          {page > 1 && (
+            <a class="sgrid__first" href={firstHref} data-sgrid-first>
+              ← First page
+            </a>
+          )}
+          {nextHref && (
+            <a class="sgrid__more" href={nextHref} rel="next nofollow" data-sgrid-more>
+              <span data-sgrid-more-label>Load more</span>
+              <span class="sgrid__more-n num" aria-hidden="true">
+                +{fmt(Math.min(pageSize, total - to))}
+              </span>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  // Progressive "Load more": fetch the next page and append its cards in place.
+  const parser = new DOMParser();
+  async function loadMore(link: HTMLAnchorElement): Promise<boolean> {
+    const root = link.closest<HTMLElement>('[data-sgrid]');
+    const cards = root?.querySelector<HTMLElement>('[data-sgrid-cards]');
+    if (!root || !cards || link.dataset.busy) return false;
+    link.dataset.busy = '1';
+    link.setAttribute('aria-busy', 'true');
+    const label = link.querySelector('[data-sgrid-more-label]');
+    if (label) label.textContent = 'Loading…';
+    try {
+      const res = await fetch(link.href, { headers: { Accept: 'text/html' } });
+      if (!res.ok) throw new Error(String(res.status));
+      const doc = parser.parseFromString(await res.text(), 'text/html');
+      const incoming = doc.querySelector('[data-sgrid-cards]');
+      if (!incoming) throw new Error('no cards');
+      const first = incoming.firstElementChild;
+      const before = cards.children.length;
+      cards.append(...Array.from(incoming.children));
+      const after = cards.children.length;
+      const status = root.querySelector<HTMLElement>('[data-sgrid-status]');
+      const range = status?.querySelector('[data-sgrid-range]');
+      const from = Number(status?.dataset.from ?? 1);
+      const fmt = (n: number) => n.toLocaleString('en-US');
+      if (range) range.textContent = from > 1 ? `${fmt(from)}–${fmt(from + after - 1)}` : fmt(after);
+      const next = doc.querySelector<HTMLAnchorElement>('[data-sgrid-more]');
+      if (next) {
+        link.href = next.getAttribute('href') ?? link.href;
+        const n = link.querySelector('.sgrid__more-n');
+        const nn = next.querySelector('.sgrid__more-n');
+        if (n && nn) n.textContent = nn.textContent;
+      } else {
+        link.remove();
+      }
+      // Keep keyboard users where the new content starts.
+      if (first && before < after) {
+        (cards.children[before]?.querySelector('a') as HTMLElement | null)?.focus({ preventScroll: true });
+      }
+      document.dispatchEvent(new CustomEvent('sgrid:append'));
+      return true;
+    } catch {
+      // Fall back to a normal navigation.
+      window.location.href = link.href;
+      return false;
+    } finally {
+      delete link.dataset.busy;
+      link.removeAttribute('aria-busy');
+      if (label) label.textContent = 'Load more';
+    }
+  }
+
+  document.addEventListener('click', (event) => {
+    const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('[data-sgrid-more]');
+    if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    void loadMore(link);
+  });
+  // The lightbox asks for more when stepping past the last card.
+  document.addEventListener('sgrid:more', (event) => {
+    const link = document.querySelector<HTMLAnchorElement>('[data-sgrid-more]');
+    const done = (event as CustomEvent<{ done: (ok: boolean) => void }>).detail.done;
+    if (!link) return done(false);
+    void loadMore(link).then(done);
+  });
+</script>
+
+<style>
+  .sgrid__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-10);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .sgrid__status {
+    color: var(--ink-2);
+  }
+  .sgrid__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+  }
+  .sgrid__first {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .sgrid__first:hover {
+    color: var(--ink);
+  }
+  .sgrid__more {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 40px;
+    padding: 0 6px 0 18px;
+    border-radius: var(--radius-pill);
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .sgrid__more:hover {
+    background: var(--inverse-2);
+  }
+  .sgrid__more:focus-visible {
+    border-radius: var(--radius-pill);
+  }
+  .sgrid__more[aria-busy='true'] {
+    opacity: 0.7;
+    cursor: progress;
+  }
+  .sgrid__more-n {
+    display: inline-grid;
+    place-items: center;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
+    background: rgb(255 255 255 / 0.12);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 479px) {
+    .sgrid__foot {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+    .sgrid__actions {
+      justify-content: space-between;
+    }
+    .sgrid__more {
+      flex: 1;
+      justify-content: space-between;
+    }
+  }
+</style>

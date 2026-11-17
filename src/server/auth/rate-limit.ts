@@ -31,7 +31,12 @@ export interface RateLimitState {
 
 export async function loginRateLimit(db: Db, ipHash: string, now: Date): Promise<RateLimitState> {
   const since = new Date(now.getTime() - LOGIN_WINDOW_MS).toISOString();
-  const row = await db.first<{ ip_n: number; ip_first: string | null; all_n: number; all_first: string | null }>(
+  const row = await db.first<{
+    ip_n: number;
+    ip_first: string | null;
+    all_n: number;
+    all_first: string | null;
+  }>(
     `SELECT
        (SELECT COUNT(*) FROM admin_audit
          WHERE action = ? AND target_id = ? AND created_at > ?
@@ -42,16 +47,30 @@ export async function loginRateLimit(db: Db, ipHash: string, now: Date): Promise
        (SELECT COUNT(*) FROM admin_audit WHERE action = ? AND created_at > ?) AS all_n,
        (SELECT MIN(created_at) FROM admin_audit WHERE action = ? AND created_at > ?) AS all_first`,
     [
-      LOGIN_FAILED, ipHash, since, LOGIN_OK, ipHash,
-      LOGIN_FAILED, ipHash, since, LOGIN_OK, ipHash,
-      LOGIN_FAILED, since,
-      LOGIN_FAILED, since,
+      LOGIN_FAILED,
+      ipHash,
+      since,
+      LOGIN_OK,
+      ipHash,
+      LOGIN_FAILED,
+      ipHash,
+      since,
+      LOGIN_OK,
+      ipHash,
+      LOGIN_FAILED,
+      since,
+      LOGIN_FAILED,
+      since,
     ],
   );
   const retry = (first: string | null | undefined) =>
-    first ? Math.max(1, Math.ceil((Date.parse(first) + LOGIN_WINDOW_MS - now.getTime()) / 1000)) : 60;
-  if ((row?.ip_n ?? 0) >= MAX_FAILURES_PER_IP) return { blocked: true, retryAfter: retry(row?.ip_first) };
-  if ((row?.all_n ?? 0) >= MAX_FAILURES_TOTAL) return { blocked: true, retryAfter: retry(row?.all_first) };
+    first
+      ? Math.max(1, Math.ceil((Date.parse(first) + LOGIN_WINDOW_MS - now.getTime()) / 1000))
+      : 60;
+  if ((row?.ip_n ?? 0) >= MAX_FAILURES_PER_IP)
+    return { blocked: true, retryAfter: retry(row?.ip_first) };
+  if ((row?.all_n ?? 0) >= MAX_FAILURES_TOTAL)
+    return { blocked: true, retryAfter: retry(row?.all_first) };
   return { blocked: false, retryAfter: 0 };
 }
 

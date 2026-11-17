@@ -32,6 +32,8 @@ export const SectionTypeInfoSchema = named(
     group: z.object({ slug: SectionGroupEnum, name: z.string() }),
     href: z.string(),
     count: int().describe('Current sections of this type on active stores.'),
+    stores: int().describe('Distinct active stores with at least one section of this type.'),
+    themes: int().describe('Distinct themes those sections were seen on.'),
     pages: z.array(PageTypeEnum).describe('Page types where it usually appears.'),
     app_categories: z.array(z.string()).describe('App categories that render this section.'),
     preview: SectionCardSchema.nullable(),
@@ -58,12 +60,22 @@ export const ListSectionTypesOutput = z.object({
 
 export const GetSectionInput = z.object({ id: int().positive() });
 
+const SectionLinkSchema = z.object({ id: int(), href: z.string() });
+
 export const SectionDetailSchema = named(
   'SectionDetail',
   z.object({
     section: SectionCardSchema,
     screenshot: ScreenshotDetailSchema,
     more_like_this: z.array(SectionCardSchema),
+    in_type: z
+      .object({
+        position: int().describe('1-based position among current sections of this type.'),
+        total: int(),
+        prev: SectionLinkSchema.nullable(),
+        next: SectionLinkSchema.nullable(),
+      })
+      .describe('Where this section sits in its type (library order), with prev/next links.'),
   }),
 );
 

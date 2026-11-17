@@ -1,0 +1,67 @@
+---
+/**
+ * Typographic vendor index: every theme vendor set in the serif, each a link to its filter with
+ * a superscript count. Reads like the "set in" list of a type specimen, not a chip row.
+ */
+import Count from '~/components/ui/Count.astro';
+
+interface Props {
+  vendors: { label: string; href: string; count: number; selected?: boolean }[];
+  label?: string;
+  class?: string;
+}
+const { vendors, label = 'Theme vendors', class: className } = Astro.props;
+---
+
+<nav class:list={['vstrip', className]} aria-label={label}>
+  <ul class="vstrip__list">
+    {
+      vendors.map((v) => (
+        <li>
+          <a
+            href={v.href}
+            class:list={['vstrip__item', { 'is-on': v.selected }]}
+            aria-current={v.selected ? 'true' : undefined}
+          >
+            {v.label}
+            <Count value={v.count} label={v.count === 1 ? 'theme' : 'themes'} />
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .vstrip__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2em 0.9em;
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .vstrip__item {
+    color: var(--ink-3);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+  .vstrip__item:hover {
+    color: var(--ink);
+    text-decoration-color: var(--line-strong);
+  }
+  .vstrip__item.is-on {
+    color: var(--ink);
+    text-decoration-color: var(--ink);
+  }
+  .vstrip__item :global(.count-sup) {
+    font-size: max(0.32em, 10px);
+  }
+</style>

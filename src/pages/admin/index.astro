@@ -24,9 +24,12 @@ const [c, meta, jobs, pending, audit] = await Promise.all([
   getPendingRemovals(db, 6),
   getRecentAudit(db, { limit: 14 }),
 ]);
-const pendingTotal = (await db.first<{ n: number }>(
-  "SELECT COUNT(*) AS n FROM removal_requests WHERE status = 'pending'",
-))?.n ?? 0;
+const pendingTotal =
+  (
+    await db.first<{ n: number }>(
+      "SELECT COUNT(*) AS n FROM removal_requests WHERE status = 'pending'",
+    )
+  )?.n ?? 0;
 const now = new Date();
 const asOf = shortDate(meta.dataAsOf);
 
@@ -37,7 +40,12 @@ const metrics = [
     note: `${c.storesActive.toLocaleString('en-US')} active · ${c.storesHidden} hidden · ${c.storesOptedOut} opted out`,
     href: '/admin/stores',
   },
-  { label: 'Curated', value: c.curated, note: 'Hand-picked for the library', href: '/admin/stores?curated=yes' },
+  {
+    label: 'Curated',
+    value: c.curated,
+    note: 'Hand-picked for the library',
+    href: '/admin/stores?curated=yes',
+  },
   {
     label: 'Captured',
     value: c.captured,
@@ -50,8 +58,18 @@ const metrics = [
     note: `Layout previews on ${c.placeholderStores} ${c.placeholderStores === 1 ? 'store' : 'stores'}`,
     href: '/admin/stores?captured=placeholder',
   },
-  { label: 'Themes', value: c.themes, note: `${c.themesActive} visible on the site`, href: '/admin/themes' },
-  { label: 'Apps', value: c.apps, note: `${c.appsFull} full profiles · ${c.appsActive} visible`, href: '/admin/apps' },
+  {
+    label: 'Themes',
+    value: c.themes,
+    note: `${c.themesActive} visible on the site`,
+    href: '/admin/themes',
+  },
+  {
+    label: 'Apps',
+    value: c.apps,
+    note: `${c.appsFull} full profiles · ${c.appsActive} visible`,
+    href: '/admin/apps',
+  },
 ];
 const jobCells = [
   { status: 'queued', label: 'Queued', n: jobs.queued },
@@ -68,20 +86,22 @@ const dataRows = [
   { label: 'Teardowns', value: `${c.teardownsPublished} published of ${c.teardowns}` },
   { label: 'Affiliate links', value: `${c.linksActive} active` },
 ];
-const SCOPE: Record<string, string> = { store: 'Whole store', screenshots: 'Screenshots', details: 'Details' };
+const SCOPE: Record<string, string> = {
+  store: 'Whole store',
+  screenshots: 'Screenshots',
+  details: 'Details',
+};
 ---
 
 <AdminLayout title="Overview" section="overview">
   <AdminHeader title="Overview" description={meta.sourceLabel ? `${meta.sourceLabel}.` : undefined}>
-    {
-      pendingTotal > 0 && (
-        <Fragment slot="actions">
-          <Button href="/admin/removals" variant="primary" size="sm" icon="flag">
-            Review {pendingTotal} {pendingTotal === 1 ? 'removal' : 'removals'}
-          </Button>
-        </Fragment>
-      )
-    }
+    {pendingTotal > 0 && (
+      <Fragment slot="actions">
+        <Button href="/admin/removals" variant="primary" size="sm" icon="flag">
+          Review {pendingTotal} {pendingTotal === 1 ? 'removal' : 'removals'}
+        </Button>
+      </Fragment>
+    )}
   </AdminHeader>
   <FlashNotice />
 
@@ -96,97 +116,111 @@ const SCOPE: Record<string, string> = { store: 'Whole store', screenshots: 'Scre
         <div class="a-block__head">
           <div>
             <h2 class="a-h2" id="queue-removals">
-              Removal requests<Count value={pendingTotal} label="pending" />
+              Removal requests
+              <Count value={pendingTotal} label="pending" />
             </h2>
-            <p class="a-block__desc">Oldest first. Store owners file these from the opt-out page.</p>
+            <p class="a-block__desc">
+              Oldest first. Store owners file these from the opt-out page.
+            </p>
           </div>
-          <a href="/admin/removals" class="a-link a-nowrap">All requests</a>
+          <a href="/admin/removals" class="a-link a-nowrap">
+            All requests
+          </a>
         </div>
-        {
-          pending.length === 0 ? (
-            <p class="quiet-empty">Nothing waiting. New requests from the opt-out page appear here.</p>
-          ) : (
-            <div class="table-wrap">
-              <table class="table a-table">
-                <thead>
+        {pending.length === 0 ? (
+          <p class="quiet-empty">
+            Nothing waiting. New requests from the opt-out page appear here.
+          </p>
+        ) : (
+          <div class="table-wrap">
+            <table class="table a-table">
+              <thead>
+                <tr>
+                  <th scope="col">Reference</th>
+                  <th scope="col">Store</th>
+                  <th scope="col">Scope</th>
+                  <th scope="col">Received</th>
+                  <th scope="col" class="is-actions">
+                    <span class="visually-hidden">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pending.map((r) => (
                   <tr>
-                    <th scope="col">Reference</th>
-                    <th scope="col">Store</th>
-                    <th scope="col">Scope</th>
-                    <th scope="col">Received</th>
-                    <th scope="col" class="is-actions">
-                      <span class="visually-hidden">Actions</span>
-                    </th>
+                    <td class="a-mono a-nowrap">{r.reference}</td>
+                    <td>
+                      <span class="a-strong">{r.domain}</span>
+                      <span class="a-sub">
+                        {r.store_id ? (r.store_name ?? 'In the library') : 'Not in the library'}
+                      </span>
+                    </td>
+                    <td class="a-nowrap">{SCOPE[r.scope] ?? r.scope}</td>
+                    <td class="a-nowrap" title={fullTime(r.created_at)}>
+                      {timeAgo(r.created_at, now)}
+                    </td>
+                    <td class="is-actions">
+                      <Button href={`/admin/removals/${r.id}`} size="sm" variant="secondary">
+                        Review
+                      </Button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {pending.map((r) => (
-                    <tr>
-                      <td class="a-mono a-nowrap">{r.reference}</td>
-                      <td>
-                        <span class="a-strong">{r.domain}</span>
-                        <span class="a-sub">{r.store_id ? (r.store_name ?? 'In the library') : 'Not in the library'}</span>
-                      </td>
-                      <td class="a-nowrap">{SCOPE[r.scope] ?? r.scope}</td>
-                      <td class="a-nowrap" title={fullTime(r.created_at)}>
-                        {timeAgo(r.created_at, now)}
-                      </td>
-                      <td class="is-actions">
-                        <Button href={`/admin/removals/${r.id}`} size="sm" variant="secondary">
-                          Review
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        }
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section class="a-block" aria-labelledby="queue-scans">
         <div class="a-block__head">
           <div>
-            <h2 class="a-h2" id="queue-scans">Scan and capture queue</h2>
+            <h2 class="a-h2" id="queue-scans">
+              Scan and capture queue
+            </h2>
             <p class="a-block__desc">Jobs wait here until the external crawler picks them up.</p>
           </div>
-          <a href="/admin/scans" class="a-link a-nowrap">Open queue</a>
+          <a href="/admin/scans" class="a-link a-nowrap">
+            Open queue
+          </a>
         </div>
         <ul class="jobs">
-          {
-            jobCells.map((j) => (
-              <li>
-                <a href={`/admin/scans?status=${j.status}`} class:list={['jobs__cell', `jobs__cell--${j.status}`, { 'is-zero': j.n === 0 }]}>
-                  <span class="jobs__label">{j.label}</span>
-                  <span class="jobs__n num">{j.n.toLocaleString('en-US')}</span>
-                </a>
-              </li>
-            ))
-          }
+          {jobCells.map((j) => (
+            <li>
+              <a
+                href={`/admin/scans?status=${j.status}`}
+                class:list={['jobs__cell', `jobs__cell--${j.status}`, { 'is-zero': j.n === 0 }]}
+              >
+                <span class="jobs__label">{j.label}</span>
+                <span class="jobs__n num">{j.n.toLocaleString('en-US')}</span>
+              </a>
+            </li>
+          ))}
         </ul>
       </section>
 
       <section class="a-block" aria-labelledby="data-info">
         <div class="a-block__head">
-          <h2 class="a-h2" id="data-info">Data</h2>
+          <h2 class="a-h2" id="data-info">
+            Data
+          </h2>
         </div>
         <dl class="a-spec">
-          {
-            dataRows.map((row) => (
-              <div class="a-spec__row">
-                <dt>{row.label}</dt>
-                <dd class:list={[{ 'a-mono': row.mono }]}>{row.value}</dd>
-              </div>
-            ))
-          }
+          {dataRows.map((row) => (
+            <div class="a-spec__row">
+              <dt>{row.label}</dt>
+              <dd class:list={[{ 'a-mono': row.mono }]}>{row.value}</dd>
+            </div>
+          ))}
         </dl>
       </section>
     </div>
 
     <section aria-labelledby="activity">
       <div class="a-block__head">
-        <h2 class="a-h2" id="activity">Recent activity</h2>
+        <h2 class="a-h2" id="activity">
+          Recent activity
+        </h2>
       </div>
       <AuditList rows={audit} />
     </section>

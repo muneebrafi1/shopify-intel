@@ -8,13 +8,15 @@ import type { ActionResult } from './actions.ts';
 const MESSAGES: Record<string, string> = {
   // Success
   saved: 'Changes saved.',
-  saved_rebuild_failed: 'Saved, but rebuilding public counts failed. It will catch up on the next ingest.',
+  saved_rebuild_failed:
+    'Saved, but rebuilding public counts failed. It will catch up on the next ingest.',
   no_changes: 'Nothing changed.',
   queued_rescan: 'Rescan queued. The crawler picks it up on its next run.',
   queued_capture: 'Capture queued. The crawler picks it up on its next run.',
   cancelled: 'Job cancelled.',
   removal_done: 'Removal approved and completed.',
-  removal_details_done: 'Marked as done. Edit the store details by hand if anything needs changing.',
+  removal_details_done:
+    'Marked as done. Edit the store details by hand if anything needs changing.',
   removal_rejected: 'Request rejected.',
   link_created: 'Affiliate link added.',
   published: 'Teardown published.',
@@ -69,7 +71,10 @@ export function readFlash(url: URL): Flash | null {
 }
 
 /** Path + query for the redirect after an action, replacing any previous flash params. */
-export function flashHref(pathWithQuery: string, result: Pick<ActionResult, 'ok' | 'flash' | 'n'>): string {
+export function flashHref(
+  pathWithQuery: string,
+  result: Pick<ActionResult, 'ok' | 'flash' | 'n'>,
+): string {
   const url = new URL(pathWithQuery, 'http://x');
   url.searchParams.delete('ok');
   url.searchParams.delete('err');

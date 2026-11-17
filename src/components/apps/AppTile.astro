@@ -1,0 +1,133 @@
+---
+/**
+ * Grid view tile for the apps index: the app's own section on a curated store (its primary
+ * surface), captioned like a contact sheet. Apps we have not seen render a section get an
+ * honest blank plate that says why (works in the background, or not on a curated store yet).
+ */
+import SectionCrop from '~/components/media/SectionCrop.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import type { AppListItem, SectionCard } from '~/server/api/v1/types';
+import { pageName, sharePct, specimen } from './helpers';
+
+interface Props {
+  app: AppListItem;
+  /** One section this app renders (null when none is attributed). */
+  section: SectionCard | null;
+  /** Name of the section type apps in this category render, e.g. "Reviews" (null = none). */
+  surface: string | null;
+  eager?: boolean;
+}
+const { app, section, surface, eager = false } = Astro.props;
+const n = app.usage.rank ?? 0;
+const meta = section
+  ? [section.type.name, pageName(section.page_type), section.store.display_name]
+  : surface
+    ? [`Renders as ${surface}`]
+    : ['No storefront section'];
+const emptyLine = surface ? 'Not seen on a curated store yet' : 'Works in the background';
+---
+
+<article class="atile">
+  {
+    section ? (
+      <SectionCrop
+        src={section.crop.src}
+        width={section.crop.width}
+        height={section.crop.height}
+        device={section.device}
+        alt={`${app.short_name}: ${section.type.name.toLowerCase()} section on ${section.store.display_name} (${section.device}, layout preview)`}
+        href={app.href}
+        eager={eager}
+      />
+    ) : (
+      <a class="atile__blank" href={app.href} aria-label={`${app.short_name}: ${emptyLine.toLowerCase()}`}>
+        <AppIcon src={app.icon_url} name={app.short_name} size={44} />
+        <span class="atile__blank-line">{emptyLine}</span>
+      </a>
+    )
+  }
+  <div class="atile__cap">
+    <span class="atile__n">{specimen(n)}</span>
+    <h3 class="atile__name">
+      <a href={app.href}>{app.short_name}</a>
+    </h3>
+    <span class="atile__stores num" title={`Running on ${app.usage.stores} of ${app.usage.denominator} scanned stores`}>
+      {app.usage.stores.toLocaleString('en-US')}
+      <span class="atile__share">{sharePct(app.usage.share)}</span>
+    </span>
+  </div>
+  <p class="atile__meta">{meta.join(' · ')}</p>
+</article>
+
+<style>
+  .atile {
+    min-width: 0;
+  }
+  .atile__blank {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+    background:
+      repeating-linear-gradient(-45deg, transparent 0 10px, rgb(25 24 22 / 0.025) 10px 11px),
+      var(--tile);
+    transition: background-color var(--dur-base) var(--ease-out);
+  }
+  .atile__blank:hover {
+    background-color: var(--tile-hover);
+  }
+  .atile__blank-line {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .atile__cap {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .atile__n {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.02em;
+  }
+  .atile__name {
+    min-width: 0;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .atile__stores {
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .atile__share {
+    margin-left: 4px;
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+    font-size: var(--text-xs);
+  }
+  .atile__meta {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

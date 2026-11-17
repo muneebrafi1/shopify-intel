@@ -328,8 +328,9 @@ const fieldId = (f: string) => (f === 'scope' ? 'scope-store' : f);
       strong.textContent = title;
       const p = document.createElement('p');
       p.textContent = message;
-      box.append(strong, p);
-      alerts.append(box);
+      box.appendChild(strong);
+      box.appendChild(p);
+      alerts.appendChild(box);
     }
 
     function setBusy(busy: boolean) {

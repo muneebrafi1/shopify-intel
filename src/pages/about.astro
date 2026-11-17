@@ -141,11 +141,18 @@ const AUDIENCES = [
                 display
               />
               <Stat value={formatCount(meta.counts.themes)} label="Themes" size="lg" display />
-              <Stat value={formatCount(meta.counts.apps_full)} label="App profiles" size="lg" display />
+              <Stat
+                value={formatCount(meta.counts.apps_full)}
+                label="App profiles"
+                size="lg"
+                display
+              />
             </StatList>
           </div>
           <MonoLabel as="p" class="about__source">
-            Source: {meta.source.label} · <a href="/methodology">How we detect</a>
+            <span>
+              Source: {meta.source.label} · <a href="/methodology">How we detect</a>
+            </span>
           </MonoLabel>
         </div>
       </section>
@@ -298,7 +305,7 @@ const AUDIENCES = [
   }
   .about__numbers :global(.about__source) {
     display: flex;
-    flex-wrap: wrap;
+    align-items: first baseline;
     margin-top: var(--space-5);
   }
   .about__numbers :global(.about__source a) {

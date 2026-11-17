@@ -39,7 +39,8 @@ export function readAuthConfig(env: Partial<AdminEnv>): AuthConfig {
     if (!team || !aud) {
       return {
         mode: 'locked',
-        reason: 'Cloudflare Access is half configured: set both CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD.',
+        reason:
+          'Cloudflare Access is half configured: set both CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD.',
       };
     }
     const teamDomain = normalizeTeamDomain(team);

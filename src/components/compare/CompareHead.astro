@@ -1,0 +1,287 @@
+---
+/**
+ * The compare header: a diptych. Both names set very large on either side of a hairline axis
+ * with a small mono "vs"; identical structure on both sides so neither reads as the favourite.
+ * App names in the UI sans, theme names in the editorial serif (as on theme pages).
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Rating from '~/components/ui/Rating.astro';
+import { formatCount, formatDate } from '~/lib/format';
+import type { ComparisonDetail, ResponseMeta } from '~/server/api/v1/types';
+import { sides, summary } from './compare';
+
+interface Props {
+  cmp: ComparisonDetail;
+  meta: ResponseMeta;
+}
+const { cmp, meta } = Astro.props;
+const [a, b] = sides(cmp);
+const isApp = cmp.kind === 'app';
+const category =
+  isApp && cmp.apps!.a.app.category?.slug === cmp.apps!.b.app.category?.slug ? cmp.apps!.a.app.category : null;
+
+const details = (side: 'a' | 'b') => {
+  if (cmp.apps) {
+    const app = cmp.apps[side].app;
+    return {
+      rating: app.rating,
+      reviews: app.reviews,
+      ratingSource: `Shopify App Store${app.checked_on ? `, checked ${formatDate(app.checked_on)}` : ''}`,
+      price: app.pricing.label ?? 'Pricing not listed',
+      line: app.category?.name ?? null,
+    };
+  }
+  const t = cmp.themes![side].theme;
+  return {
+    rating: null,
+    reviews: null,
+    ratingSource: '',
+    price: t.price.label ?? 'Price not listed',
+    line: t.marketplace,
+  };
+};
+const items = [a, b].map((s) => ({ ...s, d: details(s.side) }));
+---
+
+<header class:list={['ch', `ch--${cmp.kind}`]}>
+  <div class="ch__bar">
+    <MonoLabel as="p" tone="ink">
+      Comparison · {isApp ? 'Apps' : 'Themes'}{category && ` · ${category.name}`}
+    </MonoLabel>
+    <MonoLabel as="p" bullet={false} class="ch__asof">Data as of {formatDate(meta.data_as_of)}</MonoLabel>
+  </div>
+
+  <div class="ch__diptych">
+    <h1 class="ch__title">
+      <span class="ch__name ch__name--a">{a.name}</span>
+      <span class="ch__vs" aria-label="versus"><span aria-hidden="true">vs</span></span>
+      <span class="ch__name ch__name--b">{b.name}</span>
+    </h1>
+
+    {
+      items.map((s) => (
+        <div class:list={['ch__side', `ch__side--${s.side}`]}>
+          <p class="ch__maker">
+            {s.kind === 'app' && <AppIcon src={s.iconUrl} name={s.name} size={24} />}
+            <span class="ch__maker-text">
+              {s.maker ? (
+                s.makerHref ? (
+                  <a href={s.makerHref}>by {s.maker}</a>
+                ) : (
+                  <>by {s.maker}</>
+                )
+              ) : (
+                'Maker not listed'
+              )}
+            </span>
+          </p>
+          <p class="ch__facts">
+            {s.kind === 'app' && <Rating rating={s.d.rating} reviews={s.d.reviews} source={s.d.ratingSource} size="sm" />}
+            <span class="ch__price">{s.d.price}</span>
+          </p>
+          <p class="ch__usage mono">
+            Seen on <strong>{formatCount(s.stores)}</strong> of {formatCount(s.denominator)} stores
+          </p>
+          <p class="ch__links">
+            <a href={s.href}>{s.kind === 'app' ? 'App profile' : 'Theme page'}</a>
+            <a href={s.alternativesHref}>Alternatives</a>
+          </p>
+        </div>
+      ))
+    }
+  </div>
+
+  <p class="ch__lede">{summary(cmp)}</p>
+</header>
+
+<style>
+  .ch {
+    padding-top: var(--space-6);
+  }
+  .ch__bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--ink);
+  }
+  .ch__asof {
+    color: var(--ink-3);
+  }
+
+  /* Two equal halves around a hairline axis. Title and side details share the columns, so
+     each name sits directly above its own facts at every width. */
+  .ch__diptych {
+    --axis: 28px;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--axis) minmax(0, 1fr);
+    column-gap: var(--space-3);
+    padding-top: var(--space-8);
+  }
+  .ch__diptych::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--line);
+  }
+  .ch__title {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: end;
+  }
+  .ch__name {
+    min-width: 0;
+    font-size: clamp(1.875rem, 0.9rem + 5.2vw, 6rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.045em;
+    line-height: 0.95;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+  .ch--theme .ch__name {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+  }
+  .ch__name--b {
+    grid-column: 3;
+  }
+  .ch__vs {
+    position: relative;
+    z-index: 1;
+    align-self: center;
+    justify-self: center;
+    padding: 6px 0;
+    background: var(--bg);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: 450;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .ch__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding-top: var(--space-5);
+  }
+  .ch__side--a {
+    grid-column: 1;
+  }
+  .ch__side--b {
+    grid-column: 3;
+  }
+  .ch__maker {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    order: -1;
+    margin-bottom: var(--space-1);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    min-width: 0;
+  }
+  .ch__maker-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ch__maker a {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .ch__facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--ink);
+  }
+  .ch__price {
+    color: var(--ink-2);
+  }
+  .ch__usage {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .ch__usage strong {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .ch__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px var(--space-4);
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  .ch__links a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+  .ch__links a:hover {
+    text-decoration-color: currentColor;
+  }
+  .ch__links a::after {
+    content: ' →';
+  }
+
+  .ch__lede {
+    max-width: 720px;
+    margin-top: var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+
+  /* The maker line moves above the name on wide screens: it's grid-ordered by DOM, so keep it
+     in the side block but lift the whole block's label visually with a top rule. */
+  @media (min-width: 768px) {
+    .ch__diptych {
+      --axis: 48px;
+      column-gap: var(--space-6);
+      padding-top: var(--space-12);
+    }
+    .ch__side {
+      padding-top: var(--space-6);
+    }
+    .ch__facts {
+      font-size: var(--text-base);
+    }
+    .ch__lede {
+      font-size: var(--text-lg);
+      margin-top: var(--space-10);
+    }
+  }
+  @media (max-width: 479px) {
+    .ch__maker :global(.app-icon) {
+      display: none;
+    }
+    .ch__facts {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

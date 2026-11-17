@@ -59,8 +59,15 @@ if (config.mode === 'locked') {
       password = '';
     }
     if (password && (await secretsEqual(password, config.password))) {
-      const { token } = await signSession({ secret: config.secret, password: config.password }, now);
-      Astro.cookies.set(sessionCookieName(url), token, sessionCookieOptions(url, SESSION_TTL_SECONDS));
+      const { token } = await signSession(
+        { secret: config.secret, password: config.password },
+        now,
+      );
+      Astro.cookies.set(
+        sessionCookieName(url),
+        token,
+        sessionCookieOptions(url, SESSION_TTL_SECONDS),
+      );
       await db.batch([loginAttemptStatement(true, ipHash, now)]);
       return Astro.redirect(next, 303);
     }
@@ -72,7 +79,8 @@ if (config.mode === 'locked') {
 
 Astro.response.status = status;
 const flash = readFlash(url);
-const state = config.mode === 'locked' ? 'not-configured' : config.mode === 'access' ? 'access' : 'password';
+const state =
+  config.mode === 'locked' ? 'not-configured' : config.mode === 'access' ? 'access' : 'password';
 ---
 
 <AdminLayout title={config.mode === 'locked' ? 'Admin is not configured' : 'Sign in'} bare>
@@ -82,106 +90,102 @@ const state = config.mode === 'locked' ? 'not-configured' : config.mode === 'acc
       <span class="admin-brand__tag">Admin</span>
     </a>
 
-    {
-      state === 'password' && (
-        <>
-          <MonoLabel as="p" class="login__label">
-            Restricted area
-          </MonoLabel>
-          <h1 class="login__title display">Sign in to the admin</h1>
-          <p class="login__lede">Stores, removals, scans and affiliate links. Sessions last 12 hours.</p>
+    {state === 'password' && (
+      <>
+        <MonoLabel as="p" class="login__label">
+          Restricted area
+        </MonoLabel>
+        <h1 class="login__title display">Sign in to the admin</h1>
+        <p class="login__lede">
+          Stores, removals, scans and affiliate links. Sessions last 12 hours.
+        </p>
 
-          {error && (
-            <Notice tone="critical" class="login__notice">
-              {error}
-            </Notice>
-          )}
-          {!error && flash && (
-            <Notice tone={flash.tone} class="login__notice">
-              {flash.text}
-            </Notice>
-          )}
+        {error && (
+          <Notice tone="critical" class="login__notice">
+            {error}
+          </Notice>
+        )}
+        {!error && flash && (
+          <Notice tone={flash.tone} class="login__notice">
+            {flash.text}
+          </Notice>
+        )}
 
-          <form method="post" class="login__form" novalidate={false}>
-            <input type="text" name="username" value="admin" autocomplete="username" hidden />
-            <Field label="Password" for="admin-password">
-              <Input
-                id="admin-password"
-                name="password"
-                type="password"
-                autocomplete="current-password"
-                required
-                maxlength={256}
-                autofocus
-                aria-invalid={error ? 'true' : undefined}
-              />
-            </Field>
-            <Button type="submit" variant="primary" size="lg" full>
-              Sign in
-            </Button>
-          </form>
-          <p class="login__foot">
-            In production this page is replaced by Cloudflare Access.
-          </p>
-        </>
-      )
-    }
-
-    {
-      state === 'access' && (
-        <>
-          <MonoLabel as="p" class="login__label">
-            Cloudflare Access
-          </MonoLabel>
-          <h1 class="login__title display">Sign in through Access</h1>
-          <p class="login__lede">
-            This admin is protected by Cloudflare Access. Your request did not carry a valid Access
-            sign-in, so it was refused here.
-          </p>
-          <ul class="login__steps">
-            <li>Open the admin on the production domain, where Access asks you to sign in.</li>
-            <li>If you just signed in, your Access session may have expired. Reload to sign in again.</li>
-          </ul>
-          <Button href="/admin" variant="primary" size="lg" full>
-            Open the admin
+        <form method="post" class="login__form" novalidate={false}>
+          <input type="text" name="username" value="admin" autocomplete="username" hidden />
+          <Field label="Password" for="admin-password">
+            <Input
+              id="admin-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              maxlength={256}
+              autofocus
+              aria-invalid={error ? 'true' : undefined}
+            />
+          </Field>
+          <Button type="submit" variant="primary" size="lg" full>
+            Sign in
           </Button>
-        </>
-      )
-    }
+        </form>
+        <p class="login__foot">In production this page is replaced by Cloudflare Access.</p>
+      </>
+    )}
 
-    {
-      state === 'not-configured' && (
-        <>
-          <MonoLabel as="p" class="login__label" tone="accent">
-            Locked
-          </MonoLabel>
-          <h1 class="login__title display">Admin is not configured</h1>
-          <p class="login__lede">
-            No sign-in method is set up, so the admin stays locked. It is never open by default.
-          </p>
-          {config.mode === 'locked' && (
-            <Notice tone="caution" class="login__notice">
-              {config.reason}
-            </Notice>
-          )}
-          <dl class="login__env">
-            <div>
-              <dt>Production</dt>
-              <dd>
-                <code>CF_ACCESS_TEAM_DOMAIN</code> and <code>CF_ACCESS_AUD</code> as Wrangler secrets
-              </dd>
-            </div>
-            <div>
-              <dt>Local</dt>
-              <dd>
-                <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code> in{' '}
-                <code>.dev.vars</code>, then restart the dev server
-              </dd>
-            </div>
-          </dl>
-        </>
-      )
-    }
+    {state === 'access' && (
+      <>
+        <MonoLabel as="p" class="login__label">
+          Cloudflare Access
+        </MonoLabel>
+        <h1 class="login__title display">Sign in through Access</h1>
+        <p class="login__lede">
+          This admin is protected by Cloudflare Access. Your request did not carry a valid Access
+          sign-in, so it was refused here.
+        </p>
+        <ul class="login__steps">
+          <li>Open the admin on the production domain, where Access asks you to sign in.</li>
+          <li>
+            If you just signed in, your Access session may have expired. Reload to sign in again.
+          </li>
+        </ul>
+        <Button href="/admin" variant="primary" size="lg" full>
+          Open the admin
+        </Button>
+      </>
+    )}
+
+    {state === 'not-configured' && (
+      <>
+        <MonoLabel as="p" class="login__label" tone="accent">
+          Locked
+        </MonoLabel>
+        <h1 class="login__title display">Admin is not configured</h1>
+        <p class="login__lede">
+          No sign-in method is set up, so the admin stays locked. It is never open by default.
+        </p>
+        {config.mode === 'locked' && (
+          <Notice tone="caution" class="login__notice">
+            {config.reason}
+          </Notice>
+        )}
+        <dl class="login__env">
+          <div>
+            <dt>Production</dt>
+            <dd>
+              <code>CF_ACCESS_TEAM_DOMAIN</code> and <code>CF_ACCESS_AUD</code> as Wrangler secrets
+            </dd>
+          </div>
+          <div>
+            <dt>Local</dt>
+            <dd>
+              <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code> in{' '}
+              <code>.dev.vars</code>, then restart the dev server
+            </dd>
+          </div>
+        </dl>
+      </>
+    )}
 
     <a href="/" class="login__back">
       <Icon name="arrow-left" size={14} /> Back to the site

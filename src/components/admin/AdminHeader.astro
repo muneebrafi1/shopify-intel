@@ -23,33 +23,32 @@ const crumbs: Crumb[] = [{ label: 'Admin', href: '/admin' }, ...trail];
 <header class="ahead">
   <nav class="ahead__trail" aria-label="Breadcrumb">
     <ol>
-      {
-        crumbs.map((c, i) => (
-          <li>
-            {c.href && i < crumbs.length - 1 ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
-          </li>
-        ))
-      }
+      {crumbs.map((c, i) => (
+        <li>
+          {c.href && i < crumbs.length - 1 ? (
+            <a href={c.href}>{c.label}</a>
+          ) : (
+            <span>{c.label}</span>
+          )}
+        </li>
+      ))}
     </ol>
   </nav>
   <div class="ahead__row">
     <div class="ahead__text">
       <h1 class="ahead__title">
         <slot name="before-title" />
-        <span class="ahead__title-text">{title}</span>{
-          typeof count === 'number' && <Count value={count} label={countLabel} />
-        }
+        <span class="ahead__title-text">{title}</span>
+        {typeof count === 'number' && <Count value={count} label={countLabel} />}
       </h1>
       {description && <p class="ahead__desc">{description}</p>}
       <slot name="meta" />
     </div>
-    {
-      Astro.slots.has('actions') && (
-        <div class="ahead__actions">
-          <slot name="actions" />
-        </div>
-      )
-    }
+    {Astro.slots.has('actions') && (
+      <div class="ahead__actions">
+        <slot name="actions" />
+      </div>
+    )}
   </div>
 </header>
 

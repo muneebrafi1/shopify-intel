@@ -17,7 +17,9 @@ export const POST: APIRoute = async ({ cookies, url, locals, redirect }) => {
     sameSite: 'strict',
   });
   if (session) {
-    await adminDb().batch([auditStatement({ actor: session.actor, action: 'auth.logout' }, new Date())]);
+    await adminDb().batch([
+      auditStatement({ actor: session.actor, action: 'auth.logout' }, new Date()),
+    ]);
   }
   if (session?.method === 'access') return redirect('/cdn-cgi/access/logout', 303);
   return redirect('/admin/login?ok=signed_out', 303);

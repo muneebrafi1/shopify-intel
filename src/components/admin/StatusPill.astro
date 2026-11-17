@@ -30,7 +30,9 @@ const tone = TONES[status] ?? 'neutral';
 const text = label ?? status.replace(/[_-]+/g, ' ').replace(/^./, (c) => c.toUpperCase());
 ---
 
-<span class:list={['pill', `pill--${tone}`, { 'pill--dot': variant === 'dot' }, className]}>{text}</span>
+<span class:list={['pill', `pill--${tone}`, { 'pill--dot': variant === 'dot' }, className]}>
+  {text}
+</span>
 
 <style>
   .pill {

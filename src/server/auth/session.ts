@@ -6,7 +6,15 @@
  * timestamps and a random id; nothing secret. The signing key is derived from
  * ADMIN_SESSION_SECRET *and* ADMIN_PASSWORD, so rotating either one signs everybody out.
  */
-import { base64UrlDecode, base64UrlEncode, fromUtf8, hmacKey, hmacSign, parseJsonObject, utf8 } from './crypto.ts';
+import {
+  base64UrlDecode,
+  base64UrlEncode,
+  fromUtf8,
+  hmacKey,
+  hmacSign,
+  parseJsonObject,
+  utf8,
+} from './crypto.ts';
 
 /** Sessions last 12 hours. There is no sliding renewal: sign in again after that. */
 export const SESSION_TTL_SECONDS = 12 * 60 * 60;
