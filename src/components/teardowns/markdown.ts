@@ -39,7 +39,7 @@ export function inline(src: string): string {
     return `\u0000${codes.length - 1}\u0000`;
   });
   s = escapeHtml(s);
-  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, text: string, href: string) => {
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, text: string, href: string) => {
     const ok = safeHref(href.replace(/&amp;/g, '&'));
     if (!ok) return text;
     const external = ok.startsWith('https://');

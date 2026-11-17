@@ -95,7 +95,10 @@ const jsonLd = {
         <MonoLabel as="p" class="lib__eyebrow">
           Library · {typeCount} types in {SECTION_GROUPS.length} groups
         </MonoLabel>
-        <h1 class="lib__title">Sections<Count value={counts.sections} label="sections" /></h1>
+        <h1 class="lib__title">
+          Sections
+          <Count value={counts.sections} label="sections" />
+        </h1>
       </div>
       <p class="lib__statement start-8">{statement}</p>
     </div>

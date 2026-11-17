@@ -42,7 +42,13 @@ const {
 } = Astro.props;
 ---
 
-<div class:list={['book', { 'book--typed': rail.groups.some((g) => g.types.some((t) => t.current)) }, className]}>
+<div
+  class:list={[
+    'book',
+    { 'book--typed': rail.groups.some((g) => g.types.some((t) => t.current)) },
+    className,
+  ]}
+>
   <ContentsRail rail={rail} class="book__rail" />
   <div class="book__main" id="results">
     <FilterBar

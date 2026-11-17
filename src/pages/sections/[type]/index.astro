@@ -90,7 +90,8 @@ const usualPages = [
 
 // Apps that render it, with icons from the cards we already have.
 const icons = new Map<string, string | null>();
-for (const s of [...whole.data.items, ...data.items]) if (s.app) icons.set(s.app.slug, s.app.icon_url);
+for (const s of [...whole.data.items, ...data.items])
+  if (s.app) icons.set(s.app.slug, s.app.icon_url);
 const apps = whole.data.facets.apps.slice(0, 6).map((a) => ({
   slug: a.value,
   name: a.label,
@@ -118,8 +119,18 @@ const jsonLd = [
   {
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Sections', item: new URL('/sections', Astro.site ?? url).href },
-      { '@type': 'ListItem', position: 2, name: info.name, item: new URL(canonical, Astro.site ?? url).href },
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Sections',
+        item: new URL('/sections', Astro.site ?? url).href,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: info.name,
+        item: new URL(canonical, Astro.site ?? url).href,
+      },
     ],
   },
   {
@@ -145,7 +156,10 @@ const jsonLd = [
       Type {String(typeIndex).padStart(2, '0')} of {SECTION_TYPES.length} · Chapter
       {String(groupIndex).padStart(2, '0')}, {info.group.name}
     </MonoLabel>
-    <h1 class="chap__title">{info.name}<Count value={info.count} label="sections" /></h1>
+    <h1 class="chap__title">
+      {info.name}
+      <Count value={info.count} label="sections" />
+    </h1>
 
     <div class="chap__row cols-12">
       <div class="chap__lede span-7">
@@ -157,30 +171,26 @@ const jsonLd = [
             <span class="chap__apps-note">{renderedNote}</span>
           </p>
           <ol class="chap__app-list">
-            {
-              apps.map((a) => (
-                <li>
-                  <a href={a.href} class="chap__app">
-                    <AppIcon src={a.icon} name={a.name} size={20} />
-                    <span class="chap__app-name">{a.name}</span>
-                    <span class="chap__lead" aria-hidden="true" />
-                    <span class="chap__app-n num">{fmt(a.count)}</span>
-                  </a>
-                </li>
-              ))
-            }
-            {
-              themeOwn > 0 && (
-                <li>
-                  <span class="chap__app chap__app--theme" title="Sections the theme renders itself">
-                    <span class="chap__theme-mark" aria-hidden="true" />
-                    <span class="chap__app-name">The theme itself</span>
-                    <span class="chap__lead" aria-hidden="true" />
-                    <span class="chap__app-n num">{fmt(themeOwn)}</span>
-                  </span>
-                </li>
-              )
-            }
+            {apps.map((a) => (
+              <li>
+                <a href={a.href} class="chap__app">
+                  <AppIcon src={a.icon} name={a.name} size={20} />
+                  <span class="chap__app-name">{a.name}</span>
+                  <span class="chap__lead" aria-hidden="true" />
+                  <span class="chap__app-n num">{fmt(a.count)}</span>
+                </a>
+              </li>
+            ))}
+            {themeOwn > 0 && (
+              <li>
+                <span class="chap__app chap__app--theme" title="Sections the theme renders itself">
+                  <span class="chap__theme-mark" aria-hidden="true" />
+                  <span class="chap__app-name">The theme itself</span>
+                  <span class="chap__lead" aria-hidden="true" />
+                  <span class="chap__app-n num">{fmt(themeOwn)}</span>
+                </span>
+              </li>
+            )}
           </ol>
         </div>
       </div>
@@ -196,27 +206,27 @@ const jsonLd = [
           source={source}
         />
         <div class="chap__pages">
-          <MonoLabel as="p" tone="ink">Usually appears on</MonoLabel>
+          <MonoLabel as="p" tone="ink">
+            Usually appears on
+          </MonoLabel>
           <ul class="chap__page-list">
-            {
-              usualPages.map((p) => (
-                <li>
-                  {p.count > 0 ? (
-                    <a href={p.href} rel="nofollow" class="chap__page">
-                      <span>{p.name} page</span>
-                      <span class="chap__lead" aria-hidden="true" />
-                      <span class="chap__page-n num">{fmt(p.count)}</span>
-                    </a>
-                  ) : (
-                    <span class="chap__page is-off" title="Not seen on this page type yet">
-                      <span>{p.name} page</span>
-                      <span class="chap__lead" aria-hidden="true" />
-                      <span class="chap__page-n num">—</span>
-                    </span>
-                  )}
-                </li>
-              ))
-            }
+            {usualPages.map((p) => (
+              <li>
+                {p.count > 0 ? (
+                  <a href={p.href} rel="nofollow" class="chap__page">
+                    <span>{p.name} page</span>
+                    <span class="chap__lead" aria-hidden="true" />
+                    <span class="chap__page-n num">{fmt(p.count)}</span>
+                  </a>
+                ) : (
+                  <span class="chap__page is-off" title="Not seen on this page type yet">
+                    <span>{p.name} page</span>
+                    <span class="chap__lead" aria-hidden="true" />
+                    <span class="chap__page-n num">—</span>
+                  </span>
+                )}
+              </li>
+            ))}
           </ul>
         </div>
       </div>

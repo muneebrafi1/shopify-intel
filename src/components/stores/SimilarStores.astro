@@ -21,14 +21,19 @@ const why = (s: SimilarStore) =>
     .join(' · ');
 const curated = items.filter((s) => s.store.is_curated && s.store.preview);
 const detected = items.filter((s) => !(s.store.is_curated && s.store.preview));
+// One or two captures sit beside the index instead of leaving a half-empty grid.
+const split = detected.length > 0 && (curated.length === 1 || curated.length === 2);
+// With two captures the index gets the narrow column: number, store, why.
+const compact = split && curated.length === 2;
+const columns = compact
+  ? '56px minmax(0,1fr) auto'
+  : '64px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 80px';
+const head = compact
+  ? ['N°', 'Store', 'Why similar']
+  : ['N°', 'Store', 'Theme', 'Why similar', 'Apps'];
 ---
 
-<div
-  class:list={[
-    'similar',
-    { 'similar--split': curated.length > 0 && curated.length <= 2 && detected.length > 0 },
-  ]}
->
+<div class:list={['similar', { 'similar--split': split, 'similar--split-2': compact }]}>
   {curated.length > 0 && (
     <div class="grid grid--shots similar__cards">
       {curated.map((s) => (
@@ -46,12 +51,7 @@ const detected = items.filter((s) => !(s.store.is_curated && s.store.preview));
     </div>
   )}
   {detected.length > 0 && (
-    <IndexList
-      label="Similar detected stores"
-      columns="64px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 80px"
-      head={['N°', 'Store', 'Theme', 'Why similar', 'Apps']}
-      class="similar__index"
-    >
+    <IndexList label="Similar detected stores" columns={columns} head={head} class="similar__index">
       {detected.map((s) => (
         <IndexRow
           n={s.store.position ?? 0}
@@ -61,11 +61,15 @@ const detected = items.filter((s) => !(s.store.is_curated && s.store.preview));
           preview={
             s.store.preview ? { ...s.store.preview.image, device: s.store.preview.device } : null
           }
-          cells={[
-            { value: s.store.theme.label, muted: !s.store.theme.name },
-            { value: why(s), mono: true },
-            { value: `${s.store.app_count} apps`, mono: true, mobile: true },
-          ]}
+          cells={
+            compact
+              ? [{ value: why(s), mono: true, mobile: true }]
+              : [
+                  { value: s.store.theme.label, muted: !s.store.theme.name },
+                  { value: why(s), mono: true },
+                  { value: `${s.store.app_count} apps`, mono: true, mobile: true },
+                ]
+          }
         />
       ))}
     </IndexList>
@@ -86,6 +90,12 @@ const detected = items.filter((s) => !(s.store.is_curated && s.store.preview));
     }
     .similar--split .similar__cards {
       grid-template-columns: minmax(0, 1fr);
+    }
+    .similar--split-2 {
+      grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+    }
+    .similar--split-2 .similar__cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   @media (min-width: 640px) and (max-width: 1023px) {

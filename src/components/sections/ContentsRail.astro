@@ -31,40 +31,38 @@ const pad = (n: number) => String(n).padStart(2, '0');
     <span class="toc__n num">{fmt(rail.all.count)}</span>
   </a>
   <ol class="toc__groups">
-    {
-      rail.groups.map((g) => (
-        <li class="toc__group">
-          <p class="toc__chapter">
-            <span class="toc__no num">{pad(g.n)}</span>
-            <span class="toc__gname">{g.name}</span>
-            <span class="toc__n num">{fmt(g.count)}</span>
-          </p>
-          <ol class="toc__types">
-            {g.types.map((t) => (
-              <li>
-                {t.count > 0 || t.current ? (
-                  <a
-                    class:list={['toc__row', { 'is-current': t.current }]}
-                    href={t.href}
-                    aria-current={t.current ? 'page' : undefined}
-                  >
-                    <span class="toc__name">{t.name}</span>
-                    <span class="toc__lead" aria-hidden="true" />
-                    <span class="toc__n num">{fmt(t.count)}</span>
-                  </a>
-                ) : (
-                  <span class="toc__row is-empty" title="No sections match the current filters">
-                    <span class="toc__name">{t.name}</span>
-                    <span class="toc__lead" aria-hidden="true" />
-                    <span class="toc__n num">—</span>
-                  </span>
-                )}
-              </li>
-            ))}
-          </ol>
-        </li>
-      ))
-    }
+    {rail.groups.map((g) => (
+      <li class="toc__group">
+        <p class="toc__chapter">
+          <span class="toc__no num">{pad(g.n)}</span>
+          <span class="toc__gname">{g.name}</span>
+          <span class="toc__n num">{fmt(g.count)}</span>
+        </p>
+        <ol class="toc__types">
+          {g.types.map((t) => (
+            <li>
+              {t.count > 0 || t.current ? (
+                <a
+                  class:list={['toc__row', { 'is-current': t.current }]}
+                  href={t.href}
+                  aria-current={t.current ? 'page' : undefined}
+                >
+                  <span class="toc__name">{t.name}</span>
+                  <span class="toc__lead" aria-hidden="true" />
+                  <span class="toc__n num">{fmt(t.count)}</span>
+                </a>
+              ) : (
+                <span class="toc__row is-empty" title="No sections match the current filters">
+                  <span class="toc__name">{t.name}</span>
+                  <span class="toc__lead" aria-hidden="true" />
+                  <span class="toc__n num">—</span>
+                </span>
+              )}
+            </li>
+          ))}
+        </ol>
+      </li>
+    ))}
   </ol>
 </nav>
 
@@ -80,7 +78,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
       const bottom = current.offsetTop + current.offsetHeight;
       if (bottom > toc.scrollTop + toc.clientHeight - 24) {
         const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-        toc.scrollTo({ top: bottom - toc.clientHeight + 120, behavior: smooth ? 'smooth' : 'auto' });
+        toc.scrollTo({
+          top: bottom - toc.clientHeight + 120,
+          behavior: smooth ? 'smooth' : 'auto',
+        });
       }
       return true;
     };

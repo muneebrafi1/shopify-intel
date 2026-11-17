@@ -47,7 +47,9 @@ export const StoreListItemSchema = named(
     last_seen: z.string(),
     position: int()
       .optional()
-      .describe('1-based position in the default catalogue order (sort=rank). Use as the N° label.'),
+      .describe(
+        '1-based position in the default catalogue order (sort=rank). Use as the N° label.',
+      ),
   }),
 );
 

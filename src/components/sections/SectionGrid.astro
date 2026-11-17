@@ -55,84 +55,90 @@ const from = (page - 1) * pageSize + 1;
 const to = from + items.length - 1;
 ---
 
-{
-  items.length === 0 ? (
-    <EmptyState
-      title="No sections match these filters"
-      body="Try another page type or device, or clear the theme and app filters."
-      class="sgrid__empty"
-    >
-      <Button href={clearHref} size="sm" variant="secondary">
-        Clear filters
-      </Button>
-    </EmptyState>
-  ) : (
-    <div class="sgrid" data-sgrid data-total={total}>
-      {view === 'index' ? (
-        <div class="sgrid__index" data-sgrid-index>
-          <IndexList columns={indexCols} head={indexHead} label="Sections">
-            {items.map((s, i) => (
-              <IndexRow
-                n={from + i}
-                href={s.href}
-                title={s.store.display_name}
-                subtitle={cardMeta(s, withType ? ['type', 'page', 'device'] : ['page', 'device', 'theme'])}
-                preview={{ src: s.crop.src, width: s.crop.width, height: s.crop.height, device: s.device }}
-                cells={[
-                  ...(withType ? [{ value: s.type.name }] : []),
-                  { value: pageTypeName(s.page_type), muted: true },
-                  { value: s.device === 'mobile' ? 'Mobile' : 'Desktop', mono: true, muted: true },
-                  { value: s.theme?.name ?? 'Custom theme' },
-                  { value: s.app?.short_name ?? '—', muted: !s.app, mobile: !!s.app },
-                ]}
-              />
-            ))}
-          </IndexList>
-        </div>
-      ) : (
-        <div class="grid grid--sections sgrid__cards" data-sgrid-cards>
+{items.length === 0 ? (
+  <EmptyState
+    title="No sections match these filters"
+    body="Try another page type or device, or clear the theme and app filters."
+    class="sgrid__empty"
+  >
+    <Button href={clearHref} size="sm" variant="secondary">
+      Clear filters
+    </Button>
+  </EmptyState>
+) : (
+  <div class="sgrid" data-sgrid data-total={total}>
+    {view === 'index' ? (
+      <div class="sgrid__index" data-sgrid-index>
+        <IndexList columns={indexCols} head={indexHead} label="Sections">
           {items.map((s, i) => (
-            <SectionCard
+            <IndexRow
+              n={from + i}
               href={s.href}
-              crop={s.crop}
-              device={s.device}
-              typeName={s.type.name}
-              storeLabel={s.store.display_name}
-              meta={cardMeta(s, meta)}
-              app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
-              eager={page === 1 && i < eager}
+              title={s.store.display_name}
+              subtitle={cardMeta(
+                s,
+                withType ? ['type', 'page', 'device'] : ['page', 'device', 'theme'],
+              )}
+              preview={{
+                src: s.crop.src,
+                width: s.crop.width,
+                height: s.crop.height,
+                device: s.device,
+              }}
+              cells={[
+                ...(withType ? [{ value: s.type.name }] : []),
+                { value: pageTypeName(s.page_type), muted: true },
+                { value: s.device === 'mobile' ? 'Mobile' : 'Desktop', mono: true, muted: true },
+                { value: s.theme?.name ?? 'Custom theme' },
+                { value: s.app?.short_name ?? '—', muted: !s.app, mobile: !!s.app },
+              ]}
             />
           ))}
-        </div>
-      )}
+        </IndexList>
+      </div>
+    ) : (
+      <div class="grid grid--sections sgrid__cards" data-sgrid-cards>
+        {items.map((s, i) => (
+          <SectionCard
+            href={s.href}
+            crop={s.crop}
+            device={s.device}
+            typeName={s.type.name}
+            storeLabel={s.store.display_name}
+            meta={cardMeta(s, meta)}
+            app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
+            eager={page === 1 && i < eager}
+          />
+        ))}
+      </div>
+    )}
 
-      <div class="sgrid__foot" data-sgrid-foot>
-        <p class="sgrid__status mlabel" aria-live="polite" data-sgrid-status data-from={from}>
-          {page > 1 ? 'Sections' : 'Showing'}{' '}
-          <span class="num" data-sgrid-range>
-            {page > 1 ? `${fmt(from)}–${fmt(to)}` : fmt(to)}
-          </span>{' '}
-          of <span class="num">{fmt(total)}</span>
-        </p>
-        <div class="sgrid__actions">
-          {page > 1 && (
-            <a class="sgrid__first" href={firstHref} data-sgrid-first>
-              ← First page
-            </a>
-          )}
-          {nextHref && (
-            <a class="sgrid__more" href={nextHref} rel="next nofollow" data-sgrid-more>
-              <span data-sgrid-more-label>Load more</span>
-              <span class="sgrid__more-n num" aria-hidden="true">
-                +{fmt(Math.min(pageSize, total - to))}
-              </span>
-            </a>
-          )}
-        </div>
+    <div class="sgrid__foot" data-sgrid-foot>
+      <p class="sgrid__status mlabel" aria-live="polite" data-sgrid-status data-from={from}>
+        {page > 1 ? 'Sections' : 'Showing'}{' '}
+        <span class="num" data-sgrid-range>
+          {page > 1 ? `${fmt(from)}–${fmt(to)}` : fmt(to)}
+        </span>{' '}
+        of <span class="num">{fmt(total)}</span>
+      </p>
+      <div class="sgrid__actions">
+        {page > 1 && (
+          <a class="sgrid__first" href={firstHref} data-sgrid-first>
+            ← First page
+          </a>
+        )}
+        {nextHref && (
+          <a class="sgrid__more" href={nextHref} rel="next nofollow" data-sgrid-more>
+            <span data-sgrid-more-label>Load more</span>
+            <span class="sgrid__more-n num" aria-hidden="true">
+              +{fmt(Math.min(pageSize, total - to))}
+            </span>
+          </a>
+        )}
       </div>
     </div>
-  )
-}
+  </div>
+)}
 
 <script>
   // Progressive "Load more": fetch the next page and append its cards in place.
@@ -161,7 +167,8 @@ const to = from + items.length - 1;
       const range = status?.querySelector('[data-sgrid-range]');
       const from = Number(status?.dataset.from ?? 1);
       const fmt = (n: number) => n.toLocaleString('en-US');
-      if (range) range.textContent = from > 1 ? `${fmt(from)}–${fmt(from + after - 1)}` : fmt(after);
+      if (range)
+        range.textContent = from > 1 ? `${fmt(from)}–${fmt(from + after - 1)}` : fmt(after);
       const next = doc.querySelector<HTMLAnchorElement>('[data-sgrid-more]');
       if (next) {
         link.href = next.getAttribute('href') ?? link.href;
@@ -173,7 +180,9 @@ const to = from + items.length - 1;
       }
       // Keep keyboard users where the new content starts.
       if (first && before < after) {
-        (cards.children[before]?.querySelector('a') as HTMLElement | null)?.focus({ preventScroll: true });
+        (cards.children[before]?.querySelector('a') as HTMLElement | null)?.focus({
+          preventScroll: true,
+        });
       }
       document.dispatchEvent(new CustomEvent('sgrid:append'));
       return true;

@@ -18,12 +18,17 @@ void SectionFocus;
 <dialog class="lb" aria-label="Section" data-lb>
   <div class="lb__bar">
     <p class="lb__count mlabel">
-      <span class="num" data-lb-pos>01</span>
+      <span class="num" data-lb-pos>
+        01
+      </span>
       <span class="lb__of">of</span>
-      <span class="num" data-lb-total>—</span>
+      <span class="num" data-lb-total>
+        —
+      </span>
     </p>
     <p class="lb__keys" aria-hidden="true">
-      <Kbd>←</Kbd><Kbd>→</Kbd> browse <span class="lb__sep">·</span> <Kbd>Esc</Kbd> close
+      <Kbd>←</Kbd>
+      <Kbd>→</Kbd> browse <span class="lb__sep">·</span> <Kbd>Esc</Kbd> close
     </p>
     <button type="button" class="lb__close" data-lb-close aria-label="Close">
       <Icon name="x" size={18} />
@@ -66,8 +71,8 @@ void SectionFocus;
     const ITEMS = '.section-card a.crop, [data-sgrid-index] .irow__link';
     /** Section links in grid order. */
     const links = () =>
-      Array.from(grid.querySelectorAll<HTMLAnchorElement>(ITEMS)).map((a) =>
-        new URL(a.href, location.href).pathname,
+      Array.from(grid.querySelectorAll<HTMLAnchorElement>(ITEMS)).map(
+        (a) => new URL(a.href, location.href).pathname,
       );
 
     const fetchFocus = (href: string) => {
@@ -75,7 +80,9 @@ void SectionFocus;
       if (!hit) {
         hit = fetch(href, { headers: { Accept: 'text/html' } })
           .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
-          .then((html) => parser.parseFromString(html, 'text/html').querySelector('[data-section-focus]'))
+          .then((html) =>
+            parser.parseFromString(html, 'text/html').querySelector('[data-section-focus]'),
+          )
           .catch(() => null);
         cache.set(href, hit);
       }
@@ -162,9 +169,12 @@ void SectionFocus;
     });
 
     grid.addEventListener('click', (event) => {
-      const a = (event.target as HTMLElement).closest<HTMLAnchorElement>('.section-card a, .irow__link');
+      const a = (event.target as HTMLElement).closest<HTMLAnchorElement>(
+        '.section-card a, .irow__link',
+      );
       if (!a || !wide.matches) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
+        return;
       event.preventDefault();
       returnFocus = a;
       void show(new URL(a.href, location.href).pathname, 'push');

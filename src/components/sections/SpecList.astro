@@ -22,14 +22,12 @@ const { items, source, inline = false, class: className } = Astro.props;
 
 <div class:list={['spec', { 'spec--inline': inline }, className]}>
   <dl class="spec__rows">
-    {
-      items.map((i) => (
-        <div class="spec__row">
-          <dt class="mlabel mlabel--bullet">{i.label}</dt>
-          <dd class="num">{i.href ? <a href={i.href}>{i.value}</a> : i.value}</dd>
-        </div>
-      ))
-    }
+    {items.map((i) => (
+      <div class="spec__row">
+        <dt class="mlabel mlabel--bullet">{i.label}</dt>
+        <dd class="num">{i.href ? <a href={i.href}>{i.value}</a> : i.value}</dd>
+      </div>
+    ))}
   </dl>
   {source && <SourceNote source={source.label} asOf={source.asOf} class="spec__source" />}
 </div>

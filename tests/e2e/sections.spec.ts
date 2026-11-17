@@ -10,7 +10,10 @@ import { expectHealthyPage, prepare } from './helpers';
 async function firstSectionHref(page: import('@playwright/test').Page, type: string) {
   await prepare(page);
   await page.goto(`/sections/${type}`);
-  const href = await page.locator('[data-sgrid-cards] .section-card a.crop').first().getAttribute('href');
+  const href = await page
+    .locator('[data-sgrid-cards] .section-card a.crop')
+    .first()
+    .getAttribute('href');
   expect(href).toMatch(new RegExp(`^/sections/${type}/\\d+$`));
   return href!;
 }
@@ -39,7 +42,11 @@ test.describe('sections pages are healthy', () => {
   test('unknown types and ids are 404s', async ({ page }) => {
     await expectHealthyPage(page, '/sections/no-such-type', { status: 404 });
     await prepare(page);
-    for (const path of ['/sections/reviews/999999999', '/sections/reviews/abc', '/sections/reviews/0']) {
+    for (const path of [
+      '/sections/reviews/999999999',
+      '/sections/reviews/abc',
+      '/sections/reviews/0',
+    ]) {
       const res = await page.goto(path);
       expect(res?.status(), path).toBe(404);
     }
@@ -70,9 +77,9 @@ test.describe('library browsing', () => {
     expect(narrowed).toBeGreaterThan(0);
     expect(narrowed).toBeLessThan(all);
     await expect(page.locator('h1')).toContainText('Reviews');
-    const metas = await page.locator('[data-sgrid-cards] .section-card a.crop').evaluateAll((els) =>
-      els.map((a) => a.getAttribute('href') ?? ''),
-    );
+    const metas = await page
+      .locator('[data-sgrid-cards] .section-card a.crop')
+      .evaluateAll((els) => els.map((a) => a.getAttribute('href') ?? ''));
     expect(metas.length).toBeGreaterThan(0);
     expect(metas.every((h) => h.startsWith('/sections/reviews/'))).toBe(true);
   });
@@ -85,7 +92,11 @@ test.describe('library browsing', () => {
     const classes = await cards.evaluateAll((els) => els.map((el) => el.className));
     expect(classes.every((c) => c.includes('crop--mobile'))).toBe(true);
     // Filters are links that keep each other.
-    const reviews = page.locator('[data-toc] a[href^="/sections/reviews"], #filter-sheet a[href^="/sections/reviews"]').first();
+    const reviews = page
+      .locator(
+        '[data-toc] a[href^="/sections/reviews"], #filter-sheet a[href^="/sections/reviews"]',
+      )
+      .first();
     await expect(reviews).toHaveAttribute('href', '/sections/reviews?device=mobile');
   });
 
@@ -100,7 +111,9 @@ test.describe('library browsing', () => {
     await expect(cards).toHaveCount(before * 2);
     await expect(page).toHaveURL(/\/sections$/);
     await expect(more).toHaveAttribute('href', /p=3/);
-    const ids = await cards.evaluateAll((els) => els.map((el) => el.querySelector('a')?.getAttribute('href')));
+    const ids = await cards.evaluateAll((els) =>
+      els.map((el) => el.querySelector('a')?.getAttribute('href')),
+    );
     expect(new Set(ids).size).toBe(ids.length);
   });
 
@@ -128,7 +141,9 @@ test.describe('section detail', () => {
     const open = page.getByRole('link', { name: 'Open in full page' }).first();
     await expect(open).toHaveAttribute(
       'href',
-      new RegExp(`^/stores/[^?]+\\?page=(home|collection|product|cart)&device=(desktop|mobile)#section-${id}$`),
+      new RegExp(
+        `^/stores/[^?]+\\?page=(home|collection|product|cart)&device=(desktop|mobile)#section-${id}$`,
+      ),
     );
 
     const next = page.locator('[data-sf-next]');

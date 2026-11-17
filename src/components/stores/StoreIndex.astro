@@ -100,7 +100,7 @@ const step = Math.min(items.length, Math.max(0, total - to));
         if (!next || !list) throw new Error('missing list');
         next
           .querySelectorAll('ol > li')
-          .forEach((li) => list.append(document.importNode(li, true)));
+          .forEach((li) => list.appendChild(document.importNode(li, true)));
         const foot = root.querySelector('[data-store-index-foot]');
         const nextFoot = next.querySelector('[data-store-index-foot]');
         const range = foot?.querySelector('.num');

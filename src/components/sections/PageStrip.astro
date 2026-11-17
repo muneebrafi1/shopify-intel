@@ -21,28 +21,29 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 <div class:list={['strip', className]} data-strip>
   <ol class="strip__list">
-    {
-      ordered.map((x, i) => {
-        const current = x.id === currentId;
-        return (
-          <li class:list={['strip__item', { 'is-current': current }]} aria-current={current ? 'true' : undefined}>
-            <SectionCrop
-              src={x.crop.src}
-              width={x.crop.width}
-              height={x.crop.height}
-              device={device}
-              alt={`${pad(i + 1)} ${x.type.name} on ${storeLabel}`}
-              href={x.href}
-              class="strip__crop"
-            />
-            <a href={x.href} class="strip__cap" tabindex="-1" aria-hidden="true">
-              <span class="strip__n num">{pad(i + 1)}</span>
-              <span class="strip__name">{x.type.name}</span>
-            </a>
-          </li>
-        );
-      })
-    }
+    {ordered.map((x, i) => {
+      const current = x.id === currentId;
+      return (
+        <li
+          class:list={['strip__item', { 'is-current': current }]}
+          aria-current={current ? 'true' : undefined}
+        >
+          <SectionCrop
+            src={x.crop.src}
+            width={x.crop.width}
+            height={x.crop.height}
+            device={device}
+            alt={`${pad(i + 1)} ${x.type.name} on ${storeLabel}`}
+            href={x.href}
+            class="strip__crop"
+          />
+          <a href={x.href} class="strip__cap" tabindex="-1" aria-hidden="true">
+            <span class="strip__n num">{pad(i + 1)}</span>
+            <span class="strip__name">{x.type.name}</span>
+          </a>
+        </li>
+      );
+    })}
   </ol>
 </div>
 
@@ -52,7 +53,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
     const list = strip.querySelector<HTMLElement>('.strip__list');
     const current = strip.querySelector<HTMLElement>('.is-current');
     if (!list || !current) return;
-    list.scrollLeft = Math.max(0, current.offsetLeft - list.clientWidth / 2 + current.offsetWidth / 2);
+    list.scrollLeft = Math.max(
+      0,
+      current.offsetLeft - list.clientWidth / 2 + current.offsetWidth / 2,
+    );
   });
 </script>
 
@@ -61,6 +65,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     margin-inline: calc(var(--page-gutter) * -1);
   }
   .strip__list {
+    position: relative;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 168px;
