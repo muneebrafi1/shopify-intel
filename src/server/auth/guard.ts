@@ -3,17 +3,20 @@
  * unit-tested. `src/middleware.ts` wires them together.
  */
 import { createAccessVerifier, type FetchCerts } from './access.ts';
-import type { AuthConfig } from './config.ts';
+import { API_TOKEN_ACTOR, bearerToken, verifyApiToken } from './api-token.ts';
+import { accessSettings, type AuthConfig } from './config.ts';
 import { verifySession } from './session.ts';
 
 export type AdminArea = 'page' | 'login' | 'logout' | 'api';
 
 /** What the middleware puts on `Astro.locals.admin` for a signed-in request. */
 export interface AdminSession {
-  method: 'access' | 'password';
-  /** Shown in the UI and written to the audit log ('admin' for the shared password). */
+  /** 'token' only on /api/v1/admin (Authorization: Bearer <ADMIN_API_TOKEN>). */
+  method: 'access' | 'password' | 'token';
+  /** Shown in the UI and written to the audit log ('admin' for the shared password,
+   * 'api-token' for the API token). */
   actor: string;
-  /** Unix seconds. */
+  /** Unix seconds; 0 for the API token (no expiry). */
   expiresAt: number;
 }
 
@@ -126,21 +129,26 @@ export interface AuthInput {
   fetchCerts?: FetchCerts;
 }
 
-/** Returns the session for a signed-in request, or null. */
+/**
+ * Returns the session for a signed-in request, or null. Cloudflare Access is checked first; the
+ * password session cookie is accepted when password sign-in is configured (alone locally, or as
+ * the break-glass backup next to Access in production).
+ */
 export async function authenticate(input: AuthInput): Promise<AdminSession | null> {
   const { config, request, url, getCookie } = input;
   const now = input.now ?? new Date();
 
-  if (config.mode === 'access') {
+  const access = accessSettings(config);
+  if (access) {
     const verifier = createAccessVerifier({
-      teamDomain: config.teamDomain,
-      aud: config.aud,
+      teamDomain: access.teamDomain,
+      aud: access.aud,
       fetchCerts: input.fetchCerts,
       now: () => now,
     });
     const token = request.headers.get('cf-access-jwt-assertion') ?? getCookie('CF_Authorization');
-    const identity = await verifier.verify(token);
-    return identity ? { method: 'access', actor: identity.actor, expiresAt: identity.exp } : null;
+    const identity = token ? await verifier.verify(token) : null;
+    if (identity) return { method: 'access', actor: identity.actor, expiresAt: identity.exp };
   }
 
   if (config.mode === 'password') {
@@ -153,6 +161,41 @@ export async function authenticate(input: AuthInput): Promise<AdminSession | nul
   }
 
   return null;
+}
+
+export type AdminApiAuth =
+  | { ok: true; session: AdminSession }
+  | { ok: false; status: 401 | 403; code: 'unauthorized' | 'forbidden'; message: string };
+
+/**
+ * Authentication for /api/v1/admin/** (used by the middleware and, again, by the router's admin
+ * mount). With an Authorization header, only the bearer token counts (a wrong or unusable one is
+ * 401, never a fallback to cookies). Without one, the admin session counts (Access, or the
+ * password cookie), and state-changing requests must be same-origin (403 otherwise).
+ */
+export async function authenticateAdminApi(
+  input: AuthInput & { apiToken: string | null },
+): Promise<AdminApiAuth> {
+  const deny = (status: 401 | 403, message: string): AdminApiAuth => ({
+    ok: false,
+    status,
+    code: status === 401 ? 'unauthorized' : 'forbidden',
+    message,
+  });
+  const bearer = bearerToken(input.request);
+  if (bearer !== undefined) {
+    if (!input.apiToken) return deny(401, 'API token sign-in is not configured.');
+    if (!bearer || !(await verifyApiToken(bearer, input.apiToken))) {
+      return deny(401, 'Invalid API token.');
+    }
+    return { ok: true, session: { method: 'token', actor: API_TOKEN_ACTOR, expiresAt: 0 } };
+  }
+  if (input.config.mode === 'locked') return deny(401, 'Admin is not configured.');
+  if (!isSafeMethod(input.request.method) && !isSameOrigin(input.request, input.url)) {
+    return deny(403, 'Cross-origin request blocked.');
+  }
+  const session = await authenticate(input);
+  return session ? { ok: true, session } : deny(401, 'Sign in required.');
 }
 
 export function jsonError(status: number, code: string, message: string): Response {

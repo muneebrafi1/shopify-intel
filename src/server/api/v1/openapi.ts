@@ -1,15 +1,19 @@
 /**
- * OpenAPI 3.1 document generated from the endpoint definitions (z.toJSONSchema). Served at
- * /api/v1/openapi.json. Named schemas (see schemas/common.ts `named`) become components.
+ * OpenAPI 3.1 documents generated from endpoint definitions (z.toJSONSchema). The public one is
+ * served at /api/v1/openapi.json; named schemas (schemas/common.ts `named`) become components.
+ * The admin namespace builds its own document from its own registry with the same generator
+ * (`buildOpenApiDocument`), served only behind the admin guard, so nothing admin ever appears in
+ * the public document.
  */
 import { z } from 'zod';
 import { SITE_NAME, SITE_URL } from '../../../config/site.ts';
 import { pathParams, type EndpointDef } from './define.ts';
 import { endpointList } from './registry.ts';
 import { schemaRegistry } from './schemas/common.ts';
-import { ErrorResponseSchema, envelopeOf } from './schemas/envelope.ts';
+import { ErrorResponseSchema, ResponseMetaSchema, envelopeOf } from './schemas/envelope.ts';
 
-type Json = Record<string, unknown>;
+export type Json = Record<string, unknown>;
+export type SchemaRegistry = typeof schemaRegistry;
 
 const strip = (schema: Json): Json => {
   const { $schema: _s, $id: _i, ...rest } = schema;
@@ -44,7 +48,7 @@ function parameters(def: EndpointDef): Json[] {
   return out;
 }
 
-function operation(def: EndpointDef): Json {
+function operation(def: EndpointDef, basePath: string, extraErrors: readonly string[]): Json {
   const ok = String(def.successStatus ?? 200);
   const error = { $ref: '#/components/responses/Error' };
   const op: Json = {
@@ -61,8 +65,12 @@ function operation(def: EndpointDef): Json {
       },
       ...(def.cache === 'public' ? { '304': { description: 'Not modified (ETag matched).' } } : {}),
       '400': error,
+      ...Object.fromEntries(extraErrors.map((code) => [code, error])),
       '404': error,
-      ...(def.method === 'POST' ? { '415': error, '429': error } : {}),
+      // Only the public POST (removal requests) is rate limited.
+      ...(def.method === 'POST'
+        ? { '415': error, ...(basePath === '/api/v1' ? { '429': error } : {}) }
+        : {}),
       '500': error,
     },
   };
@@ -80,16 +88,30 @@ function operation(def: EndpointDef): Json {
   return op;
 }
 
-let cached: Json | null = null;
+export interface OpenApiOptions {
+  endpoints: readonly EndpointDef[];
+  /** Named schemas of this document (components). Response envelopes are added to it. */
+  registry: SchemaRegistry;
+  /** URL prefix of every path: '/api/v1' or '/api/v1/admin'. */
+  basePath: string;
+  title: string;
+  description: string;
+  /** Error statuses beyond 400/404/500 that every operation can return (e.g. 401, 403). */
+  extraErrors?: readonly string[];
+  /** OpenAPI securitySchemes + the document-wide security requirement. */
+  security?: { schemes: Record<string, Json>; requirement: Array<Record<string, string[]>> };
+}
 
-export function openApiDocument(): Json {
-  if (cached) return cached;
-  for (const def of endpointList) {
-    schemaRegistry.add(envelopeOf(def.output), { id: responseId(def) });
+/** Builds an OpenAPI 3.1 document for a set of endpoint definitions. */
+export function buildOpenApiDocument(opts: OpenApiOptions): Json {
+  const { registry, endpoints, basePath } = opts;
+  for (const def of endpoints) {
+    registry.add(envelopeOf(def.output), { id: responseId(def) });
   }
-  if (!schemaRegistry.has(ErrorResponseSchema))
-    schemaRegistry.add(ErrorResponseSchema, { id: 'ErrorResponse' });
-  const generated = z.toJSONSchema(schemaRegistry, {
+  if (!registry.has(ResponseMetaSchema)) registry.add(ResponseMetaSchema, { id: 'ResponseMeta' });
+  if (!registry.has(ErrorResponseSchema))
+    registry.add(ErrorResponseSchema, { id: 'ErrorResponse' });
+  const generated = z.toJSONSchema(registry, {
     uri: (id) => `#/components/schemas/${id}`,
     unrepresentable: 'any',
   }) as { schemas: Record<string, Json> };
@@ -98,29 +120,28 @@ export function openApiDocument(): Json {
   );
 
   const paths: Record<string, Json> = {};
-  for (const def of endpointList) {
-    const path = `/api/v1${def.path}`;
-    paths[path] = { ...(paths[path] ?? {}), [def.method.toLowerCase()]: operation(def) };
+  for (const def of endpoints) {
+    const path = `${basePath}${def.path}`;
+    paths[path] = {
+      ...(paths[path] ?? {}),
+      [def.method.toLowerCase()]: operation(def, basePath, opts.extraErrors ?? []),
+    };
   }
-  paths['/api/v1/openapi.json'] = {
+  paths[`${basePath}/openapi.json`] = {
     get: {
-      operationId: 'openapi',
+      operationId: basePath === '/api/v1' ? 'openapi' : 'adminOpenapi',
       summary: 'This document',
       tags: ['Meta'],
       responses: { '200': { description: 'OpenAPI 3.1 document.' } },
     },
   };
 
-  cached = {
+  return {
     openapi: '3.1.0',
-    info: {
-      title: `${SITE_NAME} API`,
-      version: '1.0.0',
-      description:
-        'Real Shopify stores, page by page: stores, themes, apps and the sections they render. Every count carries its source and date (see meta.sources). Public, read-only, CORS-open for GET.',
-    },
+    info: { title: opts.title, version: '1.0.0', description: opts.description },
     servers: [{ url: SITE_URL }],
-    tags: [...new Set(endpointList.flatMap((e) => e.tags))].map((name) => ({ name })),
+    tags: [...new Set(endpoints.flatMap((e) => e.tags))].map((name) => ({ name })),
+    ...(opts.security ? { security: opts.security.requirement } : {}),
     paths,
     components: {
       schemas,
@@ -132,7 +153,22 @@ export function openApiDocument(): Json {
           },
         },
       },
+      ...(opts.security ? { securitySchemes: opts.security.schemes } : {}),
     },
   };
+}
+
+let cached: Json | null = null;
+
+/** The public document (/api/v1/openapi.json). Never includes the admin namespace. */
+export function openApiDocument(): Json {
+  cached ??= buildOpenApiDocument({
+    endpoints: endpointList,
+    registry: schemaRegistry,
+    basePath: '/api/v1',
+    title: `${SITE_NAME} API`,
+    description:
+      'Real Shopify stores, page by page: stores, themes, apps and the sections they render. Every count carries its source and date (see meta.sources). Public, read-only, CORS-open for GET.',
+  });
   return cached;
 }

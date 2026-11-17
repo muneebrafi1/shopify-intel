@@ -4,12 +4,14 @@
  * the shared executor and writes the envelope with caching, ETag and CORS headers.
  *
  * Protected namespaces (e.g. admin) are mounted with a guard: `createApiHandler(deps, { mounts:
- * [{ prefix: 'admin', endpoints, guard }] })` serves them at /api/v1/admin/... with no caching
- * and no CORS. The guard runs before input parsing and must return an ApiError to deny.
+ * [{ prefix: 'admin', endpoints, guard, openapi }] })` serves them at /api/v1/admin/... with no
+ * caching and no CORS. The guard runs before input parsing (and before the namespace's own
+ * /openapi.json) and returns an ApiError to deny, or the Principal it authenticated, which the
+ * handlers read from `ctx.request.principal` (e.g. for the audit log).
  */
 import { z } from 'zod';
 import { SITE_URL } from '../../../config/site.ts';
-import type { Ctx } from './context.ts';
+import type { Ctx, Principal } from './context.ts';
 import type { EndpointDef } from './define.ts';
 import { ApiError, isApiError } from './errors.ts';
 import { buildCtx, createRuntime, execute, type ApiDeps, type Runtime } from './execute.ts';
@@ -34,11 +36,16 @@ const CORS: Record<string, string> = {
 export interface Mount {
   prefix: string;
   endpoints: readonly EndpointDef[];
-  guard: (request: Request, ctx: Ctx) => Promise<ApiError | null>;
+  /** Deny with an ApiError, or allow by returning who is calling. */
+  guard: (request: Request, ctx: Ctx) => Promise<ApiError | Principal>;
+  /** The namespace's own OpenAPI document, served at /api/v1/<prefix>/openapi.json (guarded). */
+  openapi?: () => Record<string, unknown>;
 }
 
 export interface RouterOptions {
   mounts?: readonly Mount[];
+  /** Serve the public endpoints too (default). The admin route serves its mount only. */
+  publicRoutes?: boolean;
 }
 
 interface Route {
@@ -181,9 +188,14 @@ export function createApiHandler(
 ): (request: Request) => Promise<Response> {
   const rt: Runtime = createRuntime(deps);
   const routes = [
-    ...endpointList.map((def) => compile(def, null)),
+    ...(opts.publicRoutes === false ? [] : endpointList.map((def) => compile(def, null))),
     ...(opts.mounts ?? []).flatMap((m) => m.endpoints.map((def) => compile(def, m))),
   ];
+  const guarded = async (mount: Mount, request: Request): Promise<Principal> => {
+    const result = await mount.guard(request, await buildCtx(rt, { ip: clientIp(request) }));
+    if (isApiError(result)) throw result;
+    return result;
+  };
 
   return async (request) => {
     const url = new URL(request.url);
@@ -193,10 +205,31 @@ export function createApiHandler(
     const method = request.method.toUpperCase();
     const isHead = method === 'HEAD';
 
-    if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+    // A guarded namespace authenticates before anything else (its documents, 404s and 405s
+    // included), so its shape is not discoverable without credentials. It answers no CORS
+    // preflight: it is for same-origin pages and server-side scripts only.
+    const mountOf = (opts.mounts ?? []).find(
+      (m) => path === `/${m.prefix}` || path.startsWith(`/${m.prefix}/`),
+    );
+    let principal: Principal | null = null;
+    if (mountOf) {
+      try {
+        principal = await guarded(mountOf, request);
+        if (mountOf.openapi && path === `/${mountOf.prefix}/openapi.json`) {
+          if (method !== 'GET' && !isHead) {
+            throw new ApiError('method_not_allowed', 'Use GET', { headers: { Allow: 'GET' } });
+          }
+          return respond(mountOf.openapi(), 200, { 'Cache-Control': 'no-store' }, isHead);
+        }
+      } catch (err) {
+        return errorResponse(err, false);
+      }
+    } else if (method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: CORS });
+    }
 
     try {
-      if (path === '/openapi.json' && (method === 'GET' || isHead)) {
+      if (path === '/openapi.json' && opts.publicRoutes !== false && (method === 'GET' || isHead)) {
         const data = await rt.dataInfo(deps.db, Date.now());
         return respond(
           openApiDocument(),
@@ -213,7 +246,9 @@ export function createApiHandler(
       const matches = routes
         .map((route) => ({ route, m: route.pattern.exec(path === '/' ? '' : path) }))
         .filter((x): x is { route: Route; m: RegExpExecArray } => x.m !== null);
-      if (matches.length === 0) throw new ApiError('not_found', `No endpoint at ${url.pathname}`);
+      if (matches.length === 0) {
+        throw new ApiError('not_found', `No endpoint at ${url.pathname}`);
+      }
       const effective = isHead ? 'GET' : method;
       const hit = matches.find((x) => x.route.def.method === effective);
       if (!hit) {
@@ -224,12 +259,9 @@ export function createApiHandler(
       const publicRoute = route.mount === null && route.def.cache === 'public';
 
       try {
-        if (route.mount) {
-          const denied = await route.mount.guard(
-            request,
-            await buildCtx(rt, { ip: clientIp(request) }),
-          );
-          if (denied) throw denied;
+        // Defence in depth: a mount route is only reachable with the principal its guard set.
+        if (route.mount && (route.mount !== mountOf || !principal)) {
+          throw new ApiError('unauthorized', 'Sign in required.');
         }
 
         const pathValues = new Map<string, string[]>();
@@ -256,7 +288,7 @@ export function createApiHandler(
           }
         }
 
-        const result = await execute(rt, route.def, input, { ip: clientIp(request) });
+        const result = await execute(rt, route.def, input, { ip: clientIp(request), principal });
         const headers: Record<string, string> = { ...result.headers };
         if (publicRoute && etag) {
           Object.assign(headers, CORS, { 'Cache-Control': PUBLIC_CACHE, ETag: etag });
@@ -271,7 +303,7 @@ export function createApiHandler(
         return errorResponse(err, publicRoute);
       }
     } catch (err) {
-      return errorResponse(err, true);
+      return errorResponse(err, !mountOf);
     }
   };
 }

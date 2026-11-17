@@ -2,9 +2,12 @@
 # Password form + signed session cookie. Use a long random ADMIN_SESSION_SECRET (32+ chars).
 ADMIN_PASSWORD=
 ADMIN_SESSION_SECRET=
-# Production uses Cloudflare Access instead (password sign-in is disabled when these are set):
+# Production uses Cloudflare Access as the primary sign-in; the password above stays as the
+# break-glass backup when both are set:
 # CF_ACCESS_TEAM_DOMAIN=
 # CF_ACCESS_AUD=
+# Optional: bearer token for scripts calling /api/v1/admin (32+ random characters).
+# ADMIN_API_TOKEN=
 
 # Public API: salt for hashing client IPs (rate limiting). Any long random string locally.
 IP_HASH_SALT=

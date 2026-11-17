@@ -5,14 +5,19 @@
  * Guarded: /admin/** (except the sign-in page, which still gets the headers and CSRF check) and
  * /api/v1/admin/**. Protection is server-side only:
  *   1. Non-GET requests must come from this origin (CSRF), on top of SameSite=Strict cookies.
- *   2. Cloudflare Access JWT (production) or the signed password-session cookie (local).
- *   3. Not configured → locked, never open.
- * Every admin response gets no-store / noindex / no-framing headers.
+ *   2. Cloudflare Access JWT (primary, production) or the signed password-session cookie (local,
+ *      and the break-glass backup next to Access).
+ *   3. /api/v1/admin/** also accepts `Authorization: Bearer <ADMIN_API_TOKEN>` (scripts, MCP);
+ *      bearer requests skip the CSRF check (browsers never send the header on their own).
+ *   4. Not configured → locked, never open.
+ * Every admin response gets no-store / noindex / no-framing headers. The admin API router checks
+ * the same credentials again (defence in depth).
  */
 import { defineMiddleware } from 'astro:middleware';
 import {
   adminAreaFor,
   authenticate,
+  authenticateAdminApi,
   isSafeMethod,
   isSameOrigin,
   jsonError,
@@ -31,15 +36,27 @@ type Next = Parameters<Parameters<typeof defineMiddleware>[0]>[1];
 
 async function guardAdmin(context: Ctx, next: Next, area: AdminArea): Promise<Response> {
   const { request, url, cookies, locals } = context;
-  const api = area === 'api';
+
+  if (area === 'api') {
+    // Loaded lazily so the public fast path never touches admin code or bindings.
+    const { adminAuthConfig, adminApiToken } = await import('./server/admin/env.ts');
+    const auth = await authenticateAdminApi({
+      config: adminAuthConfig(),
+      apiToken: adminApiToken(),
+      request,
+      url,
+      getCookie: (name) => cookies.get(name)?.value,
+    });
+    if (!auth.ok) return jsonError(auth.status, auth.code, auth.message);
+    locals.admin = auth.session;
+    return next();
+  }
 
   if (!isSafeMethod(request.method) && !isSameOrigin(request, url)) {
-    return api
-      ? jsonError(403, 'forbidden', 'Cross-origin request blocked.')
-      : new Response('Cross-origin request blocked.', {
-          status: 403,
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-        });
+    return new Response('Cross-origin request blocked.', {
+      status: 403,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
   }
 
   // Loaded lazily so the public fast path never touches admin code or bindings.
@@ -49,7 +66,6 @@ async function guardAdmin(context: Ctx, next: Next, area: AdminArea): Promise<Re
     config.mode === 'locked' ? { mode: 'locked', reason: config.reason } : { mode: config.mode };
 
   if (config.mode === 'locked') {
-    if (api) return jsonError(401, 'unauthorized', 'Admin is not configured.');
     // The sign-in page explains what is missing (names only).
     return area === 'login' ? next() : context.redirect('/admin/login', 302);
   }
@@ -66,7 +82,6 @@ async function guardAdmin(context: Ctx, next: Next, area: AdminArea): Promise<Re
   if (area === 'login' || area === 'logout') return next();
 
   if (!session) {
-    if (api) return jsonError(401, 'unauthorized', 'Sign in required.');
     const target = isSafeMethod(request.method) ? `${url.pathname}${url.search}` : '';
     const query = target && target !== '/admin' ? `?next=${encodeURIComponent(target)}` : '';
     return context.redirect(`/admin/login${query}`, isSafeMethod(request.method) ? 302 : 303);

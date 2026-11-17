@@ -6,6 +6,7 @@
 import { env } from 'cloudflare:workers';
 import { d1Db } from '../db/d1.ts';
 import type { Db } from '../db/types.ts';
+import { apiTokenFrom } from '../auth/api-token.ts';
 import { readAuthConfig, type AdminEnv, type AuthConfig } from '../auth/config.ts';
 
 export const adminEnv = (): AdminEnv => env as unknown as AdminEnv;
@@ -16,4 +17,9 @@ export function adminDb(): Db {
 
 export function adminAuthConfig(): AuthConfig {
   return readAuthConfig(adminEnv());
+}
+
+/** ADMIN_API_TOKEN when token sign-in is enabled (set and long enough), else null. */
+export function adminApiToken(): string | null {
+  return apiTokenFrom(adminEnv());
 }

@@ -5,16 +5,16 @@ where we diverged, the reason is given here.
 
 ## Stack
 
-| Layer            | Choice                                                                                                                                             | Why                                                                                                                                                                                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Web app          | **Astro 7, server-rendered on Cloudflare Workers** (`@astrojs/cloudflare` 14)                                                                      | Content-heavy, image-first site: HTML from the edge, almost no client JS (vanilla `<script>` islands, no UI framework). Dev runs _inside workerd_ via the Cloudflare Vite plugin, so local == production runtime.                          |
-| Data             | **D1** (`DB` binding), SQL migrations in `migrations/`                                                                                             | Free tier, SQLite semantics, FTS5 for search. Plain SQL behind a tiny `Db` interface (no ORM) so the same queries run on D1 and on `node:sqlite` in tests/scripts.                                                                         |
-| Screenshots      | **R2** (`MEDIA` binding) served by `/media/<key>`; drawn placeholders at `/media/placeholder/...`                                                  | See "Screenshot pipeline".                                                                                                                                                                                                                 |
-| API              | **`/api/v1/*`**: typed endpoint definitions (zod in → handler → zod out)                                                                           | One definition serves three transports: HTTP (`/api/v1`), the in-process client used by every page, and (later) the MCP server. OpenAPI 3.1 is generated from the same definitions at `/api/v1/openapi.json`. Details: [`API.md`](API.md). |
-| Search           | D1 **FTS5** `search_index`, prefix queries, grouped results                                                                                        | Works at 50K+ rows without a build step (Pagefind would need re-indexing on every ingest). Palette (⌘K) + `/search`.                                                                                                                       |
-| Admin            | `src/middleware.ts` guards `/admin` and `/api/v1/admin`: **Cloudflare Access JWT** in production or a **signed session cookie** (password) locally | Server-side only; same-origin check on writes; audit log.                                                                                                                                                                                  |
-| Affiliate        | `/go/:id` → counts the click per day (no personal data) → 302                                                                                      | Links live in the DB (`affiliate_links`), labelled in the UI, `rel="sponsored"`.                                                                                                                                                           |
-| Payments (later) | Whop                                                                                                                                               | Stripe isn't available in Pakistan. Accounts/boards tables exist; UI slots are routed.                                                                                                                                                     |
+| Layer            | Choice                                                                                                                                                                            | Why                                                                                                                                                                                                                                        |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Web app          | **Astro 7, server-rendered on Cloudflare Workers** (`@astrojs/cloudflare` 14)                                                                                                     | Content-heavy, image-first site: HTML from the edge, almost no client JS (vanilla `<script>` islands, no UI framework). Dev runs _inside workerd_ via the Cloudflare Vite plugin, so local == production runtime.                          |
+| Data             | **D1** (`DB` binding), SQL migrations in `migrations/`                                                                                                                            | Free tier, SQLite semantics, FTS5 for search. Plain SQL behind a tiny `Db` interface (no ORM) so the same queries run on D1 and on `node:sqlite` in tests/scripts.                                                                         |
+| Screenshots      | **R2** (`MEDIA` binding) served by `/media/<key>`; drawn placeholders at `/media/placeholder/...`                                                                                 | See "Screenshot pipeline".                                                                                                                                                                                                                 |
+| API              | **`/api/v1/*`**: typed endpoint definitions (zod in → handler → zod out)                                                                                                          | One definition serves three transports: HTTP (`/api/v1`), the in-process client used by every page, and (later) the MCP server. OpenAPI 3.1 is generated from the same definitions at `/api/v1/openapi.json`. Details: [`API.md`](API.md). |
+| Search           | D1 **FTS5** `search_index`, prefix queries, grouped results                                                                                                                       | Works at 50K+ rows without a build step (Pagefind would need re-indexing on every ingest). Palette (⌘K) + `/search`.                                                                                                                       |
+| Admin            | `src/middleware.ts` guards `/admin` and `/api/v1/admin`: **Cloudflare Access** (primary), **password session** (local; break-glass in production), **API token** (admin API only) | Server-side only; same-origin check on cookie writes; audit log. See "Admin auth model".                                                                                                                                                   |
+| Affiliate        | `/go/:id` → counts the click per day (no personal data) → 302                                                                                                                     | Links live in the DB (`affiliate_links`), labelled in the UI, `rel="sponsored"`.                                                                                                                                                           |
+| Payments (later) | Whop                                                                                                                                                                              | Stripe isn't available in Pakistan. Accounts/boards tables exist; UI slots are routed.                                                                                                                                                     |
 
 ### Why the website calls the API in-process instead of over HTTP
 
@@ -56,7 +56,7 @@ The pipeline (a separate job, not part of the Worker) must:
 1. Take its work list only from `listCaptureTargets(db, { scope, limit, after })` in
    `src/server/repo/capture.ts`, or over HTTP `GET /api/v1/admin/capture-targets` (active
    stores, not tombstoned, not blocked; `scope=curated` by default, `scope=all` for every
-   detected store; keyset paging with `after`).
+   detected store; keyset paging: `after` in code, `cursor`/`next_cursor` over HTTP).
 2. Re-check right before each capture with `isCaptureBlocked(db, domain)` or
    `GET /api/v1/admin/capture-status/{domain}` (`{ blocked: true }` → skip): a request can be
    approved while a run is in progress.
@@ -97,6 +97,23 @@ owner who asks to be listed again) is a manual, audited database change for now.
   domain, scope and the admin link, never the requester's details. Errors are swallowed and logged
   as `notify=failed transport=<name>` without the provider's error text.
 
+## Admin auth model
+
+Owner decision (draft): **Cloudflare Access is the primary sign-in; the password is the
+break-glass backup; scripts use an API token.** Everything is checked server-side in
+`src/middleware.ts` (and again by the admin API router):
+
+| Method                 | Configured by                             | Where it works                  | Notes                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------- | ----------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cloudflare Access      | `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`  | `/admin/**`, `/api/v1/admin/**` | Put an Access application in front of `/admin*` and `/api/v1/admin*`. The Worker still verifies the JWT (signature, `aud`, `iss`, expiry). Half-configured → the admin is locked.                                                                                                                                                     |
+| Password (break-glass) | `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`  | `/admin/**`, `/api/v1/admin/**` | Locally the only method. In production it **keeps working next to Access**: it sits behind the Access application at the edge, and is what still lets the owner in if Access has to be switched off (IdP outage, misconfiguration). Rate-limited, constant-time compare, 12-hour signed cookie. Delete the two secrets to disable it. |
+| API token              | `ADMIN_API_TOKEN` (32+ random characters) | `/api/v1/admin/**` only         | `Authorization: Bearer …`, constant-time compare, actor `api-token` in the audit log. Off when unset. Behind Access, a script also needs an Access service token (or an Access bypass policy for `/api/v1/admin*` that the owner chooses deliberately).                                                                               |
+
+With nothing configured the admin is locked (never open). Cookie-authenticated writes need a
+same-origin `Origin` header (CSRF); bearer-token requests skip that check because browsers never
+attach the header on their own. The sign-in page shows the password form whenever the password is
+configured (`mode: 'password'`, with `access` set when Access is configured too).
+
 ## Local development and CI
 
 - `npm run setup` builds seed SQL from `data/seed/*.json` + `data/curation/*` and loads it into
@@ -113,8 +130,9 @@ owner who asks to be listed again) is a manual, audited database change for now.
 1. `npx wrangler d1 create shopify-intel` → put the real `database_id` in `wrangler.jsonc`.
 2. `npx wrangler r2 bucket create shopify-intel-media`.
 3. `npx wrangler d1 migrations apply DB --remote`, then load seed/ingest data.
-4. Secrets: `npx wrangler secret put ADMIN_SESSION_SECRET` (and `ADMIN_PASSWORD`, or configure
-   Cloudflare Access + `CF_ACCESS_TEAM_DOMAIN`/`CF_ACCESS_AUD`), `IP_HASH_SALT`.
+4. Secrets: Cloudflare Access + `CF_ACCESS_TEAM_DOMAIN`/`CF_ACCESS_AUD` (primary sign-in),
+   `ADMIN_PASSWORD` + `ADMIN_SESSION_SECRET` (break-glass), optionally `ADMIN_API_TOKEN` (scripts,
+   MCP) and `ADMIN_NOTIFY_EMAIL`, and `IP_HASH_SALT`, each with `npx wrangler secret put <NAME>`.
 5. Set `SITE_NAME`/`SITE_DOMAIN` in `src/config/site.ts`, then `npm run build && npx wrangler deploy`.
 
 ## Scaling notes

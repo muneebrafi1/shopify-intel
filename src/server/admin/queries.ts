@@ -527,11 +527,48 @@ export interface RemovalRow {
   store_id: number | null;
   store_name: string | null;
   store_status: string | null;
+  /** 1 when the domain has a capture block or tombstone. */
+  capture_blocked: number;
 }
 
 const REMOVAL_COLUMNS = `r.id, r.reference, r.domain, r.email, r.name, r.reason, r.scope, r.status,
   r.admin_note, r.created_at, r.handled_at, s.id AS store_id, s.name AS store_name,
-  s.status AS store_status`;
+  s.status AS store_status,
+  (EXISTS (SELECT 1 FROM capture_blocks cb WHERE cb.domain = r.domain)
+    OR EXISTS (SELECT 1 FROM store_tombstones tb WHERE tb.domain = r.domain)) AS capture_blocked`;
+
+export const REMOVAL_STATUSES = ['pending', 'approved', 'rejected', 'done'] as const;
+export type RemovalStatus = (typeof REMOVAL_STATUSES)[number];
+
+/**
+ * Removal requests filtered by one status (or all), for the admin API. Pending: oldest first;
+ * others: most recent decision first; all: newest first.
+ */
+export async function listRemovalRequests(
+  db: Db,
+  f: { status?: RemovalStatus | undefined; page?: number; limit?: number },
+): Promise<{ rows: RemovalRow[]; total: number; page: number; limit: number }> {
+  const limit = Math.min(Math.max(1, f.limit ?? PAGE_SIZE), 100);
+  const where = f.status ? 'WHERE r.status = ?' : '';
+  const params: SqlValue[] = f.status ? [f.status] : [];
+  const total =
+    (await db.first<{ n: number }>(`SELECT COUNT(*) AS n FROM removal_requests r ${where}`, params))
+      ?.n ?? 0;
+  const pages = Math.max(1, Math.ceil(total / limit));
+  const page = Math.min(Math.max(1, f.page ?? 1), pages);
+  const order =
+    f.status === 'pending'
+      ? 'r.created_at ASC, r.id ASC'
+      : f.status
+        ? 'r.handled_at DESC, r.id DESC'
+        : 'r.created_at DESC, r.id DESC';
+  const rows = await db.all<RemovalRow>(
+    `SELECT ${REMOVAL_COLUMNS} FROM removal_requests r LEFT JOIN stores s ON s.domain = r.domain
+     ${where} ORDER BY ${order} LIMIT ? OFFSET ?`,
+    [...params, limit, (page - 1) * limit],
+  );
+  return { rows, total, page, limit };
+}
 
 export async function getRemovalCounts(db: Db): Promise<Record<RemovalTab, number>> {
   const rows = await db.all<{ status: string; n: number }>(

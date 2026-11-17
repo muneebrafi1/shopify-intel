@@ -383,14 +383,30 @@ describe('readAuthConfig', () => {
       readAuthConfig({ CF_ACCESS_TEAM_DOMAIN: 'evil.example.com', CF_ACCESS_AUD: AUD }).mode,
     ).toBe('locked');
   });
-  it('prefers Cloudflare Access over the password when both are set', () => {
+  it('keeps the password as a break-glass next to Cloudflare Access (owner decision)', () => {
     const cfg = readAuthConfig({
       CF_ACCESS_TEAM_DOMAIN: 'acme',
       CF_ACCESS_AUD: AUD,
       ADMIN_PASSWORD: 'long enough pw',
       ADMIN_SESSION_SECRET: secret,
     });
-    expect(cfg).toEqual({ mode: 'access', teamDomain: TEAM, aud: AUD });
+    expect(cfg).toEqual({
+      mode: 'password',
+      password: 'long enough pw',
+      secret,
+      access: { teamDomain: TEAM, aud: AUD },
+    });
+    // Without the password pair (or with a weak one), Access is the only method; a broken
+    // backup never locks Access out.
+    expect(readAuthConfig({ CF_ACCESS_TEAM_DOMAIN: 'acme', CF_ACCESS_AUD: AUD })).toEqual({
+      mode: 'access',
+      teamDomain: TEAM,
+      aud: AUD,
+    });
+    expect(
+      readAuthConfig({ CF_ACCESS_TEAM_DOMAIN: 'acme', CF_ACCESS_AUD: AUD, ADMIN_PASSWORD: 'short' })
+        .mode,
+    ).toBe('access');
   });
   it('uses the password when configured', () => {
     expect(
@@ -445,6 +461,45 @@ describe('authenticate', () => {
         request: new Request(url),
         url,
         getCookie: () => token,
+        now: NOW,
+        fetchCerts,
+      }),
+    ).toBeNull();
+  });
+
+  it('with Access and the break-glass password, checks Access first, then the cookie', async () => {
+    const config = {
+      mode: 'password' as const,
+      ...SECRETS,
+      access: { teamDomain: TEAM, aud: AUD },
+    };
+    const fetchCerts = async () => ({ keys: [{ ...publicJwk, kid: KID, alg: 'RS256' }] as never });
+    const jwt = await signJwt(goodClaims());
+    const viaAccess = await authenticate({
+      config,
+      request: new Request(url, { headers: { 'cf-access-jwt-assertion': jwt } }),
+      url,
+      getCookie: () => undefined,
+      now: NOW,
+      fetchCerts,
+    });
+    expect(viaAccess).toMatchObject({ method: 'access', actor: 'owner@example.com' });
+    const { token } = await signSession(SECRETS, NOW);
+    const viaPassword = await authenticate({
+      config,
+      request: new Request(url),
+      url,
+      getCookie: (n) => (n === '__Host-admin_session' ? token : undefined),
+      now: NOW,
+      fetchCerts,
+    });
+    expect(viaPassword).toMatchObject({ method: 'password', actor: 'admin' });
+    expect(
+      await authenticate({
+        config,
+        request: new Request(url),
+        url,
+        getCookie: () => undefined,
         now: NOW,
         fetchCerts,
       }),

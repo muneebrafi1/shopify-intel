@@ -144,12 +144,74 @@ npm test                # vitest on node:sqlite (migrations + generated seed in 
   writes a tombstone, rebuilds derived data and returns the R2 keys to delete. Every public query
   filters `stores.status = 'active'`.
 
-## Admin namespace
+## Admin API (`/api/v1/admin/*`)
 
-Not part of the public API. The router can mount a guarded namespace:
-`createApiHandler(deps, { mounts: [{ prefix: 'admin', endpoints, guard }] })` serves
-`/api/v1/admin/*` with `no-store` and no CORS; `guard(request, ctx)` returns an `ApiError` to
-deny. A dedicated `src/pages/api/v1/admin/[...path].ts` route also works (more specific routes win).
+Protected JSON endpoints for scripts and the future MCP server, built from the same typed
+definitions as the public API (zod in → handler → zod out) in `src/server/admin/api/`. They are
+**not** in the public `/api/v1/openapi.json` or the public index: the admin schemas live in their
+own registry and the admin document is served only behind the guard at
+`GET /api/v1/admin/openapi.json`. Responses are `Cache-Control: no-store`, no CORS, and every change
+goes through an existing admin action, so it is written to the audit log (`admin_audit`) with the
+caller as the actor.
+
+**Auth** (checked by `src/middleware.ts` and again by the router's admin mount,
+`src/server/admin/api/mount.ts`). Any one of:
+
+| Credential                                | Who                              | Notes                                                                                                                                                                                                                    |
+| ----------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cloudflare Access JWT (header or cookie)  | the owner in a browser (primary) | Verified against the team's keys (`CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`). Writes must be same-origin. Scripts behind Access also need an Access service token, whose JWT is accepted the same way.                    |
+| Password session cookie (`/admin/login`)  | break-glass backup               | Works next to Access when `ADMIN_PASSWORD` + `ADMIN_SESSION_SECRET` are set (owner decision); locally it is the only method. Writes must be same-origin (`Origin` header), else **403**.                                 |
+| `Authorization: Bearer <ADMIN_API_TOKEN>` | scripts, MCP                     | Compared in constant time. **Off** when `ADMIN_API_TOKEN` is unset or shorter than 32 characters. With an `Authorization` header only the token counts (a wrong one is **401**, never a cookie fallback). No CSRF check. |
+
+Without valid credentials every path under `/api/v1/admin` (including unknown ones and the
+OpenAPI document) answers `401 {"error":{"code":"unauthorized",…}}`; a cookie-authenticated write
+from another origin answers `403 forbidden`. Admin errors also use `409 conflict` (already
+handled, already queued, capture blocked, …) and `500` when media deletion failed after an approval
+(retry with `action: "complete"`). Failed actions put their result key in
+`error.details[0].message` (e.g. `capture_blocked`).
+
+| id                            | Method + path                                                          | Notes                                                                                                                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `adminIndex`                  | `GET /api/v1/admin`                                                    | Who you are (`principal`) and the endpoint list.                                                                                                                              |
+| `adminListRemovalRequests`    | `GET /api/v1/admin/removal-requests?status=&page=&limit=`              | `status` = `pending` \| `approved` \| `rejected` \| `done`. Includes the requester email (personal data; kept 2 years).                                                       |
+| `adminGetRemovalRequest`      | `GET /api/v1/admin/removal-requests/{id}`                              | Request, capture block, and what approving would retire/delete.                                                                                                               |
+| `adminUpdateRemovalRequest`   | `POST /api/v1/admin/removal-requests/{id}`                             | `{ action: "approve", confirm: true, note? }` · `{ action: "reject", note }` · `{ action: "complete" }`. Approving scope `store` or `screenshots` **blocks future captures**. |
+| `adminPurgeRemovalRecords`    | `POST /api/v1/admin/maintenance/purge-removal-records`                 | `{ dry_run? }`. Deletes records closed more than 730 days ago; keeps capture blocks. Safe to run daily.                                                                       |
+| `adminListCaptureBlocks`      | `GET /api/v1/admin/capture-blocks?page=&limit=`                        | Every domain that must never be captured (blocks + tombstones).                                                                                                               |
+| `adminGetCaptureStatus`       | `GET /api/v1/admin/capture-status/{domain}`                            | `{ domain, blocked, block }`. The capture pipeline calls it before each capture.                                                                                              |
+| `adminListCaptureTargets`     | `GET /api/v1/admin/capture-targets?scope=curated\|all&limit=&cursor=`  | The capture pipeline's only work list: active, not tombstoned, not blocked.                                                                                                   |
+| `adminUpdateStore`            | `POST /api/v1/admin/stores/{domain}`                                   | `{ name?, category?, country?, status?: "active"\|"hidden", curated? }`; only fields sent change.                                                                             |
+| `adminQueueJob`               | `POST /api/v1/admin/jobs`                                              | `{ domain, kind: "detect"\|"rescan"\|"capture", priority? }` → 201; captures of blocked domains → 409.                                                                        |
+| `adminCancelJob`              | `POST /api/v1/admin/jobs/{id}/cancel`                                  | Queued jobs only.                                                                                                                                                             |
+| `adminUpdateTheme`            | `POST /api/v1/admin/themes/{slug}`                                     | `{ name?, price_label?, marketplace?, status? }`.                                                                                                                             |
+| `adminUpdateApp`              | `POST /api/v1/admin/apps/{slug}`                                       | `{ name?, category? (slug), tagline?, status? }`.                                                                                                                             |
+| `adminSetTeardownPublished`   | `POST /api/v1/admin/teardowns/{slug}`                                  | `{ published: boolean }`.                                                                                                                                                     |
+| `adminListAffiliateLinks`     | `GET /api/v1/admin/affiliate-links`                                    | With click counts (total, 30 days).                                                                                                                                           |
+| `adminCreateAffiliateLink`    | `POST /api/v1/admin/affiliate-links`                                   | `{ target_type, target_slug, url (https), label?, program_id?, active? }` → 201.                                                                                              |
+| `adminUpdateAffiliateLink`    | `POST /api/v1/admin/affiliate-links/{id}`                              | `{ url?, label?, program_id?, active? }`; inactive links 404 at `/go/<id>`.                                                                                                   |
+| `adminUpdateAffiliateProgram` | `POST /api/v1/admin/affiliate-programs/{id}`                           | `{ status }`.                                                                                                                                                                 |
+| `adminListAudit`              | `GET /api/v1/admin/audit?limit=&target_type=&target_id=&include_auth=` | Recent audit rows, `detail` parsed.                                                                                                                                           |
+| —                             | `GET /api/v1/admin/openapi.json`                                       | OpenAPI 3.1 for the admin namespace (guarded).                                                                                                                                |
+
+Examples (placeholder token; never paste a real one into docs, commits or chat):
+
+```bash
+TOKEN=replace-with-your-ADMIN_API_TOKEN   # from your own secret store
+BASE=http://localhost:4321/api/v1/admin
+
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/removal-requests?status=pending"
+curl -s -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"action":"approve","confirm":true,"note":"Owner verified"}' "$BASE/removal-requests/12"
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/capture-status/example.com"
+curl -s -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"dry_run":true}' "$BASE/maintenance/purge-removal-records"
+```
+
+Mounting: `createApiHandler(deps, { publicRoutes: false, mounts: [createAdminMount({ authConfig,
+apiToken })] })` (`src/server/admin/api/worker.ts`, used by `src/pages/api/v1/admin/[...path].ts`).
+A mount's `guard(request, ctx)` returns an `ApiError` to deny or the `Principal` it authenticated;
+handlers read it from `ctx.request.principal` for the audit log. The guard runs before anything
+else in the namespace (404s, 405s and the OpenAPI document included).
 
 ## Scale notes (50K stores, 100K+ screenshots)
 
