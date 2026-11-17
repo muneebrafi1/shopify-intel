@@ -1,16 +1,16 @@
 ---
 /**
- * Terms of use — a plain-language pre-launch draft.
- * OWNER: have this reviewed by a lawyer before launch. Open points: governing law and venue,
- * refund policy for Pro, the operating entity's name and address. Bump LEGAL_UPDATED in
- * src/components/static/content.ts when you edit.
+ * Terms of use — a plain-language pre-launch draft (not legal advice).
+ * OWNER: draft. Decided 17 Nov 2026: operator LEGAL_ENTITY (config/site), governing law
+ * GOVERNING_LAW (content.ts). Still open: a lawyer's review, the refund policy for Pro, the
+ * entity's registered address. Bump LEGAL_UPDATED in src/components/static/content.ts on edits.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Button from '~/components/ui/Button.astro';
 import DocShell from '~/components/static/DocShell.astro';
 import AsideCard from '~/components/static/AsideCard.astro';
-import { CONTACT, SITE_NAME } from '~/config/site';
-import { LEGAL_UPDATED } from '~/components/static/content';
+import { CONTACT, LEGAL_ENTITY, SITE_NAME } from '~/config/site';
+import { GOVERNING_LAW, LEGAL_UPDATED } from '~/components/static/content';
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
@@ -25,6 +25,7 @@ const toc = [
   { id: 'no-warranty', label: 'No warranty' },
   { id: 'liability', label: 'Limits on liability' },
   { id: 'changes', label: 'Changes' },
+  { id: 'law', label: 'Governing law' },
   { id: 'contact', label: 'Contact' },
 ];
 ---
@@ -50,13 +51,16 @@ const toc = [
         <li>Screenshots show public pages, link back to the store, and come down on request.</li>
         <li>Quote and link freely with credit. Don’t copy the whole data set or resell it.</li>
         <li>Pro will be sold through Whop. Nothing is for sale yet.</li>
+        <li>
+          {SITE_NAME} is run by {LEGAL_ENTITY}. These terms follow the laws of {GOVERNING_LAW}.
+        </li>
       </ul>
     </Fragment>
 
     <h2 id="using-the-site">Using the site</h2>
     <p>
-      {SITE_NAME} is free to browse without an account. By using it you agree to these terms. If you
-      don’t agree, please don’t use the site.
+      {SITE_NAME} is run by {LEGAL_ENTITY} (“we”, “us”). It is free to browse without an account. By
+      using it you agree to these terms. If you don’t agree, please don’t use the site.
     </p>
     <p>Please don’t:</p>
     <ul>
@@ -164,8 +168,15 @@ const toc = [
     <p>
       We may change or stop parts of the site as it grows, and we will update these terms when we
       do. The date at the top shows the latest version. Material changes for people with accounts
-      will be emailed in advance. The governing law and place for disputes will be set before
-      launch.
+      will be emailed in advance.
+    </p>
+
+    <h2 id="law">Governing law</h2>
+    <p>
+      These terms are governed by the laws of {GOVERNING_LAW}. If we can’t settle a dispute by
+      talking it through first, it goes to the courts of {GOVERNING_LAW}. If the law where you live
+      gives you the right to use your local courts or consumer protections, nothing here takes that
+      away.
     </p>
 
     <h2 id="contact">Contact</h2>

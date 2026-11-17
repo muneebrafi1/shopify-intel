@@ -7,10 +7,16 @@
 export const LEGAL_UPDATED = '2026-11-17';
 
 /**
- * OWNER: promised handling time for removal requests. Shown on /opt-out and in the
+ * OWNER: draft. Promised handling time for removal requests. Shown on /opt-out and in the
  * confirmation. Keep it a phrase that reads after "We aim to handle it".
  */
 export const REMOVAL_SLA = 'within 3 business days';
+
+/** OWNER: draft. How long removal-request records are kept after a request is closed. */
+export const REMOVAL_RETENTION = '2 years';
+
+/** OWNER: draft. Governing law of the terms (the operator is LEGAL_ENTITY in config/site). */
+export const GOVERNING_LAW = 'Pakistan';
 
 /** The trust/legal documents, in the order the doc switcher lists them. */
 export const TRUST_DOCS = [
@@ -39,12 +45,17 @@ export function safeNext(value: string | null | undefined, fallback = '/account'
 }
 
 // ---------------------------------------------------------------------------------------------
-// Pricing (OWNER: planned launch prices from docs/BRIEF.md; checkout runs on Whop later)
+// Pricing. Checkout runs on Whop later; nothing on the site charges anyone yet.
+// OWNER: draft. Plans, prices and the feature split are the owner's 17 Nov 2026 decisions:
+//   Free = home-page screenshots + basic theme and app data.
+//   Pro  = every page type, full-page and section-by-section screenshots, CSV exports.
+//   Team = Pro for 3 seats. Yearly billing = 2 months free.
+// Other pages (the home Pro band) read PLANS: keep the exported names and shapes stable.
 // ---------------------------------------------------------------------------------------------
 export type Billing = 'monthly' | 'yearly';
 
 export interface Price {
-  /** Whole USD. */
+  /** USD for the period in `per`. */
   amount: number;
   per: 'month' | 'year' | null;
   /** Small line under the price. */
@@ -59,7 +70,23 @@ export interface Plan {
   price: Record<Billing, Price>;
   cta: { label: string; href: string };
   recommended?: boolean;
+  /** Key features on the plan card (the full list is PLAN_MATRIX). */
+  features: string[];
+  /** Seats included. */
+  seats: number;
 }
+
+/** OWNER: draft. Months you don't pay for when billed yearly (yearly = 10 × monthly). */
+export const YEARLY_FREE_MONTHS = 2;
+/** Label for the yearly toggle and notes: "2 months free". */
+export const YEARLY_LABEL = `${YEARLY_FREE_MONTHS} months free`;
+
+/** OWNER: draft. Monthly prices in USD. Yearly prices are derived from them. */
+export const MONTHLY_PRICE = { pro: 12, team: 39 } as const;
+
+const yearlyFrom = (monthly: number) => monthly * (12 - YEARLY_FREE_MONTHS);
+const money = (amount: number) => `$${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
+const yearlyNote = (monthly: number) => `${money(yearlyFrom(monthly) / 12)} a month, billed yearly`;
 
 export const PLANS: Plan[] = [
   {
@@ -71,71 +98,184 @@ export const PLANS: Plan[] = [
       yearly: { amount: 0, per: null, note: 'No account needed' },
     },
     cta: { label: 'Start browsing', href: '/stores' },
+    features: [
+      'Home page screenshots of every store',
+      'Basic theme and app data',
+      'Store, theme and app pages',
+      'Public JSON API within fair use',
+    ],
+    seats: 1,
   },
   {
     id: 'pro',
     name: 'Pro',
     forWho: 'For designers, agencies and freelancers',
     price: {
-      monthly: { amount: 12, per: 'month', note: 'Billed monthly' },
-      yearly: { amount: 96, per: 'year', note: '$8 a month, billed yearly' },
+      monthly: { amount: MONTHLY_PRICE.pro, per: 'month', note: 'Billed monthly' },
+      yearly: {
+        amount: yearlyFrom(MONTHLY_PRICE.pro),
+        per: 'year',
+        note: yearlyNote(MONTHLY_PRICE.pro),
+      },
     },
     cta: { label: 'Get Pro', href: '/sign-in?next=/pro' },
     recommended: true,
+    features: [
+      'Everything in Free',
+      'Collection, product, cart and other pages',
+      'Full-page and section-by-section screenshots',
+      'Full theme and app data',
+      'CSV exports',
+      'Boards and theme-switch alerts',
+    ],
+    seats: 1,
   },
   {
     id: 'team',
     name: 'Team',
     forWho: 'For studios working on client stores',
     price: {
-      monthly: { amount: 39, per: 'month', note: 'Billed monthly' },
-      yearly: { amount: 39, per: 'month', note: 'Billed monthly' },
+      monthly: { amount: MONTHLY_PRICE.team, per: 'month', note: 'Billed monthly' },
+      yearly: {
+        amount: yearlyFrom(MONTHLY_PRICE.team),
+        per: 'year',
+        note: yearlyNote(MONTHLY_PRICE.team),
+      },
     },
     cta: { label: 'Get Team', href: '/sign-in?next=/pro' },
+    features: ['Everything in Pro', '3 seats on one plan', 'Shared boards'],
+    seats: 3,
   },
 ];
 
-/** Saving of Pro yearly over twelve monthly payments, as a whole percentage. */
-export const YEARLY_SAVING = Math.round((1 - 96 / (12 * 12)) * 100);
+/**
+ * Saving of yearly over twelve monthly payments, as a whole percentage (17 with 2 months
+ * free). Kept for existing imports; in copy, say YEARLY_LABEL ("2 months free") instead.
+ */
+export const YEARLY_SAVING = Math.round((YEARLY_FREE_MONTHS / 12) * 100);
 
 /** Feature matrix. `true` = included, `false` = not included, string = limited or a value. */
 export type Cell = boolean | string;
-export const PLAN_MATRIX: {
-  group: string;
-  rows: { label: string; free: Cell; pro: Cell; team: Cell }[];
-}[] = [
+export interface MatrixRow {
+  label: string;
+  /** One-line explanation under the label in the comparison table. */
+  note?: string;
+  free: Cell;
+  pro: Cell;
+  team: Cell;
+}
+
+/** OWNER: draft. Rows follow the plan split above. "Never" rows are promises, not limits. */
+export const PLAN_MATRIX: { group: string; rows: MatrixRow[] }[] = [
   {
-    group: 'Library',
+    group: 'Screenshots',
     rows: [
-      { label: 'Stores, themes and apps', free: true, pro: true, team: true },
-      { label: 'Home page screenshots', free: true, pro: true, team: true },
-      { label: 'Collection, product, cart and other pages', free: false, pro: true, team: true },
-      { label: 'Mobile captures', free: 'Home only', pro: true, team: true },
-      { label: 'Full pages sliced into sections', free: 'Home only', pro: true, team: true },
-      { label: 'Filter by section, theme and app', free: 'Section type', pro: true, team: true },
-    ],
-  },
-  {
-    group: 'Work',
-    rows: [
-      { label: 'Boards', free: false, pro: true, team: 'Shared' },
-      { label: 'CSV exports', free: false, pro: true, team: true },
-      { label: 'Theme-switch alerts', free: false, pro: true, team: true },
-      { label: 'Seats', free: false, pro: '1', team: 'Several' },
+      {
+        label: 'Home page screenshots',
+        note: 'The home page of every store we capture.',
+        free: true,
+        pro: true,
+        team: true,
+      },
+      {
+        label: 'Collection, product, cart and other pages',
+        note: 'Every page type we capture, not just the home page.',
+        free: false,
+        pro: true,
+        team: true,
+      },
+      {
+        label: 'Full-page and section screenshots',
+        note: 'Each page top to bottom, sliced into tagged sections.',
+        free: false,
+        pro: true,
+        team: true,
+      },
+      {
+        label: 'Desktop and mobile',
+        note: 'Captures at 1440px and 390px wide.',
+        free: 'Home page',
+        pro: true,
+        team: true,
+      },
     ],
   },
   {
     group: 'Data',
     rows: [
-      { label: 'Detected themes and apps', free: true, pro: true, team: true },
-      { label: 'App Store facts with dates', free: true, pro: true, team: true },
-      { label: 'Public JSON API', free: 'Fair use', pro: 'Fair use', team: 'Fair use' },
-      { label: 'Revenue or traffic estimates', free: 'Never', pro: 'Never', team: 'Never' },
+      {
+        label: 'Theme and app data',
+        note: 'Free shows the theme and apps on each store. Pro adds the full record.',
+        free: 'Basic',
+        pro: 'Full',
+        team: 'Full',
+      },
+      {
+        label: 'App Store facts with dates',
+        note: 'Rating, reviews and pricing, with the date we checked them.',
+        free: true,
+        pro: true,
+        team: true,
+      },
+      {
+        label: 'Filters by section, theme and app',
+        note: 'Narrow the library to exactly the pages you need.',
+        free: 'Section type',
+        pro: true,
+        team: true,
+      },
+      {
+        label: 'Public JSON API',
+        note: 'The same data as the site, free within fair use.',
+        free: 'Fair use',
+        pro: 'Fair use',
+        team: 'Fair use',
+      },
+      {
+        label: 'Revenue or traffic estimates',
+        note: 'They can’t be measured honestly from outside a store.',
+        free: 'Never',
+        pro: 'Never',
+        team: 'Never',
+      },
+    ],
+  },
+  {
+    group: 'Workflow',
+    rows: [
+      {
+        label: 'CSV exports',
+        note: 'Download stores, apps and sections into your own sheets.',
+        free: false,
+        pro: true,
+        team: true,
+      },
+      {
+        label: 'Boards',
+        note: 'Save captures and sections for a pitch or a brief.',
+        free: false,
+        pro: true,
+        team: 'Shared',
+      },
+      {
+        label: 'Theme-switch alerts',
+        note: 'An email when a store you follow changes theme.',
+        free: false,
+        pro: true,
+        team: true,
+      },
+      {
+        label: 'Seats',
+        note: 'People who can sign in on the plan.',
+        free: '1',
+        pro: '1',
+        team: '3',
+      },
     ],
   },
 ];
 
-/** OWNER: launch lifetime deal. */
+/** OWNER: draft. Launch lifetime deal; the terms are not final. */
 export const LIFETIME = { price: 79, cap: 100 } as const;
 
 // ---------------------------------------------------------------------------------------------

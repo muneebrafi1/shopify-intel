@@ -1,15 +1,16 @@
 ---
 /**
- * Privacy policy — a plain-language pre-launch draft.
- * OWNER: have this reviewed by a lawyer before launch (jurisdiction, retention periods,
- * sub-processors) and bump LEGAL_UPDATED in src/components/static/content.ts when you edit.
+ * Privacy policy — a plain-language pre-launch draft (not legal advice).
+ * OWNER: draft. Decided 17 Nov 2026: operator LEGAL_ENTITY (config/site), removal records kept
+ * REMOVAL_RETENTION, new removal requests email the admin. Still open: a lawyer's review and
+ * the list of sub-processors. Bump LEGAL_UPDATED in src/components/static/content.ts on edits.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Button from '~/components/ui/Button.astro';
 import DocShell from '~/components/static/DocShell.astro';
 import AsideCard from '~/components/static/AsideCard.astro';
-import { CONTACT, SITE_NAME } from '~/config/site';
-import { LEGAL_UPDATED } from '~/components/static/content';
+import { CONTACT, LEGAL_ENTITY, SITE_NAME } from '~/config/site';
+import { LEGAL_UPDATED, REMOVAL_RETENTION } from '~/components/static/content';
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
@@ -47,8 +48,8 @@ const toc = [
           identifies you.
         </li>
         <li>
-          If you send a removal request, we keep the details you give us to handle it and to prove
-          we did.
+          If you send a removal request, our administrator gets an email about it. We keep the
+          details for {REMOVAL_RETENTION} as a record that we handled it.
         </li>
         <li>Store data comes from public storefront pages only.</li>
         <li>The only cookie we set is a sign-in session, and only once accounts exist.</li>
@@ -58,7 +59,8 @@ const toc = [
     <h2 id="who-we-are">Who we are</h2>
     <p>
       {SITE_NAME} is an independent library of public Shopify storefronts: which theme and apps a
-      store runs, and what its pages look like on desktop and mobile. We are not affiliated with or
+      store runs, and what its pages look like on desktop and mobile. It is run by {LEGAL_ENTITY},
+      which is responsible for the personal data described here. We are not affiliated with or
       endorsed by Shopify Inc.
     </p>
     <p>
@@ -86,6 +88,10 @@ const toc = [
       (optional), what to remove and why. We use these to check the request, do the removal and
       reply to you. To stop spam we also keep a salted, one-way hash of your IP address. It can’t be
       turned back into the address.
+    </p>
+    <p>
+      Each new request also sends an email notification to our administrator, with the details of
+      the request, so that someone looks at it quickly. The notification goes only to us.
     </p>
     <h3>When accounts open</h3>
     <p>
@@ -138,7 +144,10 @@ const toc = [
       <li>
         <strong>Whop</strong> will run Pro checkout and memberships when accounts open.
       </li>
-      <li>An email service, to reply to removal requests and send sign-in links.</li>
+      <li>
+        An email service, to notify our administrator about new removal requests, reply to you and,
+        once accounts open, send sign-in links.
+      </li>
     </ul>
     <p>
       Affiliate partners don’t get any personal data from us. When you follow an affiliate link, the
@@ -152,9 +161,9 @@ const toc = [
         data.
       </li>
       <li>
-        <strong>Removal requests</strong>: while we handle them, then up to two years as a record
-        that we did. A removed store’s domain stays on a block list for good, so our crawler never
-        adds it again.
+        <strong>Removal requests</strong>: while we handle them, then {REMOVAL_RETENTION} as a
+        record that we did, and then we delete them. A removed store’s domain stays on a block list
+        for good, so our crawler never adds it again.
       </li>
       <li>
         <strong>Accounts</strong>: until you delete your account, plus any period the law requires
@@ -186,8 +195,9 @@ const toc = [
 
     <h2 id="contact">Contact</h2>
     <p>
-      Questions about privacy: <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. Store
-      removals: <a href={`mailto:${CONTACT.removals}`}>{CONTACT.removals}</a> or the{' '}
+      {SITE_NAME} is operated by {LEGAL_ENTITY}. Questions about privacy:{' '}
+      <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. Store removals:{' '}
+      <a href={`mailto:${CONTACT.removals}`}>{CONTACT.removals}</a> or the{' '}
       <a href="/opt-out">removal form</a>.
     </p>
 

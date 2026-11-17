@@ -1,41 +1,81 @@
 ---
-/** About: what this is, why, who it's for, how it makes money, independence. Editorial. */
+/**
+ * About: what this is, why, who it's for, how it makes money, independence. A marketing page
+ * (guides, left-aligned): two-tone title → a real capture in a product window with its section
+ * tags → a stats strip with live numbers → editorial rows.
+ */
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Card from '~/components/ui/Card.astro';
+import Icon from '~/components/ui/Icon.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
 import Stat from '~/components/ui/Stat.astro';
 import StatList from '~/components/ui/StatList.astro';
-import { CONTACT, SITE_NAME, SITE_URL } from '~/config/site';
-import { formatCount, formatDate } from '~/lib/format';
+import Window from '~/components/ui/Window.astro';
+import FullPage, { type FullPageSection } from '~/components/media/FullPage.astro';
+import type { IconName } from '~/components/ui/icons';
+import { api } from '~/server/api';
+import type { ScreenshotDetail } from '~/server/api/v1/types';
+import { CONTACT, LEGAL_ENTITY, SITE_NAME, SITE_URL } from '~/config/site';
+import { formatCount } from '~/lib/format';
 import { loadMeta } from '~/components/static/meta';
 
 const meta = await loadMeta();
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
-const asOf = meta ? formatDate(meta.data_as_of) : null;
 
-const AUDIENCES = [
+// The top curated store's home page, with its sections, as the page's visual. Two queries;
+// the page renders without it if either fails.
+let shot: ScreenshotDetail | null = null;
+try {
+  const { data: list } = await api.listStores({ limit: 1 });
+  const id = list.items[0]?.preview?.id;
+  if (id) shot = (await api.getScreenshot({ id })).data;
+} catch (err) {
+  console.error('about: capture failed', err);
+}
+const sections: FullPageSection[] = shot
+  ? [...shot.sections]
+      .sort((a, b) => a.order_index - b.order_index)
+      .map((s) => ({
+        id: s.id,
+        type: s.type.slug,
+        name: s.type.name,
+        y: s.rect.y,
+        height: s.rect.h,
+        x: s.rect.x,
+        w: s.rect.w,
+        app: s.app ? { name: s.app.short_name, slug: s.app.slug, iconUrl: s.app.icon_url } : null,
+        href: s.href,
+      }))
+  : [];
+
+const AUDIENCES: { who: string; what: string; href: string; link: string; icon: IconName }[] = [
   {
     who: 'Merchants',
-    what: 'choosing a theme or an app. See it on stores like yours before you pay, with honest comparisons.',
+    what: 'Choosing a theme or an app. See it on stores like yours before you pay, with honest comparisons.',
     href: '/themes',
     link: 'Browse themes',
+    icon: 'storefront',
   },
   {
     who: 'Designers and agencies',
-    what: 'looking for references. Real pages by theme, page type and section, and boards for client pitches.',
+    what: 'Looking for references. Real pages by theme, page type and section, and boards for client pitches.',
     href: '/sections',
     link: 'Open the sections library',
+    icon: 'paint-brush',
   },
   {
     who: 'App and theme developers',
-    what: 'who want to know where their work is used, and what it runs next to.',
+    what: 'Want to know where their work is used, and what it runs next to.',
     href: '/apps',
     link: 'Browse apps',
+    icon: 'puzzle-piece',
   },
   {
     who: 'AI builders',
-    what: 'who want real store references inside Claude or ChatGPT, through our API and an MCP server.',
+    what: 'Want real store references inside Claude or ChatGPT, through our API and an MCP server.',
     href: '/developers',
     link: 'API & MCP',
+    icon: 'browser',
   },
 ];
 ---
@@ -50,34 +90,65 @@ const AUDIENCES = [
     publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
   }}
 >
-  <div class="about container">
-    <header class="about__hero cols-12">
-      <div class="about__statement">
-        <MonoLabel as="p" class="about__eyebrow">
-          About {SITE_NAME}
-        </MonoLabel>
-        <h1 class="about__title display">
-          See a theme or an app on real stores before you buy it.
-        </h1>
-      </div>
-      <div class="about__intro">
-        <p>
-          {SITE_NAME} is an independent library of public Shopify storefronts. For each store we
-          record the theme and apps it runs, and capture its pages on desktop and mobile, section by
-          section.
-        </p>
-        <MonoLabel as="p" class="about__spec">
-          Independent · Not affiliated with Shopify{asOf ? ` · Data as of ${asOf}` : ''}
-        </MonoLabel>
-      </div>
+  <div class="about container guides">
+    <!-- ============================== Hero ============================== -->
+    <header class="about__hero">
+      <p class="eyebrow">About {SITE_NAME}</p>
+      <h1 class="display-lg about__title">
+        See a theme or an app on real stores <span class="tone-muted">before you pay for it.</span>
+      </h1>
+      <p class="lead about__lead">
+        {SITE_NAME} is an independent library of public Shopify storefronts. For each store we
+        record the theme and apps it runs, and capture its pages on desktop and mobile, section by
+        section.
+      </p>
     </header>
 
-    <section class="about__row cols-12" aria-labelledby="why">
-      <MonoLabel as="h2" tone="ink" class="about__label" id="why">
-        01 Why
-      </MonoLabel>
-      <div class="about__body prose">
-        <p class="about__lead">
+    {shot && (
+      <figure class="about__window">
+        <Window url={`${shot.store.domain}`} fade height="var(--about-window-h)">
+          <div class="about__fp">
+            <FullPage
+              src={shot.image.src}
+              width={shot.width}
+              height={shot.height}
+              device={shot.device}
+              alt={`${shot.store.display_name} home page, desktop, with each section tagged`}
+              sections={sections}
+              bare
+              eager
+            />
+          </div>
+        </Window>
+        <figcaption class="about__caption">
+          {shot.store.display_name}’s home page, sliced into {sections.length} sections.{' '}
+          <a href={`/stores/${shot.store.domain}`}>Open the store</a>
+        </figcaption>
+      </figure>
+    )}
+
+    {meta && (
+      <section class="about__numbers" aria-labelledby="numbers-title">
+        <h2 class="visually-hidden" id="numbers-title">
+          The library so far
+        </h2>
+        <StatList columns={4} boxed>
+          <Stat value={formatCount(meta.counts.stores_scanned)} label="Stores scanned" size="lg" />
+          <Stat value={formatCount(meta.counts.stores_curated)} label="Curated stores" size="lg" />
+          <Stat value={formatCount(meta.counts.sections)} label="Sections tagged" size="lg" />
+          <Stat value={formatCount(meta.counts.apps_full)} label="App profiles" size="lg" />
+        </StatList>
+        <SourceNote source={meta.source.label} />
+      </section>
+    )}
+
+    <!-- ============================== Rows ============================== -->
+    <section class="row" aria-labelledby="why">
+      <h2 class="h2 row__title" id="why">
+        Why we built it
+      </h2>
+      <div class="row__body prose">
+        <p class="row__lead">
           Theme demos show a theme at its best: stock photos, perfect copy, nothing real. App
           listings show the screenshots the developer chose.
         </p>
@@ -100,69 +171,36 @@ const AUDIENCES = [
       </div>
     </section>
 
-    <section class="about__row cols-12" aria-labelledby="who">
-      <MonoLabel as="h2" tone="ink" class="about__label" id="who">
-        02 Who it’s for
-      </MonoLabel>
-      <ol class="about__who">
-        {AUDIENCES.map((a, i) => (
-          <li class="about__who-row">
-            <span class="about__who-n">{String(i + 1).padStart(2, '0')}</span>
-            <p class="about__who-text">
-              <strong>{a.who}</strong> {a.what}
-            </p>
-            <a class="about__who-link" href={a.href}>
-              {a.link}
-              <span aria-hidden="true">→</span>
-            </a>
+    <section class="row" aria-labelledby="who">
+      <h2 class="h2 row__title" id="who">
+        Who it’s for
+      </h2>
+      <ul class="who">
+        {AUDIENCES.map((a) => (
+          <li>
+            <Card interactive padding="md" class="who__card">
+              <Icon name={a.icon} size={20} class="who__icon" />
+              <h3 class="who__name">
+                <a class="stretched-link" href={a.href}>
+                  {a.who}
+                </a>
+              </h3>
+              <p class="who__what">{a.what}</p>
+              <p class="who__link" aria-hidden="true">
+                {a.link}
+                <Icon name="arrow-right" size={14} class="who__arrow" />
+              </p>
+            </Card>
           </li>
         ))}
-      </ol>
+      </ul>
     </section>
 
-    {meta && (
-      <section class="about__row cols-12" aria-labelledby="numbers">
-        <MonoLabel as="h2" tone="ink" class="about__label" id="numbers">
-          03 So far
-        </MonoLabel>
-        <div class="about__numbers">
-          <div class="about__strip marks">
-            <StatList columns={4}>
-              <Stat
-                value={formatCount(meta.counts.stores_scanned)}
-                label="Stores scanned"
-                size="lg"
-                display
-              />
-              <Stat
-                value={formatCount(meta.counts.stores_curated)}
-                label="Curated stores"
-                size="lg"
-                display
-              />
-              <Stat value={formatCount(meta.counts.themes)} label="Themes" size="lg" display />
-              <Stat
-                value={formatCount(meta.counts.apps_full)}
-                label="App profiles"
-                size="lg"
-                display
-              />
-            </StatList>
-          </div>
-          <MonoLabel as="p" class="about__source">
-            <span>
-              Source: {meta.source.label} · <a href="/methodology">How we detect</a>
-            </span>
-          </MonoLabel>
-        </div>
-      </section>
-    )}
-
-    <section class="about__row cols-12" aria-labelledby="money">
-      <MonoLabel as="h2" tone="ink" class="about__label" id="money">
-        {meta ? '04' : '03'} How we make money
-      </MonoLabel>
-      <div class="about__body prose">
+    <section class="row" aria-labelledby="money">
+      <h2 class="h2 row__title" id="money">
+        How we make money
+      </h2>
+      <div class="row__body prose">
         <p>
           <strong>Affiliate links first.</strong> Some links to apps and themes earn us a commission
           when you buy. Each one is labelled right where it appears, and none of them changes what
@@ -171,22 +209,22 @@ const AUDIENCES = [
         </p>
         <p>
           <strong>Pro later.</strong> A paid plan for designers and agencies: every page type,
-          filters by section, theme and app, boards and exports. <a href="/pro">See the plans</a>
+          full-page and section screenshots, and CSV exports. <a href="/pro">See the plans</a>
         </p>
         <p>We don’t sell data and we don’t sell placements.</p>
       </div>
     </section>
 
-    <section class="about__row cols-12" aria-labelledby="independence">
-      <MonoLabel as="h2" tone="ink" class="about__label" id="independence">
-        {meta ? '05' : '04'} Independence
-      </MonoLabel>
-      <div class="about__body prose">
+    <section class="row" aria-labelledby="independence">
+      <h2 class="h2 row__title" id="independence">
+        Independence
+      </h2>
+      <div class="row__body prose">
         <p>
-          {SITE_NAME} is independent. We are not affiliated with or endorsed by Shopify Inc., and
-          theme and app names belong to their owners. Our data comes from our own crawler, reading
-          public pages only. We may look at other tools to learn which stores are notable, but we
-          never copy their databases or their estimates.
+          {SITE_NAME} is independent and run by {LEGAL_ENTITY}. We are not affiliated with or
+          endorsed by Shopify Inc., and theme and app names belong to their owners. Our data comes
+          from our own crawler, reading public pages only. We may look at other tools to learn which
+          stores are notable, but we never copy their databases or their estimates.
         </p>
         <p>
           Own a store we list? You can <a href="/opt-out">remove it</a> at any time. Anything else:{' '}
@@ -199,159 +237,157 @@ const AUDIENCES = [
 
 <style>
   .about {
+    --about-window-h: 420px;
+    padding-bottom: var(--space-8);
+  }
+
+  /* ---------- Hero ---------- */
+  .about__hero {
     padding-top: var(--space-12);
   }
-
-  /* ---------- Hero: statement left (8 cols), intro right (cols 9–12) ---------- */
-  .about__hero {
-    align-items: end;
-    padding-bottom: var(--space-16);
-  }
-  .about__hero :global(.about__eyebrow) {
-    display: flex;
-    margin-bottom: var(--space-6);
-  }
   .about__title {
-    font-size: clamp(2.5rem, 1.4rem + 4.6vw, 5rem);
-    line-height: 1.02;
-    letter-spacing: -0.025em;
-    text-wrap: balance;
-  }
-  .about__intro {
-    color: var(--ink-2);
-    font-size: var(--text-md);
-    line-height: var(--leading-relaxed);
-  }
-  .about__intro :global(.about__spec) {
-    display: flex;
-    flex-wrap: wrap;
+    max-width: 820px;
     margin-top: var(--space-4);
   }
-
-  /* ---------- Rows: mono label left, text right, hairline above ---------- */
-  .about__row {
-    padding-block: var(--space-8) var(--space-12);
-    border-top: 1px solid var(--line);
-  }
-  .about__row :global(.about__label) {
-    display: flex;
-    align-self: start;
-    padding-top: 6px;
-  }
-  .about__body {
-    min-width: 0;
-  }
   .about__lead {
-    color: var(--ink);
-    font-family: var(--font-serif);
-    font-size: var(--text-2xl);
-    line-height: 1.3;
-    letter-spacing: -0.01em;
+    max-width: 620px;
+    margin-top: var(--space-5);
   }
 
-  .about__who {
-    min-width: 0;
+  /* ---------- Product window ---------- */
+  .about__window {
+    margin-top: var(--space-12);
   }
-  .about__who-row {
-    display: grid;
-    grid-template-columns: 2.25rem minmax(0, 1fr);
-    gap: var(--space-1) var(--space-4);
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--line);
+  .about__window :global(.window) {
+    background: var(--surface);
   }
-  .about__who-row:first-child {
-    padding-top: 0;
+  .about__fp {
+    max-width: 960px;
+    margin-inline: auto;
   }
-  .about__who-n {
-    padding-top: 3px;
+  .about__caption {
+    margin-top: var(--space-3);
     color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-  }
-  .about__who-text {
-    color: var(--ink-2);
-    font-size: var(--text-md);
-    line-height: var(--leading-normal);
-  }
-  .about__who-text strong {
-    color: var(--ink);
-    font-weight: var(--weight-semibold);
-  }
-  .about__who-link {
-    grid-column: 2;
-    display: inline-flex;
-    gap: 4px;
-    justify-self: start;
-    color: var(--ink-2);
     font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
+  }
+  .about__caption a {
+    color: var(--ink-2);
     text-decoration: underline;
     text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
-    transition: color var(--dur-fast) var(--ease-out);
   }
-  .about__who-link:hover {
+  .about__caption a:hover {
     color: var(--ink);
   }
-  .about__who-link span {
-    text-decoration: none;
+
+  /* ---------- Numbers ---------- */
+  .about__numbers {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-12);
   }
 
-  .about__numbers {
+  /* ---------- Editorial rows: heading left, body right ---------- */
+  .row {
+    display: grid;
+    gap: var(--space-5);
+    margin-top: var(--space-16);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--line);
+  }
+  .row__title {
+    scroll-margin-top: calc(var(--header-h) + var(--space-6));
+  }
+  .row__body {
     min-width: 0;
   }
-  .about__strip {
-    padding: var(--space-6) var(--space-5);
-  }
-  .about__numbers :global(.about__source) {
-    display: flex;
-    align-items: first baseline;
-    margin-top: var(--space-5);
-  }
-  .about__numbers :global(.about__source a) {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+  .row__lead {
+    color: var(--ink);
+    font-size: var(--text-h3);
+    font-weight: var(--weight-medium);
+    line-height: 1.4;
+    letter-spacing: -0.015em;
   }
 
-  @media (max-width: 639px) {
+  .who {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .who :global(.who__card) {
+    height: 100%;
+  }
+  .who :global(.who__icon) {
+    color: var(--ink-2);
+  }
+  .who__name {
+    margin-top: var(--space-4);
+    font-size: var(--text-h4);
+    font-weight: var(--weight-strong);
+  }
+  .who__name a {
+    color: var(--ink);
+  }
+  .who__name a:focus-visible {
+    outline: none;
+  }
+  .who :global(.who__card:has(.stretched-link:focus-visible)) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .who__what {
+    margin-top: var(--space-1);
+    color: var(--ink-2);
+    font-size: var(--text-ui);
+    line-height: 1.5;
+  }
+  .who__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: var(--space-4);
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .who :global(.who__arrow) {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .who :global(.who__card:hover .who__arrow) {
+    transform: translateX(2px);
+  }
+
+  @media (min-width: 640px) {
     .about {
-      padding-top: var(--space-8);
+      --about-window-h: 520px;
     }
-    .about__hero {
-      padding-bottom: var(--space-12);
-    }
-    .about__lead {
-      font-size: var(--text-xl);
+    .who {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (min-width: 1024px) {
     .about {
-      padding-top: var(--space-16);
+      --about-window-h: 600px;
     }
-    .about__statement {
-      grid-column: 1 / span 8;
+    .about__hero {
+      padding-top: var(--space-20);
     }
-    .about__intro {
-      grid-column: 9 / -1;
-      padding-bottom: var(--space-2);
+    .about__window {
+      margin-top: var(--space-16);
     }
-    .about__row :global(.about__label) {
-      grid-column: 1 / span 3;
+    .about__fp {
+      padding: var(--space-6) var(--space-6) 0;
     }
-    .about__body,
-    .about__who,
-    .about__numbers {
-      grid-column: 5 / span 7;
+    .row {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: var(--space-10);
     }
-    .about__who-row {
-      grid-template-columns: 2.25rem minmax(0, 1fr) auto;
-      align-items: baseline;
-      column-gap: var(--space-6);
-    }
-    .about__who-link {
-      grid-column: 3;
-      white-space: nowrap;
+    .row__body,
+    .who {
+      max-width: 720px;
     }
   }
 </style>

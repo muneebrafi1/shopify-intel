@@ -5,23 +5,27 @@
  */
 import { normalizeDomain } from '~/server/lib/slug';
 
+/**
+ * What a request can ask for. OWNER: draft — a screenshots-only removal also stops future
+ * captures of that store (owner decision, 17 Nov 2026).
+ */
 export const SCOPES = [
   {
     value: 'store',
     label: 'Everything',
-    hint: 'Hide the store everywhere and delete its screenshots.',
+    hint: 'Hide the store everywhere, delete its screenshots and never scan it again.',
     short: 'Everything',
   },
   {
     value: 'screenshots',
     label: 'Screenshots only',
-    hint: 'Delete its screenshots and stop capturing. The theme and apps we detected stay listed.',
+    hint: 'Delete its screenshots and stop all future captures. The theme and apps we detected stay listed.',
     short: 'Screenshots only',
   },
   {
     value: 'details',
     label: 'Correct a detail',
-    hint: 'Something we show is wrong, such as the theme, an app or the store name.',
+    hint: 'Something we show is wrong, such as the theme, an app or the store name. Nothing is removed.',
     short: 'Correction',
   },
 ] as const;

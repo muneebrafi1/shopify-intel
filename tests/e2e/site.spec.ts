@@ -37,11 +37,11 @@ test.describe('site pages are healthy', () => {
 
   test('unknown routes render the 404 page', async ({ page }) => {
     await expectHealthyPage(page, '/this-page-does-not-exist', { status: 404 });
-    await expect(page.locator('h1')).toContainText('isn’t in the archive');
+    await expect(page.locator('h1')).toHaveText('We can’t find that page.');
     const search = page.locator('form[role="search"]');
     await expect(search).toHaveAttribute('action', '/search');
     await expect(search.locator('input[name="q"]')).toBeVisible();
-    for (const href of ['/stores', '/themes', '/apps', '/sections']) {
+    for (const href of ['/stores', '/themes', '/apps', '/sections', '/teardowns', '/compare']) {
       await expect(page.locator(`main a[href="${href}"]`).first()).toBeVisible();
     }
   });
@@ -154,7 +154,7 @@ test.describe('pro', () => {
     await expect(pro.locator('[data-price]')).toHaveText('$12');
     await expect(pro.locator('[data-per]')).toHaveText('/month');
     await page.locator('[data-billing-toggle] a[data-value="yearly"]').click();
-    await expect(pro.locator('[data-price]')).toHaveText('$96');
+    await expect(pro.locator('[data-price]')).toHaveText('$120');
     await expect(pro.locator('[data-per]')).toHaveText('/year');
     await expect(page).toHaveURL(/billing=yearly/);
     await page.locator('[data-billing-toggle] a[data-value="monthly"]').click();
@@ -165,10 +165,61 @@ test.describe('pro', () => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto('/pro?billing=yearly');
-    await expect(page.locator('[data-plan="pro"] [data-price]')).toHaveText('$96');
+    await expect(page.locator('[data-plan="pro"] [data-price]')).toHaveText('$120');
     await expect(page.locator('[data-billing-toggle] a[aria-current="true"]')).toHaveAttribute(
       'data-value',
       'yearly',
+    );
+    await context.close();
+  });
+
+  test('yearly billing is sold as two months free, with the monthly equivalent', async ({
+    page,
+  }) => {
+    await prepare(page);
+    await page.goto('/pro?billing=yearly');
+    await expect(page.locator('[data-billing-toggle]')).toContainText('2 months free');
+    await expect(page.locator('[data-plan="pro"] [data-note]')).toHaveText(
+      '$10 a month, billed yearly',
+    );
+    await expect(page.locator('[data-plan="team"] [data-price]')).toHaveText('$390');
+    // Team is three seats, in the cards and in the comparison table.
+    await expect(page.locator('[data-plan="team"]')).toContainText('3 seats');
+  });
+
+  test('the comparison shows one plan at a time on small screens', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/pro');
+    const proCells = page.locator('.cmp__table td[data-col="pro"]');
+    const teamCells = page.locator('.cmp__table td[data-col="team"]');
+    const narrow = (page.viewportSize()?.width ?? 1440) < 640;
+    await expect(proCells.first()).toBeVisible();
+    if (narrow) {
+      await expect(teamCells.first()).toBeHidden();
+      await page.locator('[data-compare-toggle] a[data-value="team"]').click();
+      await expect(teamCells.first()).toBeVisible();
+      await expect(proCells.first()).toBeHidden();
+      await expect(page).toHaveURL(/compare=team/);
+      // The sticky bar offers the selected plan's button.
+      await expect(page.locator('.cmp__plan[data-col="team"] a.btn')).toBeVisible();
+    } else {
+      await expect(teamCells.first()).toBeVisible();
+      await expect(page.locator('.cmp__plan a.btn')).toHaveCount(3);
+    }
+  });
+
+  test('the plan switcher works without JS via the query param', async ({ browser }) => {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width: 390, height: 844 },
+    });
+    const page = await context.newPage();
+    await page.goto('/pro?compare=free');
+    await expect(page.locator('.cmp__table td[data-col="free"]').first()).toBeVisible();
+    await expect(page.locator('.cmp__table td[data-col="pro"]').first()).toBeHidden();
+    await expect(page.locator('[data-compare-toggle] a[aria-current="true"]')).toHaveAttribute(
+      'data-value',
+      'free',
     );
     await context.close();
   });

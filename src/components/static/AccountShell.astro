@@ -1,10 +1,14 @@
 ---
 /**
- * Account area frame: a quiet side nav (desktop) / tab row (mobile) and a preview notice.
- * Accounts open with Pro; every page here is a designed placeholder (noindex).
+ * Account area frame: a simple app shell. ≥1024: a sticky sidebar (who is signed in, the
+ * account nav, a Pro note); below: underline tabs. A "not signed in" strip sits above the page
+ * content. Accounts open with Pro; every page here is a designed placeholder (noindex).
  */
 import Button from '~/components/ui/Button.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Tabs from '~/components/ui/Tabs.astro';
+import type { IconName } from '~/components/ui/icons';
+import { MONTHLY_PRICE } from './content';
 
 interface Props {
   current: 'overview' | 'boards';
@@ -12,101 +16,121 @@ interface Props {
   hideNotice?: boolean;
 }
 const { current, hideNotice = false } = Astro.props;
-const NAV = [
-  { id: 'overview', href: '/account', label: 'Overview' },
-  { id: 'boards', href: '/account/boards', label: 'Boards' },
-] as const;
+const NAV: { id: Props['current']; href: string; label: string; icon: IconName }[] = [
+  { id: 'overview', href: '/account', label: 'Overview', icon: 'house' },
+  { id: 'boards', href: '/account/boards', label: 'Boards', icon: 'squares-four' },
+];
 const next = Astro.url.pathname + Astro.url.search;
+const signInHref = `/sign-in?next=${encodeURIComponent(next)}`;
 ---
 
-<div class="acct container">
-  <nav class="acct__nav" aria-label="Account">
-    <MonoLabel as="p" class="acct__nav-title">
-      Account
-    </MonoLabel>
-    <ul>
-      {NAV.map((item) => (
-        <li>
-          <a href={item.href} aria-current={item.id === current ? 'page' : undefined}>
-            {item.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </nav>
-  <div class="acct__main">
-    {!hideNotice && (
-      <div class="acct__notice" role="note">
-        <p>
-          <strong>You’re not signed in.</strong> This is a preview of your account. It opens with
-          Pro.
-        </p>
-        <div class="acct__notice-actions">
-          <Button
-            href={`/sign-in?next=${encodeURIComponent(next)}`}
-            variant="secondary"
-            size="sm"
-            rel="nofollow"
-          >
-            Sign in
-          </Button>
-          <Button href="/pro" variant="ghost" size="sm">
+<div class="acct">
+  <div class="acct__frame container">
+    <aside class="acct__side">
+      <div class="acct__side-inner">
+        <div class="acct__who">
+          <span class="acct__avatar" aria-hidden="true">
+            <Icon name="user" size={16} />
+          </span>
+          <span class="acct__who-text">
+            <span class="acct__who-name">Not signed in</span>
+            <span class="acct__who-plan">Free plan</span>
+          </span>
+        </div>
+        <nav class="acct__nav" aria-label="Account">
+          <ul>
+            {NAV.map((item) => (
+              <li>
+                <a href={item.href} aria-current={item.id === current ? 'page' : undefined}>
+                  <Icon name={item.icon} size={16} />
+                  <span>{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div class="acct__pro">
+          <p class="acct__pro-title">Accounts open with Pro</p>
+          <p class="acct__pro-body">
+            Boards, exports and every page type. Planned from ${MONTHLY_PRICE.pro} a month.
+          </p>
+          <Button href="/pro" variant="secondary" size="sm" full>
             See Pro
           </Button>
         </div>
       </div>
-    )}
-    <slot />
+    </aside>
+
+    <div class="acct__main">
+      <Tabs
+        label="Account"
+        class="acct__tabs"
+        items={NAV.map((item) => ({
+          label: item.label,
+          href: item.href,
+          selected: item.id === current,
+        }))}
+      />
+      {!hideNotice && (
+        <div class="acct__notice" role="note">
+          <Icon name="lock-simple" size={16} class="acct__notice-icon" />
+          <p class="acct__notice-text">
+            <strong>You’re not signed in.</strong> This is a preview of your account. It opens with
+            Pro.
+          </p>
+          <div class="acct__notice-actions">
+            <Button href={signInHref} variant="primary" size="sm" rel="nofollow">
+              Sign in
+            </Button>
+            <Button href="/pro" variant="ghost" size="sm">
+              See Pro
+            </Button>
+          </div>
+        </div>
+      )}
+      <slot />
+    </div>
   </div>
 </div>
 
 <style>
   .acct {
+    border-top: 1px solid var(--line);
+  }
+  .acct__frame {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    padding-top: var(--space-6);
+    padding-block: var(--space-4) 0;
   }
-  .acct__nav :global(.acct__nav-title) {
+  .acct__side {
     display: none;
-  }
-  .acct__nav ul {
-    display: flex;
-    gap: var(--space-5);
-    border-bottom: 1px solid var(--line);
-  }
-  .acct__nav a {
-    display: inline-flex;
-    align-items: center;
-    height: 40px;
-    margin-bottom: -1px;
-    border-bottom: 2px solid transparent;
-    color: var(--ink-3);
-    font-size: var(--text-base);
-    font-weight: var(--weight-medium);
-    transition: color var(--dur-fast) var(--ease-out);
-  }
-  .acct__nav a:hover {
-    color: var(--ink);
-  }
-  .acct__nav a[aria-current='page'] {
-    border-bottom-color: var(--ink);
-    color: var(--ink);
   }
   .acct__main {
     min-width: 0;
+  }
+  .acct__main :global(.acct__tabs) {
+    margin-bottom: var(--space-5);
   }
   .acct__notice {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3) var(--space-6);
-    margin-top: var(--space-6);
-    padding: var(--space-3) 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs);
     color: var(--ink-2);
     font-size: var(--text-sm);
+  }
+  .acct__notice :global(.acct__notice-icon) {
+    color: var(--ink-3);
+  }
+  .acct__notice-text {
+    flex: 1 1 240px;
+    min-width: 0;
   }
   .acct__notice strong {
     color: var(--ink);
@@ -117,39 +141,104 @@ const next = Astro.url.pathname + Astro.url.search;
     gap: var(--space-1);
   }
 
+  /* ---------- Sidebar (≥1024) ---------- */
+  .acct__who {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-1) var(--space-2) var(--space-4);
+  }
+  .acct__avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-3);
+  }
+  .acct__who-text {
+    display: grid;
+    min-width: 0;
+  }
+  .acct__who-name {
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .acct__who-plan {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .acct__nav ul {
+    display: grid;
+    gap: 2px;
+  }
+  .acct__nav a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 34px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-control);
+    color: var(--ink-2);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .acct__nav a :global(.icon) {
+    color: var(--ink-3);
+  }
+  .acct__nav a:hover {
+    background: var(--surface-3);
+    color: var(--ink);
+  }
+  .acct__nav a[aria-current='page'] {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .acct__nav a[aria-current='page'] :global(.icon) {
+    color: var(--ink);
+  }
+  .acct__pro {
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--bg-subtle);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .acct__pro-title {
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+  }
+  .acct__pro-body {
+    margin: var(--space-1) 0 var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+  }
+
   @media (min-width: 1024px) {
-    .acct {
-      grid-template-columns: 180px minmax(0, 1fr);
-      column-gap: var(--space-12);
-      padding-top: var(--space-12);
+    .acct__frame {
+      grid-template-columns: 232px minmax(0, 1fr);
+      column-gap: var(--space-10);
+      padding-top: var(--space-10);
     }
-    .acct__nav {
+    .acct__side {
+      display: block;
+    }
+    .acct__side-inner {
       position: sticky;
-      top: calc(var(--header-h) + var(--space-8));
-      align-self: start;
+      top: calc(var(--header-h) + var(--space-6));
     }
-    .acct__nav :global(.acct__nav-title) {
-      display: flex;
-      margin-bottom: var(--space-4);
-    }
-    .acct__nav ul {
-      flex-direction: column;
-      gap: 2px;
-      border-bottom: 0;
-    }
-    .acct__nav a {
-      width: 100%;
-      height: 34px;
-      margin: 0;
-      padding: 0 var(--space-3);
-      border: 0;
-      border-radius: var(--radius-sm);
-    }
-    .acct__nav a[aria-current='page'] {
-      background: var(--fill);
-    }
-    .acct__notice {
-      margin-top: 0;
+    .acct__main :global(.acct__tabs) {
+      display: none;
     }
   }
 </style>

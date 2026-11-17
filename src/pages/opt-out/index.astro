@@ -3,16 +3,17 @@
  * Remove your store. A plain HTML form that POSTs here: we validate, call the API in-process
  * (same rules as POST /api/v1/removal-requests) and redirect to `/opt-out?sent=<ref>`. With JS
  * the form validates inline and submits to the JSON API instead (see RemovalForm).
- * `?domain=` pre-fills the store (store pages link here).
+ * `?domain=` pre-fills the store (store pages link here). New requests email the admin (API side).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Card from '~/components/ui/Card.astro';
+import FactsCard from '~/components/ui/FactsCard.astro';
 import RemovalForm from '~/components/static/RemovalForm.astro';
 import RemovalReceipt from '~/components/static/RemovalReceipt.astro';
 import RemovalSteps from '~/components/static/RemovalSteps.astro';
 import { api, isApiError } from '~/server/api';
 import { CONTACT, SITE_NAME } from '~/config/site';
-import { REMOVAL_SLA } from '~/components/static/content';
+import { REMOVAL_RETENTION, REMOVAL_SLA } from '~/components/static/content';
 import {
   FIELD_ORDER,
   isReference,
@@ -95,6 +96,9 @@ if (Astro.request.method === 'POST') {
   if (Astro.response.status === 200) Astro.response.status = 400;
 }
 Astro.response.headers.set('Cache-Control', 'no-store');
+
+/** 'within 3 business days' → 'Within 3 business days' for the facts card. */
+const SLA_SHORT = REMOVAL_SLA.charAt(0).toUpperCase() + REMOVAL_SLA.slice(1);
 ---
 
 <BaseLayout
@@ -103,117 +107,105 @@ Astro.response.headers.set('Cache-Control', 'no-store');
   canonical="/opt-out"
   noindex={!!sent || Astro.request.method === 'POST'}
 >
-  <div class="optout container">
-    {sent ? (
-      <div class="optout__grid">
-        <div class="optout__main">
-          <RemovalReceipt reference={sent} domain={sentDomain} scope={sentScope} />
+  <div class="optout">
+    <div class="container">
+      {sent ? (
+        <div class="optout__grid optout__grid--sent">
+          <div class="optout__main">
+            <RemovalReceipt reference={sent} domain={sentDomain} scope={sentScope} />
+          </div>
+          <aside class="optout__side" aria-label="Next steps">
+            <div class="optout__panel">
+              <RemovalSteps done={1} />
+            </div>
+          </aside>
         </div>
-        <aside class="optout__side">
-          <RemovalSteps />
-        </aside>
-      </div>
-    ) : (
-      <div class="optout__grid">
-        <div class="optout__main">
+      ) : (
+        <>
           <header class="optout__head">
-            <MonoLabel as="p" class="optout__eyebrow">
-              Store owners · No account needed
-            </MonoLabel>
-            <h1 class="optout__title display">Remove your store</h1>
-            <p class="optout__lede">
-              If you run a store we list, you can have it taken down. We hide it everywhere, delete
-              its screenshots and make sure our crawler never adds it back. We aim to handle
+            <p class="eyebrow">Store owners · No account needed</p>
+            <h1 class="display-md optout__title">Remove your store</h1>
+            <p class="lead optout__lede">
+              If you run a store we list, you can have it taken down or corrected. We aim to handle
               requests {REMOVAL_SLA}.
             </p>
           </header>
-          <RemovalForm values={values} errors={errors} formError={formError} />
-        </div>
-        <aside class="optout__side">
-          <section class="optout__does" aria-labelledby="does-title">
-            <MonoLabel as="h2" tone="ink" id="does-title" class="optout__side-title">
-              What removal does
-            </MonoLabel>
-            <ul class="optout__list">
-              <li>
-                <strong>Hides the store everywhere.</strong> Its page, every list and count, search
-                and the API.
-              </li>
-              <li>
-                <strong>Deletes its screenshots</strong> and section crops from our storage.
-              </li>
-              <li>
-                <strong>Keeps only the domain</strong> on a block list, so our crawler never adds
-                the store again.
-              </li>
-            </ul>
-          </section>
-          <RemovalSteps class="optout__steps" />
-          <p class="optout__note">
-            Something we show is wrong but you’re happy to stay listed? Choose “Correct a detail”.
-            How we collect data: <a href="/methodology">methodology</a>. What we keep about you:{' '}
-            <a href="/privacy">privacy</a>.
-          </p>
-        </aside>
-      </div>
-    )}
+          <div class="optout__grid">
+            <div class="optout__main">
+              <Card padding="lg" class="optout__form">
+                <RemovalForm values={values} errors={errors} formError={formError} />
+              </Card>
+            </div>
+            <aside class="optout__side" aria-label="How removal works">
+              <FactsCard
+                title="How removal works"
+                items={[
+                  { label: 'Handling time', value: SLA_SHORT },
+                  { label: 'Account needed', value: 'No' },
+                  { label: 'New requests', value: 'Emailed to our admin' },
+                  { label: 'Requests kept', value: REMOVAL_RETENTION },
+                ]}
+                sourceHref=""
+              >
+                <p slot="footer" class="optout__facts-note">
+                  A removed store’s domain stays on a block list, so our crawler never adds it back.
+                </p>
+              </FactsCard>
+              <div class="optout__panel">
+                <RemovalSteps />
+              </div>
+              <p class="optout__note">
+                How we collect data: <a href="/methodology">methodology</a>. What we keep about you:{' '}
+                <a href="/privacy#retention">privacy</a>.
+              </p>
+            </aside>
+          </div>
+        </>
+      )}
+    </div>
   </div>
 </BaseLayout>
 
 <style>
   .optout {
-    padding-top: var(--space-10);
+    padding-block: var(--space-10) var(--section-y);
+  }
+  .optout__head {
+    max-width: 640px;
+    padding-bottom: var(--space-8);
+  }
+  .optout__title {
+    margin-top: var(--space-3);
+  }
+  .optout__lede {
+    margin-top: var(--space-3);
   }
   .optout__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-16);
-  }
-  .optout__head {
-    padding-bottom: var(--space-10);
-  }
-  .optout__head :global(.optout__eyebrow) {
-    display: flex;
-    margin-bottom: var(--space-5);
-  }
-  .optout__title {
-    font-size: var(--text-5xl);
-  }
-  .optout__lede {
-    max-width: 560px;
-    margin-top: var(--space-4);
-    color: var(--ink-2);
-    font-size: var(--text-lg);
-    line-height: var(--leading-normal);
+    gap: var(--space-8);
   }
   .optout__main {
     min-width: 0;
-    max-width: 640px;
   }
   .optout__side {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
     min-width: 0;
   }
-  .optout__side :global(.optout__side-title) {
-    display: flex;
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--ink);
+  .optout__panel {
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
   }
-  .optout__list li {
-    padding: var(--space-3) 0;
-    border-bottom: 1px solid var(--line);
-    color: var(--ink-2);
+  .optout__facts-note {
+    color: var(--ink-3);
     font-size: var(--text-sm);
-    line-height: var(--leading-normal);
-  }
-  .optout__list strong {
-    color: var(--ink);
-    font-weight: var(--weight-semibold);
-  }
-  .optout__side :global(.optout__steps) {
-    margin-top: var(--space-10);
+    line-height: 1.45;
   }
   .optout__note {
-    margin-top: var(--space-6);
     color: var(--ink-3);
     font-size: var(--text-sm);
     line-height: var(--leading-normal);
@@ -224,16 +216,14 @@ Astro.response.headers.set('Cache-Control', 'no-store');
     text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
   }
+  .optout__note a:hover {
+    color: var(--ink);
+  }
 
   @media (max-width: 639px) {
-    .optout {
-      padding-top: var(--space-8);
-    }
-    .optout__title {
-      font-size: var(--text-4xl);
-    }
-    .optout__lede {
-      font-size: var(--text-md);
+    /* The form card goes edge to edge-ish at 390 so fields keep their width. */
+    .optout :global(.optout__form) {
+      --card-pad: var(--space-4);
     }
   }
   @media (min-width: 1024px) {
@@ -241,18 +231,16 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       padding-top: var(--space-16);
     }
     .optout__grid {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: var(--space-6);
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: var(--space-10);
+      align-items: start;
     }
-    .optout__main {
-      grid-column: 1 / span 7;
+    .optout__grid--sent {
+      grid-template-columns: minmax(0, 1fr) 380px;
     }
     .optout__side {
       position: sticky;
-      top: calc(var(--header-h) + var(--space-8));
-      align-self: start;
-      grid-column: 9 / -1;
-      padding-top: var(--space-2);
+      top: calc(var(--header-h) + var(--space-6));
     }
   }
 </style>

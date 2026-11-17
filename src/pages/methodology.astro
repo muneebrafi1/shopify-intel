@@ -6,13 +6,14 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Stat from '~/components/ui/Stat.astro';
 import StatList from '~/components/ui/StatList.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
 import DocShell from '~/components/static/DocShell.astro';
 import AsideCard from '~/components/static/AsideCard.astro';
 import SlicedPlate from '~/components/static/SlicedPlate.astro';
 import { CONTACT, SITE_NAME } from '~/config/site';
 import { formatCount, formatDate } from '~/lib/format';
 import { loadMeta } from '~/components/static/meta';
+import { LEGAL_UPDATED } from '~/components/static/content';
 
 const meta = await loadMeta();
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
@@ -57,25 +58,20 @@ const toc = [
     title="Methodology"
     eyebrow="How it works"
     lede="Where our data comes from, what each number means and where it falls short. If something looks wrong, tell us."
+    byline="Editorial team"
+    updated={LEGAL_UPDATED}
     toc={toc}
     current="/methodology"
   >
     <Fragment slot="head">
       {meta && (
-        <div class="method-strip marks">
-          <StatList columns={3}>
-            <Stat
-              value={formatCount(meta.counts.stores_scanned)}
-              label="Stores scanned"
-              size="sm"
-              display
-            />
-            <Stat value={asOf ?? '—'} label="Data as of" size="sm" display />
-            <Stat value={rules ?? 'Not recorded'} label="Detection rules" size="sm" display />
+        <div class="method-strip">
+          <StatList columns={3} boxed>
+            <Stat value={formatCount(meta.counts.stores_scanned)} label="Stores scanned" />
+            <Stat value={asOf ?? '—'} label="Data as of" />
+            <Stat value={rules ?? 'Not recorded'} label="Detection rules" />
           </StatList>
-          <MonoLabel as="p" class="method-strip__source">
-            Source: {meta.source.label}
-          </MonoLabel>
+          <SourceNote source={meta.source.label} href="" />
         </div>
       )}
     </Fragment>
@@ -185,7 +181,7 @@ const toc = [
             </td>
           </tr>
           <tr>
-            <td>Rank and N° numbers</td>
+            <td>Rank</td>
             <td>Order within our scanned set, by stores. Labels, not market positions.</td>
           </tr>
           <tr>
@@ -248,8 +244,9 @@ const toc = [
     <h2 id="app-store">App Store facts</h2>
     <p>
       An app’s rating, review count, pricing, developer and Built for Shopify status are copied from
-      its public Shopify App Store listing{checkedRange ? `, read between ${checkedRange}` : ''}.
-      Each app page shows the date its listing was checked. We don’t adjust or reweight them.
+      its public Shopify App Store listing
+      {checkedRange ? `, read ${checkedFrom === checkedTo ? 'on' : 'between'} ${checkedRange}` : ''}
+      . Each app page shows the date its listing was checked. We don’t adjust or reweight them.
     </p>
 
     <h2 id="never">What we never do</h2>
@@ -290,13 +287,9 @@ const toc = [
 
 <style>
   .method-strip {
-    margin-block: var(--space-10) var(--space-4);
-    padding: var(--space-5) var(--space-5) var(--space-4);
-  }
-  .method-strip :global(.method-strip__source) {
-    display: flex;
-    align-items: first baseline;
-    margin-top: var(--space-5);
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
   }
   .method-table {
     margin-top: var(--space-4);
@@ -307,6 +300,8 @@ const toc = [
     font-weight: var(--weight-medium);
   }
   .method-table td {
+    height: auto;
+    padding-block: var(--space-3);
     color: var(--ink-2);
     font-size: var(--text-sm);
     line-height: var(--leading-normal);
