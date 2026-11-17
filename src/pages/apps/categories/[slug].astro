@@ -57,18 +57,23 @@ const shortName = new Map(apps.map((a) => [a.slug, a.short_name]));
 const leader = apps[0];
 
 // Where these apps render: each leader's own attributed sections, interleaved so one app does
-// not fill the grid alone. Only categories that render a section are asked (one call per app).
-const perApp = cat.surfaces.length
-  ? await Promise.all(
-      apps.slice(0, 8).map(async (a) => {
-        const r = await api.listSections({ app: a.slug, device, limit: 4 });
-        return {
-          app: a,
-          total: r.meta.pagination?.total ?? r.data.items.length,
-          items: r.data.items,
-        };
-      }),
-    )
+// not fill the grid alone. Only categories that render a section are asked (one call, one
+// query, for all eight leaders).
+const leaders = apps.slice(0, 8);
+const byApp =
+  cat.surfaces.length && leaders.length
+    ? new Map(
+        (
+          await api.listSectionsByApps({ apps: leaders.map((a) => a.slug), device, per_app: 4 })
+        ).data.items.map((i) => [i.app_slug, i]),
+      )
+    : null;
+const perApp = byApp
+  ? leaders.map((a) => ({
+      app: a,
+      total: byApp.get(a.slug)?.total ?? 0,
+      items: byApp.get(a.slug)?.sections ?? [],
+    }))
   : [];
 const sections: SectionCardData[] = [];
 for (let round = 0; round < 4 && sections.length < 8; round++) {

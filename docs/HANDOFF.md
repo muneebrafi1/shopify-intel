@@ -171,7 +171,11 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
   "word.How"). Add `{' '}` explicitly and eyeball rendered text.
 - Lazy images need a definite box before load (see `SectionCrop`) or they never load.
 - The Workers types hide DOM `Element.append` in client scripts; use `appendChild`.
-- D1 free plan: 50 queries per request — keep list pages to batched queries (the theme index does
-  not call `getTheme` per row for this reason).
+- D1 free plan: 50 queries (statements) per request. Never call an endpoint once per row: use
+  `listSectionsByApps` (one query for a whole grid), `listStores?domains=`, `listApps?slugs=` /
+  `listThemes?slugs=` and `facets=false` when only items are shown; details batch per-entity lists
+  with window functions. `astro dev` sends `x-d1-queries: <calls>/<statements>` on every response;
+  run `npm run budget:queries` (dev server up and idle) before review: it fails above 45. Heaviest
+  now: `/stores/<curated>` 38 (getStore + getTeardown, which embeds getStore again).
 - The dev server hot-reloads on every file save; e2e runs during heavy editing can flake with
   "execution context destroyed". Rerun when quiet.

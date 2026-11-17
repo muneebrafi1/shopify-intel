@@ -5,8 +5,9 @@
  * "How it works" dark band → feature bento of real UI → latest captures → Pro band.
  *
  * Every number and capture comes from the in-process API (the same one behind /api/v1). The page
- * stays inside D1's 50-queries-per-request budget: one teardown detail (with its store) feeds the
- * window, the steps and the teardown card, and one sections query feeds the strip and the gallery.
+ * stays inside D1's 50-queries-per-request budget (`npm run budget:queries`): one teardown detail
+ * (with its store) feeds the window, the steps and the teardown card, and one sections query
+ * (items only, no facets) feeds the strip and the gallery.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import HomeHero from '~/components/home/HomeHero.astro';
@@ -56,7 +57,8 @@ const [
   api.listComparisons({ kind: 'app', limit: 200 }),
   // One header section per captured home page, in catalogue order: each carries its full
   // screenshot and store, so this one query gives the strip and the gallery (desktop + phone).
-  api.listSections({ type: 'header', page_type: 'home', limit: 40 }),
+  // Items only: the facet counts are not shown here.
+  api.listSections({ type: 'header', page_type: 'home', limit: 40, facets: false }),
 ]);
 
 const c = meta.counts;

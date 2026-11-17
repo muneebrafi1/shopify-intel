@@ -16,6 +16,7 @@
     "lint": "node scripts/lint-rules.mjs && prettier --check .",
     "test:e2e": "playwright test --trace off --pass-with-no-tests",
     "size": "node scripts/size-budget.mjs",
+    "budget:queries": "node scripts/query-budget.mjs",
     "screens": "node scripts/capture-screens.mjs",
     "test": "vitest run",
     "db:build-seed": "node scripts/build-seed.ts",

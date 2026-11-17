@@ -148,20 +148,22 @@ for (const key of Object.keys(meta.sources)) {
 }
 
 // ---- Shared stores, enriched with list data (theme, market, apps) where we have it -----------
-// listStores defaults to the curated stores; overlap is about every detected store (scope all).
-const lookups = await Promise.all(
-  (cmp.shared_stores.items.length > 0 ? ([a, b] as const) : []).map((s) =>
-    api
-      .listStores(
-        isApp
-          ? { app: s.slug, scope: 'all', limit: 60 }
-          : { theme: s.slug, scope: 'all', limit: 60 },
-      )
-      .then((r) => r.data.items)
-      .catch(() => [] as StoreListItem[]),
-  ),
-);
-const storeInfo = new Map(lookups.flat().map((s) => [s.domain, s]));
+// One lookup of exactly the stores shown; listStores defaults to the curated stores, overlap is
+// about every detected store (scope all).
+const sharedDomains = cmp.shared_stores.items.map((s) => s.domain);
+const lookups =
+  sharedDomains.length > 0
+    ? await api
+        .listStores({
+          domains: sharedDomains,
+          scope: 'all',
+          limit: sharedDomains.length,
+          facets: false,
+        })
+        .then((r) => r.data.items)
+        .catch(() => [] as StoreListItem[])
+    : [];
+const storeInfo = new Map(lookups.map((s) => [s.domain, s]));
 const sharedRows: SharedStoreRow[] = cmp.shared_stores.items.map((s) => {
   const info = storeInfo.get(s.domain);
   return {
@@ -175,26 +177,18 @@ const sharedRows: SharedStoreRow[] = cmp.shared_stores.items.map((s) => {
 });
 
 // ---- Related (curated pairs only) -------------------------------------------------------------
-// One list call gives usage and listing facts for every app/theme in the related pairs, so
-// the cards read like the ones on the compare index.
+// One list call gives usage and listing facts for exactly the apps/themes in the related pairs,
+// so the cards read like the ones on the compare index.
 const relatedApps = new Map<string, AppListItem>();
 const relatedThemes = new Map<string, ThemeListItem>();
-if (cmp.related.length > 0) {
+const relatedSlugs = [...new Set(cmp.related.flatMap((r) => [r.a.slug, r.b.slug]))];
+if (relatedSlugs.length > 0) {
+  const lookup = { slugs: relatedSlugs, limit: 100, facets: false };
   if (cmp.apps) {
-    const cats = [
-      ...new Set([cmp.apps.a.app.category?.slug, cmp.apps.b.app.category?.slug].filter(Boolean)),
-    ] as string[];
-    const lists = await Promise.all(
-      cats.map((c) =>
-        api
-          .listApps({ category: c, limit: 100 })
-          .then((r) => r.data.items)
-          .catch(() => [] as AppListItem[]),
-      ),
-    );
-    for (const x of lists.flat()) relatedApps.set(x.slug, x);
+    const r = await api.listApps(lookup).catch(() => null);
+    for (const x of r?.data.items ?? []) relatedApps.set(x.slug, x);
   } else {
-    const r = await api.listThemes({ limit: 100 }).catch(() => null);
+    const r = await api.listThemes(lookup).catch(() => null);
     for (const x of r?.data.items ?? []) relatedThemes.set(x.slug, x);
   }
 }
