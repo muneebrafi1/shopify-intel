@@ -1,0 +1,337 @@
+---
+/**
+ * One "How it works" visual, built from a real store page: the capture (desktop + phone), the
+ * same page sliced into sections, the same page tagged (type + app), and two stores compared.
+ * Rendered inside a dark band; the captures keep light tokens (CaptureCrop).
+ */
+import CaptureCrop, { type CropRegion } from './CaptureCrop.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+
+export interface HowShot {
+  src: string;
+  width: number;
+  height: number;
+}
+export interface CompareSide {
+  name: string;
+  domain: string;
+  href: string;
+  theme: string;
+  appCount: number;
+  apps: { name: string; iconUrl: string | null; shared: boolean }[];
+}
+export interface HowData {
+  store: { name: string; domain: string; theme: string };
+  page: string;
+  isPlaceholder: boolean;
+  desktop: HowShot & { regions: CropRegion[] };
+  mobile: HowShot | null;
+  /** Visible capture px for the sliced/tagged crop. */
+  view: number;
+  pair: { a: CompareSide; b: CompareSide; shared: number } | null;
+}
+interface Props {
+  step: 'capture' | 'slice' | 'tag' | 'compare';
+  data: HowData;
+}
+const { step, data } = Astro.props;
+const { store, desktop, mobile } = data;
+const caption = `${store.domain} · ${data.page}`;
+const sectionCount = desktop.regions.length;
+const tagged = desktop.regions.filter((r) => r.active).length;
+---
+
+<div class:list={['hv', `hv--${step}`]}>
+  {step === 'capture' && (
+    <>
+      <p class="hv__bar">
+        <span class="mono">{caption}</span>
+        <span class="hv__chips">
+          <span class="hv__chip mono">desktop {desktop.width}px</span>
+          {mobile && <span class="hv__chip mono">mobile {mobile.width}px</span>}
+        </span>
+      </p>
+      <div class="hv__pair">
+        <CaptureCrop
+          class="hv__desk"
+          src={desktop.src}
+          width={desktop.width}
+          height={desktop.height}
+          view={data.view}
+          alt={`${store.name} ${data.page.toLowerCase()} page, desktop capture`}
+        />
+        {mobile && (
+          <CaptureCrop
+            class="hv__phone"
+            src={mobile.src}
+            width={mobile.width}
+            height={mobile.height}
+            view={Math.round(mobile.width * 2)}
+            alt={`${store.name} ${data.page.toLowerCase()} page, mobile capture`}
+          />
+        )}
+      </div>
+    </>
+  )}
+
+  {(step === 'slice' || step === 'tag') && (
+    <>
+      <p class="hv__bar">
+        <span class="mono">{caption}</span>
+        <span class="hv__chips">
+          {step === 'slice' ? (
+            <span class="hv__chip mono">{sectionCount} sections</span>
+          ) : (
+            <>
+              <span class="hv__chip mono">{store.theme}</span>
+              {tagged > 0 && (
+                <span class="hv__chip hv__chip--accent mono">
+                  {tagged} {tagged === 1 ? 'app' : 'apps'}
+                </span>
+              )}
+            </>
+          )}
+        </span>
+      </p>
+      <CaptureCrop
+        class="hv__crop"
+        src={desktop.src}
+        width={desktop.width}
+        height={desktop.height}
+        view={data.view}
+        regions={desktop.regions}
+        mode={step === 'slice' ? 'sliced' : 'tagged'}
+        alt={
+          step === 'slice'
+            ? `${store.name} ${data.page.toLowerCase()} page cut into ${sectionCount} sections`
+            : `${store.name} ${data.page.toLowerCase()} page with each section labelled by type and app`
+        }
+      />
+    </>
+  )}
+
+  {step === 'compare' && data.pair && (
+    <>
+      <p class="hv__bar">
+        <span class="mono">Stores like {store.domain}</span>
+        <span class="hv__chips">
+          <span class="hv__chip hv__chip--accent mono">{data.pair.shared} apps in common</span>
+        </span>
+      </p>
+      <div class="hv__compare">
+        {[data.pair.a, data.pair.b].map((side) => (
+          <div class="hv__side">
+            <a class="hv__store" href={side.href}>
+              <StoreMark domain={side.domain} name={side.name} size={32} />
+              <span class="hv__store-text">
+                <span class="hv__store-name">{side.name}</span>
+                <span class="hv__store-domain mono">{side.domain}</span>
+              </span>
+            </a>
+            <dl class="hv__facts">
+              <div>
+                <dt>Theme</dt>
+                <dd>{side.theme}</dd>
+              </div>
+              <div>
+                <dt>Apps</dt>
+                <dd class="num">{side.appCount} detected</dd>
+              </div>
+            </dl>
+            <ul class="hv__apps">
+              {side.apps.map((app) => (
+                <li class:list={['hv__app', { 'hv__app--shared': app.shared }]}>
+                  <AppIcon src={app.iconUrl} name={app.name} size={20} />
+                  <span class="hv__app-name">{app.name}</span>
+                  {app.shared && <span class="hv__app-flag mono">both</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </>
+  )}
+  {data.isPlaceholder && step !== 'compare' && (
+    <p class="hv__note">
+      Layout preview: drawn from detected sections until the first capture run.
+    </p>
+  )}
+</div>
+
+<style>
+  .hv {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    height: 100%;
+    min-width: 0;
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface-2);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--highlight);
+  }
+  .hv__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+  }
+  .hv__chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .hv__chip {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-3);
+    color: var(--ink-2);
+    font-size: var(--text-2xs);
+  }
+  .hv__chip--accent {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+  }
+  .hv__note {
+    margin-top: auto;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+
+  /* Capture: the desktop page, with its phone version standing in the corner. */
+  .hv__pair {
+    position: relative;
+  }
+  .hv__pair :global(.hv__phone) {
+    position: absolute;
+    right: 4%;
+    bottom: 5%;
+    width: 21%;
+    border-radius: 10px;
+    box-shadow:
+      0 0 0 1px rgb(18 18 17 / 0.12),
+      0 12px 32px -12px rgb(0 0 0 / 0.5);
+  }
+
+  /* Compare: two stores side by side. */
+  .hv__compare {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  .hv__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-4);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--highlight);
+  }
+  .hv__store {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .hv__store:hover .hv__store-name {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-color: var(--line-strong);
+  }
+  .hv__store-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .hv__store-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .hv__store-domain {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+  }
+  .hv__facts > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: 6px 0;
+    border-top: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .hv__facts dt {
+    color: var(--ink-3);
+  }
+  .hv__facts dd {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+  .hv__apps {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hv__app {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 30px;
+    padding: 0 var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    border-radius: 6px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .hv__app--shared {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+  .hv__app-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hv__app-flag {
+    flex: none;
+    color: var(--accent-text);
+    font-size: var(--text-2xs);
+  }
+  @media (max-width: 479px) {
+    .hv {
+      padding: var(--space-3);
+    }
+    .hv__compare {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .hv {
+      padding: var(--space-5);
+    }
+  }
+</style>

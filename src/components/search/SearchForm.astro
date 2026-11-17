@@ -1,15 +1,18 @@
 ---
 /**
- * The results-page search field: a plain GET form (works without JS), large, ink underline.
- * Unlike the home field it stays a real field here: people refine queries in place.
+ * The results page's search field: a large input that holds the query (a plain GET form, so it
+ * works without JS). It stays a real field here, people refine queries in place; the command
+ * palette is the instant version. Keeps the selected result tab (`type`) when re-searching.
  */
 import Icon from '~/components/ui/Icon.astro';
 
 interface Props {
   q: string;
+  /** Selected result tab, kept as a hidden field. */
+  type?: string | null;
   autofocus?: boolean;
 }
-const { q, autofocus = false } = Astro.props;
+const { q, type, autofocus = false } = Astro.props;
 ---
 
 <form class="sform" action="/search" method="get" role="search">
@@ -23,13 +26,14 @@ const { q, autofocus = false } = Astro.props;
     type="search"
     name="q"
     value={q}
-    placeholder="Search stores, themes, apps"
+    placeholder="Search stores, themes, apps and sections"
     autocomplete="off"
     spellcheck="false"
     enterkeyhint="search"
     maxlength="100"
     autofocus={autofocus}
   />
+  {type && <input type="hidden" name="type" value={type} />}
   <button type="submit" class="sform__submit">
     Search
   </button>
@@ -37,31 +41,55 @@ const { q, autofocus = false } = Astro.props;
 
 <style>
   .sform {
+    position: relative;
     display: flex;
     align-items: center;
+    gap: var(--space-3);
     height: 56px;
-    border-bottom: 1.5px solid var(--ink);
+    padding: 0 6px 0 var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-sm),
+      var(--highlight);
+    transition: box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .sform:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--ink-4),
+      var(--shadow-sm),
+      var(--highlight);
   }
   .sform:focus-within {
-    border-bottom-color: var(--accent);
+    box-shadow:
+      inset 0 0 0 1.5px var(--accent),
+      var(--shadow-sm),
+      var(--highlight);
   }
   .sform :global(.sform__icon) {
     flex: none;
+    color: var(--ink-3);
+  }
+  .sform:focus-within :global(.sform__icon) {
+    color: var(--ink);
   }
   .sform__input {
     flex: 1;
     min-width: 0;
     height: 100%;
-    padding: 0 var(--space-3);
+    padding: 0;
     border: 0;
     background: transparent;
+    color: var(--ink);
     font-size: var(--text-lg);
-    letter-spacing: var(--tracking-snug);
+    letter-spacing: -0.01em;
     outline: none;
     -webkit-appearance: none;
     appearance: none;
   }
   .sform__input:focus-visible {
+    outline: none;
     box-shadow: none;
   }
   .sform__input::placeholder {
@@ -72,21 +100,28 @@ const { q, autofocus = false } = Astro.props;
   }
   .sform__submit {
     flex: none;
-    height: 36px;
+    height: 44px;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--inverse);
-    color: var(--ink-inverse);
-    font-size: var(--text-sm);
+    border-radius: var(--radius-control);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-size: var(--text-ui);
     font-weight: var(--weight-medium);
-    transition: background-color var(--dur-fast) var(--ease-out);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
   }
   .sform__submit:hover {
-    background: var(--inverse-2);
+    background: var(--btn-bg-hover);
+  }
+  .sform__submit:active {
+    transform: scale(0.98);
   }
   @media (min-width: 1024px) {
     .sform {
       height: 64px;
+      padding-left: var(--space-5);
+      padding-right: 10px;
     }
     .sform__input {
       font-size: var(--text-xl);

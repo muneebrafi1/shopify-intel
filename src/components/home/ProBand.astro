@@ -1,0 +1,160 @@
+---
+/**
+ * The home page's Pro band: a dark band (data-theme="dark") with one value line, what Pro adds,
+ * and two actions: Get Pro (accent, the one vermilion fill on the page) and See plans.
+ * Prices and features come from the shared PLANS data (src/components/static/content.ts), never
+ * typed here.
+ */
+import Button from '~/components/ui/Button.astro';
+import Icon from '~/components/ui/Icon.astro';
+import { PLANS } from '~/components/static/content';
+
+const pro = PLANS.find((p) => p.id === 'pro');
+const money = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
+const monthly = pro?.price.monthly;
+const yearly = pro?.price.yearly;
+const features = (pro?.features ?? []).filter((f) => !/^everything in/i.test(f)).slice(0, 4);
+---
+
+{pro && (
+  <section class="pro" data-theme="dark" aria-labelledby="pro-title">
+    <div class="pro__text">
+      <p class="eyebrow">{pro.name}</p>
+      <h2 id="pro-title" class="pro__title display-md">
+        Every page, not just the home page.{' '}
+        {monthly && monthly.amount > 0 && (
+          <span class="tone-muted">From {money(monthly.amount)} a month.</span>
+        )}
+      </h2>
+      {yearly && yearly.amount > 0 && <p class="pro__note">Or {yearly.note.toLowerCase()}.</p>}
+    </div>
+    {features.length > 0 && (
+      <ul class="pro__features">
+        {features.map((f) => (
+          <li>
+            <Icon name="check-bold" size={14} class="pro__check" />
+            {f}
+          </li>
+        ))}
+      </ul>
+    )}
+    <div class="pro__actions">
+      <Button variant="accent" size="lg" href={pro.cta.href} arrow>
+        {pro.cta.label}
+      </Button>
+      <Button variant="secondary" size="lg" href="/pro">
+        See plans
+      </Button>
+    </div>
+  </section>
+)}
+
+<style>
+  .pro {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+    margin-inline: calc(var(--page-gutter) * -1);
+    padding: var(--space-16) var(--page-gutter);
+    overflow: hidden;
+    background: var(--bg-subtle);
+    color: var(--ink);
+  }
+  /* The band edge: a thin line of light along the top, and a faint glow under it. */
+  .pro::before,
+  .pro::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+  }
+  .pro::before {
+    left: 10%;
+    right: 10%;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+  }
+  .pro::after {
+    left: 15%;
+    right: 15%;
+    top: -120px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--accent-wash), transparent);
+  }
+  .pro > * {
+    position: relative;
+    z-index: 1;
+  }
+  .pro__text .eyebrow {
+    margin-bottom: var(--space-3);
+  }
+  .pro__title {
+    max-width: 18ch;
+  }
+  .pro__note {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-body);
+  }
+  .pro__features {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3) var(--space-6);
+    align-content: start;
+  }
+  .pro__features li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-body);
+  }
+  .pro__features :global(.pro__check) {
+    flex: none;
+    color: var(--accent);
+    transform: translateY(2px);
+  }
+  .pro__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  @media (max-width: 479px) {
+    .pro__actions > :global(.btn) {
+      flex: 1 1 0;
+    }
+  }
+  @media (min-width: 640px) {
+    .pro {
+      margin-inline: 0;
+      padding: var(--space-16) var(--space-10);
+      border-radius: var(--radius-band);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+  }
+  @media (min-width: 1024px) {
+    .pro {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      grid-template-areas:
+        'text features'
+        'actions features';
+      gap: var(--space-8) var(--space-16);
+      padding: var(--space-16);
+    }
+    .pro__text {
+      grid-area: text;
+    }
+    .pro__features {
+      grid-area: features;
+      align-self: center;
+      padding-left: var(--space-8);
+      border-left: 1px solid var(--line);
+    }
+    .pro__actions {
+      grid-area: actions;
+    }
+  }
+</style>

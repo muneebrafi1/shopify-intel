@@ -10,7 +10,8 @@ export interface TabItem {
   label: string;
   href: string;
   selected?: boolean;
-  count?: number | null;
+  /** A number, or a preformatted string such as "20+" for a capped count. */
+  count?: number | string | null;
 }
 interface Props {
   items: TabItem[];
@@ -25,8 +26,10 @@ const { items, label, size = 'md', class: className } = Astro.props;
   {items.map((item) => (
     <a href={item.href} class="tabs__item" aria-current={item.selected ? 'page' : undefined}>
       {item.label}
-      {typeof item.count === 'number' && (
-        <span class="tabs__count num">{item.count.toLocaleString('en-US')}</span>
+      {(typeof item.count === 'number' || typeof item.count === 'string') && (
+        <span class="tabs__count num">
+          {typeof item.count === 'number' ? item.count.toLocaleString('en-US') : item.count}
+        </span>
       )}
     </a>
   ))}

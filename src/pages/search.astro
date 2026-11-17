@@ -1,82 +1,94 @@
 ---
 /**
- * Full search results (server-rendered, no JS needed): /search?q=. Results are grouped by kind
- * (stores, themes, apps, categories, section types, vendors, teardowns) with a sticky index of
- * groups. An empty query shows popular picks; no results shows an empty state with a way out.
- * The command palette is the instant version of this page.
+ * Full search results (server-rendered, no JS needed): /search?q=&type=.
+ * Header: the query as the title and in a large field, then tabs by result type with counts
+ * (URL state: ?type=app). "All" shows each kind as a panel with its first rows; a tab shows every
+ * row of one kind. An empty query shows popular searches and picks; no results shows an empty
+ * state with ways out and popular picks. The command palette is the instant version of this page.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import SearchForm from '~/components/search/SearchForm.astro';
 import SearchHitRow from '~/components/search/SearchHitRow.astro';
 import { queryWords } from '~/components/search/highlight';
-import Count from '~/components/ui/Count.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import { KIND, ORDER, isKind, shortQuery } from '~/components/search/kinds';
+import Tabs from '~/components/ui/Tabs.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
+import Chip from '~/components/ui/Chip.astro';
+import Kbd from '~/components/ui/Kbd.astro';
 import { api, isApiError } from '~/server/api';
 import type { SearchKind, SearchOutput } from '~/server/api/v1/types';
 import { formatDate } from '~/lib/format';
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
+/** Per kind (the API's maximum): counts at this number are shown as "20+". */
 const LIMIT = 20;
+/** Rows per kind on the "All" tab. */
+const PREVIEW = 5;
+
 const raw = Astro.url.searchParams.get('q') ?? '';
 const q = raw.trim().slice(0, 100);
-
-const KIND: Record<SearchKind, { one: string; many: string; href: string; all: string }> = {
-  store: { one: 'Store', many: 'Stores', href: '/stores', all: 'All stores' },
-  theme: { one: 'Theme', many: 'Themes', href: '/themes', all: 'All themes' },
-  app: { one: 'App', many: 'Apps', href: '/apps', all: 'All apps' },
-  'app-category': {
-    one: 'Category',
-    many: 'App categories',
-    href: '/apps/categories',
-    all: 'All categories',
-  },
-  'section-type': {
-    one: 'Section',
-    many: 'Section types',
-    href: '/sections',
-    all: 'Sections library',
-  },
-  vendor: { one: 'Vendor', many: 'Theme vendors', href: '/themes', all: 'All themes' },
-  teardown: { one: 'Teardown', many: 'Teardowns', href: '/teardowns', all: 'All teardowns' },
-};
-// Page order: the things people search for most first.
-const ORDER: SearchKind[] = [
-  'store',
-  'theme',
-  'app',
-  'app-category',
-  'section-type',
-  'vendor',
-  'teardown',
-];
+const typeParam = Astro.url.searchParams.get('type');
+const type: SearchKind | null = q && isKind(typeParam) ? typeParam : null;
 
 let result: SearchOutput = { q, is_suggestion: !q, groups: [] };
-let suggestions: SearchOutput['groups'] = [];
+let popularGroups: SearchOutput['groups'] = [];
 let failed = false;
 let dataAsOf = '';
 try {
   const [res, popular] = await Promise.all([
     api.search({ q, limit: q ? LIMIT : 6 }),
-    // Popular picks for the no-results state.
+    // Popular picks: the empty-query page, the "popular searches" pills and no-results.
     q ? api.search({ q: '', limit: 4 }) : Promise.resolve(null),
   ]);
   result = res.data;
   dataAsOf = res.meta.data_as_of;
-  suggestions = popular?.data.groups ?? [];
+  popularGroups = popular?.data.groups ?? res.data.groups;
 } catch (err) {
   // A rejected query (400) simply has no results; anything else is an outage.
   if (!isApiError(err) || err.status >= 500) failed = true;
 }
 
-const groups = [...result.groups].sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
+const byOrder = <T extends { kind: SearchKind }>(list: T[]) =>
+  [...list].sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
+const groups = byOrder(result.groups).filter((g) => g.items.length > 0);
 const total = groups.reduce((n, g) => n + g.items.length, 0);
+const capped = groups.some((g) => g.items.length >= LIMIT);
+const countOf = (n: number) => (n >= LIMIT ? `${LIMIT}+` : String(n));
+const totalLabel = `${total}${capped ? '+' : ''}`;
 const words = queryWords(q);
-const capped = (n: number) => (n >= LIMIT ? `${LIMIT}+` : n);
+const hasResults = !!q && total > 0;
+const shown = type ? groups.filter((g) => g.kind === type) : groups;
+const popular = byOrder(popularGroups).filter((g) => g.items.length > 0);
+
+// Popular searches as pills: themes, apps and stores, interleaved.
+const pills: string[] = [];
+for (let i = 0; i < 4; i++) {
+  for (const kind of ['theme', 'app', 'store'] as const) {
+    const hit = popularGroups.find((g) => g.kind === kind)?.items[i];
+    const label = hit ? shortQuery(hit.title) : '';
+    if (label && !pills.some((p) => p.toLowerCase() === label.toLowerCase())) pills.push(label);
+  }
+}
+pills.splice(8);
+const searchHref = (query: string, kind?: SearchKind | null) =>
+  `/search?q=${encodeURIComponent(query)}${kind ? `&type=${kind}` : ''}`;
+
+const tabs = hasResults
+  ? [
+      { label: 'All', href: searchHref(q), selected: !type, count: totalLabel },
+      ...groups.map((g) => ({
+        label: KIND[g.kind].tab,
+        href: searchHref(q, g.kind),
+        selected: type === g.kind,
+        count: countOf(g.items.length),
+      })),
+    ]
+  : [];
 
 const title = q ? `Results for “${q}”` : 'Search';
+const asOf = dataAsOf ? formatDate(dataAsOf) : '';
 ---
 
 <BaseLayout
@@ -90,143 +102,217 @@ const title = q ? `Results for “${q}”` : 'Search';
   noindex={!!q}
 >
   <div class="container srch">
-    <header class="srch__head cols-12">
-      <div class="span-8">
-        <MonoLabel as="p" class="srch__eyebrow">
-          {q
-            ? `Search · ${capped(total)} ${total === 1 ? 'result' : 'results'}`
-            : 'Search the archive'}
-        </MonoLabel>
-        <h1 class="srch__title">
-          {q ? (
-            <>
-              Results for <span class="srch__q">“{q}”</span>
-            </>
-          ) : (
-            'Search'
-          )}
-          {q && <Count value={capped(total)} label={total === 1 ? 'result' : 'results'} />}
-        </h1>
-        <div class="srch__form">
-          <SearchForm q={q} autofocus={!q} />
-        </div>
-      </div>
-      <p class="srch__tip start-9">
-        Matches the start of words in store domains and names, themes, vendors, apps, categories and
-        section types.
-        <span class="srch__tip-kbd">
-          {' '}
-          Press <kbd class="srch__kbd">/</kbd> anywhere for instant search.
-        </span>
+    <header class="srch__head">
+      <p class="eyebrow">Search</p>
+      <h1 class="srch__title display-md">
+        {q ? (
+          <>
+            Results for <span class="srch__q">“{q}”</span>
+          </>
+        ) : (
+          'Search'
+        )}
+      </h1>
+      <p class="srch__lede">
+        {failed
+          ? 'Search is unavailable right now.'
+          : hasResults
+            ? `${totalLabel} ${total === 1 ? 'match' : 'matches'} across ${groups.length} ${groups.length === 1 ? 'kind' : 'kinds'} of result.`
+            : q
+              ? 'No matches.'
+              : 'Find any store, theme, app, section type or teardown we have scanned.'}
       </p>
+      <div class="srch__form">
+        <SearchForm q={q} type={type} autofocus={!q} />
+      </div>
+      {tabs.length > 0 && <Tabs items={tabs} label="Result types" class="srch__tabs" />}
     </header>
 
-    {failed ? (
-      <div class="srch__body">
-        <EmptyState
-          title="Search isn’t available right now"
-          body="Please try again in a moment, or browse the archive directly."
-        >
-          <Button href="/stores" variant="secondary">
-            Stores
-          </Button>
-          <Button href="/themes" variant="secondary">
-            Themes
-          </Button>
-          <Button href="/apps" variant="secondary">
-            Apps
-          </Button>
-        </EmptyState>
-      </div>
-    ) : q && total === 0 ? (
-      <div class="srch__body">
-        <EmptyState
-          title={`Nothing matches “${q}”`}
-          body="Check the spelling, try a shorter word, or search for a store domain, a theme or an app by name."
-        >
-          <Button href="/stores" variant="secondary">
-            Browse stores
-          </Button>
-          <Button href="/themes" variant="secondary">
-            Browse themes
-          </Button>
-          <Button href="/apps" variant="secondary">
-            Browse apps
-          </Button>
-        </EmptyState>
-        {suggestions.length > 0 && (
-          <section class="srch__popular" aria-labelledby="srch-popular">
-            <MonoLabel as="h2" id="srch-popular" tone="ink">
-              Popular instead
-            </MonoLabel>
-            <div class="srch__popular-grid">
-              {[...suggestions]
-                .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind))
-                .map((g) => (
-                  <div class="srch__pgroup">
-                    <h3 class="srch__pgroup-title">{KIND[g.kind].many}</h3>
-                    <ul class="srch__list">
-                      {g.items.map((hit) => (
-                        <SearchHitRow hit={hit} words={[]} kindLabel={KIND[hit.kind].one} />
+    <div class="srch__body">
+      <div class="srch__main">
+        {failed ? (
+          <EmptyState
+            title="Search isn’t available right now"
+            body="Please try again in a moment, or browse the catalogue directly."
+          >
+            <div class="srch__ways">
+              <Button href="/stores" variant="secondary">
+                Stores
+              </Button>
+              <Button href="/themes" variant="secondary">
+                Themes
+              </Button>
+              <Button href="/apps" variant="secondary">
+                Apps
+              </Button>
+            </div>
+          </EmptyState>
+        ) : q && total === 0 ? (
+          <>
+            <EmptyState
+              title={`Nothing matches “${q}”`}
+              body="Search matches the start of words. Check the spelling, try a shorter word, or search for a store domain, a theme or an app by name."
+            >
+              <div class="srch__ways">
+                <Button href="/stores" variant="secondary">
+                  Browse stores
+                </Button>
+                <Button href="/themes" variant="secondary">
+                  Browse themes
+                </Button>
+                <Button href="/apps" variant="secondary">
+                  Browse apps
+                </Button>
+              </div>
+            </EmptyState>
+            {popular.length > 0 && (
+              <section class="srch__popular" aria-labelledby="srch-popular">
+                <h2 id="srch-popular" class="srch__h2">
+                  Popular instead
+                </h2>
+                {pills.length > 0 && (
+                  <ul class="srch__pills" aria-label="Popular searches">
+                    {pills.map((p) => (
+                      <li>
+                        <Chip href={searchHref(p)} size="sm" icon="magnifying-glass">
+                          {p}
+                        </Chip>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div class="srch__groups">
+                  {popular.map((g) => (
+                    <section class="rgroup" aria-labelledby={`pop-${g.kind}-title`}>
+                      <div class="rgroup__head">
+                        <h3 class="rgroup__title" id={`pop-${g.kind}-title`}>
+                          {KIND[g.kind].many}
+                        </h3>
+                        <a href={KIND[g.kind].href} class="rgroup__all">
+                          {KIND[g.kind].all} <span aria-hidden="true">→</span>
+                        </a>
+                      </div>
+                      <ul class="rgroup__list">
+                        {g.items.map((hit) => (
+                          <SearchHitRow hit={hit} words={[]} />
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        ) : type && shown.length === 0 ? (
+          <EmptyState
+            title={`No ${KIND[type].many.toLowerCase()} match “${q}”`}
+            body="Other kinds of result might."
+          >
+            <Button href={searchHref(q)} variant="secondary">
+              See all results
+            </Button>
+          </EmptyState>
+        ) : (
+          <>
+            {!q && pills.length > 0 && (
+              <section class="srch__start" aria-labelledby="srch-try">
+                <h2 id="srch-try" class="eyebrow">
+                  Popular searches
+                </h2>
+                <ul class="srch__pills">
+                  {pills.map((p) => (
+                    <li>
+                      <Chip href={searchHref(p)} size="sm" icon="magnifying-glass">
+                        {p}
+                      </Chip>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            <div class="srch__groups">
+              {shown.map((g, gi) => {
+                const info = KIND[g.kind];
+                const rows = q && !type ? g.items.slice(0, PREVIEW) : g.items;
+                const more = q && !type && g.items.length > PREVIEW;
+                return (
+                  <section
+                    class="rgroup"
+                    id={`results-${g.kind}`}
+                    aria-labelledby={`results-${g.kind}-title`}
+                  >
+                    <div class="rgroup__head">
+                      <h2 class="rgroup__title" id={`results-${g.kind}-title`}>
+                        {q ? info.many : `Popular ${info.many.toLowerCase()}`}
+                        {q && <span class="rgroup__count num">{countOf(g.items.length)}</span>}
+                      </h2>
+                      {more ? (
+                        <a href={searchHref(q, g.kind)} class="rgroup__all">
+                          Show all {info.many.toLowerCase()} <span aria-hidden="true">→</span>
+                        </a>
+                      ) : (
+                        <a href={info.href} class="rgroup__all">
+                          {info.all} <span aria-hidden="true">→</span>
+                        </a>
+                      )}
+                    </div>
+                    <ul class="rgroup__list">
+                      {rows.map((hit, i) => (
+                        <SearchHitRow hit={hit} words={words} eager={gi === 0 && i < 4} />
                       ))}
                     </ul>
-                  </div>
-                ))}
+                    {type && g.items.length >= LIMIT && (
+                      <p class="rgroup__foot">
+                        Showing the first {LIMIT}. Add a word to narrow it down, or{' '}
+                        <a href={info.href}>browse {info.all.toLowerCase()}</a>.
+                      </p>
+                    )}
+                  </section>
+                );
+              })}
             </div>
-          </section>
+          </>
         )}
       </div>
-    ) : (
-      <div class="srch__body cols-12">
-        <nav class="srch__toc" aria-label="Result groups">
-          <MonoLabel as="p" class="srch__toc-label">
-            {q ? 'In these results' : 'Popular now'}
-          </MonoLabel>
-          <ol class="srch__toc-list">
-            {groups.map((g) => (
-              <li>
-                <a href={`#results-${g.kind}`} class="srch__toc-link">
-                  <span>
-                    {q ? KIND[g.kind].many : `Popular ${KIND[g.kind].many.toLowerCase()}`}
-                  </span>
-                  <span class="srch__toc-n num">{capped(g.items.length)}</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-          {dataAsOf && <p class="srch__asof">Data as of {formatDate(dataAsOf)}</p>}
-        </nav>
-        <div class="srch__results">
-          {groups.map((g, gi) => (
-            <section
-              class="srch__group"
-              id={`results-${g.kind}`}
-              aria-labelledby={`results-${g.kind}-title`}
-            >
-              <div class="srch__group-head">
-                <h2 class="srch__group-title" id={`results-${g.kind}-title`}>
-                  {q ? KIND[g.kind].many : `Popular ${KIND[g.kind].many.toLowerCase()}`}
-                  <Count value={capped(g.items.length)} />
-                </h2>
-                <a href={KIND[g.kind].href} class="srch__all">
-                  {KIND[g.kind].all} <span aria-hidden="true">→</span>
-                </a>
-              </div>
-              <ul class="srch__list">
-                {g.items.map((hit, i) => (
-                  <SearchHitRow
-                    hit={hit}
-                    words={words}
-                    kindLabel={KIND[hit.kind].one}
-                    eager={gi === 0 && i < 4}
-                  />
-                ))}
-              </ul>
-            </section>
-          ))}
+
+      <aside class="srch__aside" aria-label="About search">
+        {hasResults && pills.length > 0 && (
+          <div class="aside__block">
+            <h2 class="eyebrow">Popular searches</h2>
+            <ul class="srch__pills">
+              {pills.map((p) => (
+                <li>
+                  <Chip href={searchHref(p)} size="sm">
+                    {p}
+                  </Chip>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div class="aside__block">
+          <h2 class="eyebrow">How search works</h2>
+          <p class="aside__text">
+            Matches the start of words in store names and domains, themes, vendors, apps, app
+            categories and section types. “judge” finds Judge.me; “udge” doesn’t.
+          </p>
+          <p class="aside__text aside__kbd">
+            Press <Kbd>/</Kbd> or{' '}
+            <span class="aside__combo" data-kbd-hint>
+              <Kbd>⌘</Kbd>
+              <Kbd>K</Kbd>
+            </span>{' '}
+            anywhere for instant results.
+          </p>
         </div>
-      </div>
-    )}
+        {asOf && (
+          <p class="aside__asof">
+            Data as of <span class="num">{asOf}</span> ·{' '}
+            <a href="/methodology">How we collect it</a>
+          </p>
+        )}
+      </aside>
+    </div>
   </div>
 </BaseLayout>
 
@@ -235,160 +321,190 @@ const title = q ? `Results for “${q}”` : 'Search';
     padding-bottom: var(--space-20);
   }
   .srch__head {
-    align-items: end;
-    padding-block: var(--space-8) var(--space-8);
+    padding-top: var(--section-y-app);
   }
-  .srch__eyebrow {
-    margin-bottom: var(--space-4);
+  .srch__head .eyebrow {
+    margin-bottom: var(--space-3);
   }
   .srch__title {
-    font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.5rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.035em;
-    line-height: 1.02;
     overflow-wrap: anywhere;
   }
   .srch__q {
-    font-family: var(--font-serif);
-    font-weight: 400;
-    letter-spacing: -0.02em;
+    color: var(--ink-2);
+  }
+  .srch__lede {
+    margin-top: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-body);
   }
   .srch__form {
     margin-top: var(--space-6);
   }
-  .srch__tip {
-    max-width: 320px;
-    color: var(--ink-3);
-    font-size: var(--text-sm);
-  }
-  .srch__tip-kbd {
-    display: none;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .srch__tip-kbd {
-      display: inline;
+  /* The header lines up with the results column (the aside sits beside the results only). */
+  @media (min-width: 1024px) {
+    .srch__head {
+      max-width: calc(100% - 280px - var(--space-12));
     }
   }
-  .srch__kbd {
-    display: inline-grid;
-    place-items: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
-    border-radius: var(--radius-xs);
-    background: var(--surface);
-    box-shadow:
-      inset 0 0 0 1px var(--line),
-      0 1px 0 var(--line);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    color: var(--ink-2);
+  .srch__head :global(.srch__tabs) {
+    margin-top: var(--space-6);
   }
 
   .srch__body {
-    margin-top: var(--space-4);
-    align-items: start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-12);
+    margin-top: var(--space-8);
   }
-  .srch__toc {
-    display: none;
-  }
-  .srch__toc-label {
-    padding-bottom: var(--space-3);
-  }
-  .srch__toc-list {
-    border-top: 1px solid var(--ink);
-  }
-  .srch__toc-link {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: var(--space-2) 0;
-    border-bottom: 1px solid var(--line);
-    font-size: var(--text-base);
-  }
-  .srch__toc-link:hover span:first-child {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-  .srch__toc-n {
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-  }
-  .srch__asof {
-    margin-top: var(--space-4);
-    color: var(--ink-3);
-    font-size: var(--text-xs);
+  @media (min-width: 1024px) {
+    .srch__body {
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    .srch__aside {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
   }
 
-  .srch__group + .srch__group {
-    margin-top: var(--space-12);
+  /* Result groups: one panel per kind. */
+  .srch__groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
   }
-  .srch__group {
+  .rgroup {
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
     scroll-margin-top: calc(var(--header-h) + var(--space-6));
   }
-  .srch__group-head {
+  .rgroup__head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--ink);
+    min-height: 48px;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--line);
   }
-  .srch__group-title {
-    font-size: var(--text-xl);
+  .rgroup__title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-ui);
     font-weight: var(--weight-semibold);
-    letter-spacing: var(--tracking-snug);
   }
-  .srch__all {
+  .rgroup__count {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+  }
+  .rgroup__all {
     flex: none;
     color: var(--ink-2);
     font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .rgroup__all:hover {
+    color: var(--ink);
+  }
+  .rgroup__all span {
+    display: inline-block;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .rgroup__all:hover span {
+    transform: translateX(2px);
+  }
+  .rgroup__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-1-5);
+  }
+  .rgroup__foot {
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .rgroup__foot a,
+  .aside__asof a {
+    color: var(--ink-2);
     text-decoration: underline;
     text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
   }
-  .srch__all:hover {
-    color: var(--ink);
-    text-decoration-color: currentColor;
-  }
 
+  /* Popular searches + empty states */
+  .srch__start {
+    margin-bottom: var(--space-8);
+  }
+  .srch__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .srch__ways {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
   .srch__popular {
     margin-top: var(--space-12);
   }
-  .srch__popular-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-8) var(--space-8);
-    margin-top: var(--space-4);
-  }
-  .srch__pgroup-title {
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--ink);
-    font-size: var(--text-md);
+  .srch__h2 {
+    font-size: var(--text-h3);
     font-weight: var(--weight-semibold);
+    letter-spacing: -0.015em;
+  }
+  .srch__popular .srch__pills {
+    margin-bottom: var(--space-6);
   }
 
-  @media (min-width: 768px) {
-    .srch__popular-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Aside */
+  .srch__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+  .aside__block {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .aside__text {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+  }
+  .aside__kbd {
+    display: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .aside__kbd {
+      display: block;
     }
   }
-  @media (min-width: 1024px) {
-    .srch__head {
-      padding-block: var(--space-12) var(--space-10);
-    }
-    .srch__tip {
-      padding-bottom: var(--space-3);
-    }
-    .srch__toc {
-      display: block;
-      grid-column: 1 / span 3;
-      position: sticky;
-      top: calc(var(--header-h) + var(--space-6));
-    }
-    .srch__results {
-      grid-column: 5 / -1;
-    }
+  .aside__combo {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .aside__asof {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
   }
 </style>
