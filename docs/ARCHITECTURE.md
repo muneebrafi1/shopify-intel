@@ -97,6 +97,22 @@ owner who asks to be listed again) is a manual, audited database change for now.
   domain, scope and the admin link, never the requester's details. Errors are swallowed and logged
   as `notify=failed transport=<name>` without the provider's error text.
 
+## Product rules from the owner's decisions (17 Nov 2026, drafts)
+
+Where each rule lives, so pages and the MCP server get it from the data layer rather than
+re-implementing it:
+
+| Rule                                                                                            | Where                                                                                                    |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Equal usage shares a rank, the next rank skips (1, 2, 2, 4); ties listed by name                | `RANK()` in `src/server/repo/maintenance.ts` (`usage.rank`, `category_rank`); `src/lib/rank.ts`          |
+| `/compare` only for curated popular pairs; other pairs 404 (`not_curated`)                      | `getComparison` / `curatedPairs` in `src/server/repo/compare.ts`; alternatives carry `compare_available` |
+| Store lists default to the curated stores, also with filters; `scope=all` for every store       | `listStores` in `src/server/repo/stores.ts`                                                              |
+| A `store` or `screenshots` removal blocks all future captures                                   | `capture_blocks`, `src/server/repo/capture.ts` (above)                                                   |
+| Removal records kept 2 years after closing                                                      | `purgeExpiredRemovalRecords` in `src/server/repo/removal.ts`                                             |
+| The admin is notified of new removal requests                                                   | `src/server/notify.ts`                                                                                   |
+| Access primary, password break-glass, API token for scripts                                     | `src/server/auth/*`, "Admin auth model" below                                                            |
+| Wrong data fixed in curation, never in raw exports (`trustpilot` unmatched, Hyper link dropped) | `data/curation/overrides.json`                                                                           |
+
 ## Admin auth model
 
 Owner decision (draft): **Cloudflare Access is the primary sign-in; the password is the
