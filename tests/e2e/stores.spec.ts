@@ -102,12 +102,12 @@ test.describe('store detail', () => {
   test('page tabs and the device toggle change the viewer', async ({ page }) => {
     await prepare(page);
     await page.goto('/stores/youngla.com');
-    await expect(page.locator('.plates__viewer img')).toHaveAttribute('alt', /home page on desktop/);
+    await expect(page.locator('.plates__viewer .fp__canvas > img')).toHaveAttribute('alt', /home page on desktop/);
     await expect(page.locator('.plates__status')).toContainText('Layout preview — capture pending');
 
     await page.locator('.plates__tabs a', { hasText: 'Product' }).click();
     await expect(page).toHaveURL(/[?&]page=product/);
-    await expect(page.locator('.plates__viewer img')).toHaveAttribute('alt', /product page on desktop/);
+    await expect(page.locator('.plates__viewer .fp__canvas > img')).toHaveAttribute('alt', /product page on desktop/);
 
     await page.locator('.plates__top a', { hasText: 'Mobile' }).click();
     await expect(page).toHaveURL(/page=product&device=mobile/);
@@ -116,7 +116,7 @@ test.describe('store detail', () => {
 
     // The contact strip switches plates too.
     await page.locator('.strip__item').first().locator('a').click();
-    await expect(page.locator('.plates__viewer img')).toHaveAttribute('alt', /home page on desktop/);
+    await expect(page.locator('.plates__viewer .fp__canvas > img')).toHaveAttribute('alt', /home page on desktop/);
   });
 
   test('rail items scroll the capture to their section', async ({ page }) => {

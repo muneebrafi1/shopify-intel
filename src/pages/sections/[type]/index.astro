@@ -104,11 +104,13 @@ const themeOwn = Math.max(0, info.count - attributed);
 const renderedNote =
   appTotal === 0
     ? 'No app detected'
-    : `${appTotal} ${appTotal === 1 ? 'app' : 'apps'} · ${fmt(attributed)} of ${fmt(info.count)}`;
+    : `${appTotal} ${appTotal === 1 ? 'app' : 'apps'} · ${fmt(attributed)} of ${fmt(info.count)} sections`;
 const devices = whole.data.facets.devices;
 const deviceLine = devices.map((d) => `${d.label} ${fmt(d.count)}`).join(' · ') || '—';
 
 const lower = info.name.toLowerCase();
+// Typographic quotes for the editorial line ("you may also like" → “you may also like”).
+const statement = info.description.replace(/"([^"]+)"/g, '\u201c$1\u201d');
 const title = `${info.name} sections on real Shopify stores`;
 const description = `${fmt(info.count)} ${lower} sections from ${info.stores} Shopify stores on ${info.themes} themes. ${info.description} Desktop and mobile, filterable by page type, theme and app.`;
 const canonical = `/sections/${type}`;
@@ -147,7 +149,7 @@ const jsonLd = [
 
     <div class="chap__row cols-12">
       <div class="chap__lede span-7">
-        <p class="chap__statement">{info.description}</p>
+        <p class="chap__statement">{statement}</p>
 
         <div class="chap__apps">
           <p class="chap__apps-head">
@@ -370,13 +372,13 @@ const jsonLd = [
   }
   @media (min-width: 1024px) {
     .chap :global(.chap__eyebrow) {
-      margin-top: var(--space-12);
+      margin-top: var(--space-10);
     }
     .chap__row {
       margin-top: var(--space-10);
     }
     .chap__body {
-      margin-top: var(--space-16);
+      margin-top: var(--space-12);
     }
   }
 </style>
