@@ -1,0 +1,101 @@
+---
+/** Head-to-head links (`/compare/a-vs-b` hrefs come from the API): two icons, the pair, a fact. */
+import AppIcon from '~/components/ui/AppIcon.astro';
+
+export interface ComparePair {
+  href: string;
+  a: { name: string; iconUrl?: string | null };
+  b: { name: string; iconUrl?: string | null };
+  note?: string | null;
+}
+interface Props {
+  items: ComparePair[];
+  class?: string;
+}
+const { items, class: className } = Astro.props;
+---
+
+<ul class:list={['pairs', className]}>
+  {items.map((p) => (
+    <li>
+      <a href={p.href} class="pair">
+        <span class="pair__icons" aria-hidden="true">
+          <AppIcon src={p.a.iconUrl} name={p.a.name} size={26} />
+          <AppIcon src={p.b.iconUrl} name={p.b.name} size={26} />
+        </span>
+        <span class="pair__title">
+          {p.a.name} <span class="pair__vs">vs</span> {p.b.name}
+        </span>
+        {p.note && <span class="pair__note">{p.note}</span>}
+        <span class="pair__arrow" aria-hidden="true">
+          →
+        </span>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .pairs {
+    border-top: 1px solid var(--ink);
+  }
+  .pair {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'icons title arrow' 'icons note arrow';
+    align-items: center;
+    column-gap: var(--space-3);
+    min-height: 56px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    transition: padding var(--dur-base) var(--ease-out);
+  }
+  .pair:hover {
+    padding-left: var(--space-2);
+  }
+  .pair__icons {
+    grid-area: icons;
+    display: inline-flex;
+  }
+  .pair__icons :global(.app-icon + .app-icon) {
+    margin-left: -8px;
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+  .pair__title {
+    grid-area: title;
+    min-width: 0;
+    font-weight: var(--weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pair__vs {
+    color: var(--ink-3);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+  }
+  .pair__note {
+    grid-area: note;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .pair__arrow {
+    grid-area: arrow;
+    color: var(--ink-3);
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .pair:hover .pair__arrow {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+  @media (min-width: 768px) {
+    .pair {
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      grid-template-areas: 'icons title note arrow';
+    }
+  }
+</style>

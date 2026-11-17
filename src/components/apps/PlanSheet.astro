@@ -1,0 +1,153 @@
+---
+/**
+ * App plans as a spec sheet: one column per plan with hairline dividers, the price in serif
+ * numerals, then what the plan includes. No emphasis on any plan (we don't sell them). Columns
+ * stack on small screens.
+ */
+import type { AppPlan } from '~/server/api/v1/types';
+
+interface Props {
+  plans: AppPlan[];
+  class?: string;
+}
+const { plans, class: className } = Astro.props;
+const MAX_FEATURES = 8;
+const period = (p: AppPlan) => {
+  if (p.price_cents === 0) return 'Free forever';
+  if (!p.period) return 'One-time or usage based';
+  return `per ${p.period}`;
+};
+const priceText = (p: AppPlan) => (p.price_cents === 0 ? 'Free' : p.price_label);
+---
+
+<ol
+  class:list={['plans', className]}
+  style={`--plans:${Math.min(plans.length, 4)};--plans-md:${Math.min(plans.length, 2)}`}
+>
+  {plans.map((p, i) => (
+    <li class="plan">
+      <p class="plan__n">{String(i + 1).padStart(2, '0')}</p>
+      <h3 class="plan__name">{p.name}</h3>
+      <p class="plan__price">
+        <span class="plan__amount num">{priceText(p)}</span>
+        <span class="plan__period">{period(p)}</span>
+      </p>
+      <p class="plan__trial">
+        {p.trial_days
+          ? `${p.trial_days}-day free trial`
+          : p.price_cents === 0
+            ? '—'
+            : 'No trial listed'}
+      </p>
+      {p.features.length > 0 ? (
+        <ul class="plan__features">
+          {p.features.slice(0, MAX_FEATURES).map((f) => (
+            <li>{f}</li>
+          ))}
+          {p.features.length > MAX_FEATURES && (
+            <li class="plan__more">+{p.features.length - MAX_FEATURES} more on the listing</li>
+          )}
+        </ul>
+      ) : (
+        <p class="plan__none">No features listed.</p>
+      )}
+    </li>
+  ))}
+</ol>
+
+<style>
+  .plans {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border-top: 1px solid var(--ink);
+  }
+  @media (min-width: 640px) {
+    .plans {
+      grid-template-columns: repeat(var(--plans-md), minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .plans {
+      grid-template-columns: repeat(var(--plans), minmax(0, 1fr));
+    }
+  }
+  .plan {
+    min-width: 0;
+    padding: var(--space-5) 0 var(--space-6);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 640px) {
+    .plan {
+      padding-right: var(--space-6);
+    }
+    .plan + .plan {
+      padding-left: var(--space-6);
+      border-left: 1px solid var(--line);
+    }
+  }
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .plan:nth-child(odd) {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+  .plan__n {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .plan__name {
+    margin-top: var(--space-2);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+  }
+  .plan__price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px var(--space-2);
+    margin-top: var(--space-4);
+  }
+  .plan__amount {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .plan__period {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .plan__trial {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .plan__features {
+    margin-top: var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+  .plan__features li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+  }
+  .plan__features li:last-child {
+    border-bottom: 0;
+  }
+  .plan__more {
+    color: var(--ink-3);
+  }
+  .plan__none {
+    margin-top: var(--space-5);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+</style>
