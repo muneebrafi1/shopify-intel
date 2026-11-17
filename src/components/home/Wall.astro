@@ -1,0 +1,434 @@
+---
+/**
+ * The home page's one dark moment: columns of store captures drifting slowly, desktop and
+ * mobile mixed. Pure CSS motion (no JS): each column's track holds its tiles twice and slides by
+ * half its height, so the loop is seamless. Hover, keyboard focus or the "Pause" toggle stop it;
+ * under prefers-reduced-motion it is a static wall.
+ *
+ * Tiles are top-of-page thumbnails (see ~/lib/media) in fixed-ratio boxes, so nothing shifts
+ * while images load. The second copy of each column is hidden from assistive tech and the tab
+ * order.
+ */
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import { thumbUrl } from '~/lib/media';
+import { pageTypeName, type Device } from '~/lib/taxonomy';
+
+export interface WallTile {
+  domain: string;
+  name: string;
+  href: string;
+  pageType: string;
+  device: Device;
+  src: string;
+  width: number;
+  height: number;
+  isPlaceholder: boolean;
+}
+
+interface Props {
+  desktop: WallTile[];
+  mobile: WallTile[];
+  storeCount: number;
+  storesHref?: string;
+}
+const { desktop, mobile, storeCount, storesHref = '/stores' } = Astro.props;
+
+/** The first screen of each page: a 1440×900 or 390×844 viewport. */
+const VIEWPORT: Record<Device, number> = { desktop: 900, mobile: 844 };
+
+// Column layout, left to right. Desktop and mobile columns alternate so every slice of the wall
+// (including the narrow middle a phone sees) mixes both. `dur` is one loop, in seconds.
+const LAYOUT: Array<{ device: Device; dur: number; offset: number }> = [
+  { device: 'desktop', dur: 74, offset: -40 },
+  { device: 'mobile', dur: 88, offset: -150 },
+  { device: 'desktop', dur: 62, offset: -110 },
+  { device: 'mobile', dur: 80, offset: -20 },
+  { device: 'desktop', dur: 70, offset: -70 },
+  { device: 'mobile', dur: 94, offset: -120 },
+  { device: 'desktop', dur: 66, offset: -10 },
+];
+const PER_COLUMN = 5;
+
+const pools: Record<Device, WallTile[]> = { desktop, mobile };
+const columnsOf = (device: Device) => LAYOUT.filter((c) => c.device === device).length;
+const columns = LAYOUT.map((col, ci) => {
+  const pool = pools[col.device];
+  const n = columnsOf(col.device);
+  const index = LAYOUT.slice(0, ci).filter((c) => c.device === col.device).length;
+  // Deal the pool round-robin so neighbouring tiles come from different stores; cycle if short.
+  const tiles = pool.length
+    ? Array.from({ length: PER_COLUMN }, (_, row) => pool[(row * n + index) % pool.length]!)
+    : [];
+  return {
+    ...col,
+    dir: ci % 2 === 0 ? 'up' : 'down',
+    tiles: tiles.map((t) => ({
+      ...t,
+      thumb: thumbUrl(t.src, {
+        cropHeight: Math.min(t.height, VIEWPORT[t.device]),
+        width: t.device === 'desktop' ? 640 : 320,
+      }),
+      cropH: Math.min(t.height, VIEWPORT[t.device]),
+      page: pageTypeName(t.pageType),
+    })),
+  };
+}).filter((c) => c.tiles.length > 0);
+
+const allPlaceholders = [...desktop, ...mobile].every((t) => t.isPlaceholder);
+---
+
+<section class="wall" aria-labelledby="wall-label">
+  <input
+    type="checkbox"
+    id="wall-pause"
+    class="wall__pause-input visually-hidden"
+    aria-label="Pause the moving wall"
+  />
+  <div class="wall__stage">
+    <div class="wall__cols">
+      {columns.map((col) => (
+        <div
+          class:list={['wall__col', `wall__col--${col.device}`, `wall__col--${col.dir}`]}
+          style={`--dur:${col.dur}s;--offset:${col.offset}px`}
+        >
+          <div class="wall__track">
+            {[0, 1].map((copy) => (
+              <ul class="wall__set" aria-hidden={copy === 1 ? 'true' : undefined}>
+                {col.tiles.map((t) => (
+                  <li>
+                    <a
+                      href={t.href}
+                      class:list={['wall__tile', `wall__tile--${t.device}`]}
+                      tabindex={copy === 1 ? -1 : undefined}
+                    >
+                      <img
+                        src={t.thumb}
+                        alt=""
+                        width={t.width}
+                        height={t.cropH}
+                        loading={copy === 0 ? 'eager' : 'lazy'}
+                        fetchpriority="low"
+                        decoding="async"
+                      />
+                      <span class="wall__pill">
+                        <span class="wall__domain">{t.domain}</span>
+                        <span class="wall__page">{t.page}</span>
+                        <span class="visually-hidden">
+                          {`, ${t.device} ${t.isPlaceholder ? 'layout preview' : 'capture'}`}
+                        </span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="wall__caption container">
+    <MonoLabel as="h2" id="wall-label" class="wall__label">
+      {storeCount} curated stores · home, collection, product · desktop + mobile
+    </MonoLabel>
+    <p class="wall__note">
+      {allPlaceholders
+        ? 'Layout previews drawn from detected sections until the first capture run.'
+        : 'Captured from live storefronts.'}
+    </p>
+    <div class="wall__actions">
+      <label for="wall-pause" class="wall__pause">
+        <span class="wall__pause-icon" aria-hidden="true"></span>
+        <span class="wall__pause-off" aria-hidden="true">
+          Pause
+        </span>
+        <span class="wall__pause-on" aria-hidden="true">
+          Play
+        </span>
+      </label>
+      <a href={storesHref} class="wall__link">
+        Browse all stores <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .wall {
+    --d: 190px; /* desktop column width */
+    --m: 98px; /* mobile column width */
+    --g: 10px;
+    --h: 440px; /* visible height of the wall */
+    position: relative;
+    background: var(--inverse);
+    color: var(--ink-inverse);
+  }
+  @media (min-width: 640px) {
+    .wall {
+      --d: 236px;
+      --m: 120px;
+      --g: 14px;
+      --h: 520px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .wall {
+      --d: clamp(250px, 20.5vw, 330px);
+      --m: calc(var(--d) * 0.5);
+      --g: 16px;
+      --h: 620px;
+    }
+  }
+
+  .wall__stage {
+    position: relative;
+    height: var(--h);
+    overflow: hidden;
+  }
+  /* Functional fades so tiles enter and leave softly at the top and bottom edges. */
+  .wall__stage::before,
+  .wall__stage::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    height: 72px;
+    pointer-events: none;
+  }
+  .wall__stage::before {
+    top: 0;
+    background: linear-gradient(var(--inverse), transparent);
+  }
+  .wall__stage::after {
+    bottom: 0;
+    background: linear-gradient(transparent, var(--inverse));
+  }
+
+  .wall__cols {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    justify-content: center;
+    gap: var(--g);
+    height: 100%;
+  }
+  .wall__col {
+    width: var(--d);
+    margin-top: var(--offset);
+  }
+  .wall__col--mobile {
+    width: var(--m);
+  }
+  .wall__track {
+    will-change: transform;
+    animation: wall-up var(--dur) linear infinite;
+  }
+  .wall__col--down .wall__track {
+    animation-name: wall-down;
+  }
+  @keyframes wall-up {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(0, -50%, 0);
+    }
+  }
+  @keyframes wall-down {
+    from {
+      transform: translate3d(0, -50%, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  /* Hover, keyboard focus or the toggle stops the drift. */
+  .wall__stage:hover .wall__track,
+  .wall__stage:focus-within .wall__track,
+  .wall:has(.wall__pause-input:checked) .wall__track {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wall__track {
+      animation: none;
+      will-change: auto;
+    }
+    .wall__pause {
+      display: none !important;
+    }
+  }
+
+  /* Each copy ends with one gap so the two halves are identical and the loop is seamless. */
+  .wall__set {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g);
+    padding-bottom: var(--g);
+  }
+
+  .wall__tile {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    background: var(--inverse-2);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06);
+    aspect-ratio: 1440 / 900;
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .wall__tile--mobile {
+    border-radius: 12px;
+    aspect-ratio: 390 / 844;
+  }
+  .wall__tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  /* Spotlight the tile under the pointer; the rest step back. */
+  .wall__cols:hover .wall__tile:not(:hover) {
+    opacity: 0.55;
+  }
+  .wall__tile:hover {
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.5);
+  }
+  .wall__tile:focus-visible {
+    border-radius: var(--radius-sm);
+    box-shadow:
+      0 0 0 2px var(--inverse),
+      0 0 0 4px var(--accent);
+  }
+
+  /* Domain pill (Ploy-style), sitting on the capture. */
+  .wall__pill {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    max-width: calc(100% - 16px);
+    padding: 4px 9px 4px 8px;
+    border-radius: var(--radius-pill);
+    background: rgb(25 24 22 / 0.86);
+    color: var(--ink-inverse);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  @supports (backdrop-filter: blur(1px)) {
+    .wall__pill {
+      backdrop-filter: blur(6px);
+    }
+  }
+  .wall__domain {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wall__page {
+    flex: none;
+    color: var(--ink-inverse-2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .wall__tile--mobile .wall__pill {
+    left: 6px;
+    bottom: 6px;
+    max-width: calc(100% - 12px);
+    padding: 3px 8px;
+  }
+  .wall__tile--mobile .wall__page {
+    display: none;
+  }
+
+  /* Contact-sheet caption strip along the bottom edge. */
+  .wall__caption {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2) var(--space-6);
+    padding-block: var(--space-4) var(--space-5);
+    border-top: 1px solid var(--line-inverse);
+  }
+  .wall .wall__caption :global(.wall__label) {
+    color: var(--ink-inverse);
+  }
+  .wall__note {
+    color: var(--ink-inverse-2);
+    font-size: var(--text-xs);
+  }
+  .wall__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+  }
+  @media (min-width: 1024px) {
+    .wall__caption {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+    }
+  }
+  .wall__link,
+  .wall__pause {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    color: var(--ink-inverse);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+  .wall__link {
+    text-decoration: underline;
+    text-decoration-color: var(--line-inverse);
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+  .wall__link:hover {
+    text-decoration-color: currentColor;
+  }
+  .wall__pause {
+    cursor: pointer;
+    color: var(--ink-inverse-2);
+    user-select: none;
+  }
+  .wall__pause:hover {
+    color: var(--ink-inverse);
+  }
+  .wall__pause-icon {
+    width: 8px;
+    height: 9px;
+    border-inline: 2.5px solid currentColor;
+  }
+  .wall__pause-on {
+    display: none;
+  }
+  .wall:has(.wall__pause-input:checked) .wall__pause-on {
+    display: inline;
+  }
+  .wall:has(.wall__pause-input:checked) .wall__pause-off {
+    display: none;
+  }
+  .wall:has(.wall__pause-input:checked) .wall__pause-icon {
+    width: 0;
+    height: 0;
+    border-inline: 0;
+    border-block: 4.5px solid transparent;
+    border-left: 7px solid currentColor;
+  }
+  .wall__pause-input:focus-visible ~ .wall__caption .wall__pause {
+    border-radius: var(--radius-xs);
+    box-shadow:
+      0 0 0 2px var(--inverse),
+      0 0 0 4px var(--accent);
+  }
+</style>

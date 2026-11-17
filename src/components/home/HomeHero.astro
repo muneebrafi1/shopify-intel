@@ -1,0 +1,322 @@
+---
+/**
+ * Home statement: one large Newsreader line across 8 columns, a live dated spec line, the big
+ * search field (a plain GET form; with JS it opens the command palette) and the four ways in.
+ */
+import Count from '~/components/ui/Count.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Kbd from '~/components/ui/Kbd.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+
+interface Entry {
+  href: string;
+  label: string;
+  count: number;
+}
+interface Props {
+  spec: string[];
+  entries: Entry[];
+  lede: string;
+}
+const { spec, entries, lede } = Astro.props;
+---
+
+<section class="hero container" aria-labelledby="home-title">
+  <div class="hero__top cols-12">
+    <div class="hero__statement span-8">
+      <h1 id="home-title" class="hero__title display">
+        Shopify themes and apps, on the stores that run them.
+      </h1>
+      <MonoLabel as="p" class="hero__spec">
+        {spec.join(' · ')}
+      </MonoLabel>
+    </div>
+    <p class="hero__lede start-9">{lede}</p>
+  </div>
+
+  <div class="hero__search cols-12">
+    <form class="hsearch span-8" action="/search" method="get" role="search" data-home-search>
+      <label for="home-q" class="visually-hidden">
+        Search stores, themes and apps
+      </label>
+      <Icon name="magnifying-glass" size={20} class="hsearch__icon" />
+      <input
+        id="home-q"
+        class="hsearch__input"
+        type="search"
+        name="q"
+        placeholder="Search stores, themes, apps"
+        autocomplete="off"
+        spellcheck="false"
+        enterkeyhint="search"
+      />
+      <span class="hsearch__kbd" data-kbd-hint aria-hidden="true">
+        <Kbd>⌘</Kbd>
+        <Kbd>K</Kbd>
+      </span>
+      <button type="submit" class="hsearch__submit">
+        Search
+      </button>
+    </form>
+    <p class="hero__try start-9">
+      Try{' '}
+      <a href="/search?q=prestige" data-try="prestige">
+        Prestige
+      </a>
+      ,{' '}
+      <a href="/search?q=judge.me" data-try="judge.me">
+        Judge.me
+      </a>{' '}
+      or{' '}
+      <a href="/search?q=youngla" data-try="youngla">
+        youngla.com
+      </a>
+    </p>
+  </div>
+
+  <nav class="entries" aria-label="Browse the archive">
+    <ol class="entries__list">
+      {entries.map((e, i) => (
+        <li>
+          <a href={e.href} class="entries__link">
+            <span class="entries__n">{String(i + 1).padStart(2, '0')}</span>
+            <span class="entries__label">
+              {e.label}
+              <Count value={e.count} />
+            </span>
+            <span class="entries__arrow" aria-hidden="true">
+              →
+            </span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+</section>
+
+<script>
+  // Progressive enhancement: the field is a plain GET form. With JS, clicking it or typing into
+  // it hands over to the command palette (which answers `palette:open` by cancelling it).
+  const form = document.querySelector<HTMLFormElement>('[data-home-search]');
+  const input = form?.querySelector<HTMLInputElement>('input[name="q"]');
+  const open = (q: string) =>
+    !document.dispatchEvent(new CustomEvent('palette:open', { cancelable: true, detail: { q } }));
+
+  if (form && input) {
+    input.addEventListener('click', () => {
+      if (open(input.value)) input.blur();
+    });
+    input.addEventListener('input', () => {
+      const q = input.value;
+      if (q.trim() && open(q)) {
+        input.value = '';
+        input.blur();
+      }
+    });
+    document.querySelectorAll<HTMLAnchorElement>('[data-try]').forEach((a) => {
+      a.addEventListener('click', (event) => {
+        if (open(a.dataset.try ?? '')) event.preventDefault();
+      });
+    });
+  }
+</script>
+
+<style>
+  .hero {
+    padding-block: var(--space-10) var(--space-10);
+  }
+  .hero__top {
+    align-items: end;
+    row-gap: var(--space-5);
+  }
+  .hero__title {
+    font-size: clamp(2.6rem, 1.3rem + 4.6vw, 5.5rem);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  .hero__spec {
+    margin-top: var(--space-5);
+    color: var(--ink-2);
+    flex-wrap: wrap;
+  }
+  .hero__lede {
+    max-width: 340px;
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+
+  .hero__search {
+    margin-top: var(--space-8);
+    align-items: center;
+    row-gap: var(--space-3);
+  }
+  .hsearch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 56px;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .hsearch :global(.hsearch__icon) {
+    flex: none;
+    color: var(--ink);
+  }
+  .hsearch__input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 var(--space-3);
+    border: 0;
+    background: transparent;
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-snug);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .hsearch__input:focus-visible {
+    box-shadow: none;
+  }
+  .hsearch__input::placeholder {
+    color: var(--ink-3);
+  }
+  .hsearch__input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .hsearch:focus-within {
+    border-bottom-color: var(--accent);
+  }
+  .hsearch__kbd {
+    display: none;
+    gap: 3px;
+    margin-right: var(--space-3);
+  }
+  .hsearch__submit {
+    flex: none;
+    height: 36px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .hsearch__submit:hover {
+    background: var(--inverse-2);
+  }
+  .hero__try {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .hero__try a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .hero__try a:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .entries {
+    margin-top: var(--space-10);
+  }
+  .entries__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--ink);
+  }
+  .entries__link {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'n arrow'
+      'label label';
+    align-items: baseline;
+    height: 100%;
+    padding: var(--space-3) var(--space-4) var(--space-4) 0;
+    border-bottom: 1px solid var(--line);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .entries__list li:nth-child(even) .entries__link {
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--line);
+  }
+  .entries__n {
+    grid-area: n;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    color: var(--ink-3);
+  }
+  .entries__arrow {
+    grid-area: arrow;
+    color: var(--ink-3);
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .entries__label {
+    grid-area: label;
+    margin-top: var(--space-2);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-medium);
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+  .entries__link:hover .entries__arrow {
+    color: var(--ink);
+    transform: translateX(3px);
+  }
+  .entries__link:hover .entries__label {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  @media (min-width: 640px) {
+    .hsearch__kbd {
+      display: inline-flex;
+    }
+  }
+  @media (min-width: 1024px) {
+    .hero {
+      padding-block: var(--space-12) var(--space-12);
+    }
+    .hero__lede {
+      padding-bottom: 0.4em;
+    }
+    .hero__try {
+      grid-column: 9 / -1;
+    }
+    .hsearch {
+      height: 64px;
+    }
+    .hsearch__input {
+      font-size: var(--text-xl);
+    }
+    .entries {
+      margin-top: var(--space-10);
+    }
+    .entries__list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .entries__link {
+      padding: var(--space-3) var(--space-5) var(--space-5);
+      border-bottom: 0;
+    }
+    .entries__list li:first-child .entries__link {
+      padding-left: 0;
+    }
+    .entries__list li + li .entries__link {
+      border-left: 1px solid var(--line);
+      padding-left: var(--space-5);
+    }
+    .entries__label {
+      font-size: var(--text-2xl);
+    }
+  }
+</style>

@@ -1,0 +1,1121 @@
+---
+/**
+ * Global command palette: keyboard-first instant search over /api/v1/search.
+ *
+ * Opens on ⌘K / Ctrl+K, on "/" (when not typing in a field) and on the `palette:open` event
+ * (the header's search trigger and the home search field dispatch it; we cancel it to say it was
+ * handled, and read an optional `detail.q`). Native <dialog> for focus trap and Esc; the input is
+ * an ARIA combobox driving a listbox via aria-activedescendant. Results are fetched with a short
+ * debounce, stale requests are aborted, and answers are cached per query.
+ */
+import Icon from '~/components/ui/Icon.astro';
+import Kbd from '~/components/ui/Kbd.astro';
+import Skeleton from '~/components/ui/Skeleton.astro';
+---
+
+<dialog class="palette" aria-labelledby="palette-title" data-palette>
+  <h2 id="palette-title" class="visually-hidden">
+    Search
+  </h2>
+  <div class="palette__bar">
+    <Icon name="magnifying-glass" size={18} class="palette__glass" />
+    <input
+      id="palette-input"
+      class="palette__input"
+      type="text"
+      role="combobox"
+      aria-expanded="false"
+      aria-controls="palette-list"
+      aria-autocomplete="list"
+      aria-label="Search stores, themes, apps and sections"
+      placeholder="Search stores, themes, apps, sections…"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      enterkeyhint="go"
+      data-palette-input
+    />
+    <span class="palette__busy" aria-hidden="true" hidden data-palette-busy></span>
+    <button type="button" class="palette__close" data-palette-close>
+      <span class="palette__close-kbd" aria-hidden="true">
+        <Kbd>esc</Kbd>
+      </span>
+      <span class="palette__close-text">Cancel</span>
+      <span class="visually-hidden">Close search</span>
+    </button>
+  </div>
+
+  <div class="palette__body" data-palette-body>
+    <div
+      id="palette-list"
+      role="listbox"
+      aria-label="Search results"
+      class="palette__list"
+      data-palette-list
+    ></div>
+    <div class="palette__loading" hidden data-palette-loading aria-hidden="true">
+      <span class="palette__skel-label">
+        <Skeleton width="64px" />
+      </span>
+      {[0, 1, 2, 3].map((i) => (
+        <div class="palette__skel">
+          <Skeleton variant="block" width="40px" height="30px" class="palette__skel-media" />
+          <span class="palette__skel-text">
+            <Skeleton width={`${[46, 38, 52, 30][i]}%`} />
+            <Skeleton width={`${[28, 34, 22, 26][i]}%`} height="0.65em" />
+          </span>
+        </div>
+      ))}
+    </div>
+    <div class="palette__state" hidden data-palette-state>
+      <p class="palette__state-title" data-palette-state-title></p>
+      <p class="palette__state-body" data-palette-state-body></p>
+    </div>
+  </div>
+
+  <footer class="palette__foot">
+    <span class="palette__legend" aria-hidden="true">
+      <span>
+        <Kbd>↑</Kbd>
+        <Kbd>↓</Kbd> Navigate
+      </span>
+      <span>
+        <Kbd>↵</Kbd> Open
+      </span>
+      <span>
+        <Kbd>esc</Kbd> Close
+      </span>
+    </span>
+    <span class="palette__count" role="status" aria-live="polite" data-palette-count></span>
+  </footer>
+
+  <template data-palette-icon="clock">
+    <Icon name="clock" size={16} />
+  </template>
+  <template data-palette-icon="arrow">
+    <Icon name="arrow-right" size={16} />
+  </template>
+  <template data-palette-icon="search">
+    <Icon name="magnifying-glass" size={16} />
+  </template>
+</dialog>
+
+<script>
+  import { thumbUrl } from '~/lib/media';
+  import { toneFor } from '~/lib/tone';
+
+  type Kind = 'store' | 'theme' | 'app' | 'app-category' | 'section-type' | 'teardown' | 'vendor';
+  interface Hit {
+    kind: Kind;
+    ref: string;
+    title: string;
+    subtitle: string | null;
+    href: string;
+    icon_url: string | null;
+    thumbnail: { src: string; width: number; height: number; is_placeholder: boolean } | null;
+  }
+  interface Group {
+    kind: Kind;
+    label: string;
+    items: Hit[];
+  }
+  /** One row in the listbox. `fill` rows put a query into the field instead of navigating. */
+  interface Row {
+    href: string;
+    title: string;
+    subtitle?: string | null;
+    kind?: Kind;
+    hit?: Hit;
+    icon?: 'clock' | 'arrow' | 'search';
+    fill?: string;
+    tag?: string;
+  }
+  interface Section {
+    label: string;
+    rows: Row[];
+    action?: { label: string; run: () => void };
+  }
+
+  const KIND_LABEL: Record<Kind, string> = {
+    store: 'Store',
+    theme: 'Theme',
+    app: 'App',
+    'app-category': 'Category',
+    'section-type': 'Section',
+    teardown: 'Teardown',
+    vendor: 'Vendor',
+  };
+  const JUMP: Row[] = [
+    {
+      href: '/stores',
+      title: 'Stores',
+      subtitle: 'Every scanned store, with its theme and apps',
+      icon: 'arrow',
+    },
+    {
+      href: '/themes',
+      title: 'Themes',
+      subtitle: 'Themes on the stores that run them',
+      icon: 'arrow',
+    },
+    {
+      href: '/apps',
+      title: 'Apps',
+      subtitle: 'Most-installed apps and where they show up',
+      icon: 'arrow',
+    },
+    {
+      href: '/sections',
+      title: 'Sections',
+      subtitle: 'The library, by section type',
+      icon: 'arrow',
+    },
+    {
+      href: '/teardowns',
+      title: 'Teardowns',
+      subtitle: 'One store, read section by section',
+      icon: 'arrow',
+    },
+  ];
+  const RECENT_KEY = 'palette:recent';
+  const DEBOUNCE = 110;
+
+  const dialog = document.querySelector<HTMLDialogElement>('[data-palette]');
+  if (dialog) init(dialog);
+
+  function init(dialog: HTMLDialogElement) {
+    const $ = <T extends Element>(sel: string) => dialog.querySelector<T>(sel)!;
+    const input = $<HTMLInputElement>('[data-palette-input]');
+    const list = $<HTMLElement>('[data-palette-list]');
+    const body = $<HTMLElement>('[data-palette-body]');
+    const loading = $<HTMLElement>('[data-palette-loading]');
+    const state = $<HTMLElement>('[data-palette-state]');
+    const stateTitle = $<HTMLElement>('[data-palette-state-title]');
+    const stateBody = $<HTMLElement>('[data-palette-state-body]');
+    const count = $<HTMLElement>('[data-palette-count]');
+    const busy = $<HTMLElement>('[data-palette-busy]');
+    const icon = (name: string) =>
+      (dialog
+        .querySelector<HTMLTemplateElement>(`[data-palette-icon="${name}"]`)
+        ?.content.cloneNode(true) ?? document.createDocumentFragment()) as DocumentFragment;
+
+    const cache = new Map<string, Group[]>();
+    let suggestions: Group[] | null = null;
+    let options: HTMLElement[] = [];
+    let rows: Row[] = [];
+    let active = -1;
+    let timer = 0;
+    let slowTimer = 0;
+    let controller: AbortController | null = null;
+    let seq = 0;
+
+    // ---------- recent searches (localStorage can be unavailable: always guarded) ----------
+    const readRecent = (): string[] => {
+      try {
+        const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+        return Array.isArray(v)
+          ? v.filter((x): x is string => typeof x === 'string').slice(0, 5)
+          : [];
+      } catch {
+        return [];
+      }
+    };
+    const saveRecent = (q: string) => {
+      const t = q.trim();
+      if (t.length < 2) return;
+      try {
+        const next = [t, ...readRecent().filter((x) => x.toLowerCase() !== t.toLowerCase())].slice(
+          0,
+          5,
+        );
+        localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {
+        /* storage blocked: recents are a convenience */
+      }
+    };
+    const clearRecent = () => {
+      try {
+        localStorage.removeItem(RECENT_KEY);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    // ---------- open / close ----------
+    function open(q = '') {
+      if (!dialog.open) dialog.showModal();
+      input.value = q;
+      input.focus();
+      input.setSelectionRange(q.length, q.length);
+      update();
+    }
+    function close() {
+      if (dialog.open) dialog.close();
+    }
+    dialog.addEventListener('close', () => {
+      controller?.abort();
+      clearTimeout(timer);
+      clearTimeout(slowTimer);
+    });
+    // Clicking the backdrop (the dialog box itself, outside the panel content) closes.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) close();
+    });
+    $<HTMLButtonElement>('[data-palette-close]').addEventListener('click', close);
+
+    document.addEventListener('palette:open', (event) => {
+      event.preventDefault();
+      const q = (event as CustomEvent<{ q?: string } | null>).detail?.q ?? '';
+      open(typeof q === 'string' ? q : '');
+    });
+
+    const isTyping = (el: EventTarget | null) => {
+      if (!(el instanceof HTMLElement)) return false;
+      if (el.isContentEditable) return true;
+      const tag = el.tagName;
+      if (tag === 'TEXTAREA' || tag === 'SELECT') return true;
+      if (tag === 'INPUT') {
+        const type = (el as HTMLInputElement).type;
+        return ![
+          'checkbox',
+          'radio',
+          'button',
+          'submit',
+          'reset',
+          'range',
+          'color',
+          'file',
+        ].includes(type);
+      }
+      return false;
+    };
+    document.addEventListener('keydown', (event) => {
+      if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        if (dialog.open) close();
+        else open();
+        return;
+      }
+      if (
+        event.key === '/' &&
+        !dialog.open &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !isTyping(event.target)
+      ) {
+        // Another dialog (e.g. the mobile menu) owns the keyboard while it is open.
+        if (document.querySelector('dialog[open]')) return;
+        event.preventDefault();
+        open();
+      }
+    });
+
+    // ---------- query → results ----------
+    input.addEventListener('input', update);
+
+    function update() {
+      const q = input.value.trim();
+      clearTimeout(timer);
+      clearTimeout(slowTimer);
+      if (!q) {
+        controller?.abort();
+        setBusy(false);
+        renderIdle();
+        return;
+      }
+      const hit = cache.get(q.toLowerCase());
+      if (hit) {
+        controller?.abort();
+        setBusy(false);
+        renderResults(q, hit);
+        return;
+      }
+      setBusy(true);
+      // Only show skeleton rows when the answer is slow, so fast typing doesn't flicker.
+      slowTimer = window.setTimeout(showLoading, 260);
+      timer = window.setTimeout(() => fetchResults(q), DEBOUNCE);
+    }
+
+    async function fetchResults(q: string) {
+      controller?.abort();
+      controller = new AbortController();
+      const mine = ++seq;
+      try {
+        const res = await fetch(`/api/v1/search?q=${encodeURIComponent(q)}&limit=5`, {
+          signal: controller.signal,
+          headers: { accept: 'application/json' },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as { data: { groups: Group[] } };
+        cache.set(q.toLowerCase(), json.data.groups);
+        if (mine === seq && input.value.trim() === q) renderResults(q, json.data.groups);
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
+        if (mine === seq && input.value.trim() === q) renderError(q);
+      } finally {
+        if (mine === seq) {
+          clearTimeout(slowTimer);
+          setBusy(false);
+        }
+      }
+    }
+
+    async function loadSuggestions() {
+      if (suggestions) return;
+      try {
+        const res = await fetch('/api/v1/search?q=&limit=3', {
+          headers: { accept: 'application/json' },
+        });
+        if (!res.ok) return;
+        suggestions = ((await res.json()) as { data: { groups: Group[] } }).data.groups;
+        if (dialog.open && !input.value.trim()) renderIdle();
+      } catch {
+        /* the idle state works without suggestions */
+      }
+    }
+
+    // ---------- states ----------
+    function setBusy(on: boolean) {
+      busy.hidden = !on;
+    }
+    function showLoading() {
+      list.replaceChildren();
+      options = [];
+      setActive(-1);
+      state.hidden = true;
+      loading.hidden = false;
+      input.setAttribute('aria-expanded', 'false');
+      count.textContent = 'Searching…';
+    }
+    function showState(title: string, text: string) {
+      stateTitle.textContent = title;
+      stateBody.textContent = text;
+      state.hidden = false;
+    }
+
+    function renderIdle() {
+      const sections: Section[] = [];
+      const recent = readRecent();
+      if (recent.length) {
+        sections.push({
+          label: 'Recent searches',
+          rows: recent.map((q) => ({
+            href: `/search?q=${encodeURIComponent(q)}`,
+            title: q,
+            icon: 'clock',
+            fill: q,
+          })),
+          action: {
+            label: 'Clear',
+            run: () => {
+              clearRecent();
+              renderIdle();
+              input.focus();
+            },
+          },
+        });
+      }
+      if (suggestions) {
+        for (const g of suggestions) {
+          if (g.kind === 'teardown') continue;
+          sections.push({ label: `Popular ${g.label.toLowerCase()}`, rows: g.items.map(hitRow) });
+        }
+      } else {
+        void loadSuggestions();
+      }
+      sections.push({ label: 'Jump to', rows: JUMP });
+      render(sections, '');
+      count.textContent = '';
+      // Like Linear/Raycast, a row is always active so Enter does something useful.
+      setActive(0, false);
+    }
+
+    function renderResults(q: string, groups: Group[]) {
+      const total = groups.reduce((n, g) => n + g.items.length, 0);
+      if (!total) {
+        render([], q);
+        showState(
+          `No matches for “${q}”`,
+          'Search matches the start of words. Try a store domain, a theme or an app name, or press ↵ to search every page.',
+        );
+        count.textContent = '0 results';
+        return;
+      }
+      const sections: Section[] = groups.map((g) => ({
+        label: g.label,
+        rows: g.items.map(hitRow),
+      }));
+      sections.push({
+        label: '',
+        rows: [
+          {
+            href: `/search?q=${encodeURIComponent(q)}`,
+            title: `See all results for “${q}”`,
+            icon: 'search',
+          },
+        ],
+      });
+      render(sections, q);
+      setActive(0);
+      count.textContent = `${total} ${total === 1 ? 'result' : 'results'}`;
+    }
+
+    function renderError(q: string) {
+      render([], q);
+      showState('Search isn’t responding', 'Press ↵ to open the full results page instead.');
+      count.textContent = '';
+    }
+
+    function hitRow(hit: Hit): Row {
+      return {
+        href: hit.href,
+        title: hit.title,
+        subtitle: hit.subtitle,
+        kind: hit.kind,
+        hit,
+        tag: KIND_LABEL[hit.kind],
+      };
+    }
+
+    // ---------- rendering ----------
+    function render(sections: Section[], q: string) {
+      loading.hidden = true;
+      state.hidden = true;
+      const words = q
+        .toLowerCase()
+        .split(/[^\p{L}\p{N}]+/u)
+        .filter(Boolean);
+      const frag = document.createDocumentFragment();
+      rows = [];
+      options = [];
+      sections.forEach((section, si) => {
+        if (!section.rows.length) return;
+        const wrap = el('div', 'pgroup');
+        wrap.setAttribute('role', 'presentation');
+        const groupEl = el('div', 'pgroup__rows');
+        groupEl.setAttribute('role', 'group');
+        if (section.label) {
+          const head = el('div', 'pgroup__head');
+          head.setAttribute('role', 'presentation');
+          const label = el('span', 'pgroup__label', section.label);
+          label.id = `palette-g-${si}`;
+          add(head, label);
+          if (section.action) {
+            const btn = el('button', 'pgroup__action', section.action.label) as HTMLButtonElement;
+            btn.type = 'button';
+            btn.tabIndex = -1;
+            btn.setAttribute(
+              'aria-label',
+              `${section.action.label} ${section.label.toLowerCase()}`,
+            );
+            btn.addEventListener('click', section.action.run);
+            add(head, btn);
+          }
+          add(wrap, head);
+          groupEl.setAttribute('aria-labelledby', label.id);
+        } else {
+          groupEl.setAttribute('aria-label', 'More');
+          wrap.classList.add('pgroup--plain');
+        }
+        for (const row of section.rows) add(groupEl, option(row, words));
+        add(wrap, groupEl);
+        add(frag, wrap);
+      });
+      list.replaceChildren(frag);
+      body.scrollTop = 0;
+      input.setAttribute('aria-expanded', options.length ? 'true' : 'false');
+      setActive(-1);
+    }
+
+    function option(row: Row, words: string[]) {
+      const index = options.length;
+      const a = el('a', 'prow') as HTMLAnchorElement;
+      a.href = row.href;
+      a.id = `palette-opt-${index}`;
+      a.tabIndex = -1;
+      a.setAttribute('role', 'option');
+      a.setAttribute('aria-selected', 'false');
+      if (row.kind) a.dataset.kind = row.kind;
+
+      add(a, media(row));
+      const text = el('span', 'prow__text');
+      const title = el('span', 'prow__title');
+      add(title, highlight(row.title, words));
+      add(text, title);
+      if (row.subtitle) add(text, el('span', 'prow__sub', row.subtitle));
+      add(a, text);
+      const end = el('span', 'prow__end');
+      if (row.tag) add(end, el('span', 'prow__tag', row.tag));
+      const enter = el('span', 'prow__enter', '↵');
+      enter.setAttribute('aria-hidden', 'true');
+      add(end, enter);
+      add(a, end);
+
+      a.addEventListener('pointermove', () => {
+        if (active !== index) setActive(index, false);
+      });
+      a.addEventListener('click', (event) => {
+        if (row.fill !== undefined) {
+          event.preventDefault();
+          input.value = row.fill;
+          input.focus();
+          update();
+          return;
+        }
+        saveRecent(input.value);
+        if (!event.metaKey && !event.ctrlKey && !event.shiftKey) close();
+      });
+      options.push(a);
+      rows.push(row);
+      return a;
+    }
+
+    function media(row: Row) {
+      const box = el('span', 'prow__media');
+      const hit = row.hit;
+      if (row.icon) {
+        box.classList.add('prow__media--glyph');
+        add(box, icon(row.icon));
+        return box;
+      }
+      if (!hit) return box;
+      if (hit.kind === 'app') {
+        box.classList.add('prow__media--icon');
+        add(box, el('span', 'prow__mono', initial(hit.title)));
+        if (hit.icon_url) {
+          const img = new Image(28, 28);
+          img.alt = '';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.referrerPolicy = 'no-referrer';
+          img.addEventListener('error', () => img.remove());
+          img.src = hit.icon_url;
+          add(box, img);
+        }
+        return box;
+      }
+      if (hit.thumbnail) {
+        const t = hit.thumbnail;
+        const shot = hit.kind !== 'section-type';
+        box.classList.add(shot ? 'prow__media--shot' : 'prow__media--crop');
+        const img = new Image();
+        img.alt = '';
+        img.decoding = 'async';
+        img.width = 80;
+        img.height = 56;
+        img.src = shot
+          ? thumbUrl(t.src, {
+              cropHeight: Math.min(t.height, Math.round(t.width * 0.62)),
+              width: 160,
+            })
+          : t.src;
+        add(box, img);
+        return box;
+      }
+      if (hit.kind === 'store') {
+        const tone = toneFor(hit.ref);
+        box.classList.add('prow__media--mark');
+        box.style.setProperty('--mark-bg', tone.mark);
+        box.style.setProperty('--mark-fg', tone.markInk);
+        box.textContent = initial(hit.title);
+        return box;
+      }
+      box.classList.add('prow__media--glyph');
+      add(box, el('span', 'prow__mono', initial(hit.title)));
+      return box;
+    }
+
+    function highlight(text: string, words: string[]) {
+      const frag = document.createDocumentFragment();
+      if (!words.length) {
+        add(frag, text);
+        return frag;
+      }
+      const re = new RegExp(
+        `(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+        'giu',
+      );
+      let last = 0;
+      for (const m of text.matchAll(re)) {
+        const at = m.index ?? 0;
+        const before = at === 0 ? '' : text[at - 1]!;
+        if (before && /[\p{L}\p{N}]/u.test(before)) continue; // only word starts, like the index
+        if (at > last) add(frag, text.slice(last, at));
+        add(frag, el('mark', 'prow__hl', m[0]));
+        last = at + m[0].length;
+      }
+      if (last < text.length) add(frag, text.slice(last));
+      return frag;
+    }
+
+    function setActive(index: number, scroll = true) {
+      if (active >= 0 && options[active]) options[active]!.setAttribute('aria-selected', 'false');
+      active = index >= 0 && index < options.length ? index : -1;
+      if (active >= 0) {
+        const opt = options[active]!;
+        opt.setAttribute('aria-selected', 'true');
+        input.setAttribute('aria-activedescendant', opt.id);
+        if (scroll) opt.scrollIntoView({ block: 'nearest' });
+      } else {
+        input.removeAttribute('aria-activedescendant');
+      }
+    }
+
+    // ---------- keyboard inside the field ----------
+    input.addEventListener('keydown', (event) => {
+      if (event.isComposing) return;
+      const n = options.length;
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          if (n) setActive(active < 0 ? 0 : (active + 1) % n);
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          if (n) setActive(active <= 0 ? n - 1 : active - 1);
+          break;
+        case 'Enter': {
+          event.preventDefault();
+          const row = active >= 0 ? rows[active] : null;
+          const q = input.value.trim();
+          if (row && row.fill !== undefined) {
+            input.value = row.fill;
+            update();
+            return;
+          }
+          const href = row ? row.href : q ? `/search?q=${encodeURIComponent(q)}` : null;
+          if (!href) return;
+          saveRecent(q);
+          if (event.metaKey || event.ctrlKey) {
+            window.open(href, '_blank', 'noopener');
+            return;
+          }
+          close();
+          window.location.assign(href);
+          break;
+        }
+      }
+    });
+
+    // DOM appends via appendChild: the Workers types in this project shadow Element.append.
+    function add(parent: Node, ...kids: Array<Node | string>) {
+      for (const k of kids)
+        parent.appendChild(typeof k === 'string' ? document.createTextNode(k) : k);
+    }
+    function el(tag: string, className: string, text?: string) {
+      const node = document.createElement(tag);
+      node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+    function initial(s: string) {
+      return (
+        s
+          .replace(/^www\./, '')
+          .trim()
+          .charAt(0) || '·'
+      ).toUpperCase();
+    }
+  }
+</script>
+
+<style>
+  .palette {
+    width: min(calc(100% - 32px), 640px);
+    max-width: none;
+    max-height: min(600px, calc(100dvh - 20vh - 32px));
+    margin: 20vh auto auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-float);
+    overflow: hidden;
+    flex-direction: column;
+  }
+  .palette[open] {
+    display: flex;
+    animation: palette-in var(--dur-base) var(--ease-out);
+  }
+  .palette::backdrop {
+    background: rgb(25 24 22 / 0.4);
+  }
+  @supports (backdrop-filter: blur(1px)) {
+    .palette::backdrop {
+      backdrop-filter: blur(2px);
+    }
+  }
+  @keyframes palette-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.99);
+    }
+  }
+  :global(html:has(dialog.palette[open])) {
+    overflow: hidden;
+  }
+
+  /* Field */
+  .palette__bar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-3);
+    height: 56px;
+    padding: 0 var(--space-3) 0 var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .palette__bar :global(.palette__glass) {
+    color: var(--ink-3);
+  }
+  .palette__input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-snug);
+    outline: none;
+  }
+  .palette__input::placeholder {
+    color: var(--ink-3);
+  }
+  /* The caret is the focus indicator here; the global ring would box the whole field. */
+  .palette__input:focus-visible {
+    box-shadow: none;
+  }
+  .palette__busy {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-strong);
+    border-top-color: var(--ink-2);
+    animation: palette-spin 0.7s linear infinite;
+  }
+  .palette__busy[hidden] {
+    display: none;
+  }
+  @keyframes palette-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .palette__busy {
+      animation: none;
+      border-top-color: var(--line-strong);
+    }
+  }
+  .palette__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .palette__close:hover {
+    background: var(--fill);
+  }
+  .palette__close-text {
+    display: none;
+  }
+
+  /* Results */
+  .palette__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-2);
+    scroll-padding-block: var(--space-8) var(--space-2);
+  }
+  .palette__list:empty {
+    display: none;
+  }
+  .palette__list :global(.pgroup + .pgroup) {
+    margin-top: var(--space-2);
+  }
+  .palette__list :global(.pgroup--plain) {
+    padding-top: var(--space-1);
+    border-top: 1px solid var(--line);
+  }
+  .palette__list :global(.pgroup__head) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-3) var(--space-1);
+  }
+  .palette__list :global(.pgroup__label) {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .palette__list :global(.pgroup__action) {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .palette__list :global(.pgroup__action:hover) {
+    color: var(--ink);
+  }
+
+  .palette__list :global(.prow) {
+    position: relative;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 52px;
+    padding: 6px var(--space-3);
+    border-radius: var(--radius-md);
+    color: var(--ink);
+    scroll-margin-block: var(--space-8) var(--space-2);
+  }
+  .palette__list :global(.prow[aria-selected='true']) {
+    background: var(--fill);
+  }
+  .palette__list :global(.prow[aria-selected='true']::before) {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .palette__list :global(.prow__media) {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 30px;
+    overflow: hidden;
+    border-radius: var(--radius-xs);
+    color: var(--ink-3);
+  }
+  .palette__list :global(.prow__media--shot),
+  .palette__list :global(.prow__media--crop) {
+    background: var(--tile);
+    box-shadow: inset 0 0 0 1px rgb(25 24 22 / 0.06);
+  }
+  .palette__list :global(.prow__media--shot img),
+  .palette__list :global(.prow__media--crop img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  .palette__list :global(.prow__media--crop img) {
+    object-fit: contain;
+    object-position: center;
+    padding: 3px;
+  }
+  .palette__list :global(.prow__media--icon) {
+    width: 28px;
+    height: 28px;
+    margin-inline: 6px;
+    border-radius: 7px;
+    background: var(--fill);
+    box-shadow: inset 0 0 0 1px rgb(25 24 22 / 0.08);
+  }
+  .palette__list :global(.prow__media--icon img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .palette__list :global(.prow__media--mark) {
+    width: 28px;
+    height: 28px;
+    margin-inline: 6px;
+    border-radius: 7px;
+    background: var(--mark-bg);
+    color: var(--mark-fg);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+  }
+  .palette__list :global(.prow__media--glyph) {
+    background: transparent;
+    color: var(--ink-3);
+  }
+  .palette__list :global(.prow__mono) {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--ink-3);
+  }
+  .palette__list :global(.prow__text) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .palette__list :global(.prow__title) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    line-height: 1.35;
+  }
+  .palette__list :global(.prow__hl) {
+    background: none;
+    color: inherit;
+    font-weight: var(--weight-semibold);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.18em;
+  }
+  .palette__list :global(.prow__sub) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+  }
+  .palette__list :global(.prow__end) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .palette__list :global(.prow__tag) {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .palette__list :global(.prow__enter) {
+    display: none;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: var(--radius-xs);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      0 1px 0 var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    line-height: 20px;
+    text-align: center;
+  }
+  .palette__list :global(.prow[aria-selected='true'] .prow__enter) {
+    display: inline-block;
+  }
+  .palette__list :global(.prow[aria-selected='true'] .prow__tag) {
+    display: none;
+  }
+
+  /* Loading, empty and error states */
+  .palette__loading {
+    padding: var(--space-2) var(--space-3);
+  }
+  .palette__skel-label {
+    display: block;
+    padding: var(--space-1) 0 var(--space-2);
+  }
+  .palette__skel {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: center;
+    min-height: 52px;
+  }
+  .palette__skel-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .palette__skel-text :global(.skeleton + .skeleton) {
+    margin-top: 0;
+  }
+  .palette__state {
+    padding: var(--space-10) var(--space-6);
+    text-align: center;
+  }
+  .palette__state-title {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    overflow-wrap: anywhere;
+  }
+  .palette__state-body {
+    max-width: 380px;
+    margin: var(--space-2) auto 0;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+
+  /* Footer legend */
+  .palette__foot {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 36px;
+    padding: 0 var(--space-4);
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+  }
+  .palette__legend {
+    display: flex;
+    gap: var(--space-4);
+  }
+  .palette__legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .palette__legend :global(.kbd) {
+    min-width: 18px;
+    height: 18px;
+  }
+  .palette__count {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+
+  /* Phones: a full-screen sheet */
+  @media (max-width: 639px) {
+    .palette {
+      width: 100%;
+      height: 100dvh;
+      max-height: none;
+      margin: 0;
+      border-radius: 0;
+    }
+    .palette__bar {
+      padding: 0 var(--space-2) 0 var(--space-4);
+    }
+    .palette__close {
+      padding: 0 var(--space-2);
+    }
+    .palette__close-kbd {
+      display: none;
+    }
+    .palette__close-text {
+      display: inline;
+    }
+    .palette__legend {
+      display: none;
+    }
+    .palette__foot {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+</style>
