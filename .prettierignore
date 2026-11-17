@@ -1,0 +1,7 @@
+dist
+.astro
+.wrangler
+node_modules
+data/seed
+package-lock.json
+docs/design/research.md

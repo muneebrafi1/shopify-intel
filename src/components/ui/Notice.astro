@@ -1,0 +1,72 @@
+---
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+type Tone = 'info' | 'caution' | 'positive' | 'critical';
+interface Props {
+  tone?: Tone;
+  title?: string;
+  icon?: IconName;
+  class?: string;
+}
+const { tone = 'info', title, icon, class: className } = Astro.props;
+const defaults: Record<Tone, IconName> = {
+  info: 'info',
+  caution: 'warning',
+  positive: 'check-circle',
+  critical: 'x-circle',
+};
+---
+
+<div class:list={['notice', `notice--${tone}`, className]} role={tone === 'critical' ? 'alert' : 'note'}>
+  <Icon name={icon ?? defaults[tone]} size={16} class="notice__icon" />
+  <div class="notice__body">
+    {title && <p class="notice__title">{title}</p>}
+    <div class="notice__text"><slot /></div>
+  </div>
+</div>
+
+<style>
+  .notice {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--fill);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+  .notice__icon {
+    margin-top: 2px;
+    color: var(--ink-3);
+  }
+  .notice--caution {
+    background: var(--caution-soft);
+  }
+  .notice--caution .notice__icon {
+    color: var(--caution);
+  }
+  .notice--positive {
+    background: var(--positive-soft);
+  }
+  .notice--positive .notice__icon {
+    color: var(--positive);
+  }
+  .notice--critical {
+    background: var(--critical-soft);
+  }
+  .notice--critical .notice__icon {
+    color: var(--critical);
+  }
+  .notice__title {
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+    margin-bottom: 2px;
+  }
+  .notice__text :global(a) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+</style>

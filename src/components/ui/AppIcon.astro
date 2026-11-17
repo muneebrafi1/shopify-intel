@@ -1,0 +1,55 @@
+---
+/** App icon from the App Store listing, with a neutral fallback tile when missing. */
+interface Props {
+  src?: string | null;
+  name: string;
+  size?: number;
+  class?: string;
+}
+const { src, name, size = 32, class: className } = Astro.props;
+const initial = name.trim().charAt(0).toUpperCase();
+const radius = Math.round(size * 0.24);
+---
+
+<span class:list={['app-icon', className]} style={`--s:${size}px;--r:${radius}px`}>
+  <!-- The monogram sits underneath: if the remote icon fails to load, it shows through. -->
+  <span class="app-icon__fallback" aria-hidden="true">{initial}</span>
+  {src && <img src={src} alt="" width={size} height={size} loading="lazy" decoding="async" referrerpolicy="no-referrer" />}
+</span>
+
+<style>
+  .app-icon {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    width: var(--s);
+    height: var(--s);
+    border-radius: var(--r);
+    overflow: hidden;
+    background: var(--fill);
+  }
+  .app-icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgb(25 24 22 / 0.08);
+    pointer-events: none;
+  }
+  .app-icon img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .app-icon__fallback {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: var(--ink-3);
+    font-weight: var(--weight-semibold);
+    font-size: calc(var(--s) * 0.42);
+  }
+</style>

@@ -1,0 +1,112 @@
+---
+/**
+ * Screenshot tile: a warm-gray well with the top of a full-page capture inset in it. The
+ * capture bleeds off the bottom edge on purpose: it reads as "this page keeps going".
+ * Works identically for drawn placeholders and real captures (only `src` differs).
+ */
+import type { Device } from '~/lib/taxonomy';
+import { thumbCropHeight, thumbUrl } from '~/lib/media';
+
+interface Props {
+  src: string;
+  /** Full capture size in CSS px. */
+  width: number;
+  height: number;
+  device: Device;
+  alt: string;
+  href?: string;
+  /** Load immediately (above-the-fold tiles). */
+  eager?: boolean;
+  /** Well aspect ratio; defaults per device. */
+  ratio?: string;
+  /** Small label in the top-left corner, e.g. the page type. */
+  tag?: string;
+  /** `sizes` hint for responsive images. */
+  sizes?: string;
+  class?: string;
+}
+
+const { src, width, height, device, alt, href, eager = false, ratio, tag, class: className } = Astro.props;
+const cropH = thumbCropHeight(width, height, device);
+const thumb = thumbUrl(src, { cropHeight: cropH, width: device === 'desktop' ? 720 : 360 });
+const Tag = href ? 'a' : 'div';
+---
+
+<Tag
+  href={href}
+  class:list={['shot', `shot--${device}`, className]}
+  style={ratio ? `--ratio:${ratio}` : undefined}
+  data-shot
+>
+  <img
+    class="shot__img"
+    src={thumb}
+    alt={alt}
+    width={width}
+    height={cropH}
+    loading={eager ? 'eager' : 'lazy'}
+    decoding="async"
+    fetchpriority={eager ? 'high' : undefined}
+  />
+  {tag && <span class="shot__tag">{tag}</span>}
+  <slot />
+</Tag>
+
+<style>
+  .shot {
+    --ratio: 4 / 3;
+    --inset-w: 86%;
+    --inset-top: 6%;
+    position: relative;
+    display: block;
+    aspect-ratio: var(--ratio);
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--tile);
+    isolation: isolate;
+    transition: background-color var(--dur-base) var(--ease-out);
+  }
+  .shot--mobile {
+    --ratio: 4 / 5;
+    --inset-w: 54%;
+    --inset-top: 8%;
+  }
+  .shot__img {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: var(--inset-w);
+    height: auto;
+    margin-top: calc(var(--inset-top) * 0.75);
+    transform: translateX(-50%);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    box-shadow: var(--shadow-shot);
+    background: var(--surface);
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .shot--mobile .shot__img {
+    border-radius: 14px 14px 0 0;
+  }
+  a.shot:hover {
+    background: var(--tile-hover);
+  }
+  a.shot:hover .shot__img {
+    transform: translateX(-50%) translateY(-3px);
+  }
+  a.shot:focus-visible {
+    border-radius: var(--radius-lg);
+  }
+  .shot__tag {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    z-index: 1;
+    padding: 4px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow: var(--shadow-float);
+    color: var(--ink);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+  }
+</style>

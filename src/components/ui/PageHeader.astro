@@ -1,0 +1,105 @@
+---
+/**
+ * Top of an index or static page: eyebrow/breadcrumbs, title, lede, actions, and an optional
+ * meta line. Detail pages compose their own richer headers.
+ */
+interface Props {
+  title: string;
+  lede?: string;
+  eyebrow?: string;
+  /** Use the editorial serif for the title (teardowns, about, legal). */
+  serif?: boolean;
+  size?: 'md' | 'lg';
+  class?: string;
+}
+const { title, lede, eyebrow, serif = false, size = 'md', class: className } = Astro.props;
+---
+
+<header class:list={['ph', `ph--${size}`, className]}>
+  <slot name="top" />
+  {eyebrow && <p class="ph__eyebrow">{eyebrow}</p>}
+  <div class="ph__row">
+    <div class="ph__text">
+      <h1 class:list={['ph__title', { display: serif }]}>{title}</h1>
+      {lede && <p class="ph__lede">{lede}</p>}
+      <slot name="meta" />
+    </div>
+    {
+      Astro.slots.has('actions') && (
+        <div class="ph__actions">
+          <slot name="actions" />
+        </div>
+      )
+    }
+  </div>
+  <slot />
+</header>
+
+<style>
+  .ph {
+    padding-block: var(--space-8) var(--space-6);
+  }
+  .ph--lg {
+    padding-block: var(--space-12) var(--space-8);
+  }
+  .ph__eyebrow {
+    margin-bottom: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .ph__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-8);
+  }
+  .ph__text {
+    min-width: 0;
+    max-width: 760px;
+  }
+  .ph__title {
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+  }
+  .ph__title.display {
+    font-size: var(--text-4xl);
+    font-weight: 400;
+  }
+  .ph--lg .ph__title {
+    font-size: var(--text-4xl);
+  }
+  .ph--lg .ph__title.display {
+    font-size: var(--text-5xl);
+  }
+  .ph__lede {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    max-width: 620px;
+  }
+  .ph__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  @media (max-width: 639px) {
+    .ph__title {
+      font-size: var(--text-2xl);
+    }
+    .ph__title.display,
+    .ph--lg .ph__title {
+      font-size: var(--text-3xl);
+    }
+    .ph--lg .ph__title.display {
+      font-size: var(--text-4xl);
+    }
+    .ph__lede {
+      font-size: var(--text-md);
+    }
+  }
+</style>

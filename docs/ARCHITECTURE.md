@@ -1,4 +1,67 @@
-# Architecture (PROPOSAL — Claude may improve it)
+# Architecture
+
+This describes what the base build implements. The original proposal is kept at the bottom;
+where we diverged, the reason is given here.
+
+## Stack
+| Layer | Choice | Why |
+|---|---|---|
+| Web app | **Astro 7, server-rendered on Cloudflare Workers** (`@astrojs/cloudflare` 14) | Content-heavy, image-first site: HTML from the edge, almost no client JS (vanilla `<script>` islands, no UI framework). Dev runs *inside workerd* via the Cloudflare Vite plugin, so local == production runtime. |
+| Data | **D1** (`DB` binding), SQL migrations in `migrations/` | Free tier, SQLite semantics, FTS5 for search. Plain SQL behind a tiny `Db` interface (no ORM) so the same queries run on D1 and on `node:sqlite` in tests/scripts. |
+| Screenshots | **R2** (`MEDIA` binding) served by `/media/<key>`; drawn placeholders at `/media/placeholder/...` | See "Screenshot pipeline". |
+| API | **`/api/v1/*`**: typed endpoint definitions (zod in → handler → zod out) | One definition serves three transports: HTTP (`/api/v1`), the in-process client used by every page, and (later) the MCP server. OpenAPI 3.1 is generated from the same definitions at `/api/v1/openapi.json`. Details: [`API.md`](API.md). |
+| Search | D1 **FTS5** `search_index`, prefix queries, grouped results | Works at 50K+ rows without a build step (Pagefind would need re-indexing on every ingest). Palette (⌘K) + `/search`. |
+| Admin | `src/middleware.ts` guards `/admin` and `/api/v1/admin`: **Cloudflare Access JWT** in production or a **signed session cookie** (password) locally | Server-side only; same-origin check on writes; audit log. |
+| Affiliate | `/go/:id` → counts the click per day (no personal data) → 302 | Links live in the DB (`affiliate_links`), labelled in the UI, `rel="sponsored"`. |
+| Payments (later) | Whop | Stripe isn't available in Pakistan. Accounts/boards tables exist; UI slots are routed. |
+
+### Why the website calls the API in-process instead of over HTTP
+A Worker fetching its own public URL adds a network hop and double billing, and on Workers
+self-fetches are awkward. The in-process client calls the *same endpoint definitions* the HTTP
+router uses (same input validation, same output schema), so the site is guaranteed to see
+exactly what API/MCP consumers see, without the hop. The MCP server will import the same
+definitions (or call the HTTP API from elsewhere).
+
+## Screenshot pipeline (designed now, captures later)
+- Every capture is a row in `screenshots` (page × device) with its sections in `sections`
+  (`section_type`, `y`, `height`, optional `app_id`). Real captures have an `r2_key`
+  (`shots/{domain}/{page_type}/{device}/{captured_at}.webp`).
+- Until the capture pipeline runs, the seed creates **placeholder captures** for the 20 curated
+  stores (home/collection/product/cart × desktop/mobile) with plausible section layouts
+  (deterministic, flagged `is_placeholder`). `/media/placeholder/shot/<id>.svg` draws them from
+  their section rows in the store's muted tone (`src/server/media/placeholder-svg.ts`).
+- The UI never knows the difference: tiles request the top slice (`?h=` for placeholders,
+  Image Resizing `fit=crop,gravity=top` for R2 once enabled — `src/lib/media.ts`), the
+  full-page viewer positions section outlines in percentages of the capture height, and section
+  crops come from `r2_key_crop` or the same renderer with a crop. **A real capture drops in by
+  writing its R2 key and section rows; no UI change.**
+- A slim sitewide notice (`SHOW_CAPTURE_PREVIEW_NOTICE` in `src/config/site.ts`) says
+  screenshots are previews until the first capture run.
+
+## Local development and CI
+- `npm run setup` builds seed SQL from `data/seed/*.json` + `data/curation/*` and loads it into
+  the local D1 (`wrangler d1 ... --local`). No cloud resources are created.
+- CI (`.github/workflows/ci.yml`): seed JSON validation, project lint rules
+  (`scripts/lint-rules.mjs`: brand name only in `SITE_NAME`, no affiliate URLs or secrets in
+  source), Prettier, `astro check`, Vitest (API handlers against the seeded DB on
+  `node:sqlite`), build, size budgets (`scripts/size-budget.mjs`), and Playwright at 390px and
+  1440px against the built Worker (status, one h1, no horizontal overflow, no JS errors, named
+  controls, alt text).
+
+## Deploying (for the owner — nothing has been deployed)
+1. `npx wrangler d1 create shopify-intel` → put the real `database_id` in `wrangler.jsonc`.
+2. `npx wrangler r2 bucket create shopify-intel-media`.
+3. `npx wrangler d1 migrations apply DB --remote`, then load seed/ingest data.
+4. Secrets: `npx wrangler secret put ADMIN_SESSION_SECRET` (and `ADMIN_PASSWORD`, or configure
+   Cloudflare Access + `CF_ACCESS_TEAM_DOMAIN`/`CF_ACCESS_AUD`), `IP_HASH_SALT`.
+5. Set `SITE_NAME`/`SITE_DOMAIN` in `src/config/site.ts`, then `npm run build && npx wrangler deploy`.
+
+## Scaling notes
+Unchanged from the proposal below: append-only detection history, precomputed summary tables at
+ingest, edge caching keyed by URL + data version, on-demand rendering for the long tail (no
+static store pages, so the 20,000-asset limit doesn't apply), opt-out tombstones.
+
+## Original proposal (kept for reference)
 
 This is a starting proposal, not a contract. If you see a better design, change it and explain why
 in the PR. Constraints: free Cloudflare tier preferred, scales to 50K+ stores and 100K+ screenshots,

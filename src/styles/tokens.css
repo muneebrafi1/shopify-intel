@@ -1,0 +1,158 @@
+/*
+ * Design tokens. Every colour, size, radius and duration used in the UI comes from here.
+ * Components reference tokens only (no raw hex values in components).
+ *
+ * Palette: warm neutrals + one accent (vermilion). The accent is a signal, not decoration:
+ * focus rings, selected sections on screenshots, active indicators, the logo mark.
+ * Contrast: --ink-3 and darker pass WCAG AA for small text on --bg and --tile.
+ * --accent passes 3:1 for UI graphics; use --accent-text for accent-coloured text.
+ */
+:root {
+  /* Surfaces */
+  --bg: #fcfbf9;
+  --surface: #ffffff;
+  --tile: #f1efea; /* well behind screenshots */
+  --tile-hover: #ebe8e2;
+  --fill: #f4f2ee; /* inputs, quiet buttons, chips */
+  --fill-hover: #ece9e4;
+  --fill-active: #e4e0d9;
+  --inverse: #191816;
+  --inverse-2: #2a2825;
+
+  /* Lines */
+  --line: #e7e4de;
+  --line-strong: #d6d1c8;
+  --line-inverse: #3a3733;
+
+  /* Text */
+  --ink: #191816;
+  --ink-2: #57534d;
+  --ink-3: #6f6a63;
+  --ink-4: #a9a49b; /* disabled + decorative only, never body text */
+  --ink-inverse: #faf9f6;
+  --ink-inverse-2: #b9b4ab;
+
+  /* Accent (vermilion) */
+  --accent: #e4572e;
+  --accent-text: #c23e17;
+  --accent-soft: #fbe6de;
+  --accent-wash: rgb(228 87 46 / 0.12);
+
+  /* Status */
+  --positive: #2f7d4f;
+  --positive-soft: #e3f0e7;
+  --caution: #9a6512;
+  --caution-soft: #f6ecd9;
+  --critical: #b42318;
+  --critical-soft: #f9e3e0;
+
+  /* Placeholder screenshots (drawn wireframes) */
+  --ph-paper: #ffffff;
+  --ph-block: #ebe8e2;
+  --ph-line: #ddd9d1;
+
+  /* Type */
+  --font-sans: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Newsreader Variable', 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas,
+    monospace;
+
+  --text-2xs: 0.6875rem; /* 11 */
+  --text-xs: 0.75rem; /* 12 */
+  --text-sm: 0.8125rem; /* 13 */
+  --text-base: 0.875rem; /* 14  UI default */
+  --text-md: 0.9375rem; /* 15  reading */
+  --text-lg: 1.0625rem; /* 17 */
+  --text-xl: 1.25rem; /* 20 */
+  --text-2xl: 1.5rem; /* 24 */
+  --text-3xl: 2rem; /* 32 */
+  --text-4xl: 2.5rem; /* 40 */
+  --text-5xl: 3.5rem; /* 56 */
+
+  --leading-tight: 1.1;
+  --leading-snug: 1.3;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.6;
+
+  --weight-regular: 420;
+  --weight-medium: 520;
+  --weight-semibold: 600;
+
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-wide: 0.04em;
+
+  /* Space (4px grid) */
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Layout */
+  --page-max: 1440px;
+  --page-gutter: 16px;
+  --reading-max: 680px;
+  --header-h: 56px;
+
+  /* Radius */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Elevation: hairlines first, shadow only for things that float */
+  --shadow-hairline: 0 0 0 1px var(--line);
+  --shadow-shot: 0 0 0 1px rgb(25 24 22 / 0.06), 0 1px 2px rgb(25 24 22 / 0.06);
+  --shadow-float: 0 0 0 1px rgb(25 24 22 / 0.06), 0 2px 4px rgb(25 24 22 / 0.04),
+    0 12px 32px rgb(25 24 22 / 0.12);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
+
+  /* Focus */
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+
+  /* Z layers */
+  --z-sticky: 20;
+  --z-header: 40;
+  --z-overlay: 80;
+  --z-dialog: 90;
+  --z-toast: 100;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-gutter: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-gutter: 32px;
+    --header-h: 60px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}

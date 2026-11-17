@@ -1,24 +1,69 @@
-# Placeholder CI. Claude Code should replace this with real checks (install, typecheck,
-# lint, unit tests, build, and optionally Playwright smoke + size budgets) once the app exists.
 name: CI
+
 on:
   pull_request:
   push:
     branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  ASTRO_TELEMETRY_DISABLED: '1'
+  WRANGLER_SEND_METRICS: 'false'
+
 jobs:
-  check:
+  checks:
+    name: Lint, types, unit tests, build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - name: Validate seed JSON
-        run: |
-          for f in data/seed/*.json; do python3 -m json.tool "$f" > /dev/null || exit 1; done
-          echo "seed ok"
-      - name: Build (if package.json exists)
-        run: |
-          if [ -f package.json ]; then
-            corepack enable || true
-            (npm ci || npm install) && npm run --if-present lint && npm run --if-present typecheck && npm run --if-present test && npm run --if-present build
-          else
-            echo "no app yet"
-          fi
+        run: for f in data/seed/*.json; do python3 -m json.tool "$f" > /dev/null || exit 1; done
+      - name: Project rules + formatting
+        run: npm run lint
+      - name: Type check (astro check)
+        run: npm run check
+      - name: Unit tests (API against the seeded database)
+        run: npm test
+      - name: Build Worker
+        run: npm run build
+      - name: Size budgets
+        run: npm run size
+
+  e2e:
+    name: E2E + layout (390px and 1440px)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Seed local D1 (no cloud resources)
+        run: npm run setup
+      - name: Build Worker
+        run: npm run build
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Playwright
+        run: npm run test:e2e
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7

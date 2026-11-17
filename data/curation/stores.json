@@ -1,0 +1,40 @@
+{
+  "_note": "Editorial fields for the 20 curated stores. These are editorial, not detected: the owner should verify them. Filled only where reliable: country from the ccTLD or currency when unambiguous (USD .com stores stay null), names and categories only where confident. null = unknown; the UI falls back to the domain.",
+  "stores": [
+    { "domain": "youngla.com", "name": "YoungLA", "category": "Apparel", "country": null },
+    {
+      "domain": "thursdayboots.com",
+      "name": "Thursday Boot Co.",
+      "category": "Footwear",
+      "country": null
+    },
+    { "domain": "lskd.co", "name": "LSKD", "category": "Activewear", "country": "AU" },
+    { "domain": "thesill.com", "name": "The Sill", "category": "Home & garden", "country": null },
+    {
+      "domain": "negativeunderwear.com",
+      "name": "Negative Underwear",
+      "category": "Apparel",
+      "country": null
+    },
+    { "domain": "eatfishwife.com", "name": "Fishwife", "category": "Food & drink", "country": null },
+    { "domain": "koh.com", "name": "Koh", "category": "Home & garden", "country": "AU" },
+    { "domain": "wearicy.com", "name": null, "category": null, "country": null },
+    { "domain": "flybyjing.com", "name": "Fly By Jing", "category": "Food & drink", "country": null },
+    { "domain": "ncf.co.uk", "name": null, "category": null, "country": "GB" },
+    { "domain": "4wks.com", "name": null, "category": null, "country": "ZA" },
+    { "domain": "alfheimbeauty.com", "name": "Alfheim Beauty", "category": "Beauty", "country": null },
+    { "domain": "blacksheepniagara.com", "name": null, "category": null, "country": null },
+    { "domain": "flexfit.com.au", "name": null, "category": null, "country": "AU" },
+    { "domain": "guestsonearth.com", "name": null, "category": null, "country": null },
+    { "domain": "hikeepebike.com", "name": null, "category": null, "country": null },
+    { "domain": "hofstrawagner.dk", "name": null, "category": null, "country": "DK" },
+    { "domain": "mayatea.com", "name": "Maya Tea", "category": "Food & drink", "country": null },
+    { "domain": "shopcolorgame.com", "name": null, "category": null, "country": null },
+    {
+      "domain": "shopharveys.com",
+      "name": "Harveys",
+      "category": "Bags & accessories",
+      "country": null
+    }
+  ]
+}

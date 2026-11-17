@@ -1,0 +1,373 @@
+---
+/**
+ * Full-page screenshot viewer with its section slices.
+ *
+ * Left: a sticky rail listing the page's sections in order (with the app that renders each one).
+ * Right: the capture at a readable scale with an outline per section. Hovering either side
+ * highlights the other; scrolling marks the section in view. Overlays are HTML positioned in
+ * percentages of the capture height, so they work the same for drawn placeholders and real
+ * captures.
+ */
+import type { Device } from '~/lib/taxonomy';
+import AppIcon from '~/components/ui/AppIcon.astro';
+
+export interface FullPageSection {
+  id: string | number;
+  type: string;
+  name: string;
+  y: number;
+  height: number;
+  /** Horizontal bounds for side-by-side slices (CSS px of the capture). Omit for full width. */
+  x?: number | null;
+  w?: number | null;
+  app?: { name: string; slug: string; iconUrl?: string | null } | null;
+  /** Link for the section (e.g. its page in the sections library). */
+  href?: string;
+}
+
+interface Props {
+  src: string;
+  width: number;
+  height: number;
+  device: Device;
+  alt: string;
+  sections: FullPageSection[];
+  /** Hide the rail (e.g. inside a narrow column). */
+  rail?: boolean;
+  /** Eager-load (when the viewer is the main content above the fold). */
+  eager?: boolean;
+  class?: string;
+}
+
+const { src, width, height, device, alt, sections, rail = true, eager = false, class: className } = Astro.props;
+const ordered = [...sections].sort((a, b) => a.y - b.y);
+const pct = (n: number) => `${((n / height) * 100).toFixed(4)}%`;
+const pctX = (n: number) => `${((n / width) * 100).toFixed(4)}%`;
+const regionStyle = (s: FullPageSection) => {
+  const base = `top:${pct(s.y)};height:${pct(s.height)}`;
+  if (s.x == null || s.w == null || s.w >= width) return base;
+  return `${base};left:${pctX(s.x)};width:${pctX(s.w)};right:auto`;
+};
+const pad = (i: number) => String(i + 1).padStart(2, '0');
+---
+
+<div class:list={['fp', `fp--${device}`, { 'fp--no-rail': !rail }, className]} data-fullpage>
+  {
+    rail && (
+      <aside class="fp__rail" aria-label="Sections on this page">
+        <p class="fp__rail-title">
+          Sections <span class="num">{ordered.length}</span>
+        </p>
+        <ol class="fp__list">
+          {ordered.map((s, i) => (
+            <li>
+              <a class="fp__item" href={`#section-${s.id}`} data-target={String(s.id)}>
+                <span class="fp__n num">{pad(i)}</span>
+                <span class="fp__name">{s.name}</span>
+                {s.app && (
+                  <span class="fp__app" title={`Rendered by ${s.app.name}`}>
+                    <AppIcon src={s.app.iconUrl} name={s.app.name} size={16} />
+                    <span class="fp__app-name">{s.app.name}</span>
+                  </span>
+                )}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </aside>
+    )
+  }
+
+  <div class="fp__stage">
+    <div class="fp__canvas" style={`aspect-ratio:${width} / ${height}`}>
+      <img src={src} alt={alt} width={width} height={height} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+      {
+        ordered.map((s, i) => (
+          <div
+            class="fp__region"
+            id={`section-${s.id}`}
+            data-region={String(s.id)}
+            style={regionStyle(s)}
+          >
+            <span class="fp__tag">
+              <span class="num">{pad(i)}</span> {s.name}
+              {s.app && <span class="fp__tag-app">· {s.app.name}</span>}
+            </span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-fullpage]').forEach((root) => {
+    const items = new Map<string, HTMLElement>();
+    const regions = new Map<string, HTMLElement>();
+    root.querySelectorAll<HTMLElement>('[data-target]').forEach((el) => items.set(el.dataset.target!, el));
+    root.querySelectorAll<HTMLElement>('[data-region]').forEach((el) => regions.set(el.dataset.region!, el));
+
+    const setHover = (id: string | null) => {
+      regions.forEach((el, key) => el.classList.toggle('is-hover', key === id));
+      items.forEach((el, key) => el.classList.toggle('is-hover', key === id));
+    };
+    items.forEach((el, id) => {
+      el.addEventListener('mouseenter', () => setHover(id));
+      el.addEventListener('mouseleave', () => setHover(null));
+      el.addEventListener('focus', () => setHover(id));
+      el.addEventListener('blur', () => setHover(null));
+      el.addEventListener('click', (event) => {
+        event.preventDefault();
+        const region = regions.get(id);
+        if (!region) return;
+        region.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+        history.replaceState(null, '', `#section-${id}`);
+      });
+    });
+    regions.forEach((el, id) => {
+      el.addEventListener('mouseenter', () => setHover(id));
+      el.addEventListener('mouseleave', () => setHover(null));
+    });
+
+    // Mark the section crossing the middle of the viewport as current.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const id = (entry.target as HTMLElement).dataset.region!;
+          items.forEach((el, key) => {
+            const current = key === id;
+            el.toggleAttribute('aria-current', current);
+            if (current && root.querySelector('.fp__rail')?.scrollWidth) {
+              el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }
+          });
+        }
+      },
+      { rootMargin: '-50% 0px -50% 0px' },
+    );
+    regions.forEach((el) => observer.observe(el));
+  });
+</script>
+
+<style>
+  .fp {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  @media (min-width: 1024px) {
+    .fp {
+      grid-template-columns: 248px minmax(0, 1fr);
+      gap: var(--space-8);
+      align-items: start;
+    }
+    .fp--no-rail {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* Rail */
+  .fp__rail {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 2;
+    margin-inline: calc(var(--page-gutter) * -1);
+    padding: var(--space-2) var(--page-gutter);
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  .fp__rail-title {
+    display: none;
+  }
+  .fp__list {
+    display: flex;
+    gap: var(--space-1);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .fp__list::-webkit-scrollbar {
+    display: none;
+  }
+  .fp__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: none;
+    height: 32px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .fp__item:hover,
+  .fp__item.is-hover {
+    background: var(--fill);
+    color: var(--ink);
+  }
+  .fp__item[aria-current] {
+    background: var(--inverse);
+    color: var(--ink-inverse);
+  }
+  .fp__item[aria-current] .fp__n,
+  .fp__item[aria-current] .fp__app-name {
+    color: var(--ink-inverse-2);
+  }
+  .fp__n {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .fp__app {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .fp__app-name {
+    display: none;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+
+  @media (min-width: 1024px) {
+    .fp__rail {
+      top: calc(var(--header-h) + var(--space-6));
+      margin: 0;
+      padding: 0;
+      background: none;
+      border: 0;
+      max-height: calc(100dvh - var(--header-h) - var(--space-12));
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .fp__rail-title {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 var(--space-3) var(--space-3);
+      color: var(--ink-3);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+    }
+    .fp__list {
+      flex-direction: column;
+      overflow: visible;
+      gap: 1px;
+    }
+    .fp__item {
+      height: auto;
+      min-height: 34px;
+      padding: 6px var(--space-3);
+      border-radius: var(--radius-sm);
+      white-space: normal;
+    }
+    .fp__name {
+      flex: 1;
+      min-width: 0;
+    }
+    .fp__app {
+      margin-left: auto;
+    }
+    .fp__app-name {
+      display: inline;
+      max-width: 92px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  /* Stage + canvas */
+  .fp__stage {
+    min-width: 0;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--tile);
+  }
+  @media (min-width: 1024px) {
+    .fp__stage {
+      padding: var(--space-8);
+    }
+  }
+  .fp__canvas {
+    position: relative;
+    width: 100%;
+    max-width: 1040px;
+    margin-inline: auto;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: var(--shadow-shot);
+  }
+  .fp--mobile .fp__canvas {
+    max-width: 390px;
+    border-radius: 18px;
+  }
+  .fp__canvas img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .fp__region {
+    position: absolute;
+    left: 0;
+    right: 0;
+    scroll-margin-top: calc(var(--header-h) + 64px);
+    border-top: 1px dashed rgb(25 24 22 / 0.18);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .fp__region:first-of-type {
+    border-top: 0;
+  }
+  .fp__tag {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: calc(100% - 16px);
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background: rgb(25 24 22 / 0.78);
+    color: #fff;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+    pointer-events: none;
+  }
+  .fp__tag-app {
+    color: rgb(255 255 255 / 0.7);
+  }
+  .fp__region.is-hover,
+  .fp__region:target {
+    background: var(--accent-wash);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .fp__region.is-hover .fp__tag,
+  .fp__region:target .fp__tag {
+    opacity: 1;
+    transform: none;
+    background: var(--accent);
+  }
+  @media (hover: none) {
+    .fp__tag {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

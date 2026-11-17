@@ -1,0 +1,72 @@
+---
+export interface TabItem {
+  label: string;
+  href: string;
+  selected?: boolean;
+  count?: number | null;
+}
+interface Props {
+  items: TabItem[];
+  label: string;
+  class?: string;
+}
+const { items, label, class: className } = Astro.props;
+---
+
+<nav class:list={['tabs', className]} aria-label={label}>
+  {
+    items.map((item) => (
+      <a href={item.href} class="tabs__item" aria-current={item.selected ? 'page' : undefined}>
+        {item.label}
+        {typeof item.count === 'number' && <span class="tabs__count num">{item.count.toLocaleString('en-US')}</span>}
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .tabs {
+    display: flex;
+    gap: var(--space-5);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .tabs__item {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    color: var(--ink-3);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .tabs__item:hover {
+    color: var(--ink);
+  }
+  .tabs__item[aria-current='page'] {
+    color: var(--ink);
+  }
+  .tabs__item[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--ink);
+  }
+  .tabs__count {
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+    font-size: var(--text-sm);
+  }
+</style>

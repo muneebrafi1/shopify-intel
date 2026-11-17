@@ -1,0 +1,64 @@
+---
+/**
+ * Loading placeholder. Used for client-rendered regions (search palette, lazy panels).
+ * Server-rendered pages don't need loading states; images reserve space via width/height.
+ */
+interface Props {
+  variant?: 'line' | 'block' | 'tile' | 'circle';
+  width?: string;
+  height?: string;
+  lines?: number;
+  class?: string;
+}
+const { variant = 'line', width, height, lines = 1, class: className } = Astro.props;
+const items = variant === 'line' ? Array.from({ length: lines }, (_, i) => i) : [0];
+---
+
+{
+  items.map((i) => (
+    <span
+      class:list={['skeleton', `skeleton--${variant}`, className]}
+      style={`${width ? `width:${width};` : variant === 'line' && i === lines - 1 && lines > 1 ? 'width:60%;' : ''}${height ? `height:${height};` : ''}`}
+      aria-hidden="true"
+    />
+  ))
+}
+
+<style>
+  .skeleton {
+    display: block;
+    background: linear-gradient(90deg, var(--fill) 0%, var(--fill-hover) 40%, var(--fill) 80%) 0 0 / 300% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+  .skeleton--line {
+    height: 0.8em;
+    border-radius: var(--radius-xs);
+    width: 100%;
+  }
+  .skeleton--line + .skeleton--line {
+    margin-top: 0.6em;
+  }
+  .skeleton--block {
+    border-radius: var(--radius-md);
+    height: 120px;
+  }
+  .skeleton--tile {
+    border-radius: var(--radius-lg);
+    aspect-ratio: 4 / 3;
+  }
+  .skeleton--circle {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+  }
+  @keyframes shimmer {
+    to {
+      background-position: -300% 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton {
+      animation: none;
+    }
+  }
+</style>

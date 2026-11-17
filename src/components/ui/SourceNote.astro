@@ -1,0 +1,40 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  source: string;
+  asOf?: string;
+  href?: string;
+  class?: string;
+}
+const { source, asOf, href = '/methodology', class: className } = Astro.props;
+---
+
+<p class:list={['source-note', className]}>
+  <Icon name="info" size={12} />
+  <span>
+    Source: {source}{asOf && <> · <span class="num">{asOf}</span></>}.
+    {href && <a href={href}>How we detect</a>}
+  </span>
+</p>
+
+<style>
+  .source-note {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.4;
+  }
+  .source-note :global(.icon) {
+    margin-top: 2px;
+  }
+  .source-note a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+    margin-left: 2px;
+  }
+</style>

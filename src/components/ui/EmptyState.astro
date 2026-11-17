@@ -1,0 +1,105 @@
+---
+/**
+ * Empty results / nothing saved yet. The visual is a quiet stack of blank tiles (our own
+ * screenshot language), never an icon in a circle.
+ */
+interface Props {
+  title: string;
+  body?: string;
+  align?: 'center' | 'start';
+  size?: 'sm' | 'md';
+  class?: string;
+}
+const { title, body, align = 'center', size = 'md', class: className } = Astro.props;
+---
+
+<div class:list={['empty', `empty--${align}`, `empty--${size}`, className]}>
+  <div class="empty__art" aria-hidden="true">
+    <span></span><span></span><span></span>
+  </div>
+  <h2 class="empty__title">{title}</h2>
+  {body && <p class="empty__body">{body}</p>}
+  {
+    Astro.slots.has('default') && (
+      <div class="empty__actions">
+        <slot />
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-16) var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--line-strong);
+  }
+  .empty--sm {
+    padding: var(--space-10) var(--space-4);
+  }
+  .empty--start {
+    align-items: flex-start;
+    text-align: left;
+    border: 0;
+    padding: var(--space-6) 0;
+  }
+  .empty__art {
+    position: relative;
+    width: 72px;
+    height: 56px;
+    margin-bottom: var(--space-5);
+  }
+  .empty__art span {
+    position: absolute;
+    width: 44px;
+    height: 54px;
+    border-radius: 6px;
+    background: var(--surface);
+    box-shadow: var(--shadow-shot);
+  }
+  .empty__art span:nth-child(1) {
+    left: 0;
+    top: 6px;
+    transform: rotate(-8deg);
+    background: var(--tile);
+  }
+  .empty__art span:nth-child(2) {
+    left: 28px;
+    top: 4px;
+    transform: rotate(7deg);
+    background: var(--tile);
+  }
+  .empty__art span:nth-child(3) {
+    left: 14px;
+    top: 0;
+    background:
+      linear-gradient(var(--ph-block), var(--ph-block)) 6px 8px / 32px 12px no-repeat,
+      linear-gradient(var(--ph-line), var(--ph-line)) 6px 26px / 24px 3px no-repeat,
+      linear-gradient(var(--ph-line), var(--ph-line)) 6px 33px / 18px 3px no-repeat,
+      var(--surface);
+  }
+  .empty__title {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+  }
+  .empty--sm .empty__title {
+    font-size: var(--text-md);
+  }
+  .empty__body {
+    max-width: 420px;
+    margin-top: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-base);
+  }
+  .empty__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+  }
+</style>

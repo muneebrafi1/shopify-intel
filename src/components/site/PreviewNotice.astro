@@ -1,0 +1,57 @@
+---
+/** Slim, honest note that screenshots are layout previews until the first capture run. */
+---
+
+<div class="preview-notice" role="note">
+  <div class="container preview-notice__inner">
+    <span class="preview-notice__dot" aria-hidden="true"></span>
+    <p>
+      <span class="preview-notice__long">Preview: store screenshots are drawn from each page's detected sections until our first capture run. Detection data is real.</span>
+      <span class="preview-notice__short">Screenshots are layout previews until our first capture run.</span>
+      <a href="/methodology#screenshots">How it works</a>
+    </p>
+  </div>
+</div>
+
+<style>
+  .preview-notice {
+    background: var(--inverse);
+    color: var(--ink-inverse-2);
+    font-size: var(--text-xs);
+  }
+  .preview-notice__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 32px;
+    padding-block: 6px;
+    text-align: center;
+  }
+  .preview-notice__dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .preview-notice a {
+    margin-left: 4px;
+    color: var(--ink-inverse);
+    text-decoration: underline;
+    text-decoration-color: rgb(255 255 255 / 0.35);
+    text-underline-offset: 0.2em;
+    white-space: nowrap;
+  }
+  .preview-notice__long {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .preview-notice__long {
+      display: inline;
+    }
+    .preview-notice__short {
+      display: none;
+    }
+  }
+</style>

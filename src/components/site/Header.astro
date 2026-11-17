@@ -1,0 +1,356 @@
+---
+import { PRIMARY_NAV } from '~/config/site';
+import Logo from './Logo.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Kbd from '~/components/ui/Kbd.astro';
+
+interface Props {
+  /** Minimal chrome: logo only (focused flows such as sign-in). */
+  minimal?: boolean;
+}
+const { minimal = false } = Astro.props;
+const path = Astro.url.pathname;
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
+
+const SECONDARY_NAV = [
+  { href: '/compare', label: 'Compare' },
+  { href: '/alternatives', label: 'Alternatives' },
+  { href: '/pro', label: 'Pro' },
+  { href: '/developers', label: 'API & MCP' },
+  { href: '/methodology', label: 'Methodology' },
+  { href: '/about', label: 'About' },
+];
+---
+
+<header class="header">
+  <div class="header__inner container">
+    <a href="/" class="header__logo" aria-label="Home">
+      <Logo />
+    </a>
+
+    {
+      !minimal && (
+        <>
+          <nav class="header__nav" aria-label="Main">
+            {PRIMARY_NAV.map((item) => (
+              <a
+                href={item.href}
+                class="header__link"
+                aria-current={isActive(item.href) ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <a href="/search" class="search-trigger" data-palette-open>
+            <Icon name="magnifying-glass" size={16} />
+            <span class="search-trigger__label">Search stores, themes, apps</span>
+            <span class="search-trigger__kbd" data-kbd-hint>
+              <Kbd>⌘</Kbd>
+              <Kbd>K</Kbd>
+            </span>
+          </a>
+
+          <div class="header__actions">
+            <a
+              href="/pro"
+              class="header__link header__pro"
+              aria-current={isActive('/pro') ? 'page' : undefined}
+            >
+              Pro
+            </a>
+            <a href="/sign-in" class="header__signin">
+              Sign in
+            </a>
+            <a href="/search" class="icon-btn header__mobile-only" data-palette-open aria-label="Search">
+              <Icon name="magnifying-glass" size={20} />
+            </a>
+            <button
+              type="button"
+              class="icon-btn header__mobile-only"
+              aria-label="Open menu"
+              aria-haspopup="dialog"
+              data-menu-open
+            >
+              <Icon name="list" size={20} />
+            </button>
+          </div>
+        </>
+      )
+    }
+  </div>
+
+  {
+    !minimal && (
+      <dialog class="menu" aria-label="Menu" data-menu>
+        <div class="menu__top container">
+          <a href="/" aria-label="Home">
+            <Logo />
+          </a>
+          <button type="button" class="icon-btn" aria-label="Close menu" data-menu-close>
+            <Icon name="x" size={20} />
+          </button>
+        </div>
+        <nav class="menu__body container" aria-label="Main">
+          <ul class="menu__primary">
+            {PRIMARY_NAV.map((item) => (
+              <li>
+                <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <ul class="menu__secondary">
+            {SECONDARY_NAV.map((item) => (
+              <li>
+                <a href={item.href}>{item.label}</a>
+              </li>
+            ))}
+          </ul>
+          <a href="/sign-in" class="menu__signin">
+            Sign in
+          </a>
+        </nav>
+      </dialog>
+    )
+  }
+</header>
+
+<script>
+  // Search trigger: if a command palette is mounted it handles the event; otherwise we
+  // fall through to the /search page (works without JS too).
+  document.querySelectorAll<HTMLAnchorElement>('[data-palette-open]').forEach((el) => {
+    el.addEventListener('click', (event) => {
+      const handled = !document.dispatchEvent(new CustomEvent('palette:open', { cancelable: true }));
+      if (handled) event.preventDefault();
+    });
+  });
+
+  // Show the right shortcut for the platform.
+  if (!/Mac|iPhone|iPad/.test(navigator.platform)) {
+    document.querySelectorAll('[data-kbd-hint] kbd:first-child').forEach((k) => {
+      k.textContent = 'Ctrl';
+    });
+  }
+
+  const menu = document.querySelector<HTMLDialogElement>('[data-menu]');
+  document.querySelector('[data-menu-open]')?.addEventListener('click', () => menu?.showModal());
+  document.querySelector('[data-menu-close]')?.addEventListener('click', () => menu?.close());
+  menu?.addEventListener('click', (event) => {
+    if (event.target === menu) menu.close();
+  });
+</script>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  @supports (backdrop-filter: blur(1px)) {
+    .header {
+      backdrop-filter: saturate(1.4) blur(10px);
+    }
+  }
+  .header__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    height: var(--header-h);
+  }
+  .header__logo {
+    flex: none;
+    border-radius: var(--radius-sm);
+  }
+  .header__nav {
+    display: none;
+    align-items: center;
+    gap: var(--space-0-5);
+  }
+  .header__link {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--ink-2);
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+  .header__link:hover {
+    color: var(--ink);
+  }
+  .header__link[aria-current='page'] {
+    color: var(--ink);
+    background: var(--fill);
+  }
+
+  .search-trigger {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1 1 auto;
+    max-width: 380px;
+    height: 36px;
+    margin-left: auto;
+    padding: 0 var(--space-2) 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--fill);
+    color: var(--ink-3);
+    font-size: var(--text-base);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .search-trigger:hover {
+    background: var(--fill-hover);
+  }
+  .search-trigger__label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .search-trigger__kbd {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  .header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-left: auto;
+  }
+  .header__pro,
+  .header__signin {
+    display: none;
+  }
+  .header__signin {
+    align-items: center;
+    height: 32px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    font-weight: var(--weight-medium);
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .header__signin:hover {
+    background: var(--inverse-2);
+  }
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    color: var(--ink);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .icon-btn:hover {
+    background: var(--fill);
+  }
+
+  @media (min-width: 1024px) {
+    .header__nav,
+    .search-trigger {
+      display: flex;
+    }
+    .header__actions {
+      margin-left: 0;
+    }
+    .header__pro,
+    .header__signin {
+      display: inline-flex;
+    }
+    .header__mobile-only {
+      display: none;
+    }
+  }
+  @media (min-width: 1024px) and (max-width: 1199px) {
+    .search-trigger__label {
+      font-size: var(--text-sm);
+    }
+    .search-trigger__kbd {
+      display: none;
+    }
+  }
+
+  /* Mobile menu sheet */
+  .menu {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .menu::backdrop {
+    background: transparent;
+  }
+  .menu[open] {
+    animation: menu-in var(--dur-base) var(--ease-out);
+  }
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  .menu__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-h);
+    border-bottom: 1px solid var(--line);
+  }
+  .menu__body {
+    padding-block: var(--space-6) var(--space-10);
+  }
+  .menu__primary a {
+    display: block;
+    padding: var(--space-2) 0;
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.15;
+  }
+  .menu__primary a[aria-current='page'] {
+    color: var(--accent-text);
+  }
+  .menu__secondary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-1) var(--space-4);
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+  }
+  .menu__secondary a {
+    display: block;
+    padding: var(--space-2) 0;
+    font-size: var(--text-md);
+    color: var(--ink-2);
+  }
+  .menu__signin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    margin-top: var(--space-8);
+    border-radius: var(--radius-pill);
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    font-weight: var(--weight-medium);
+  }
+</style>

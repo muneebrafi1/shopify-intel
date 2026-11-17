@@ -1,0 +1,151 @@
+---
+/**
+ * A theme as a small deck of real stores: the front capture plus up to two more peeking
+ * behind it. Says "this theme on several stores" without words.
+ */
+import { thumbCropHeight, thumbUrl } from '~/lib/media';
+
+interface ShotRef {
+  src: string;
+  width: number;
+  height: number;
+  alt?: string;
+}
+interface Props {
+  slug: string;
+  name: string;
+  vendor: string;
+  priceLabel: string;
+  storesCount: number;
+  shots: ShotRef[];
+  href?: string;
+  eager?: boolean;
+  class?: string;
+}
+const { slug, name, vendor, priceLabel, storesCount, shots, href = `/themes/${slug}`, eager = false, class: className } =
+  Astro.props;
+const deck = shots.slice(0, 3).map((s) => {
+  const h = thumbCropHeight(s.width, s.height, 'desktop');
+  return { ...s, thumb: thumbUrl(s.src, { cropHeight: h, width: 640 }), cropH: h };
+});
+// Front card last in the DOM so it paints on top.
+const ordered = [...deck].reverse();
+---
+
+<article class:list={['theme-card', className]}>
+  <a href={href} class="theme-card__well" aria-label={`${name} theme`}>
+    {
+      deck.length === 0 ? (
+        <span class="theme-card__none">No captured stores yet</span>
+      ) : (
+        ordered.map((s, i) => (
+          <img
+            class={`theme-card__img theme-card__img--${deck.length - 1 - i}`}
+            src={s.thumb}
+            alt={i === ordered.length - 1 ? (s.alt ?? `${name} on a live store`) : ''}
+            width={s.width}
+            height={s.cropH}
+            loading={eager ? 'eager' : 'lazy'}
+            decoding="async"
+          />
+        ))
+      )
+    }
+  </a>
+  <div class="theme-card__caption">
+    <div class="theme-card__text">
+      <h3 class="theme-card__name"><a href={href}>{name}</a></h3>
+      <p class="theme-card__meta">{vendor} · {priceLabel}</p>
+    </div>
+    <p class="theme-card__count num">
+      {storesCount.toLocaleString('en-US')}<span> {storesCount === 1 ? 'store' : 'stores'}</span>
+    </p>
+  </div>
+</article>
+
+<style>
+  .theme-card {
+    min-width: 0;
+  }
+  .theme-card__well {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--tile);
+    transition: background-color var(--dur-base) var(--ease-out);
+  }
+  .theme-card__well:hover {
+    background: var(--tile-hover);
+  }
+  .theme-card__img {
+    position: absolute;
+    left: 50%;
+    width: 80%;
+    height: auto;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    box-shadow: var(--shadow-shot);
+    background: var(--surface);
+    transform-origin: 50% 0;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .theme-card__img--0 {
+    top: 14%;
+    transform: translateX(-50%);
+  }
+  .theme-card__img--1 {
+    top: 9%;
+    transform: translateX(-50%) scale(0.92);
+    opacity: 0.9;
+  }
+  .theme-card__img--2 {
+    top: 4.5%;
+    transform: translateX(-50%) scale(0.84);
+    opacity: 0.75;
+  }
+  .theme-card__well:hover .theme-card__img--1 {
+    transform: translateX(-50%) translateY(-4px) scale(0.92);
+  }
+  .theme-card__well:hover .theme-card__img--2 {
+    transform: translateX(-50%) translateY(-8px) scale(0.84);
+  }
+  .theme-card__none {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .theme-card__caption {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+  .theme-card__text {
+    min-width: 0;
+  }
+  .theme-card__name {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+    line-height: 1.3;
+  }
+  .theme-card__meta {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .theme-card__count {
+    flex: none;
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .theme-card__count span {
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+  }
+</style>

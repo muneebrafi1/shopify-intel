@@ -1,0 +1,98 @@
+---
+/** Heading for a block within a page: title, optional description and a "view all" link. */
+interface Props {
+  title: string;
+  description?: string;
+  href?: string;
+  linkLabel?: string;
+  count?: number;
+  level?: 2 | 3;
+  id?: string;
+  class?: string;
+}
+const { title, description, href, linkLabel = 'View all', count, level = 2, id, class: className } = Astro.props;
+const H = `h${level}` as 'h2' | 'h3';
+---
+
+<div class:list={['sh', className]}>
+  <div class="sh__text">
+    <H class="sh__title" id={id}>
+      {title}
+      {typeof count === 'number' && <span class="sh__count num">{count.toLocaleString('en-US')}</span>}
+    </H>
+    {description && <p class="sh__desc">{description}</p>}
+  </div>
+  {
+    (href || Astro.slots.has('default')) && (
+      <div class="sh__actions">
+        <slot />
+        {href && (
+          <a class="sh__link" href={href}>
+            {linkLabel}
+            <span aria-hidden="true">→</span>
+          </a>
+        )}
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .sh {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+  .sh__text {
+    min-width: 0;
+  }
+  .sh__title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+    line-height: 1.2;
+  }
+  h3.sh__title {
+    font-size: var(--text-lg);
+  }
+  .sh__count {
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+    font-size: 0.8em;
+  }
+  .sh__desc {
+    margin-top: var(--space-1);
+    color: var(--ink-3);
+    font-size: var(--text-base);
+    max-width: 640px;
+  }
+  .sh__actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .sh__link {
+    display: inline-flex;
+    gap: 4px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .sh__link:hover {
+    color: var(--ink);
+  }
+  .sh__link span {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .sh__link:hover span {
+    transform: translateX(2px);
+  }
+</style>

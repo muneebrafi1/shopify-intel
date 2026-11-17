@@ -1,0 +1,44 @@
+---
+/**
+ * A single line of chips. Wraps on wide screens, scrolls horizontally on small ones (with
+ * edge fades) so filter rows never push the layout wider than the viewport.
+ */
+interface Props {
+  label?: string;
+  wrap?: boolean;
+  class?: string;
+}
+const { label, wrap = false, class: className } = Astro.props;
+---
+
+<div class:list={['chip-row', { 'chip-row--wrap': wrap }, className]} role="group" aria-label={label}>
+  <slot />
+</div>
+
+<style>
+  .chip-row {
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding: 2px;
+    margin: -2px;
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
+  .chip-row::-webkit-scrollbar {
+    display: none;
+  }
+  .chip-row--wrap {
+    flex-wrap: wrap;
+    overflow: visible;
+    mask-image: none;
+  }
+  @media (min-width: 1024px) {
+    .chip-row {
+      flex-wrap: wrap;
+      overflow: visible;
+      mask-image: none;
+    }
+  }
+</style>

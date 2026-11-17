@@ -1,0 +1,93 @@
+---
+/**
+ * A sliced section in a fixed-aspect well, so wide desktop strips and tall mobile slices
+ * share one even grid. The crop is contained (never cut).
+ */
+import type { Device } from '~/lib/taxonomy';
+
+interface Props {
+  src: string;
+  /** Crop size in CSS px. */
+  width: number;
+  height: number;
+  device: Device;
+  alt: string;
+  href?: string;
+  ratio?: string;
+  eager?: boolean;
+  class?: string;
+}
+const { src, width, height, device, alt, href, ratio, eager = false, class: className } = Astro.props;
+const Tag = href ? 'a' : 'div';
+const tall = height / width > 1.1;
+// The well's inner box is 86% x 61% of its width (4:3 well, 7% padding). Fill whichever side
+// binds, so the image has a definite size before it loads (lazy images need a box to load).
+const wide = width / height > 0.86 / 0.61;
+---
+
+<Tag
+  href={href}
+  class:list={['crop', `crop--${device}`, { 'crop--tall': tall }, className]}
+  style={ratio ? `--ratio:${ratio}` : undefined}
+>
+  <span class="crop__frame">
+    <img
+      class:list={[wide ? 'crop__img--wide' : 'crop__img--tall']}
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+  </span>
+  <slot />
+</Tag>
+
+<style>
+  .crop {
+    --ratio: 4 / 3;
+    position: relative;
+    display: block;
+    aspect-ratio: var(--ratio);
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--tile);
+    transition: background-color var(--dur-base) var(--ease-out);
+  }
+  .crop__frame {
+    position: absolute;
+    inset: 7%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .crop img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: var(--radius-xs);
+    box-shadow: var(--shadow-shot);
+    background: var(--surface);
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .crop__img--wide {
+    width: 100%;
+    height: auto;
+  }
+  .crop__img--tall {
+    height: 100%;
+    width: auto;
+  }
+  .crop--tall img {
+    border-radius: 10px;
+  }
+  a.crop:hover {
+    background: var(--tile-hover);
+  }
+  a.crop:hover img {
+    transform: translateY(-2px);
+  }
+  a.crop:focus-visible {
+    border-radius: var(--radius-lg);
+  }
+</style>

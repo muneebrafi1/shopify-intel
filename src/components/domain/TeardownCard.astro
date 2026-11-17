@@ -1,0 +1,63 @@
+---
+import Shot from '~/components/media/Shot.astro';
+import { formatDate } from '~/lib/format';
+
+interface Props {
+  slug: string;
+  title: string;
+  dek?: string | null;
+  storeLabel: string;
+  publishedAt?: string | null;
+  shot?: { src: string; width: number; height: number } | null;
+  size?: 'md' | 'lg';
+  isSample?: boolean;
+  class?: string;
+}
+const { slug, title, dek, storeLabel, publishedAt, shot, size = 'md', isSample = false, class: className } = Astro.props;
+const href = `/teardowns/${slug}`;
+---
+
+<article class:list={['td-card', `td-card--${size}`, className]}>
+  {shot && <Shot src={shot.src} width={shot.width} height={shot.height} device="desktop" alt={`${storeLabel} home page`} href={href} ratio="16 / 10" />}
+  <div class="td-card__body">
+    <p class="td-card__kicker">
+      Teardown · {storeLabel}{publishedAt && <> · <span class="num">{formatDate(publishedAt)}</span></>}
+      {isSample && <> · Sample</>}
+    </p>
+    <h3 class="td-card__title display"><a href={href}>{title}</a></h3>
+    {dek && <p class="td-card__dek">{dek}</p>}
+  </div>
+</article>
+
+<style>
+  .td-card {
+    min-width: 0;
+  }
+  .td-card__body {
+    margin-top: var(--space-4);
+  }
+  .td-card__kicker {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+  }
+  .td-card__title {
+    margin-top: var(--space-2);
+    font-size: var(--text-2xl);
+    line-height: 1.15;
+  }
+  .td-card--lg .td-card__title {
+    font-size: var(--text-3xl);
+  }
+  .td-card__title a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+  }
+  .td-card__dek {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+</style>
