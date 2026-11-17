@@ -20,7 +20,14 @@ Plan (stacked on #11; no merge, no deploy):
    compare+alternatives, sections, static/legal/account/pro, admin), each checked at 390/1440.
 4. Full gate (lint, astro check, unit, build, size, e2e) → PR #12 with screenshots.
 
-Status: see the newest commits on `feat/12-saas-redesign`; this section is updated as steps land.
+Status: **paused at step 1 — waiting for Muneeb's approval.** He asked for the reference list
+first and no code changes until he approves. The proposed references (with Mobbin links) are in
+the chat reply of 17 Nov: Linear (dark theme, product-window hero, UI-fragment feature cards),
+Attio (light theme, centred hero, nav), Stripe (guide-line frame, two-tone headline, live
+counter), Vercel + Cloudflare plans (Pro pricing: plan cards + comparison table), Dovetail
+(step list driving a product visual), Base44 (gallery browse bar + cards), Twenty (labels pinned
+on product crops). Do not start steps 2–4 until he replies. CI was green on all 11 PRs at that
+point.
 
 ## Status
 
