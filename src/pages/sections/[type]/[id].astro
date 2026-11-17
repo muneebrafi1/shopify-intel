@@ -1,0 +1,188 @@
+---
+/**
+ * /sections/<type>/<id> — one section in focus: the crop large on a calm stage, a spec sheet
+ * (store, theme, page type, device, position, app, capture state), "Open in full page", Save,
+ * prev/next within the type (← → keys). Below: the rest of the page as a numbered strip, and
+ * more sections like it. Unknown ids 404; an id under another type 301s to its real URL.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import SectionCard from '~/components/domain/SectionCard.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import PageStrip from '~/components/sections/PageStrip.astro';
+import SectionFocus from '~/components/sections/SectionFocus.astro';
+import { cardMeta, cropSource, pagePhrase } from '~/components/sections/library';
+import { pageTypeName } from '~/lib/taxonomy';
+import { api, orNotFound } from '~/server/api';
+
+const { type, id } = Astro.params;
+if (!id || !/^[1-9]\d{0,9}$/.test(id)) return Astro.rewrite('/404');
+
+const res = await orNotFound(api.getSection({ id: Number(id) }));
+if (!res) return Astro.rewrite('/404');
+const { data: detail, meta } = res;
+const s = detail.section;
+if (s.type.slug !== type) return Astro.redirect(s.href, 301);
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+
+const shot = detail.screenshot;
+const ordered = [...shot.sections].sort((a, b) => a.order_index - b.order_index);
+const index = ordered.findIndex((x) => x.id === s.id);
+const source = cropSource(meta, [s]);
+const phrase = pagePhrase(s.page_type, s.device);
+// Whole rows on the 4-column grid.
+const more =
+  detail.more_like_this.length >= 4
+    ? detail.more_like_this.slice(
+        0,
+        detail.more_like_this.length - (detail.more_like_this.length % 4),
+      )
+    : detail.more_like_this;
+
+const title = `${s.type.name} section on ${s.store.display_name} (${phrase})`;
+const description = `The ${s.type.name.toLowerCase()} section on ${s.store.display_name}'s ${phrase}${
+  s.theme ? `, ${s.theme.name} theme` : ''
+}${s.app ? `, rendered by ${s.app.short_name}` : ''}. Section ${index + 1} of ${ordered.length} on the page.`;
+const site = Astro.site ?? Astro.url;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Sections', item: new URL('/sections', site).href },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: s.type.name,
+        item: new URL(s.type.href, site).href,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: s.store.display_name,
+        item: new URL(s.href, site).href,
+      },
+    ],
+  },
+  {
+    '@type': 'ImageObject',
+    name: title,
+    description,
+    contentUrl: new URL(s.crop.src, site).href,
+    width: s.crop.width,
+    height: s.crop.height,
+    isPartOf: { '@type': 'WebPage', url: new URL(s.store.href, site).href },
+  },
+];
+---
+
+<BaseLayout title={title} description={description} canonical={s.href} jsonLd={jsonLd}>
+  <div class="container detail">
+    <Breadcrumbs
+      class="detail__crumbs"
+      items={[
+        { label: 'Sections', href: '/sections' },
+        { label: s.type.name, href: s.type.href },
+        { label: `${s.store.display_name} · ${pageTypeName(s.page_type)}, ${s.device}` },
+      ]}
+    />
+    <SectionFocus detail={detail} source={source} />
+
+    <section class="page-block" aria-labelledby="on-this-page">
+      <SectionHeader
+        id="on-this-page"
+        label={`${pageTypeName(s.page_type)} page · ${s.device}`}
+        title="Other sections on this page"
+        count={ordered.length}
+        rule
+      />
+      <PageStrip
+        sections={shot.sections}
+        currentId={s.id}
+        device={s.device}
+        storeLabel={s.store.display_name}
+      />
+    </section>
+
+    {more.length > 0 && (
+      <section class="page-block" aria-labelledby="more-like-this">
+        <SectionHeader
+          id="more-like-this"
+          label={s.type.name}
+          title="More like this"
+          count={more.length}
+          description="On other stores: the same app, theme or device first."
+          rule
+        />
+        <div class="grid grid--sections">
+          {more.map((m) => (
+            <SectionCard
+              href={m.href}
+              crop={m.crop}
+              device={m.device}
+              typeName={m.type.name}
+              storeLabel={m.store.display_name}
+              meta={cardMeta(m, ['page', 'device', 'theme'])}
+              app={m.app ? { name: m.app.short_name, iconUrl: m.app.icon_url } : null}
+            />
+          ))}
+        </div>
+        <p class="detail__all">
+          <a href={s.type.href}>
+            All {detail.in_type.total} {s.type.name.toLowerCase()} sections{' '}
+            <span aria-hidden="true">→</span>
+          </a>
+        </p>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<script>
+  // ← → step through the sections of this type (the links in the spec sheet).
+  document.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
+      return;
+    const target = event.target as HTMLElement;
+    if (target.closest('input, textarea, select, [contenteditable], dialog[open]')) return;
+    if (document.querySelector('dialog[open]')) return;
+    const link =
+      event.key === 'ArrowLeft'
+        ? document.querySelector<HTMLAnchorElement>('[data-sf-prev]')
+        : event.key === 'ArrowRight'
+          ? document.querySelector<HTMLAnchorElement>('[data-sf-next]')
+          : null;
+    if (!link) return;
+    event.preventDefault();
+    window.location.href = link.href;
+  });
+</script>
+
+<style>
+  .detail__all {
+    margin-top: var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .detail__all a {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.25em;
+  }
+  .detail__all a:hover {
+    text-decoration-color: currentColor;
+  }
+  .detail {
+    padding-top: var(--space-6);
+  }
+  .detail :global(.detail__crumbs) {
+    margin-bottom: var(--space-6);
+  }
+  @media (min-width: 1024px) {
+    .detail :global(.detail__crumbs) {
+      margin-bottom: var(--space-8);
+    }
+  }
+</style>

@@ -1,0 +1,131 @@
+---
+/**
+ * "Other sections on this page": the page read top to bottom as a numbered contact strip.
+ * Numbers match the store page's sections rail; the current section is marked.
+ */
+import SectionCrop from '~/components/media/SectionCrop.astro';
+import type { Device } from '~/lib/taxonomy';
+import type { ShotSection } from '~/server/api/v1/types';
+
+interface Props {
+  sections: ShotSection[];
+  currentId: number;
+  device: Device;
+  storeLabel: string;
+  class?: string;
+}
+const { sections, currentId, device, storeLabel, class: className } = Astro.props;
+const ordered = [...sections].sort((a, b) => a.order_index - b.order_index);
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<div class:list={['strip', className]} data-strip>
+  <ol class="strip__list">
+    {ordered.map((x, i) => {
+      const current = x.id === currentId;
+      return (
+        <li
+          class:list={['strip__item', { 'is-current': current }]}
+          aria-current={current ? 'true' : undefined}
+        >
+          <SectionCrop
+            src={x.crop.src}
+            width={x.crop.width}
+            height={x.crop.height}
+            device={device}
+            alt={`${pad(i + 1)} ${x.type.name} on ${storeLabel}`}
+            href={x.href}
+            class="strip__crop"
+          />
+          <a href={x.href} class="strip__cap" tabindex="-1" aria-hidden="true">
+            <span class="strip__n num">{pad(i + 1)}</span>
+            <span class="strip__name">{x.type.name}</span>
+          </a>
+        </li>
+      );
+    })}
+  </ol>
+</div>
+
+<script>
+  // Start the strip with the current section in view.
+  document.querySelectorAll<HTMLElement>('[data-strip]').forEach((strip) => {
+    const list = strip.querySelector<HTMLElement>('.strip__list');
+    const current = strip.querySelector<HTMLElement>('.is-current');
+    if (!list || !current) return;
+    list.scrollLeft = Math.max(
+      0,
+      current.offsetLeft - list.clientWidth / 2 + current.offsetWidth / 2,
+    );
+  });
+</script>
+
+<style>
+  .strip {
+    margin-inline: calc(var(--page-gutter) * -1);
+  }
+  .strip__list {
+    position: relative;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 168px;
+    gap: var(--space-4);
+    overflow-x: auto;
+    padding: 2px var(--page-gutter) var(--space-3);
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--page-gutter);
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  @media (min-width: 1024px) {
+    .strip__list {
+      grid-auto-columns: 196px;
+      gap: var(--space-5);
+    }
+  }
+  .strip__item {
+    position: relative;
+    min-width: 0;
+    scroll-snap-align: start;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+  }
+  .strip__item.is-current {
+    border-top: 2px solid var(--accent);
+    padding-top: calc(var(--space-3) - 1px);
+  }
+  .strip__item :global(.strip__crop) {
+    --ratio: 4 / 3;
+  }
+  .strip__item.is-current :global(.strip__crop) {
+    background: var(--tile-hover);
+  }
+  .strip__cap {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    min-width: 0;
+  }
+  .strip__n {
+    flex: none;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .strip__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .strip__item.is-current .strip__n {
+    color: var(--accent-text);
+  }
+  .strip__item.is-current .strip__name {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+</style>

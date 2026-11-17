@@ -1,0 +1,125 @@
+---
+/**
+ * The library body shared by /sections and /sections/<type>: the contents rail on the left
+ * (desktop), the filter bar and the crop grid on the right, plus the grid lightbox.
+ * The "Type" filter lives in the rail on desktop and in the filter sheet/pill below 1024px.
+ */
+import FilterBar, { type FilterGroup } from '~/components/ui/FilterBar.astro';
+import type { SectionCard } from '~/server/api/v1/types';
+import ContentsRail from './ContentsRail.astro';
+import SectionGrid from './SectionGrid.astro';
+import SectionLightbox from './SectionLightbox.astro';
+import type { Rail } from './library';
+
+interface Props {
+  rail: Rail;
+  groups: FilterGroup[];
+  items: SectionCard[];
+  total: number;
+  meta: Array<'type' | 'page' | 'device' | 'theme'>;
+  page: number;
+  pageSize: number;
+  nextHref: string | null;
+  firstHref: string;
+  clearHref: string;
+  /** Grid ↔ index toggle. */
+  view: { current: 'grid' | 'index'; gridHref: string; indexHref: string };
+  class?: string;
+}
+const {
+  rail,
+  groups,
+  items,
+  total,
+  meta,
+  page,
+  pageSize,
+  nextHref,
+  firstHref,
+  clearHref,
+  view,
+  class: className,
+} = Astro.props;
+---
+
+<div
+  class:list={[
+    'book',
+    { 'book--typed': rail.groups.some((g) => g.types.some((t) => t.current)) },
+    className,
+  ]}
+>
+  <ContentsRail rail={rail} class="book__rail" />
+  <div class="book__main" id="results">
+    <FilterBar
+      groups={groups}
+      total={total}
+      noun={total === 1 ? 'section' : 'sections'}
+      clearHref={clearHref}
+      view={view}
+    />
+    <div class="book__grid">
+      <SectionGrid
+        items={items}
+        total={total}
+        meta={meta}
+        page={page}
+        pageSize={pageSize}
+        nextHref={nextHref}
+        firstHref={firstHref}
+        clearHref={clearHref}
+        view={view.current}
+      />
+    </div>
+  </div>
+  <SectionLightbox />
+</div>
+
+<style>
+  .book {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .book :global(.book__rail) {
+    display: none;
+  }
+  .book__main {
+    min-width: 0;
+  }
+  .book__grid {
+    margin-top: var(--space-6);
+  }
+  @media (min-width: 1024px) {
+    .book {
+      grid-template-columns: 236px minmax(0, 1fr);
+      gap: var(--space-12);
+      align-items: start;
+    }
+    .book :global(.book__rail) {
+      display: block;
+    }
+    /* The rail is the type filter here, so the "Type" pill (first group) steps aside. */
+    .book__main :global(details.fpill:first-of-type) {
+      display: none;
+    }
+    /* …and so does the active "Type" chip (the rail marks the current type). */
+    .book--typed .book__main :global(.fbar__active > .chip:first-child) {
+      display: none;
+    }
+    .book--typed .book__main :global(.fbar__active:not(:has(> .chip:nth-child(2)))) {
+      display: none;
+    }
+    /* The grid shares the row with the rail: one column fewer than full width. */
+    .book__main :global(.grid--sections) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .book__grid {
+      margin-top: var(--space-8);
+    }
+  }
+  @media (min-width: 1280px) {
+    .book__main :global(.grid--sections) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
