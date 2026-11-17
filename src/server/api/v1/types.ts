@@ -65,6 +65,8 @@ export type {
 } from './schemas/compare.ts';
 export type {
   ListSectionTypesOutput,
+  ListSectionsByAppsInput,
+  ListSectionsByAppsOutput,
   ListSectionsInput,
   ListSectionsOutput,
   SectionDetail,

@@ -23,6 +23,7 @@ const rest = {
   getApp: catalog.getAppEndpoint,
   listAppStores: catalog.listAppStoresEndpoint,
   listSections: library.listSectionsEndpoint,
+  listSectionsByApps: library.listSectionsByAppsEndpoint,
   listSectionTypes: library.listSectionTypesEndpoint,
   getSection: library.getSectionEndpoint,
   getScreenshot: library.getScreenshotEndpoint,

@@ -232,3 +232,15 @@ export function parseStringArray(json: string | null): string[] {
 
 /** JSON array of ids for `IN (SELECT value FROM json_each(?))` (sidesteps D1's 100-param cap). */
 export const jsonIds = (ids: ReadonlyArray<number | string>): string => JSON.stringify(ids);
+
+/** Rows grouped by a key, each group in row order (splits per-entity windowed queries). */
+export function groupBy<T, K>(rows: readonly T[], key: (row: T) => K): Map<K, T[]> {
+  const out = new Map<K, T[]>();
+  for (const row of rows) {
+    const k = key(row);
+    const group = out.get(k);
+    if (group) group.push(row);
+    else out.set(k, [row]);
+  }
+  return out;
+}

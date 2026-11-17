@@ -127,6 +127,8 @@ export interface StoreFilters {
   curated?: boolean;
   captured?: boolean;
   fts?: string | null;
+  /** Exact (normalised) domains. */
+  domains?: readonly string[];
 }
 type FilterKey = keyof StoreFilters;
 
@@ -197,6 +199,10 @@ function storeWhere(f: StoreFilters, omit: readonly FilterKey[] = []) {
   }
   if (use('curated')) where.push(`s.is_curated = ${f.curated ? 1 : 0}`);
   if (use('captured')) where.push(`s.is_captured = ${f.captured ? 1 : 0}`);
+  if (use('domains')) {
+    where.push('s.domain IN (SELECT value FROM json_each(?))');
+    params.push(jsonIds(f.domains ?? []));
+  }
   if (use('fts')) {
     if (f.fts === null) where.push('0');
     else {
@@ -320,10 +326,26 @@ export interface ListStoresParams {
   curated?: boolean | undefined;
   captured?: boolean | undefined;
   q?: string | undefined;
+  /** Only these stores (domains, normalised like the detail route). */
+  domains?: readonly string[] | undefined;
   sort: keyof typeof SORTS;
   cursor?: string | undefined;
   limit: number;
+  /** false: skip the facet queries (facets come back empty: no values, zero counts). */
+  facets?: boolean | undefined;
 }
+
+/** Facets left out on request (`facets: false`): the same shape, nothing counted. */
+const noStoreFacets = (): StoreFacets => ({
+  themes: [],
+  categories: [],
+  currencies: [],
+  countries: [],
+  apps: [],
+  curated: 0,
+  captured: 0,
+  scope: { curated: 0, all: 0 },
+});
 
 export async function listStores(ctx: Ctx, p: ListStoresParams) {
   const f: StoreFilters = {};
@@ -337,6 +359,7 @@ export async function listStores(ctx: Ctx, p: ListStoresParams) {
   else if ((p.scope ?? 'curated') === 'curated') f.curated = true;
   if (p.captured !== undefined) f.captured = p.captured;
   if (p.q?.trim()) f.fts = ftsPrefixQuery(p.q);
+  if (p.domains) f.domains = p.domains.map((d) => normalizeDomain(d) ?? d);
 
   const keys = SORTS[p.sort];
   const w = storeWhere(f);
@@ -353,7 +376,7 @@ export async function listStores(ctx: Ctx, p: ListStoresParams) {
       [...params, p.limit + 1],
     ),
     ctx.db.first<{ n: number }>(`SELECT COUNT(*) AS n FROM stores s WHERE ${w.sql}`, w.params),
-    storeFacets(ctx, f),
+    p.facets === false ? Promise.resolve(noStoreFacets()) : storeFacets(ctx, f),
   ]);
   const page = pageOf(rows, p.limit, keys);
   return {

@@ -30,6 +30,8 @@ import {
   bool,
   boolOrNull,
   categorySurfaces,
+  groupBy,
+  jsonIds,
   parseStringArray,
   ratio,
   storeRef,
@@ -39,7 +41,7 @@ import {
   type AppRefRow,
   type StoreThemeRow,
 } from './refs.ts';
-import { homePreviews, sectionCards } from './visual.ts';
+import { groupedSectionCards, homePreviews } from './visual.ts';
 
 const APP_COLS = `a.id, ${APP_REF_COLS}, a.developer, a.tagline, a.rating, a.reviews,
   a.free_plan, a.from_price_cents, a.trial_days, a.built_for_shopify, a.profile,
@@ -107,14 +109,25 @@ export interface ListAppsParams {
   min_rating?: number | undefined;
   profile?: 'full' | 'basic' | undefined;
   q?: string | undefined;
+  /** Only these apps (slugs or aliases). */
+  slugs?: readonly string[] | undefined;
   sort: 'usage' | 'rating' | 'reviews' | 'name';
   cursor?: string | undefined;
   limit: number;
+  /** false: skip the category facet (returned empty). */
+  facets?: boolean | undefined;
 }
 
 function appWhere(p: ListAppsParams, omitCategory = false) {
   const where = ["a.status = 'active'"];
   const params: SqlValue[] = [];
+  if (p.slugs) {
+    where.push(
+      `(a.slug IN (SELECT value FROM json_each(?))
+        OR a.id IN (SELECT app_id FROM app_aliases WHERE slug IN (SELECT value FROM json_each(?))))`,
+    );
+    params.push(jsonIds(p.slugs), jsonIds(p.slugs));
+  }
   if (p.category && !omitCategory) {
     where.push('ac.slug = ?');
     params.push(p.category);
@@ -165,12 +178,14 @@ export async function listApps(ctx: Ctx, p: ListAppsParams) {
       `SELECT COUNT(*) AS n FROM apps a LEFT JOIN app_categories ac ON ac.id = a.category_id WHERE ${w.sql}`,
       w.params,
     ),
-    ctx.db.all<Facet>(
-      `SELECT ac.slug AS value, ac.name AS label, COUNT(*) AS count
-       FROM apps a JOIN app_categories ac ON ac.id = a.category_id
-       WHERE ${cw.sql} GROUP BY ac.id ORDER BY count DESC, label`,
-      cw.params,
-    ),
+    p.facets === false
+      ? Promise.resolve([])
+      : ctx.db.all<Facet>(
+          `SELECT ac.slug AS value, ac.name AS label, COUNT(*) AS count
+           FROM apps a JOIN app_categories ac ON ac.id = a.category_id
+           WHERE ${cw.sql} GROUP BY ac.id ORDER BY count DESC, label`,
+          cw.params,
+        ),
   ]);
   const n = total?.n ?? 0;
   return {
@@ -233,7 +248,7 @@ export async function listAppCategories(ctx: Ctx): Promise<AppCategory[]> {
 // ---------------------------------------------------------------------------------------------
 // Detail
 // ---------------------------------------------------------------------------------------------
-interface AppFactsRow extends AppRow {
+export interface AppFactsRow extends AppRow {
   app_store_handle: string | null;
   app_store_category: string | null;
   launched_on: string | null;
@@ -253,6 +268,26 @@ export async function findApp(ctx: Ctx, slug: string): Promise<AppFactsRow | nul
      WHERE a.status = 'active' AND (a.slug = ? OR a.id = (SELECT app_id FROM app_aliases WHERE slug = ?))`,
     [slug, slug],
   );
+}
+
+/** `findApp` for several slugs or aliases in one query, keyed by the slug as given. */
+export async function findApps(
+  ctx: Ctx,
+  slugs: readonly string[],
+): Promise<Map<string, AppFactsRow>> {
+  const rows = await ctx.db.all<AppFactsRow & { req_slug: string }>(
+    `SELECT j.value AS req_slug, ${APP_COLS}, a.app_store_handle, a.app_store_category,
+       a.launched_on, a.plans_json, a.features_json, a.works_with_json, a.languages_json,
+       a.checked_on
+     ${APP_FROM}
+     JOIN json_each(?) j
+       ON a.slug = j.value OR a.id = (SELECT app_id FROM app_aliases WHERE slug = j.value)
+     WHERE a.status = 'active'`,
+    [jsonIds([...new Set(slugs)])],
+  );
+  const out = new Map<string, AppFactsRow>();
+  for (const { req_slug, ...row } of rows) if (!out.has(req_slug)) out.set(req_slug, row);
+  return out;
 }
 
 function parsePlans(json: string | null): AppPlan[] {
@@ -283,48 +318,26 @@ function parsePlans(json: string | null): AppPlan[] {
   }
 }
 
-export async function appStores(
-  ctx: Ctx,
-  appId: number,
-  limit: number,
-  cursor?: string,
-): Promise<{ items: AppStoreRow[]; next_cursor: string | null; total: number }> {
-  const params: SqlValue[] = [appId];
-  let seek = '';
-  if (cursor) {
-    const [pos] = decodeCursor(cursor, 1);
-    seek = 'AND s.list_position > ?';
-    params.push(pos ?? 0);
-  }
-  const [rows, total] = await Promise.all([
-    limit === 0
-      ? Promise.resolve([])
-      : ctx.db.all<
-          StoreThemeRow & {
-            domain: string;
-            name: string | null;
-            is_curated: number;
-            app_count: number;
-            is_captured: number;
-            first_seen: string;
-            list_position: number;
-          }
-        >(
-          `SELECT s.domain, s.name, s.is_curated, s.app_count, s.is_captured, sa.first_seen,
-             s.list_position, ${STORE_THEME_COLS}
-           FROM store_apps sa
-           JOIN stores s ON s.id = sa.store_id AND s.status = 'active'
-           LEFT JOIN themes t ON t.id = s.current_theme_id
-           WHERE sa.app_id = ? AND sa.removed_at IS NULL ${seek}
-           ORDER BY s.list_position LIMIT ?`,
-          [...params, limit + 1],
-        ),
-    ctx.db.first<{ n: number }>(
-      `SELECT COUNT(*) AS n FROM store_apps sa JOIN stores s ON s.id = sa.store_id AND s.status = 'active'
-       WHERE sa.app_id = ? AND sa.removed_at IS NULL`,
-      [appId],
-    ),
-  ]);
+type AppStoreDbRow = StoreThemeRow & {
+  domain: string;
+  name: string | null;
+  is_curated: number;
+  app_count: number;
+  is_captured: number;
+  first_seen: string;
+  list_position: number;
+};
+
+const APP_STORE_COLS = `s.domain, s.name, s.is_curated, s.app_count, s.is_captured, sa.first_seen,
+  s.list_position, ${STORE_THEME_COLS}`;
+const APP_STORE_FROM = `FROM store_apps sa
+  JOIN stores s ON s.id = sa.store_id AND s.status = 'active'
+  LEFT JOIN themes t ON t.id = s.current_theme_id`;
+
+type AppStorePage = { items: AppStoreRow[]; next_cursor: string | null; total: number };
+
+/** A page of store rows (`rows` holds up to limit + 1, the extra one only signals more). */
+function appStorePage(rows: AppStoreDbRow[], limit: number, total: number): AppStorePage {
   const page = rows.slice(0, limit);
   const last = page[page.length - 1];
   return {
@@ -336,8 +349,64 @@ export async function appStores(
       first_seen: r.first_seen,
     })),
     next_cursor: rows.length > limit && last ? encodeCursor([last.list_position]) : null,
-    total: total?.n ?? 0,
+    total,
   };
+}
+
+export async function appStores(
+  ctx: Ctx,
+  appId: number,
+  limit: number,
+  cursor?: string,
+): Promise<AppStorePage> {
+  const params: SqlValue[] = [appId];
+  let seek = '';
+  if (cursor) {
+    const [pos] = decodeCursor(cursor, 1);
+    seek = 'AND s.list_position > ?';
+    params.push(pos ?? 0);
+  }
+  const [rows, total] = await Promise.all([
+    limit === 0
+      ? Promise.resolve([])
+      : ctx.db.all<AppStoreDbRow>(
+          `SELECT ${APP_STORE_COLS} ${APP_STORE_FROM}
+           WHERE sa.app_id = ? AND sa.removed_at IS NULL ${seek}
+           ORDER BY s.list_position LIMIT ?`,
+          [...params, limit + 1],
+        ),
+    ctx.db.first<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM store_apps sa JOIN stores s ON s.id = sa.store_id AND s.status = 'active'
+       WHERE sa.app_id = ? AND sa.removed_at IS NULL`,
+      [appId],
+    ),
+  ]);
+  return appStorePage(rows, limit, total?.n ?? 0);
+}
+
+/** The first page of `appStores` for each app, with its total, in one windowed query. */
+async function appStoresFirstPages(
+  ctx: Ctx,
+  appIds: readonly number[],
+  limit: number,
+): Promise<Map<number, AppStorePage>> {
+  const rows = await ctx.db.all<AppStoreDbRow & { g_app: number; g_rn: number; g_total: number }>(
+    `SELECT * FROM (
+       SELECT sa.app_id AS g_app, ${APP_STORE_COLS},
+         ROW_NUMBER() OVER (PARTITION BY sa.app_id ORDER BY s.list_position) AS g_rn,
+         COUNT(*) OVER (PARTITION BY sa.app_id) AS g_total
+       ${APP_STORE_FROM}
+       WHERE sa.app_id IN (SELECT value FROM json_each(?)) AND sa.removed_at IS NULL
+     ) WHERE g_rn <= ? ORDER BY g_app, g_rn`,
+    [jsonIds(appIds), limit + 1],
+  );
+  const byApp = groupBy(rows, (r) => r.g_app);
+  return new Map(
+    appIds.map((id) => {
+      const mine = byApp.get(id) ?? [];
+      return [id, appStorePage(mine, limit, mine[0]?.g_total ?? 0)];
+    }),
+  );
 }
 
 export async function alternativeApps(
@@ -361,112 +430,165 @@ export async function getAppDetail(
 ): Promise<AppDetail> {
   const row = await findApp(ctx, slug);
   if (!row) throw notFound(`App '${slug}'`);
+  const [detail] = await appDetails(ctx, [row], opts);
+  if (!detail) throw notFound(`App '${slug}'`);
+  return detail;
+}
+
+/** Rows of a per-app windowed list: the app it belongs to and its rank there. */
+type PerApp<T> = T & { g_app: number; g_rn: number };
+const byApp = <T extends { g_app: number }>(rows: readonly T[]) => groupBy(rows, (r) => r.g_app);
+
+/**
+ * App details for several apps at once (the compare page shows two), with the same number of
+ * queries as one: every per-app list is one windowed query over all of them.
+ */
+export async function appDetails(
+  ctx: Ctx,
+  rows: readonly AppFactsRow[],
+  opts: { storesLimit: number; sectionsLimit?: number },
+): Promise<AppDetail[]> {
+  if (rows.length === 0) return [];
+  const appIds = rows.map((r) => r.id);
+  const ids = jsonIds(appIds);
   const sectionsLimit = Math.max(0, Math.floor(opts.sectionsLimit ?? 24));
+  const inApps = 'IN (SELECT value FROM json_each(?))';
 
-  const [
-    [item],
-    aliases,
-    sections,
-    sectionTotal,
-    curated,
-    stores,
-    coInstalled,
-    alternatives,
-    comparisons,
-    themes,
-  ] = await Promise.all([
-    hydrateApps(ctx, [row]),
-    ctx.db.all<{ slug: string }>('SELECT slug FROM app_aliases WHERE app_id = ? ORDER BY slug', [
-      row.id,
-    ]),
-    sectionCards(
-      ctx,
-      's.app_id = ? AND s.is_current = 1',
-      [row.id],
-      `ORDER BY st.list_position, s.device, s.id LIMIT ${sectionsLimit}`,
-    ),
-    ctx.db.first<{ n: number }>(
-      `SELECT COUNT(*) AS n FROM sections s JOIN stores st ON st.id = s.store_id AND st.status = 'active'
-         WHERE s.app_id = ? AND s.is_current = 1`,
-      [row.id],
-    ),
-    ctx.db.all<{ id: number; domain: string; name: string | null; is_curated: number }>(
-      `SELECT s.id, s.domain, s.name, s.is_curated FROM store_apps sa
-         JOIN stores s ON s.id = sa.store_id AND s.status = 'active'
-         WHERE sa.app_id = ? AND sa.removed_at IS NULL
-           AND EXISTS (SELECT 1 FROM screenshots sh WHERE sh.store_id = s.id AND sh.is_current = 1)
-         ORDER BY s.list_position LIMIT 12`,
-      [row.id],
-    ),
-    appStores(ctx, row.id, opts.storesLimit),
-    ctx.db.all<AppRefRow & { stores: number }>(
-      `SELECT c.store_count AS stores, ${APP_REF_COLS}
-         FROM app_co_installs c
-         JOIN apps a ON a.id = c.other_app_id AND a.status = 'active'
-         LEFT JOIN app_categories ac ON ac.id = a.category_id
-         WHERE c.app_id = ? ORDER BY c.store_count DESC, a.slug LIMIT 12`,
-      [row.id],
-    ),
-    alternativeApps(ctx, row, 8),
-    comparisonLinks(ctx, { kind: 'app', entityId: row.id, limit: 12 }),
-    ctx.db.all<{ slug: string; name: string; vendor: string | null; stores: number }>(
-      `SELECT t.slug, t.name, t.vendor, u.store_count AS stores
-         FROM theme_app_usage u JOIN themes t ON t.id = u.theme_id AND t.status = 'active'
-         WHERE u.app_id = ? ORDER BY u.store_count DESC, t.slug LIMIT 8`,
-      [row.id],
-    ),
+  const [aliases, sections, curated, stores, coInstalled, altRows, links, themes] =
+    await Promise.all([
+      ctx.db.all<{ g_app: number; slug: string }>(
+        `SELECT app_id AS g_app, slug FROM app_aliases WHERE app_id ${inApps} ORDER BY app_id, slug`,
+        [ids],
+      ),
+      groupedSectionCards(ctx, {
+        group: 's.app_id',
+        where: `s.app_id ${inApps} AND s.is_current = 1`,
+        params: [ids],
+        order: 'st.list_position, s.device, s.id',
+        per: sectionsLimit,
+      }),
+      ctx.db.all<PerApp<{ id: number; domain: string; name: string | null; is_curated: number }>>(
+        `SELECT * FROM (
+           SELECT sa.app_id AS g_app, s.id, s.domain, s.name, s.is_curated,
+             ROW_NUMBER() OVER (PARTITION BY sa.app_id ORDER BY s.list_position) AS g_rn
+           FROM store_apps sa
+           JOIN stores s ON s.id = sa.store_id AND s.status = 'active'
+           WHERE sa.app_id ${inApps} AND sa.removed_at IS NULL
+             AND EXISTS (SELECT 1 FROM screenshots sh WHERE sh.store_id = s.id AND sh.is_current = 1)
+         ) WHERE g_rn <= 12 ORDER BY g_app, g_rn`,
+        [ids],
+      ),
+      appStoresFirstPages(ctx, appIds, opts.storesLimit),
+      ctx.db.all<PerApp<AppRefRow & { stores: number }>>(
+        `SELECT * FROM (
+           SELECT c.app_id AS g_app, c.store_count AS stores, ${APP_REF_COLS},
+             ROW_NUMBER() OVER (PARTITION BY c.app_id ORDER BY c.store_count DESC, a.slug) AS g_rn
+           FROM app_co_installs c
+           JOIN apps a ON a.id = c.other_app_id AND a.status = 'active'
+           LEFT JOIN app_categories ac ON ac.id = a.category_id
+           WHERE c.app_id ${inApps}
+         ) WHERE g_rn <= 12 ORDER BY g_app, g_rn`,
+        [ids],
+      ),
+      // Alternatives: the most used other apps of the same category (as alternativeApps).
+      ctx.db.all<PerApp<AppRow>>(
+        `SELECT * FROM (
+           SELECT r.id AS g_app, ${APP_COLS},
+             ROW_NUMBER() OVER (
+               PARTITION BY r.id
+               ORDER BY COALESCE(st.store_count, 0) DESC, a.rating IS NULL, a.rating DESC, a.name, a.id
+             ) AS g_rn
+           FROM apps r
+           JOIN apps a ON a.category_id = r.category_id AND a.id <> r.id AND a.status = 'active'
+           LEFT JOIN app_categories ac ON ac.id = a.category_id
+           LEFT JOIN app_stats st ON st.app_id = a.id
+           WHERE r.id ${inApps}
+         ) WHERE g_rn <= 8 ORDER BY g_app, g_rn`,
+        [ids],
+      ),
+      comparisonLinks(ctx, { kind: 'app', entityIds: appIds, limit: 500 }),
+      ctx.db.all<PerApp<{ slug: string; name: string; vendor: string | null; stores: number }>>(
+        `SELECT * FROM (
+           SELECT u.app_id AS g_app, t.slug, t.name, t.vendor, u.store_count AS stores,
+             ROW_NUMBER() OVER (PARTITION BY u.app_id ORDER BY u.store_count DESC, t.slug) AS g_rn
+           FROM theme_app_usage u JOIN themes t ON t.id = u.theme_id AND t.status = 'active'
+           WHERE u.app_id ${inApps}
+         ) WHERE g_rn <= 8 ORDER BY g_app, g_rn`,
+        [ids],
+      ),
+    ]);
+
+  // Second round: listing data (CTA links) for the apps and all their alternatives, and the
+  // home previews of every curated store, each in one query.
+  const [items, previews] = await Promise.all([
+    hydrateApps(ctx, [...rows, ...altRows]),
+    homePreviews(ctx, [...new Set(curated.map((c) => c.id))]),
   ]);
-  if (!item) throw notFound(`App '${slug}'`);
+  const itemById = new Map<number, AppListItem>();
+  [...rows, ...altRows].forEach((r, i) => {
+    const item = items[i];
+    if (item) itemById.set(r.id, item);
+  });
+  const aliasesOf = byApp(aliases);
+  const curatedOf = byApp(curated);
+  const coOf = byApp(coInstalled);
+  const altOf = byApp(altRows);
+  const themesOf = byApp(themes);
 
-  const previews = await homePreviews(
-    ctx,
-    curated.map((c) => c.id),
-  );
-  const cardsByStore = new Map<string, SectionCard[]>();
-  for (const c of sections)
-    cardsByStore.set(c.store.domain, [...(cardsByStore.get(c.store.domain) ?? []), c]);
-
-  const facts: AppFacts = {
-    ...item,
-    app_store_handle: row.app_store_handle,
-    app_store_url: row.app_store_url,
-    website_url: row.website_url,
-    app_store_category: row.app_store_category,
-    launched_on: row.launched_on,
-    plans: parsePlans(row.plans_json),
-    features: parseStringArray(row.features_json),
-    works_with: parseStringArray(row.works_with_json),
-    languages: parseStringArray(row.languages_json),
-    checked_on: row.checked_on,
-    facts_source: SOURCE_IDS.appStore,
-    aliases: aliases.map((a) => a.slug),
-  };
-  return {
-    app: facts,
-    surfaces: categorySurfaces(row.app_cat_name),
-    seen_on: {
-      stores: curated.map((c) => ({
-        store: storeRef(c),
-        preview: previews.get(c.id) ?? null,
-        sections: cardsByStore.get(c.domain) ?? [],
-      })),
-      sections,
-      section_total: sectionTotal?.n ?? 0,
-    },
-    stores,
-    co_installed: coInstalled.map((r) => ({
-      app: appRef(r),
-      stores: r.stores,
-      share: ratio(r.stores, row.store_count),
-    })),
-    alternatives,
-    comparisons,
-    themes: themes.map((t) => ({
-      theme: themeRef(t),
-      stores: t.stores,
-      share: ratio(t.stores, row.store_count),
-    })),
-  };
+  return rows.flatMap((row): AppDetail[] => {
+    const item = itemById.get(row.id);
+    if (!item) return [];
+    const mine = sections.get(row.id);
+    const cards = mine?.cards ?? [];
+    const cardsByStore = new Map<string, SectionCard[]>();
+    for (const c of cards)
+      cardsByStore.set(c.store.domain, [...(cardsByStore.get(c.store.domain) ?? []), c]);
+    const facts: AppFacts = {
+      ...item,
+      app_store_handle: row.app_store_handle,
+      app_store_url: row.app_store_url,
+      website_url: row.website_url,
+      app_store_category: row.app_store_category,
+      launched_on: row.launched_on,
+      plans: parsePlans(row.plans_json),
+      features: parseStringArray(row.features_json),
+      works_with: parseStringArray(row.works_with_json),
+      languages: parseStringArray(row.languages_json),
+      checked_on: row.checked_on,
+      facts_source: SOURCE_IDS.appStore,
+      aliases: (aliasesOf.get(row.id) ?? []).map((a) => a.slug),
+    };
+    return [
+      {
+        app: facts,
+        surfaces: categorySurfaces(row.app_cat_name),
+        seen_on: {
+          stores: (curatedOf.get(row.id) ?? []).map((c) => ({
+            store: storeRef(c),
+            preview: previews.get(c.id) ?? null,
+            sections: cardsByStore.get(c.domain) ?? [],
+          })),
+          sections: cards,
+          section_total: mine?.total ?? 0,
+        },
+        stores: stores.get(row.id) ?? appStorePage([], opts.storesLimit, 0),
+        co_installed: (coOf.get(row.id) ?? []).map((r) => ({
+          app: appRef(r),
+          stores: r.stores,
+          share: ratio(r.stores, row.store_count),
+        })),
+        alternatives: (altOf.get(row.id) ?? []).flatMap((r) => itemById.get(r.id) ?? []),
+        comparisons: links
+          .filter((l) => l.a.slug === row.app_slug || l.b.slug === row.app_slug)
+          .slice(0, 12),
+        themes: (themesOf.get(row.id) ?? []).map((t) => ({
+          theme: themeRef(t),
+          stores: t.stores,
+          share: ratio(t.stores, row.store_count),
+        })),
+      },
+    ];
+  });
 }
 
 /** Category names that render a section type (for section type info). */

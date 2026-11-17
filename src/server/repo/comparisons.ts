@@ -3,7 +3,7 @@ import type { Ctx } from '../api/v1/context.ts';
 import { hrefs } from '../api/v1/hrefs.ts';
 import type { ComparisonLink } from '../api/v1/schemas/common.ts';
 import type { SqlValue } from '../db/types.ts';
-import { entityRef } from './refs.ts';
+import { entityRef, jsonIds } from './refs.ts';
 
 interface LinkRow {
   slug: string;
@@ -33,10 +33,20 @@ export function comparisonTitle(a: string, b: string): string {
   return `${a} vs ${b}`;
 }
 
+/**
+ * Curated pairs in list order. `entityId`/`entityIds` keep the pairs that include one of those
+ * apps or themes (one query for several, e.g. both sides of a comparison).
+ */
 export async function comparisonLinks(
   ctx: Ctx,
-  opts: { kind?: 'app' | 'theme' | undefined; entityId?: number; limit: number },
+  opts: {
+    kind?: 'app' | 'theme' | undefined;
+    entityId?: number;
+    entityIds?: readonly number[];
+    limit: number;
+  },
 ): Promise<ComparisonLink[]> {
+  const entityIds = opts.entityIds ?? (opts.entityId !== undefined ? [opts.entityId] : undefined);
   const kinds = opts.kind ? [opts.kind] : (['app', 'theme'] as const);
   const results = await Promise.all(
     kinds.map((kind) => {
@@ -45,9 +55,11 @@ export async function comparisonLinks(
       const short = (alias: string) => (kind === 'app' ? `${alias}.short_name` : `${alias}.name`);
       const where = ['c.kind = ?', "x.status = 'active'", "y.status = 'active'"];
       const params: SqlValue[] = [kind];
-      if (opts.entityId !== undefined) {
-        where.push('(c.a_id = ? OR c.b_id = ?)');
-        params.push(opts.entityId, opts.entityId);
+      if (entityIds) {
+        where.push(
+          '(c.a_id IN (SELECT value FROM json_each(?)) OR c.b_id IN (SELECT value FROM json_each(?)))',
+        );
+        params.push(jsonIds(entityIds), jsonIds(entityIds));
       }
       return ctx.db.all<LinkRow>(
         `SELECT c.slug, c.kind, c.reason,

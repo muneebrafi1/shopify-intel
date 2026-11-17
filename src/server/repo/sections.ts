@@ -14,8 +14,15 @@ import type { SqlValue } from '../db/types.ts';
 import { normalizeDomain } from '../lib/slug.ts';
 import { categoriesForSection } from './apps.ts';
 import { resolveAppId } from './stores.ts';
-import { pageTypeRef, sectionTypeRef } from './refs.ts';
-import { screenshotDetails, sectionCards } from './visual.ts';
+import { jsonIds, pageTypeRef, sectionTypeRef } from './refs.ts';
+import {
+  rankedCardsSql,
+  screenshotDetails,
+  sectionCards,
+  toSectionCard,
+  type RankedCardCols,
+  type SectionCardRow,
+} from './visual.ts';
 
 export interface SectionFilters {
   type?: SectionType | undefined;
@@ -153,7 +160,25 @@ export interface ListSectionsParams {
   sort?: 'id' | 'mixed' | undefined;
   cursor?: string | undefined;
   limit: number;
+  /** false: items and pagination only (no facet counts, no section_type info). */
+  facets?: boolean | undefined;
 }
+
+/** ORDER BY for each list sort (aliases s, st); every key ends on the unique id. */
+const SECTION_ORDER = {
+  id: 's.id',
+  mixed: `${TIER_SQL}, ${MIX_SQL}, s.id`,
+} as const;
+
+/** Facets left out on request (`facets: false`): the same shape, nothing counted. */
+const noFacets = (): ListSectionsOutput['facets'] => ({
+  types: [],
+  groups: [],
+  page_types: [],
+  devices: [],
+  themes: [],
+  apps: [],
+});
 
 export async function listSections(ctx: Ctx, p: ListSectionsParams) {
   const f: SectionFilters = {
@@ -188,16 +213,17 @@ export async function listSections(ctx: Ctx, p: ListSectionsParams) {
       ? ` AND (${TIER_SQL}, ${MIX_SQL}, s.id) > (?, ?, ?)`
       : ' AND s.id > ?'
     : '';
+  const withFacets = p.facets !== false;
   const [items, total, facets, typeInfo] = await Promise.all([
     sectionCards(
       ctx,
       `${w.sql}${seekSql}`,
       seek ? [...w.params, ...seek] : w.params,
-      `ORDER BY ${mixed ? `${TIER_SQL}, ${MIX_SQL}, s.id` : 's.id'} LIMIT ${p.limit + 1}`,
+      `ORDER BY ${SECTION_ORDER[mixed ? 'mixed' : 'id']} LIMIT ${p.limit + 1}`,
     ),
     ctx.db.first<{ n: number }>(`SELECT COUNT(*) AS n ${FROM} WHERE ${w.sql}`, w.params),
-    sectionFacets(ctx, f),
-    p.type ? sectionTypeInfos(ctx, [p.type]) : Promise.resolve([]),
+    withFacets ? sectionFacets(ctx, f) : Promise.resolve(noFacets()),
+    p.type && withFacets ? sectionTypeInfos(ctx, [p.type]) : Promise.resolve([]),
   ]);
   const page = items.slice(0, p.limit);
   const last = page[page.length - 1];
@@ -216,6 +242,69 @@ export async function listSections(ctx: Ctx, p: ListSectionsParams) {
       total: total?.n ?? 0,
     },
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sections of several apps at once
+// ---------------------------------------------------------------------------------------------
+export interface ListSectionsByAppsParams {
+  apps: readonly string[];
+  type?: SectionType | undefined;
+  group?: string | undefined;
+  page_type?: string | undefined;
+  device?: string | undefined;
+  sort?: 'id' | 'mixed' | undefined;
+  per_app: number;
+}
+
+/** App id of the slug or alias `j.value`, as `resolveAppId` resolves it (slug first). */
+const APP_ID_OF_SLUG = `COALESCE(
+  (SELECT id FROM apps WHERE slug = j.value AND status = 'active'),
+  (SELECT app_id FROM app_aliases WHERE slug = j.value))`;
+
+/**
+ * For each app, the first `per_app` sections and the total: the same items, order and total as
+ * `listSections({ app, ...filters, sort, limit: per_app })`, for many apps in ONE statement (the
+ * slugs resolve in a CTE, a window ranks each app's sections). Apps come back in request order;
+ * unknown slugs are left out, known apps without a matching section have total 0.
+ */
+export async function listSectionsByApps(ctx: Ctx, p: ListSectionsByAppsParams) {
+  const slugs = [...new Set(p.apps)];
+  const w = sectionWhere({
+    type: p.type,
+    group: p.group,
+    page_type: p.page_type,
+    device: p.device,
+  });
+  const ranked = rankedCardsSql(
+    's.app_id',
+    `${w.sql} AND s.app_id IN (SELECT app_id FROM req)`,
+    SECTION_ORDER[p.sort ?? 'id'],
+  );
+  const rows = await ctx.db.all<
+    { req_slug: string } & Partial<SectionCardRow> & Partial<RankedCardCols>
+  >(
+    `WITH req AS (
+       SELECT j.key AS pos, j.value AS slug, ${APP_ID_OF_SLUG} AS app_id FROM json_each(?) j
+     ),
+     ranked AS (${ranked})
+     SELECT req.slug AS req_slug, ranked.*
+     FROM req LEFT JOIN ranked ON ranked.g_key = req.app_id AND ranked.g_rn <= ?
+     WHERE req.app_id IS NOT NULL
+     ORDER BY req.pos, ranked.g_rn`,
+    [jsonIds(slugs), ...w.params, p.per_app],
+  );
+  const items: Array<{ app_slug: string; total: number; sections: SectionCard[] }> = [];
+  for (const r of rows) {
+    let item = items[items.length - 1];
+    if (item?.app_slug !== r.req_slug) {
+      item = { app_slug: r.req_slug, total: r.g_total ?? 0, sections: [] };
+      items.push(item);
+    }
+    // An app without a matching section is one row of NULLs (the LEFT JOIN).
+    if (r.id != null) item.sections.push(toSectionCard(r as SectionCardRow, ctx));
+  }
+  return { items };
 }
 
 // ---------------------------------------------------------------------------------------------

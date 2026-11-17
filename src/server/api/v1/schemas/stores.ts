@@ -10,6 +10,7 @@ import {
   SectionTypeRefSchema,
   StoreRefSchema,
   StoreThemeInfoSchema,
+  facetsFlag,
   int,
   named,
 } from './common.ts';
@@ -36,9 +37,17 @@ export const ListStoresInput = z.object({
     ),
   captured: z.boolean().optional().describe('Only stores with real screenshots.'),
   q: z.string().max(100).optional().describe('Domain or name (prefix match).'),
+  domains: z
+    .array(z.string().min(1).max(253))
+    .max(60)
+    .optional()
+    .describe(
+      'Only these stores: exact domains, comma-separated in a query string (up to 60). Combine with scope=all to look up any detected store.',
+    ),
   sort: StoreSortEnum.default('rank'),
   cursor: z.string().optional(),
   limit: int().min(1).max(60).default(24),
+  facets: facetsFlag('every facet list comes back empty and every facet count 0'),
 });
 
 export const StoreListItemSchema = named(

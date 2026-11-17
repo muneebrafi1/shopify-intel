@@ -7,6 +7,7 @@ import {
   SectionCardSchema,
   SectionGroupEnum,
   SectionTypeEnum,
+  facetsFlag,
   int,
   named,
 } from './common.ts';
@@ -27,6 +28,40 @@ export const ListSectionsInput = z.object({
     ),
   cursor: z.string().optional(),
   limit: int().min(1).max(60).default(24),
+  facets: facetsFlag('every facet list comes back empty, and section_type null'),
+});
+
+/** Sort shared by the section lists. */
+const SectionSortEnum = ListSectionsInput.shape.sort;
+
+export const ListSectionsByAppsInput = z.object({
+  apps: z
+    .array(z.string().min(1))
+    .min(1)
+    .max(50)
+    .describe('App slugs (aliases resolve), comma-separated in a query string. Up to 50.'),
+  type: SectionTypeEnum.optional(),
+  group: SectionGroupEnum.optional(),
+  page_type: PageTypeEnum.optional(),
+  device: DeviceEnum.optional(),
+  sort: SectionSortEnum,
+  per_app: int().min(1).max(24).default(6).describe('Sections per app.'),
+});
+
+export const ListSectionsByAppsOutput = z.object({
+  items: z
+    .array(
+      z.object({
+        app_slug: z.string().describe('The slug as requested (an alias stays an alias).'),
+        total: int().describe("The app's sections matching the filters (listSections total)."),
+        sections: z
+          .array(SectionCardSchema)
+          .describe(
+            'The first per_app of them: the same items, in the same order, as listSections with app=<slug> and the same filters, sort and limit=per_app.',
+          ),
+      }),
+    )
+    .describe('One entry per known app, in request order. Unknown slugs are left out.'),
 });
 
 export const SectionTypeInfoSchema = named(
@@ -90,6 +125,8 @@ export const SectionDetailSchema = named(
 export const GetScreenshotInput = z.object({ id: int().positive() });
 
 export type ListSectionsInput = z.input<typeof ListSectionsInput>;
+export type ListSectionsByAppsInput = z.input<typeof ListSectionsByAppsInput>;
+export type ListSectionsByAppsOutput = z.infer<typeof ListSectionsByAppsOutput>;
 export type SectionTypeInfo = z.infer<typeof SectionTypeInfoSchema>;
 export type ListSectionsOutput = z.infer<typeof ListSectionsOutput>;
 export type ListSectionTypesOutput = z.infer<typeof ListSectionTypesOutput>;

@@ -12,6 +12,7 @@ import {
   StoreRefSchema,
   ThemeRefSchema,
   UsageStatSchema,
+  facetsFlag,
   int,
   named,
   pagedList,
@@ -24,9 +25,15 @@ export const ListThemesInput = z.object({
   price_band: PriceBandEnum.optional(),
   vendor: z.string().optional().describe('Vendor slug.'),
   q: z.string().max(100).optional(),
+  slugs: z
+    .array(z.string().min(1))
+    .max(100)
+    .optional()
+    .describe('Only these themes: slugs, comma-separated in a query string (up to 100).'),
   sort: z.enum(['usage', 'name', 'price']).default('usage'),
   cursor: z.string().optional(),
   limit: int().min(1).max(100).default(48),
+  facets: facetsFlag('vendors and price_bands come back empty'),
 });
 
 export const VendorSchema = z.object({ name: z.string(), slug: z.string(), href: z.string() });

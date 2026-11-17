@@ -12,6 +12,7 @@ import {
   StoreThemeInfoSchema,
   ThemeRefSchema,
   UsageStatSchema,
+  facetsFlag,
   int,
   named,
   pagedList,
@@ -24,9 +25,15 @@ export const ListAppsInput = z.object({
   min_rating: z.number().min(0).max(5).optional(),
   profile: z.enum(['full', 'basic']).optional(),
   q: z.string().max(100).optional(),
+  slugs: z
+    .array(z.string().min(1))
+    .max(100)
+    .optional()
+    .describe('Only these apps: slugs or aliases, comma-separated in a query string (up to 100).'),
   sort: z.enum(['usage', 'rating', 'reviews', 'name']).default('usage'),
   cursor: z.string().optional(),
   limit: int().min(1).max(100).default(48),
+  facets: facetsFlag('facets.categories comes back empty'),
 });
 
 export const AppPricingSchema = named(
