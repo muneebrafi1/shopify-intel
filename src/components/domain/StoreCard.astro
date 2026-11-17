@@ -1,0 +1,132 @@
+---
+import Shot from '~/components/media/Shot.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import type { Device } from '~/lib/taxonomy';
+
+interface Props {
+  domain: string;
+  name?: string | null;
+  href?: string;
+  shot?: { src: string; width: number; height: number; device?: Device } | null;
+  /** One quiet meta line, e.g. "Prestige · 11 apps". */
+  meta?: string;
+  tag?: string;
+  /** Specimen number shown at the end of the caption (N°014). */
+  n?: number;
+  eager?: boolean;
+  class?: string;
+}
+const {
+  domain,
+  name,
+  href = `/stores/${domain}`,
+  shot,
+  meta,
+  tag,
+  n,
+  eager,
+  class: className,
+} = Astro.props;
+const title = name || domain;
+---
+
+<article class:list={['store-card', className]}>
+  {shot ? (
+    <Shot
+      src={shot.src}
+      width={shot.width}
+      height={shot.height}
+      device={shot.device ?? 'desktop'}
+      alt={`${title} ${shot.device === 'mobile' ? 'mobile' : 'desktop'} home page`}
+      href={href}
+      eager={eager}
+      tag={tag}
+    />
+  ) : (
+    <a href={href} class="store-card__empty">
+      <span class="store-card__empty-domain">{domain}</span>
+      <span class="store-card__empty-note">Not captured yet</span>
+    </a>
+  )}
+  <div class="store-card__caption">
+    <StoreMark domain={domain} name={name} size={20} />
+    <div class="store-card__text">
+      <h3 class="store-card__title">
+        <a href={href}>{title}</a>
+      </h3>
+      {meta && <p class="store-card__meta">{meta}</p>}
+    </div>
+    {typeof n === 'number' && <span class="store-card__n">N°{String(n).padStart(3, '0')}</span>}
+    <slot name="aside" />
+  </div>
+</article>
+
+<style>
+  .store-card {
+    min-width: 0;
+  }
+  .store-card__caption {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .store-card__caption :global(.store-mark) {
+    margin-top: 1px;
+  }
+  .store-card__text {
+    flex: 1;
+    min-width: 0;
+  }
+  .store-card__title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .store-card__n {
+    flex: none;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    color: var(--ink-3);
+  }
+  .store-card__meta {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .store-card__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+    background:
+      repeating-linear-gradient(-45deg, transparent 0 10px, rgb(25 24 22 / 0.025) 10px 11px),
+      var(--tile);
+    transition: background-color var(--dur-base) var(--ease-out);
+  }
+  .store-card__empty:hover {
+    background-color: var(--tile-hover);
+  }
+  .store-card__empty-domain {
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--ink-2);
+  }
+  .store-card__empty-note {
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+</style>

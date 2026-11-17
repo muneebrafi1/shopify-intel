@@ -1,0 +1,61 @@
+---
+/** Label + control + hint/error. Wrap any native control in it. */
+interface Props {
+  label: string;
+  for: string;
+  hint?: string;
+  error?: string;
+  optional?: boolean;
+  class?: string;
+}
+const { label, for: htmlFor, hint, error, optional = false, class: className } = Astro.props;
+---
+
+<div class:list={['field', { 'field--error': !!error }, className]}>
+  <label class="field__label" for={htmlFor}>
+    {label}
+    {optional && <span class="field__optional">Optional</span>}
+  </label>
+  <slot />
+  {hint && !error && (
+    <p class="field__hint" id={`${htmlFor}-hint`}>
+      {hint}
+    </p>
+  )}
+  {error && (
+    <p class="field__error" id={`${htmlFor}-error`}>
+      {error}
+    </p>
+  )}
+</div>
+
+<style>
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field__label {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+  }
+  .field__optional {
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+  }
+  .field__hint {
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+  .field__error {
+    font-size: var(--text-xs);
+    color: var(--critical);
+  }
+  .field--error :global(.input) {
+    box-shadow: inset 0 0 0 1px var(--critical);
+  }
+</style>

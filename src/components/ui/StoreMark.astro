@@ -1,0 +1,43 @@
+---
+/**
+ * Small square identifying a store in lists (until we capture real favicons). The tone is
+ * derived from the domain so the same store always looks the same.
+ */
+import { toneFor } from '~/lib/tone';
+
+interface Props {
+  domain: string;
+  name?: string | null;
+  size?: number;
+  class?: string;
+}
+const { domain, name, size = 28, class: className } = Astro.props;
+const label = (name || domain).replace(/^www\./, '');
+const initial = label.charAt(0).toUpperCase();
+const tone = toneFor(domain);
+---
+
+<span
+  class:list={['store-mark', className]}
+  style={`--s:${size}px;--bg:${tone.mark};--fg:${tone.markInk}`}
+  aria-hidden="true"
+>
+  {initial}
+</span>
+
+<style>
+  .store-mark {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: var(--s);
+    height: var(--s);
+    border-radius: calc(var(--s) * 0.26);
+    background: var(--bg);
+    color: var(--fg);
+    font-size: calc(var(--s) * 0.44);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px rgb(25 24 22 / 0.06);
+  }
+</style>

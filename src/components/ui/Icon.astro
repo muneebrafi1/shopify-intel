@@ -1,0 +1,39 @@
+---
+import { icons, type IconName } from './icons';
+
+interface Props {
+  name: IconName;
+  /** Rendered size in px (square). */
+  size?: number;
+  /** Accessible label. Omit for decorative icons (hidden from assistive tech). */
+  label?: string;
+  class?: string;
+}
+
+const { name, size = 16, label, class: className } = Astro.props;
+// Phosphor SVGs ship with fill="currentColor" and a 256 viewBox; we only size them.
+const svg = icons[name];
+---
+
+<span
+  class:list={['icon', className]}
+  style={`--icon-size:${size}px`}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  set:html={svg}
+/>
+
+<style>
+  .icon {
+    display: inline-flex;
+    flex: none;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    line-height: 0;
+  }
+  .icon :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+</style>

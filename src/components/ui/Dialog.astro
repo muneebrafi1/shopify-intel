@@ -1,0 +1,140 @@
+---
+/**
+ * Native <dialog> (focus trap, Esc, inert background for free). Open from any element with
+ * `data-dialog-open="<id>"`; close with `data-dialog-close` inside. Clicking the backdrop closes.
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  /** Visually hide the title (still labels the dialog). */
+  hideTitle?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'full';
+  class?: string;
+}
+const { id, title, hideTitle = false, size = 'md', class: className } = Astro.props;
+---
+
+<dialog
+  id={id}
+  class:list={['dialog', `dialog--${size}`, className]}
+  aria-labelledby={`${id}-title`}
+>
+  <div class="dialog__head">
+    <h2 id={`${id}-title`} class:list={['dialog__title', { 'visually-hidden': hideTitle }]}>
+      {title}
+    </h2>
+    <button type="button" class="dialog__close" data-dialog-close aria-label="Close">
+      <Icon name="x" size={18} />
+    </button>
+  </div>
+  <div class="dialog__body">
+    <slot />
+  </div>
+  {Astro.slots.has('footer') && (
+    <div class="dialog__foot">
+      <slot name="footer" />
+    </div>
+  )}
+</dialog>
+
+<script>
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const opener = target.closest<HTMLElement>('[data-dialog-open]');
+    if (opener) {
+      const dialog = document.getElementById(
+        opener.dataset.dialogOpen ?? '',
+      ) as HTMLDialogElement | null;
+      if (dialog) {
+        event.preventDefault();
+        dialog.showModal();
+      }
+      return;
+    }
+    if (target.closest('[data-dialog-close]')) {
+      target.closest('dialog')?.close();
+      return;
+    }
+    if (target instanceof HTMLDialogElement && target.classList.contains('dialog')) target.close();
+  });
+</script>
+
+<style>
+  .dialog {
+    width: min(calc(100% - 32px), var(--dialog-w, 520px));
+    max-height: min(calc(100dvh - 48px), 880px);
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-float);
+    overflow: hidden;
+    flex-direction: column;
+  }
+  .dialog[open] {
+    display: flex;
+    animation: dialog-in var(--dur-base) var(--ease-out);
+  }
+  .dialog::backdrop {
+    background: rgb(25 24 22 / 0.4);
+  }
+  .dialog--sm {
+    --dialog-w: 400px;
+  }
+  .dialog--lg {
+    --dialog-w: 880px;
+  }
+  .dialog--full {
+    --dialog-w: 1280px;
+    height: calc(100dvh - 48px);
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.99);
+    }
+  }
+  .dialog__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .dialog__title {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+  }
+  .dialog__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    border-radius: var(--radius-pill);
+    color: var(--ink-2);
+  }
+  .dialog__close:hover {
+    background: var(--fill);
+    color: var(--ink);
+  }
+  .dialog__body {
+    padding: var(--space-5);
+    overflow: auto;
+    flex: 1;
+  }
+  .dialog__foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+</style>

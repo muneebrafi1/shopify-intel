@@ -1,0 +1,155 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+type Variant = 'primary' | 'secondary' | 'quiet' | 'ghost';
+type Size = 'sm' | 'md' | 'lg';
+
+interface Props extends Omit<HTMLAttributes<'button'>, 'class'> {
+  href?: string;
+  variant?: Variant;
+  size?: Size;
+  icon?: IconName;
+  iconRight?: IconName;
+  /** Icon-only button: pass `label` for assistive tech. */
+  label?: string;
+  full?: boolean;
+  /** Opens in a new tab with rel="noopener"; add `sponsored` for affiliate links. */
+  external?: boolean;
+  rel?: string;
+  class?: string;
+}
+
+const {
+  href,
+  variant = 'secondary',
+  size = 'md',
+  icon,
+  iconRight,
+  label,
+  full = false,
+  external = false,
+  rel,
+  class: className,
+  type = 'button',
+  ...rest
+} = Astro.props;
+
+const iconOnly = !!label && !Astro.slots.has('default');
+const iconSize = size === 'lg' ? 18 : 16;
+const classes = [
+  'btn',
+  `btn--${variant}`,
+  `btn--${size}`,
+  { 'btn--full': full, 'btn--icon': iconOnly },
+  className,
+];
+const relValue = [external ? 'noopener' : '', rel ?? ''].filter(Boolean).join(' ') || undefined;
+---
+
+{href ? (
+  <a
+    href={href}
+    class:list={classes}
+    aria-label={label}
+    target={external ? '_blank' : undefined}
+    rel={relValue}
+    {...(rest as HTMLAttributes<'a'>)}
+  >
+    {icon && <Icon name={icon} size={iconSize} />}
+    {!iconOnly && (
+      <span class="btn__label">
+        <slot />
+      </span>
+    )}
+    {iconRight && <Icon name={iconRight} size={iconSize} />}
+  </a>
+) : (
+  <button type={type} class:list={classes} aria-label={label} {...rest}>
+    {icon && <Icon name={icon} size={iconSize} />}
+    {!iconOnly && (
+      <span class="btn__label">
+        <slot />
+      </span>
+    )}
+    {iconRight && <Icon name={iconRight} size={iconSize} />}
+  </button>
+)}
+
+<style>
+  .btn {
+    --btn-h: 34px;
+    --btn-px: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: var(--btn-h);
+    padding: 0 var(--btn-px);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+    user-select: none;
+  }
+  .btn:focus-visible {
+    border-radius: var(--radius-pill);
+  }
+  .btn--sm {
+    --btn-h: 28px;
+    --btn-px: 10px;
+    font-size: var(--text-sm);
+  }
+  .btn--lg {
+    --btn-h: 44px;
+    --btn-px: 20px;
+    font-size: var(--text-md);
+  }
+  .btn--full {
+    width: 100%;
+  }
+  .btn--icon {
+    width: var(--btn-h);
+    padding: 0;
+  }
+  .btn--primary {
+    background: var(--inverse);
+    color: var(--ink-inverse);
+  }
+  .btn--primary:hover {
+    background: var(--inverse-2);
+  }
+  .btn--secondary {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .btn--secondary:hover {
+    background: var(--fill);
+  }
+  .btn--quiet {
+    background: var(--fill);
+    color: var(--ink);
+  }
+  .btn--quiet:hover {
+    background: var(--fill-hover);
+  }
+  .btn--ghost {
+    color: var(--ink-2);
+  }
+  .btn--ghost:hover {
+    background: var(--fill);
+    color: var(--ink);
+  }
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+</style>

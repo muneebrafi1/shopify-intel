@@ -1,0 +1,92 @@
+---
+import SectionCrop from '~/components/media/SectionCrop.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import type { Device } from '~/lib/taxonomy';
+
+interface Props {
+  href: string;
+  crop: { src: string; width: number; height: number };
+  device: Device;
+  typeName: string;
+  storeLabel: string;
+  /** e.g. "Prestige · Product page" */
+  meta?: string;
+  app?: { name: string; iconUrl?: string | null } | null;
+  eager?: boolean;
+  class?: string;
+}
+const {
+  href,
+  crop,
+  device,
+  typeName,
+  storeLabel,
+  meta,
+  app,
+  eager,
+  class: className,
+} = Astro.props;
+---
+
+<article class:list={['section-card', className]}>
+  <SectionCrop
+    src={crop.src}
+    width={crop.width}
+    height={crop.height}
+    device={device}
+    alt={`${typeName} section on ${storeLabel} (${device})`}
+    href={href}
+    eager={eager}
+  />
+  <div class="section-card__caption">
+    <div class="section-card__text">
+      <h3 class="section-card__title">
+        <a href={href}>{storeLabel}</a>
+      </h3>
+      <p class="section-card__meta">{meta ?? typeName}</p>
+    </div>
+    {app && (
+      <span class="section-card__app" title={`Rendered by ${app.name}`}>
+        <AppIcon src={app.iconUrl} name={app.name} size={20} />
+      </span>
+    )}
+  </div>
+</article>
+
+<style>
+  .section-card {
+    min-width: 0;
+  }
+  .section-card__caption {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+  .section-card__text {
+    min-width: 0;
+  }
+  .section-card__title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .section-card__meta {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .section-card__app {
+    flex: none;
+    margin-top: 1px;
+  }
+</style>

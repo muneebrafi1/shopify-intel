@@ -1,0 +1,64 @@
+---
+import Icon from './Icon.astro';
+import { formatCount } from '~/lib/format';
+
+interface Props {
+  rating: number | null | undefined;
+  reviews?: number | null;
+  /** Where the number comes from, shown on hover ("Shopify App Store, checked 17 Nov 2026"). */
+  source?: string;
+  size?: 'sm' | 'md';
+  class?: string;
+}
+const { rating, reviews, source, size = 'md', class: className } = Astro.props;
+const hasRating = typeof rating === 'number' && rating > 0;
+---
+
+{hasRating ? (
+  <span class:list={['rating', `rating--${size}`, className]} title={source}>
+    <Icon name="star-fill" size={size === 'sm' ? 12 : 14} class="rating__star" />
+    <span class="rating__value num">{rating!.toFixed(1)}</span>
+    {typeof reviews === 'number' && (
+      <span class="rating__reviews num">
+        {formatCount(reviews)}
+        <span class="visually-hidden"> reviews</span>
+      </span>
+    )}
+  </span>
+) : (
+  <span class:list={['rating', 'rating--none', `rating--${size}`, className]} title={source}>
+    No rating yet
+  </span>
+)}
+
+<style>
+  .rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-sm);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .rating--sm {
+    font-size: var(--text-xs);
+  }
+  .rating__star {
+    color: var(--ink);
+  }
+  .rating__value {
+    font-weight: var(--weight-semibold);
+  }
+  .rating__reviews {
+    color: var(--ink-3);
+  }
+  .rating__reviews::before {
+    content: '(';
+  }
+  .rating__reviews::after {
+    content: ')';
+  }
+  .rating--none {
+    color: var(--ink-3);
+  }
+</style>
