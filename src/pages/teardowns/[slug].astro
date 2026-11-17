@@ -1,22 +1,25 @@
 ---
 /**
- * /teardowns/<slug> — long-form editorial on one store. Serif title + dek, mono byline, the
- * article with the store's spec sheet in a sticky sidebar, the notes on the plates (numbers
- * match the store page's sections rail), the stack, more teardowns.
+ * /teardowns/<slug> — a long read on one store (reading pattern).
+ * 680px column: kicker, display-lg title, dek, byline "Editorial team · date", the store's home
+ * capture, the article. Beside it (≥1024, sticky): the store's facts card and, ≥1200, the table
+ * of contents. Then the notes pinned to sections on the captures (numbers match the store
+ * page's sections rail), the stack and more teardowns.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
+import FactsCard from '~/components/ui/FactsCard.astro';
+import type { Fact } from '~/components/ui/Facts.astro';
 import Button from '~/components/ui/Button.astro';
-import Icon from '~/components/ui/Icon.astro';
-import SpecRows, { type SpecRow } from '~/components/stores/SpecRows.astro';
+import Badge from '~/components/ui/Badge.astro';
+import Window from '~/components/ui/Window.astro';
+import Shot from '~/components/media/Shot.astro';
+import TeardownCard from '~/components/domain/TeardownCard.astro';
 import StackSheet from '~/components/stores/StackSheet.astro';
 import AnnotatedPlates from '~/components/teardowns/AnnotatedPlates.astro';
-import TeardownRow from '~/components/teardowns/TeardownRow.astro';
 import { renderMarkdown } from '~/components/teardowns/markdown';
-import { specimen } from '~/components/stores/query';
 import { api, orNotFound } from '~/server/api';
 import { SITE_NAME } from '~/config/site';
 import { formatCount, formatDate } from '~/lib/format';
@@ -33,48 +36,42 @@ const ordered = [...list.items].sort(
   (a, b) =>
     (b.published_at ?? '').localeCompare(a.published_at ?? '') || b.note_count - a.note_count,
 );
-const number = Math.max(1, ordered.findIndex((t) => t.slug === teardown.slug) + 1);
 const others = ordered.filter((t) => t.slug !== teardown.slug).slice(0, 3);
 
-const body = renderMarkdown(teardown.body_md, { headingPrefix: true });
+const body = renderMarkdown(teardown.body_md);
 const words =
   teardown.body_md.split(/\s+/).length + notes.reduce((n, x) => n + x.body.split(/\s+/).length, 0);
 const minutes = Math.max(1, Math.round(words / 220));
-const plates = new Set(notes.map((n) => `${n.page_type}-${n.device}`)).size;
+const captures = new Set(notes.map((n) => `${n.page_type}-${n.device}`)).size;
 const source = meta.sources[detail.detection.source];
 const asOf = formatDate(source?.as_of ?? detail.detection.last_seen);
 const isPreview = detail.pages.some((p) => p.is_placeholder);
 const title = store.name ?? store.domain;
+const cover = teardown.cover;
 
-const specs: SpecRow[] = [
+const facts: Fact[] = [
+  { label: 'Store', value: store.domain, href: store.href, mono: true },
   {
     label: 'Theme',
     value: store.theme.label,
-    href: store.theme.theme?.href ?? null,
-    note: store.theme.theme?.vendor ?? null,
+    ...(store.theme.theme ? { href: store.theme.theme.href } : {}),
   },
-  { label: 'Apps', value: `${store.app_count} detected` },
+  { label: 'Apps', value: `${store.app_count} detected`, href: '#stack' },
   {
     label: 'Pixels',
     value: detail.pixels.length ? detail.pixels.map((p) => p.name).join(', ') : 'None detected',
-    muted: !detail.pixels.length,
   },
-  { label: 'Currency', value: store.currency ?? '—', mono: true },
+  { label: 'Currency', value: store.currency ?? '—', mono: !!store.currency },
   {
     label: 'Tranco rank',
     value: store.tranco_rank ? formatCount(store.tranco_rank) : 'Not ranked',
     mono: !!store.tranco_rank,
-    muted: !store.tranco_rank,
   },
-  {
-    label: 'Detected',
-    value: formatDate(detail.detection.last_seen),
-    note: `Rules ${detail.detection.rules_version ?? 'unknown'}`,
-  },
+  { label: 'Detected', value: formatDate(detail.detection.last_seen), mono: true },
 ];
 const toc = [
   ...body.headings.filter((h) => h.level === 2).map((h) => ({ href: `#${h.id}`, text: h.text })),
-  ...(notes.length ? [{ href: '#notes', text: 'Notes on the plates' }] : []),
+  ...(notes.length ? [{ href: '#notes', text: 'Notes on the captures' }] : []),
   { href: '#stack', text: 'The stack' },
 ];
 
@@ -125,72 +122,82 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 >
   <article class="td">
     <div class="container">
-      <Breadcrumbs
-        items={[{ label: 'Teardowns', href: '/teardowns' }, { label: title }]}
-        class="td__crumbs"
-      />
+      <Breadcrumbs items={[{ label: 'Teardowns', href: '/teardowns' }, { label: title }]} />
 
-      <header class="td__head">
-        <p class="td__labels">
-          <MonoLabel tone="ink">Teardown {specimen(number).replace('N°0', 'N°')}</MonoLabel>
-          {teardown.is_sample && <MonoLabel tone="accent">Sample · detected data only</MonoLabel>}
-        </p>
-        <h1 class="td__title display">{teardown.title}</h1>
-        {teardown.dek && <p class="td__dek display">{teardown.dek}</p>}
-        <p class="td__byline mono">
-          <span>{SITE_NAME} editorial</span>
-          {teardown.published_at && <span>{formatDate(teardown.published_at)}</span>}
-          <span>{minutes} min read</span>
-          <span>
-            {notes.length} {notes.length === 1 ? 'note' : 'notes'} on {plates}{' '}
-            {plates === 1 ? 'plate' : 'plates'}
-          </span>
-          <span>Scan {asOf}</span>
-          {isPreview && <span class="td__pending">Capture pending</span>}
-        </p>
-      </header>
+      <div class="td__layout">
+        <div class="td__main">
+          <header class="td__head">
+            <p class="td__kicker">
+              <span>Teardown</span>
+              {teardown.is_sample && (
+                <Badge tone="caution" size="sm">
+                  Sample · detected data only
+                </Badge>
+              )}
+            </p>
+            <h1 class="td__title display-lg">{teardown.title}</h1>
+            {teardown.dek && <p class="td__dek lead">{teardown.dek}</p>}
+            <p class="td__byline">
+              <span class="td__author">Editorial team</span>
+              {teardown.published_at && (
+                <time datetime={teardown.published_at}>{formatDate(teardown.published_at)}</time>
+              )}
+              <span>{minutes} min read</span>
+            </p>
+          </header>
 
-      <div class="td__body cols-12">
-        <div class="td__article">
-          <div class="td-prose" set:html={body.html} />
+          {cover && (
+            <figure class="td__cover">
+              <Window url={store.domain}>
+                <Shot
+                  src={cover.image.src}
+                  width={cover.image.width}
+                  height={cover.image.height}
+                  device="desktop"
+                  alt={`${title} home page${cover.is_placeholder ? ' (layout preview, not a screenshot)' : ''}`}
+                  ratio="16 / 9"
+                  eager
+                  flush
+                />
+              </Window>
+              <figcaption>
+                {title} home page, desktop
+                {cover.is_placeholder
+                  ? ' · layout preview drawn from the sections we expect, not a screenshot'
+                  : cover.captured_at
+                    ? ` · captured ${formatDate(cover.captured_at)}`
+                    : ''}
+              </figcaption>
+            </figure>
+          )}
+
+          <div class="prose td-prose" set:html={body.html} />
         </div>
 
-        <aside class="td__side" aria-label="The store">
-          <div class="td__sheet">
-            <MonoLabel as="p">The store</MonoLabel>
-            <p class="td__store">
-              <a href={store.href}>{title}</a>
-            </p>
-            <p class="td__domain">
-              <span class="mono">{store.domain}</span>
-              <a href={store.url} target="_blank" rel="noopener" class="td__visit">
-                Visit <Icon name="arrow-up-right" size={12} />
-              </a>
-            </p>
-            <SpecRows rows={specs} label={`${title} specification`} class="td__specs" />
+        <aside class="td__aside" aria-label="The store and contents">
+          <FactsCard title="The store" items={facts} source={source?.label} class="td__sheet">
             <Button
+              slot="actions"
               href={store.href}
-              size="sm"
               variant="secondary"
-              iconRight="arrow-right"
+              size="sm"
+              arrow
+              full
               class="td__open"
             >
-              Open the store specimen
+              Open the store page
             </Button>
-            <nav class="td__toc" aria-label="In this teardown">
-              <MonoLabel as="p">In this teardown</MonoLabel>
-              <ol>
-                {toc.map((t, i) => (
-                  <li>
-                    <a href={t.href}>
-                      <span class="mono">{String(i + 1).padStart(2, '0')}</span>
-                      {t.text}
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </nav>
-          </div>
+          </FactsCard>
+          <nav class="td__toc" aria-label="On this page" data-toc>
+            <p class="eyebrow">On this page</p>
+            <ol>
+              {toc.map((t) => (
+                <li>
+                  <a href={t.href}>{t.text}</a>
+                </li>
+              ))}
+            </ol>
+          </nav>
         </aside>
       </div>
     </div>
@@ -199,13 +206,12 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       <section id="notes" class="container td__notes" aria-labelledby="notes-title">
         <SectionHeader
           id="notes-title"
-          title="Notes on the plates"
+          title="Notes on the captures"
           count={notes.length}
-          label={isPreview ? 'Plates · layout previews, capture pending' : 'Plates'}
           description={
             isPreview
-              ? 'Each note points at one section. The plates are drawn from the sections we expect on each page until the store is captured.'
-              : 'Each note points at one section of a captured page.'
+              ? `Each note points at one section, pinned on ${captures === 1 ? 'the capture' : `${captures} captures`}. The pages are layout previews, drawn from the sections we expect, until the store is captured.`
+              : `Each note points at one section, pinned on ${captures === 1 ? 'the capture' : `${captures} captures`}.`
           }
           rule
         />
@@ -213,19 +219,19 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       </section>
     )}
 
-    <section id="stack" class="container page-block" aria-labelledby="stack-title">
+    <section id="stack" class="container td__stack" aria-labelledby="stack-title">
       <SectionHeader
         id="stack-title"
         title="The stack"
         count={store.app_count}
-        description={`Everything the ${asOf} scan detected on ${store.domain}. App and theme names link to their pages; placements link to the section on the store’s plates.`}
+        description={`Everything the ${asOf} scan detected on ${store.domain}. Placements link to the section on the store page.`}
         rule
       />
-      <StackSheet detail={detail} basePath={store.href} />
+      <StackSheet detail={detail} basePath={store.href} class="td__stacksheet" />
     </section>
 
     {others.length > 0 && (
-      <section class="container page-block td__more" aria-labelledby="more-title">
+      <section class="container td__more" aria-labelledby="more-title">
         <SectionHeader
           id="more-title"
           title="More teardowns"
@@ -233,9 +239,17 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           linkLabel="All teardowns"
           rule
         />
-        <div class="td__more-list">
+        <div class="td__more-grid" style={`--cols:${Math.min(others.length, 3)}`}>
           {others.map((t) => (
-            <TeardownRow item={t} n={ordered.indexOf(t) + 1} />
+            <TeardownCard
+              slug={t.slug}
+              title={t.title}
+              dek={t.dek}
+              storeLabel={t.store.domain}
+              publishedAt={t.published_at}
+              shot={t.cover ? t.cover.image : null}
+              isSample={t.is_sample}
+            />
           ))}
         </div>
       </section>
@@ -251,162 +265,122 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   </article>
 </BaseLayout>
 
+<script>
+  // Mark the table-of-contents entry for the section being read.
+  document.querySelectorAll<HTMLElement>('[data-toc]').forEach((toc) => {
+    const links = new Map<Element, HTMLAnchorElement>();
+    toc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
+      const target = document.getElementById(decodeURIComponent(a.hash.slice(1)));
+      if (target) links.set(target, a);
+    });
+    if (!links.size) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          links.forEach((a, el) => a.toggleAttribute('aria-current', el === entry.target));
+        }
+      },
+      { rootMargin: '-15% 0px -75% 0px' },
+    );
+    links.forEach((_, el) => observer.observe(el));
+  });
+</script>
+
 <style>
-  .td :global(.td__crumbs) {
+  .td :global(nav[aria-label='Breadcrumb']) {
     padding-top: var(--space-6);
   }
+  @media (min-width: 1024px) {
+    .td :global(nav[aria-label='Breadcrumb']) {
+      padding-top: var(--space-8);
+    }
+  }
+
+  /* Reading column + sticky aside */
+  .td__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-12);
+  }
+  @media (min-width: 1024px) {
+    .td__layout {
+      grid-template-columns: minmax(0, var(--reading-max)) 300px;
+      justify-content: space-between;
+      gap: var(--space-12);
+    }
+  }
+  @media (min-width: 1200px) {
+    .td__layout {
+      grid-template-columns: minmax(0, var(--reading-max)) 320px;
+    }
+  }
+  .td__main {
+    min-width: 0;
+    max-width: var(--reading-max);
+  }
   .td__head {
-    padding-block: var(--space-10) var(--space-8);
-    max-width: 1040px;
+    padding-block: var(--space-8) var(--space-8);
   }
   @media (min-width: 1024px) {
     .td__head {
-      padding-block: var(--space-16) var(--space-10);
+      padding-block: var(--space-10);
     }
   }
-  .td__labels {
+  .td__kicker {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-5);
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--accent-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+  }
+  .td__kicker :global(.badge) {
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: var(--font-sans);
   }
   .td__title {
-    margin-top: var(--space-5);
-    font-size: clamp(2.5rem, 1.4rem + 4.6vw, 5.5rem);
-    line-height: 1;
-    letter-spacing: -0.03em;
+    margin-top: var(--space-4);
     text-wrap: balance;
   }
   .td__dek {
-    margin-top: var(--space-5);
-    max-width: 40ch;
-    color: var(--ink-2);
-    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
-    line-height: 1.25;
+    margin-top: var(--space-4);
   }
   .td__byline {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 0;
-    margin-top: var(--space-8);
-    padding-block: var(--space-3);
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--line);
-    color: var(--ink-2);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    align-items: center;
+    gap: var(--space-1) 0;
+    margin-top: var(--space-6);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
   }
-  .td__byline span + span::before {
+  .td__byline > * + *::before {
     content: '·';
-    margin-inline: 10px;
+    margin-inline: var(--space-2);
     color: var(--ink-4);
   }
-  @media (max-width: 639px) {
-    .td__byline {
-      gap: 6px 16px;
-    }
-    .td__byline span + span::before {
-      content: none;
-    }
-  }
-  .td__pending {
-    color: var(--accent-text);
-  }
-
-  .td__body {
-    align-items: start;
-    padding-top: var(--space-4);
-  }
-  .td__article {
-    min-width: 0;
-  }
-  @media (min-width: 1024px) {
-    .td__article {
-      grid-column: 1 / span 7;
-    }
-    .td__side {
-      grid-column: 9 / -1;
-      position: sticky;
-      top: calc(var(--header-h) + var(--space-6));
-    }
-  }
-  .td__sheet {
-    display: grid;
-    gap: var(--space-2);
-  }
-  .td__store {
-    margin-top: var(--space-2);
-    font-size: var(--text-2xl);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-  }
-  .td__store a:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.15em;
-  }
-  .td__domain {
-    display: flex;
-    gap: var(--space-3);
-    align-items: baseline;
-    color: var(--ink-2);
-    font-size: var(--text-sm);
-  }
-  .td__visit {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
-  }
-  .td__sheet :global(.td__specs) {
-    margin-top: var(--space-3);
-  }
-  .td__sheet :global(.td__open) {
-    justify-self: start;
-    margin-top: var(--space-3);
-  }
-  .td__toc {
-    margin-top: var(--space-6);
-  }
-  .td__toc ol {
-    margin-top: var(--space-2);
-    border-top: 1px solid var(--line);
-  }
-  .td__toc a {
-    display: grid;
-    grid-template-columns: 28px minmax(0, 1fr);
-    gap: var(--space-2);
-    padding: 7px 0;
-    border-bottom: 1px solid var(--line);
-    color: var(--ink-2);
-    font-size: var(--text-sm);
-  }
-  .td__toc a:hover {
+  .td__author {
     color: var(--ink);
-  }
-  .td__toc .mono {
-    color: var(--ink-3);
-    font-size: var(--text-2xs);
-    padding-top: 2px;
-  }
-  @media (max-width: 1023px) {
-    .td__side {
-      margin-top: var(--space-10);
-      padding-top: var(--space-6);
-      border-top: 1px solid var(--ink);
-    }
-    .td__toc {
-      display: none;
-    }
+    font-weight: var(--weight-medium);
   }
 
-  /* Article typography */
+  .td__cover {
+    margin-bottom: var(--space-10);
+  }
+  .td__cover figcaption {
+    margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+  }
+
+  /* Article typography (on top of .prose) */
   .td-prose {
-    max-width: 680px;
-    color: var(--ink-2);
     font-size: 1.0625rem;
     line-height: 1.7;
   }
@@ -414,124 +388,112 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     margin-top: var(--space-5);
   }
   .td-prose :global(h2) {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
     margin-top: var(--space-12);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
-    color: var(--ink);
-    font-size: var(--text-2xl);
+    font-size: var(--text-h3);
     font-weight: var(--weight-semibold);
     letter-spacing: -0.015em;
-    line-height: 1.2;
+    line-height: 1.3;
     scroll-margin-top: calc(var(--header-h) + var(--space-6));
   }
-  .td-prose :global(h2 .md-n) {
-    flex: none;
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: 450;
-    letter-spacing: 0.04em;
-  }
   .td-prose :global(h3) {
-    margin-top: var(--space-8);
-    color: var(--ink);
-    font-size: var(--text-lg);
+    scroll-margin-top: calc(var(--header-h) + var(--space-6));
   }
   .td-prose :global(h2 + *),
   .td-prose :global(h3 + *) {
     margin-top: var(--space-3);
   }
-  .td-prose :global(strong) {
-    color: var(--ink);
-    font-weight: var(--weight-semibold);
+  /* Editor's note: a quiet callout. */
+  .td-prose :global(.md-note) {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-well);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-size: var(--text-ui);
+    line-height: 1.6;
   }
-  .td-prose :global(a) {
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
+  .td-prose :global(.md-note__label) {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
   }
-  .td-prose :global(a:hover) {
-    text-decoration-color: currentColor;
-  }
-  .td-prose :global(ul) {
-    padding-left: 1.2em;
-    list-style: disc;
-  }
-  .td-prose :global(ul li + li) {
+  .td-prose :global(.md-note p + p) {
     margin-top: var(--space-2);
   }
-  .td-prose :global(li::marker) {
-    color: var(--ink-4);
-  }
-  .td-prose :global(code) {
-    font-family: var(--font-mono);
-    font-size: 0.86em;
-    padding: 0.1em 0.35em;
-    border-radius: var(--radius-xs);
-    background: var(--fill);
-    color: var(--ink);
-  }
-  /* "What to learn" lists: serif numerals on hairlines. */
+  /* Numbered takeaways on hairlines (the text sits in its own cell next to the number). */
   .td-prose :global(ol.md-ol) {
+    padding-left: 0;
+    list-style: none;
     counter-reset: learn;
-    border-top: 1px solid var(--ink);
+    border-top: 1px solid var(--line);
   }
   .td-prose :global(ol.md-ol li) {
     counter-increment: learn;
     display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
-    gap: var(--space-3);
-    padding-block: var(--space-4);
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: var(--space-2);
+    margin-top: 0;
+    padding-block: var(--space-3);
     border-bottom: 1px solid var(--line);
     color: var(--ink);
   }
   .td-prose :global(ol.md-ol li::before) {
     content: counter(learn, decimal-leading-zero);
-    font-family: var(--font-serif);
-    font-size: 1.75rem;
-    line-height: 1;
+    padding-top: 0.3em;
     color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
   }
-  /* Pull quote */
-  .td-prose :global(.md-pull) {
-    margin-block: var(--space-10);
-    padding-block: var(--space-6);
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--line);
-    color: var(--ink);
-    font-family: var(--font-serif);
-    font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
-    line-height: 1.22;
-    letter-spacing: -0.01em;
+
+  /* Aside: the store's facts, then the table of contents (≥1200). Sticky from 1024. */
+  .td__aside {
+    display: grid;
+    gap: var(--space-8);
+    align-content: start;
+    min-width: 0;
   }
-  @media (min-width: 1280px) {
-    .td-prose :global(.md-pull) {
-      margin-right: -12%;
+  @media (min-width: 1024px) {
+    .td__aside {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+      align-self: start;
+      margin-top: var(--space-10);
     }
   }
-  .td-prose :global(.md-pull strong) {
-    font-weight: 500;
+  .td__toc {
+    display: none;
   }
-  /* Editor's note */
-  .td-prose :global(.md-note) {
-    display: grid;
-    gap: var(--space-2);
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    font-size: var(--text-base);
-    line-height: var(--leading-relaxed);
-  }
-  .td-prose :global(.md-note__label) {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--accent-text);
+  @media (min-width: 1200px) {
+    .td__toc {
+      display: block;
+    }
+    .td__toc ol {
+      margin-top: var(--space-3);
+      border-left: 1px solid var(--line);
+    }
+    .td__toc a {
+      display: block;
+      margin-left: -1px;
+      padding: 5px 0 5px var(--space-4);
+      border-left: 1px solid transparent;
+      color: var(--ink-3);
+      font-size: var(--text-sm);
+      line-height: 1.4;
+      transition:
+        color var(--dur-fast) var(--ease-out),
+        border-color var(--dur-fast) var(--ease-out);
+    }
+    .td__toc a:hover {
+      color: var(--ink);
+      border-left-color: var(--ink-3);
+    }
+    .td__toc a[aria-current] {
+      color: var(--ink);
+      border-left-color: var(--accent);
+    }
   }
 
   .td__notes {
@@ -540,21 +502,34 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   }
   @media (min-width: 1024px) {
     .td__notes {
-      margin-top: var(--space-24);
+      margin-top: var(--space-20);
     }
   }
-  .td__notes :global(.sh),
-  .td__notes > :global(header) {
-    margin-bottom: var(--space-6);
+  .td__notes :global(.tdplates) {
+    margin-top: var(--space-6);
   }
-  .td__more-list {
+  .td__stack,
+  .td__more {
+    margin-top: var(--space-16);
+    scroll-margin-top: var(--header-h);
+  }
+  .td__stack :global(.td__stacksheet) {
+    margin-top: var(--space-6);
+  }
+  .td__more-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    column-gap: var(--space-8);
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+  }
+  @media (min-width: 640px) {
+    .td__more-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
   @media (min-width: 1024px) {
-    .td__more-list {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .td__more-grid {
+      grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
     }
   }
   .container :global(.td__source) {

@@ -2,22 +2,25 @@ import { expect, test, type Page } from '@playwright/test';
 import { expectHealthyPage, prepare } from './helpers';
 
 /**
- * /stores (curated grid, detected index, filters, paging) and /stores/<domain> (the specimen:
- * plates viewer, stack, similar stores, removal link; the not-captured state; 404s).
- * Runs at 390px and 1440px (playwright.config.ts).
+ * /stores (curated grid by default, Curated / All detected scope, the stores table, filters,
+ * search, paging) and /stores/<domain> (the viewer, facts, detected apps, similar stores,
+ * removal link; the not-captured state; 404s). Runs at 390px and 1440px (playwright.config.ts).
  */
 
 const total = async (page: Page) => {
   const text = (await page.locator('.fbar__total').first().textContent()) ?? '';
   return Number(text.replace(/[^\d]/g, ''));
 };
+const rows = (page: Page) => page.locator('[data-store-index] tbody tr');
 
 test.describe('stores index', () => {
   for (const path of [
     '/stores',
     '/stores?view=index',
+    '/stores?scope=all',
     '/stores?theme=prestige',
-    '/stores?sort=apps&view=index',
+    '/stores?scope=all&sort=apps',
+    '/stores?q=you',
     '/stores?capture=captured',
   ]) {
     test(`healthy: ${path}`, async ({ page }) => {
@@ -29,48 +32,110 @@ test.describe('stores index', () => {
     await prepare(page);
     await page.goto('/stores');
     const cards = page.locator('.stores__grid .store-card');
-    expect(await cards.count()).toBeGreaterThan(0);
-    await expect(page.locator('.seg__item[aria-current="true"]').first()).toContainText('Curated');
-    await expect(page.locator('.rest')).toContainText('No screenshots yet');
+    await expect(cards).toHaveCount(20);
+    expect(await total(page)).toBe(20);
+    const scope = page.locator('.stores__scope .seg__item');
+    await expect(scope.first()).toHaveAttribute('aria-current', 'true');
+    await expect(scope.first()).toContainText('Curated');
+    await expect(scope.nth(1)).toContainText('930');
+    await expect(scope.nth(1)).toHaveAttribute('href', '/stores?scope=all');
+    await expect(page.locator('.stores__more')).toContainText('detected but not captured');
+    // No v1 specimen numbering anywhere.
+    expect(await page.locator('main').textContent()).not.toContain('N°');
   });
 
-  test('index view lists every detected store', async ({ page }) => {
+  test('the curated list view is a table of the same stores', async ({ page }) => {
     await prepare(page);
     await page.goto('/stores?view=index');
-    expect(await total(page)).toBe(930);
-    await expect(page.locator('[data-store-index] .irow')).toHaveCount(60);
-    await expect(page.locator('[data-store-index] .irow__n').first()).toHaveText('N°001');
+    expect(await total(page)).toBe(20);
+    await expect(rows(page)).toHaveCount(20);
+    await expect(rows(page).first().locator('.srow__name')).toHaveText('YoungLA');
   });
 
-  test('a theme filter narrows the list to that theme', async ({ page }) => {
+  test('all detected stores: the full table, in order, numbered without N°', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/stores?scope=all');
+    expect(await total(page)).toBe(930);
+    await expect(rows(page)).toHaveCount(60);
+    await expect(rows(page).first().locator('.srow__n')).toHaveText('1');
+    await expect(rows(page).nth(59).locator('.srow__n')).toHaveText('60');
+    // Curated stores lead the default order and are marked as such.
+    await expect(rows(page).first().locator('.srow__capture')).toContainText('Curated');
+    await expect(rows(page).nth(20).locator('.srow__capture')).toContainText('Detected');
+    expect(await page.locator('main').textContent()).not.toContain('N°');
+  });
+
+  test('a filter keeps the curated scope; the switch offers every detected store', async ({
+    page,
+  }) => {
     await prepare(page);
     await page.goto('/stores?theme=prestige');
-    const n = await total(page);
-    expect(n).toBeGreaterThan(0);
-    expect(n).toBeLessThan(930);
-    const rows = page.locator('[data-store-index] .irow');
-    await expect(rows).toHaveCount(n);
-    for (const text of await rows.allTextContents()) expect(text).toContain('Prestige');
+    const curated = await total(page);
+    expect(curated).toBeGreaterThan(0);
+    expect(curated).toBeLessThan(20);
+    const cards = page.locator('.stores__grid .store-card');
+    await expect(cards).toHaveCount(curated);
+    for (const text of await cards.allTextContents()) expect(text).toContain('Prestige');
     // The active filter is shown as a removable chip that clears it.
     await expect(page.locator('.fbar__active a').first()).toHaveAttribute('href', '/stores');
+
+    const all = page.locator('.stores__scope .seg__item').nth(1);
+    await expect(all).toHaveAttribute('href', '/stores?scope=all&theme=prestige');
+    await all.click();
+    await expect(page).toHaveURL(/scope=all&theme=prestige/);
+    const n = await total(page);
+    expect(n).toBeGreaterThan(curated);
+    expect(n).toBeLessThan(930);
+    await expect(rows(page)).toHaveCount(n);
+    for (const text of await rows(page).allTextContents()) expect(text).toContain('Prestige');
   });
 
-  test('load more appends the next page of the index', async ({ page }) => {
+  test('search finds a store by domain; a detected-only match points to all stores', async ({
+    page,
+  }) => {
     await prepare(page);
-    await page.goto('/stores?view=index');
+    await page.goto('/stores');
+    const search = page.locator('.fbar__search input[type="search"]');
+    await search.fill('youngla');
+    await search.press('Enter');
+    await expect(page).toHaveURL(/[?&]q=youngla/);
+    await expect(page.locator('.stores__grid .store-card')).toHaveCount(1);
+
+    await page.goto('/stores?q=muji');
+    await expect(page.locator('.empty')).toContainText('No curated store matches');
+    await page.locator('.empty a', { hasText: 'Show all detected stores' }).click();
+    await expect(page).toHaveURL(/q=muji&scope=all/);
+    await expect(rows(page).first()).toContainText('muji.ca');
+  });
+
+  test('load more appends the next page of the table', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/stores?scope=all');
     const more = page.locator('a[data-load-more]');
-    await expect(more).toHaveAttribute('href', /cursor=.+&p=2/);
+    await expect(more).toHaveAttribute('href', /scope=all.*cursor=.+&p=2/);
+    const href = await more.getAttribute('href');
+    const secondFirst = await (async () => {
+      const res = await page.request.get(href!);
+      const html = await res.text();
+      return /class="srow__name[^"]*"[^>]*>\s*([^<\s][^<]*?)\s*</.exec(html)?.[1];
+    })();
     await more.click();
-    await expect(page.locator('[data-store-index] .irow')).toHaveCount(120);
-    await expect(page.locator('[data-store-index] .irow__n').nth(60)).toHaveText('N°061');
+    await expect(rows(page)).toHaveCount(120);
+    await expect(rows(page).nth(60).locator('.srow__n')).toHaveText('61');
+    await expect(rows(page).nth(60).locator('.srow__name')).toHaveText(secondFirst!);
+    await expect(page.locator('[data-range]')).toHaveText('1–120');
+    // Every row is a different store.
+    const names = await page.locator('[data-store-index] .srow__name').allTextContents();
+    expect(new Set(names).size).toBe(120);
   });
 
   test('the second page also works without JavaScript', async ({ page }) => {
     await prepare(page);
-    await page.goto('/stores?view=index');
+    await page.goto('/stores?scope=all');
     const href = await page.locator('a[data-load-more]').getAttribute('href');
     await page.goto(href!);
-    await expect(page.locator('[data-store-index] .irow__n').first()).toHaveText('N°061');
+    await expect(rows(page).first().locator('.srow__n')).toHaveText('61');
+    await expect(page.locator('.sindex__first')).toHaveAttribute('href', '/stores?scope=all');
   });
 
   test('an empty filter result explains itself', async ({ page }) => {
@@ -84,7 +149,9 @@ test.describe('store detail', () => {
   test('healthy: curated store', async ({ page }) => {
     await expectHealthyPage(page, '/stores/youngla.com');
     await expect(page.locator('h1')).toHaveText('YoungLA');
-    await expect(page.locator('.shdr__label')).toContainText('N°001');
+    await expect(page.locator('.sid')).toContainText('Curated');
+    await expect(page.locator('.sid')).toContainText('Prestige');
+    expect(await page.locator('main').textContent()).not.toContain('N°');
   });
 
   for (const path of [
@@ -100,8 +167,9 @@ test.describe('store detail', () => {
   test('header links: visit store (not affiliate) and removal request', async ({ page }) => {
     await prepare(page);
     await page.goto('/stores/youngla.com');
-    const visit = page.locator('a.shdr__visit');
+    const visit = page.locator('a.sid__visit');
     await expect(visit).toHaveAttribute('rel', 'noopener');
+    await expect(visit).toHaveAttribute('target', '_blank');
     await expect(visit).toHaveAttribute('href', /^https:\/\/(www\.)?youngla\.com/);
     await expect(page.locator('a[href="/opt-out?domain=youngla.com"]')).toBeVisible();
     const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
@@ -109,46 +177,52 @@ test.describe('store detail', () => {
     expect(ld.join('')).toContain('OnlineStore');
   });
 
-  test('page tabs and the device toggle change the viewer', async ({ page }) => {
+  test('facts card lists the theme, apps and source', async ({ page }) => {
     await prepare(page);
     await page.goto('/stores/youngla.com');
-    await expect(page.locator('.plates__viewer .fp__canvas > img')).toHaveAttribute(
-      'alt',
-      /home page on desktop/,
-    );
-    await expect(page.locator('.plates__status')).toContainText('Layout preview — capture pending');
-
-    await page.locator('.plates__tabs a', { hasText: 'Product' }).click();
-    await expect(page).toHaveURL(/[?&]page=product/);
-    await expect(page.locator('.plates__viewer .fp__canvas > img')).toHaveAttribute(
-      'alt',
-      /product page on desktop/,
-    );
-
-    await page.locator('.plates__top a', { hasText: 'Mobile' }).click();
-    await expect(page).toHaveURL(/page=product&device=mobile/);
-    await expect(page.locator('.plates__viewer')).toHaveClass(/fp--mobile/);
-    await expect(page.locator('.plates__frame')).toContainText('06');
-
-    // The contact strip switches plates too.
-    await page.locator('.strip__item').first().locator('a').click();
-    await expect(page.locator('.plates__viewer .fp__canvas > img')).toHaveAttribute(
-      'alt',
-      /home page on desktop/,
-    );
+    const facts = page.locator('.store__aside .fcard');
+    await expect(facts).toContainText('Prestige 9.3.0');
+    await expect(facts).toContainText('11 detected');
+    await expect(facts).toContainText('Source:');
+    await expect(page.locator('.store__aside a[href="/teardowns/youngla"]')).toBeVisible();
   });
 
-  test('rail items scroll the capture to their section', async ({ page }) => {
+  test('page tabs and the device switch change the viewer', async ({ page }) => {
     await prepare(page);
     await page.goto('/stores/youngla.com');
-    const item = page.locator('.plates__viewer .fp__item', { hasText: 'Reviews' }).first();
+    const img = page.locator('.viewer .fp__canvas > img');
+    await expect(img).toHaveAttribute('alt', /home page on desktop/);
+    await expect(page.locator('.viewer__state')).toContainText('Layout preview');
+
+    await page.locator('.viewer__tabs a', { hasText: 'Product' }).click();
+    await expect(page).toHaveURL(/[?&]page=product/);
+    await expect(img).toHaveAttribute('alt', /product page on desktop/);
+    await expect(page.locator('.viewer__tabs a[aria-current="page"]')).toContainText('Product');
+    await expect(page.locator('.viewer .window__url')).toContainText('youngla.com/products/');
+
+    await page.locator('.viewer__device a', { hasText: 'Mobile' }).click();
+    await expect(page).toHaveURL(/page=product&device=mobile/);
+    await expect(page.locator('.viewer .fp')).toHaveClass(/fp--mobile/);
+    await expect(img).toHaveAttribute('alt', /product page on mobile/);
+
+    await page.locator('.viewer__device a', { hasText: 'Desktop' }).click();
+    await expect(page).toHaveURL(/page=product#plates$/);
+    await expect(img).toHaveAttribute('alt', /product page on desktop/);
+  });
+
+  test('rail items scroll the capture to their section and show its app', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/stores/youngla.com');
+    const item = page.locator('.viewer .fp__item', { hasText: 'Reviews' }).first();
+    await expect(item).toContainText('Loox');
     const id = await item.getAttribute('data-target');
+    await expect(page.locator(`#section-${id} .fp__tag`)).toContainText('Reviews');
     await item.click();
     await expect(page.locator(`#section-${id}`)).toBeInViewport();
     await expect(page).toHaveURL(new RegExp(`#section-${id}$`));
   });
 
-  test('stack placements link to the section on the right plate', async ({ page }) => {
+  test('app placements link to the section on the right page', async ({ page }) => {
     await prepare(page);
     await page.goto('/stores/youngla.com');
     const jump = page.locator('.stack__jump', { hasText: 'Reviews on the product page' });
@@ -159,9 +233,19 @@ test.describe('store detail', () => {
     await expect(page.locator(href!.slice(href!.indexOf('#')))).toBeInViewport();
   });
 
+  test('compare jumps to similar stores', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/stores/youngla.com');
+    await page.locator('.sid__actions a', { hasText: 'Compare' }).click();
+    await expect(page).toHaveURL(/#similar$/);
+    await expect(page.locator('#similar')).toBeInViewport();
+    await expect(page.locator('#similar .srow').first()).toBeVisible();
+  });
+
   test('uncaptured store: honest state, still useful, not indexed', async ({ page }) => {
     await expectHealthyPage(page, '/stores/muji.ca');
     await expect(page.locator('.nc')).toContainText('Not captured yet');
+    await expect(page.locator('.sid')).toContainText('Detected only');
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
     await expect(page.locator('.stack__app').first()).toBeVisible();
     await expect(page.locator('a[href="/opt-out?domain=muji.ca"]')).toBeVisible();

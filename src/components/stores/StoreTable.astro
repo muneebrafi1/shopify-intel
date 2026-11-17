@@ -1,0 +1,407 @@
+---
+/**
+ * Stores as a data table: store (mark, name, domain) · theme + version · apps (top icons +
+ * count) · market · capture state, plus an optional note column ("Why similar"). One link per
+ * row (the store name is a stretched link). Rows with a capture float it next to the cursor on
+ * pointer devices. Below 768px only the store (with theme and market under it) and the app
+ * count remain.
+ */
+import StoreMark from '~/components/ui/StoreMark.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Badge from '~/components/ui/Badge.astro';
+import type { StoreListItem } from '~/server/api/v1/types';
+import { thumbCropHeight, thumbUrl } from '~/lib/media';
+import { themeName } from './query';
+
+export interface StoreTableRow {
+  store: StoreListItem;
+  /** Extra column value, e.g. "Same theme · 4 shared apps". */
+  note?: string;
+}
+interface Props {
+  rows: StoreTableRow[];
+  label: string;
+  /** Row numbers start after this many rows (they continue across pages). */
+  offset?: number;
+  /** Show the row-number column. */
+  numbered?: boolean;
+  /** Header of the note column; omit to hide it. */
+  noteLabel?: string;
+  /** Status reads "Curated" (the list mixes curated and detected stores) instead of the capture state. */
+  markCurated?: boolean;
+  class?: string;
+}
+const {
+  rows,
+  label,
+  offset = 0,
+  numbered = false,
+  noteLabel,
+  markCurated = false,
+  class: className,
+} = Astro.props;
+
+const previewFor = (s: StoreListItem) =>
+  s.preview
+    ? thumbUrl(s.preview.image.src, {
+        cropHeight: thumbCropHeight(
+          s.preview.image.width,
+          s.preview.image.height,
+          s.preview.device,
+        ),
+        width: 600,
+      })
+    : undefined;
+const market = (s: StoreListItem) => [s.currency, s.country].filter(Boolean).join(' · ') || '—';
+---
+
+<div class:list={['stable', className]} data-store-table>
+  <div class="table-wrap stable__wrap">
+    <table class="table stable__table" aria-label={label}>
+      <thead>
+        <tr>
+          {numbered && (
+            <th scope="col" class="stable__n is-num">
+              #
+            </th>
+          )}
+          <th scope="col" class="stable__store">
+            Store
+          </th>
+          <th scope="col" class="stable__theme stable__wide">
+            Theme
+          </th>
+          {noteLabel && (
+            <th scope="col" class="stable__note stable__wide">
+              {noteLabel}
+            </th>
+          )}
+          <th scope="col" class="stable__apps is-num">
+            Apps
+          </th>
+          {!noteLabel && (
+            <th scope="col" class="stable__market stable__wide">
+              Market
+            </th>
+          )}
+          {!noteLabel && (
+            <th scope="col" class="stable__capture stable__wide">
+              Status
+            </th>
+          )}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(({ store: s, note }, i) => {
+          const theme = themeName(s.theme);
+          const version = s.theme.version;
+          const preview = previewFor(s);
+          return (
+            <tr
+              class:list={['srow', { 'srow--curated': s.is_curated }]}
+              data-preview={preview}
+              data-preview-device={s.preview ? s.preview.device : undefined}
+            >
+              {numbered && <td class="srow__n is-num num">{offset + i + 1}</td>}
+              <td class="srow__store">
+                <span class="srow__id">
+                  <StoreMark domain={s.domain} name={s.name} size={28} />
+                  <span class="srow__text">
+                    <span class="srow__line">
+                      <a href={s.href} class="srow__name stretched-link">
+                        {s.name ?? s.domain}
+                      </a>
+                    </span>
+                    {s.name && <span class="srow__domain mono">{s.domain}</span>}
+                    <span class="srow__sub">
+                      {theme}
+                      {note ? ` · ${note}` : s.currency ? ` · ${market(s)}` : ''}
+                    </span>
+                  </span>
+                </span>
+              </td>
+              <td class="srow__theme stable__wide">
+                <span class:list={{ srow__muted: !s.theme.name }}>{theme}</span>
+                {version && <span class="srow__version mono">{version}</span>}
+              </td>
+              {noteLabel && <td class="srow__note stable__wide">{note ?? ''}</td>}
+              <td class="srow__apps is-num">
+                <span class="srow__apps-in">
+                  {s.top_apps.length > 0 && (
+                    <span class="srow__icons" aria-hidden="true">
+                      {s.top_apps.slice(0, 4).map((a) => (
+                        <AppIcon src={a.icon_url} name={a.short_name} size={20} />
+                      ))}
+                    </span>
+                  )}
+                  <span class="num srow__count">{s.app_count}</span>
+                </span>
+              </td>
+              {!noteLabel && (
+                <td class="srow__market stable__wide mono">
+                  <span class:list={{ srow__muted: !s.currency }}>{market(s)}</span>
+                </td>
+              )}
+              {!noteLabel && (
+                <td class="srow__capture stable__wide">
+                  {s.is_captured ? (
+                    <Badge tone="positive" size="sm" dot>
+                      Captured
+                    </Badge>
+                  ) : s.is_curated ? (
+                    <Badge
+                      tone={markCurated ? 'accent' : 'neutral'}
+                      size="sm"
+                      title="Mapped page by page; layout previews until the first capture run"
+                    >
+                      {markCurated ? 'Curated' : 'Layout preview'}
+                    </Badge>
+                  ) : (
+                    <span class="srow__muted">Detected</span>
+                  )}
+                </td>
+              )}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+  <div class="stable__preview" aria-hidden="true">
+    <img alt="" decoding="async" />
+  </div>
+</div>
+
+<script>
+  // Hovering a row with a capture floats it beside the cursor (pointer devices only).
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.querySelectorAll<HTMLElement>('[data-store-table]').forEach((root) => {
+      const box = root.querySelector<HTMLElement>('.stable__preview');
+      const img = box?.querySelector('img');
+      if (!box || !img) return;
+      let frame = 0;
+      let x = 0;
+      let y = 0;
+      const place = () => {
+        frame = 0;
+        const left = Math.min(window.innerWidth - box.offsetWidth - 16, x + 28);
+        const top = Math.min(
+          window.innerHeight - box.offsetHeight - 16,
+          Math.max(16, y - box.offsetHeight / 2),
+        );
+        box.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+      };
+      root.addEventListener('pointermove', (event) => {
+        const row = (event.target as HTMLElement).closest<HTMLElement>('tr[data-preview]');
+        if (!row) {
+          box.classList.remove('is-on');
+          return;
+        }
+        const src = row.dataset.preview!;
+        if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+        box.dataset.device = row.dataset.previewDevice ?? 'desktop';
+        box.classList.add('is-on');
+        x = event.clientX;
+        y = event.clientY;
+        if (!frame) frame = requestAnimationFrame(place);
+      });
+      root.addEventListener('pointerleave', () => box.classList.remove('is-on'));
+    });
+  }
+</script>
+
+<style>
+  .stable__wrap {
+    /* The table never needs to scroll sideways: columns drop out below 768px instead. */
+    overflow-x: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+  .stable__table {
+    table-layout: auto;
+  }
+  .stable__table th {
+    font-weight: var(--weight-medium);
+  }
+  .stable__n {
+    width: 48px;
+  }
+  .stable__store {
+    width: 34%;
+  }
+  .stable__apps {
+    width: 132px;
+  }
+  .stable__market {
+    width: 112px;
+  }
+  .stable__capture {
+    width: 136px;
+  }
+  .srow {
+    position: relative;
+  }
+  .srow:has(.stretched-link:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  .srow .stretched-link:focus-visible {
+    outline: none;
+  }
+  .srow__n {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .srow__id {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .srow__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .srow__line {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .srow__name {
+    min-width: 0;
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .srow__domain {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .srow__sub {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .srow__theme {
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .srow__version {
+    margin-left: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .srow__note {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .srow__muted {
+    color: var(--ink-3);
+  }
+  .srow__apps-in {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+  }
+  .srow__icons {
+    display: none;
+  }
+  .srow__icons > :global(.app-icon) {
+    box-shadow: 0 0 0 2px var(--bg);
+    transition: box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .srow:hover .srow__icons > :global(.app-icon) {
+    box-shadow: 0 0 0 2px var(--surface-2);
+  }
+  .srow__icons > :global(.app-icon + .app-icon) {
+    margin-left: -6px;
+  }
+  .srow__count {
+    min-width: 2ch;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .srow__market {
+    color: var(--ink-2);
+    font-size: var(--text-xs);
+  }
+
+  /* Small screens: store + app count; theme and market move under the store. */
+  .stable__wide,
+  .stable__n,
+  .srow__n {
+    display: none;
+  }
+  .srow__store {
+    padding-block: var(--space-2);
+  }
+  .srow__domain {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .stable__wide,
+    .stable__n,
+    .srow__n {
+      display: table-cell;
+    }
+    .srow__domain {
+      display: block;
+    }
+    .srow__sub {
+      display: none;
+    }
+    .srow__icons {
+      display: inline-flex;
+    }
+  }
+
+  /* Cursor preview */
+  .stable__preview {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: var(--z-overlay);
+    width: 300px;
+    padding: 6px;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-lg);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+  .stable__preview[data-device='mobile'] {
+    width: 170px;
+  }
+  .stable__preview.is-on {
+    opacity: 1;
+  }
+  .stable__preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1440 / 1000;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    object-position: top;
+    background: var(--capture-bg);
+  }
+  .stable__preview[data-device='mobile'] img {
+    aspect-ratio: 390 / 760;
+  }
+</style>
