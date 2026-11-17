@@ -135,7 +135,8 @@ const hidden = Object.entries(search?.hidden ?? {}).filter(
         <button type="button" class="fbar__mobile" data-dialog-open={sheetId}>
           <Icon name="sliders-horizontal" size={16} />
           Filters
-          {active.length > 0 && <span class="fbar__badge num">{active.length}</span>}
+          {/* The pill group's selection is visible inline, so only count the dropdown filters. */}
+          {activeChips.length > 0 && <span class="fbar__badge num">{activeChips.length}</span>}
         </button>
       )}
       {dropdowns.map((g) => {
