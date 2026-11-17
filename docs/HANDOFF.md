@@ -39,17 +39,17 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
 
 ## PR stack (merge in order; each targets the previous branch)
 
-1. `feat/01-foundation-data-api` — scaffold, tooling, CI, schema, seed, API v1, unit tests
-2. `feat/02-design-system` — tokens, components, screenshot system, styleguide
-3. `feat/03-home-search` — home, search, command palette
-4. `feat/04-stores-teardowns` — stores index/detail (full-page viewer), teardowns
-5. `feat/05-themes`
-6. `feat/06-apps` — index, categories, detail
-7. `feat/07-compare-alternatives`
-8. `feat/08-sections` — sections library
-9. `feat/09-site-pages` — about, methodology, legal, opt-out, Pro, sign-in/account, developers, 404
-10. `feat/10-admin` — protected admin
-11. `feat/11-handoff` — this file
+1. [#1](https://github.com/muneebrafi1/shopify-intel/pull/1) `feat/01-foundation-data-api` — scaffold, tooling, CI, schema, seed, API v1, unit tests
+2. [#2](https://github.com/muneebrafi1/shopify-intel/pull/2) `feat/02-design-system` — tokens, components, screenshot system, styleguide
+3. [#3](https://github.com/muneebrafi1/shopify-intel/pull/3) `feat/03-home-search` — home, search, command palette
+4. [#4](https://github.com/muneebrafi1/shopify-intel/pull/4) `feat/04-stores-teardowns` — stores index/detail (full-page viewer), teardowns
+5. [#5](https://github.com/muneebrafi1/shopify-intel/pull/5) `feat/05-themes`
+6. [#6](https://github.com/muneebrafi1/shopify-intel/pull/6) `feat/06-apps` — index, categories, detail
+7. [#7](https://github.com/muneebrafi1/shopify-intel/pull/7) `feat/07-compare-alternatives`
+8. [#8](https://github.com/muneebrafi1/shopify-intel/pull/8) `feat/08-sections` — sections library
+9. [#9](https://github.com/muneebrafi1/shopify-intel/pull/9) `feat/09-site-pages` — about, methodology, legal, opt-out, Pro, sign-in/account, developers, 404
+10. [#10](https://github.com/muneebrafi1/shopify-intel/pull/10) `feat/10-admin` — protected admin
+11. [#11](https://github.com/muneebrafi1/shopify-intel/pull/11) `feat/11-handoff` — this file
 
 `claude/busy-wright-i74iuv` holds the same final tree with the session's checkpoint history.
 PR screenshots live on the `pr-screenshots` branch (images only; never merge it).
