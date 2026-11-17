@@ -1,24 +1,44 @@
 ---
+/**
+ * Button / link-button.
+ *
+ *   <Button variant="primary" href="/stores" arrow>Browse stores</Button>
+ *   <Button variant="secondary" icon="magnifying-glass">Search</Button>
+ *   <Button variant="ghost" size="sm" icon="x" label="Close" />          (icon-only: pass label)
+ *   <Button variant="accent" href="/pro">Get Pro</Button>                 (Pro CTAs only)
+ *
+ * Variants: primary (ink; the default action), secondary (surface + border), ghost (no chrome),
+ * accent (vermilion, Pro CTAs only), link (inline text action), quiet (v1, surface-2 fill).
+ * Sizes: sm 30, md 36, lg 44 (touch devices always get a ≥44px hit area).
+ * `href` renders an <a>. `external` opens a new tab (rel="noopener"); pass rel="sponsored" for
+ * affiliate links. `arrow` adds a trailing arrow that nudges 2px on hover; trailing arrows given
+ * through `iconRight` (arrow-right, arrow-up-right, caret-right) nudge too.
+ */
 import type { HTMLAttributes } from 'astro/types';
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
 
-type Variant = 'primary' | 'secondary' | 'quiet' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'accent' | 'link' | 'quiet';
 type Size = 'sm' | 'md' | 'lg';
 
 interface Props extends Omit<HTMLAttributes<'button'>, 'class'> {
   href?: string;
   variant?: Variant;
   size?: Size;
+  /** Leading icon. */
   icon?: IconName;
+  /** Trailing icon. */
   iconRight?: IconName;
+  /** Trailing arrow with a hover nudge (shorthand for iconRight="arrow-right"). */
+  arrow?: boolean;
   /** Icon-only button: pass `label` for assistive tech. */
   label?: string;
   full?: boolean;
-  /** Opens in a new tab with rel="noopener"; add `sponsored` for affiliate links. */
+  /** Opens in a new tab with rel="noopener"; add rel="sponsored" for affiliate links. */
   external?: boolean;
   rel?: string;
   class?: string;
+  [key: `data-${string}`]: string | boolean | undefined;
 }
 
 const {
@@ -27,6 +47,7 @@ const {
   size = 'md',
   icon,
   iconRight,
+  arrow = false,
   label,
   full = false,
   external = false,
@@ -38,11 +59,14 @@ const {
 
 const iconOnly = !!label && !Astro.slots.has('default');
 const iconSize = size === 'lg' ? 18 : 16;
+const trailing: IconName | undefined = iconRight ?? (arrow ? 'arrow-right' : undefined);
+const nudges = !!trailing && /^(arrow-right|arrow-up-right|caret-right)$/.test(trailing);
+const diagonal = trailing === 'arrow-up-right';
 const classes = [
   'btn',
   `btn--${variant}`,
   `btn--${size}`,
-  { 'btn--full': full, 'btn--icon': iconOnly },
+  { 'btn--full': full, 'btn--icon': iconOnly, 'btn--nudge': nudges, 'btn--diag': diagonal },
   className,
 ];
 const relValue = [external ? 'noopener' : '', rel ?? ''].filter(Boolean).join(' ') || undefined;
@@ -57,59 +81,65 @@ const relValue = [external ? 'noopener' : '', rel ?? ''].filter(Boolean).join(' 
     rel={relValue}
     {...(rest as HTMLAttributes<'a'>)}
   >
-    {icon && <Icon name={icon} size={iconSize} />}
+    {icon && <Icon name={icon} size={iconSize} class="btn__icon" />}
     {!iconOnly && (
       <span class="btn__label">
         <slot />
       </span>
     )}
-    {iconRight && <Icon name={iconRight} size={iconSize} />}
+    {trailing && <Icon name={trailing} size={iconSize} class="btn__icon btn__icon--end" />}
   </a>
 ) : (
   <button type={type} class:list={classes} aria-label={label} {...rest}>
-    {icon && <Icon name={icon} size={iconSize} />}
+    {icon && <Icon name={icon} size={iconSize} class="btn__icon" />}
     {!iconOnly && (
       <span class="btn__label">
         <slot />
       </span>
     )}
-    {iconRight && <Icon name={iconRight} size={iconSize} />}
+    {trailing && <Icon name={trailing} size={iconSize} class="btn__icon btn__icon--end" />}
   </button>
 )}
 
 <style>
   .btn {
-    --btn-h: 34px;
+    --btn-h: 36px;
     --btn-px: 14px;
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     height: var(--btn-h);
     padding: 0 var(--btn-px);
-    border-radius: var(--radius-pill);
-    font-size: var(--text-base);
+    border-radius: var(--radius-control);
+    font-size: var(--text-ui);
     font-weight: var(--weight-medium);
     line-height: 1;
+    letter-spacing: -0.005em;
     white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
     transition:
       background-color var(--dur-fast) var(--ease-out),
       box-shadow var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
-    user-select: none;
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
   }
-  .btn:focus-visible {
-    border-radius: var(--radius-pill);
+  .btn:active {
+    transform: scale(0.98);
   }
   .btn--sm {
-    --btn-h: 28px;
+    --btn-h: 30px;
     --btn-px: 10px;
+    gap: 5px;
     font-size: var(--text-sm);
   }
   .btn--lg {
     --btn-h: 44px;
-    --btn-px: 20px;
-    font-size: var(--text-md);
+    --btn-px: 18px;
+    gap: 8px;
+    font-size: var(--text-body);
   }
   .btn--full {
     width: 100%;
@@ -118,34 +148,89 @@ const relValue = [external ? 'noopener' : '', rel ?? ''].filter(Boolean).join(' 
     width: var(--btn-h);
     padding: 0;
   }
+  /* ≥44px hit area on touch without changing the drawn size. */
+  @media (pointer: coarse) {
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: calc((min(var(--btn-h), 44px) - 44px) / 2) 0;
+    }
+    .btn--icon::before {
+      inset: calc((min(var(--btn-h), 44px) - 44px) / 2);
+    }
+  }
+
   .btn--primary {
-    background: var(--inverse);
-    color: var(--ink-inverse);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    box-shadow: var(--shadow-xs);
   }
   .btn--primary:hover {
-    background: var(--inverse-2);
+    background: var(--btn-bg-hover);
   }
   .btn--secondary {
     background: var(--surface);
     color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-xs);
   }
   .btn--secondary:hover {
-    background: var(--fill);
+    background: var(--surface-2);
   }
   .btn--quiet {
-    background: var(--fill);
+    background: var(--surface-2);
     color: var(--ink);
   }
   .btn--quiet:hover {
-    background: var(--fill-hover);
+    background: var(--surface-3);
   }
   .btn--ghost {
     color: var(--ink-2);
   }
   .btn--ghost:hover {
-    background: var(--fill);
+    background: var(--surface-2);
     color: var(--ink);
+  }
+  .btn--accent {
+    background: var(--accent-btn);
+    color: var(--accent-fg);
+    box-shadow: var(--shadow-xs);
+  }
+  .btn--accent:hover {
+    background: var(--accent-btn-hover);
+  }
+  .btn--link {
+    --btn-px: 0;
+    height: auto;
+    min-height: 0;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.25em;
+    text-decoration-thickness: 1px;
+  }
+  .btn--link:hover {
+    text-decoration-color: currentColor;
+  }
+  .btn--link:active {
+    transform: none;
+  }
+  .btn--link .btn__icon {
+    text-decoration: none;
+  }
+
+  .btn :global(.btn__icon) {
+    opacity: 0.9;
+  }
+  .btn--nudge :global(.btn__icon--end) {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .btn--nudge:hover :global(.btn__icon--end) {
+    transform: translateX(2px);
+  }
+  .btn--diag:hover :global(.btn__icon--end) {
+    transform: translate(1.5px, -1.5px);
   }
   .btn:disabled,
   .btn[aria-disabled='true'] {

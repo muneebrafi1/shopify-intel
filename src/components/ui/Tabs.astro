@@ -1,4 +1,11 @@
 ---
+/**
+ * Underline tabs for page sub-views (page types on a store, request status in admin).
+ * Links (URL state), so they work without JS; a 2px --ink indicator slides between them when a
+ * page switches aria-current in place (client/indicator.ts).
+ *
+ *   <Tabs label="Page type" items={[{ label: 'Home', href: '?page=home', selected: true, count: 9 }, …]} />
+ */
 export interface TabItem {
   label: string;
   href: string;
@@ -8,12 +15,13 @@ export interface TabItem {
 interface Props {
   items: TabItem[];
   label: string;
+  size?: 'sm' | 'md';
   class?: string;
 }
-const { items, label, class: className } = Astro.props;
+const { items, label, size = 'md', class: className } = Astro.props;
 ---
 
-<nav class:list={['tabs', className]} aria-label={label}>
+<nav class:list={['tabs', `tabs--${size}`, className]} aria-label={label} data-indicator>
   {items.map((item) => (
     <a href={item.href} class="tabs__item" aria-current={item.selected ? 'page' : undefined}>
       {item.label}
@@ -24,11 +32,16 @@ const { items, label, class: className } = Astro.props;
   ))}
 </nav>
 
+<script>
+  import '~/components/ui/client/indicator';
+</script>
+
 <style>
   .tabs {
+    position: relative;
     display: flex;
-    gap: var(--space-5);
-    border-bottom: 1px solid var(--line);
+    gap: var(--space-6);
+    box-shadow: inset 0 -1px 0 var(--line);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -41,32 +54,74 @@ const { items, label, class: className } = Astro.props;
     flex: none;
     align-items: center;
     gap: 6px;
-    height: 40px;
+    height: 44px;
     color: var(--ink-3);
-    font-size: var(--text-base);
+    font-size: var(--text-ui);
     font-weight: var(--weight-medium);
     white-space: nowrap;
     transition: color var(--dur-fast) var(--ease-out);
   }
-  .tabs__item:hover {
-    color: var(--ink);
+  .tabs--sm {
+    gap: var(--space-5);
   }
+  .tabs--sm .tabs__item {
+    height: 36px;
+    font-size: var(--text-sm);
+  }
+  .tabs__item:hover,
   .tabs__item[aria-current='page'] {
     color: var(--ink);
   }
+  .tabs__item:focus-visible {
+    outline-offset: -2px;
+    border-radius: var(--radius-sm);
+  }
+  .tabs__count {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+  }
+  .tabs__item[aria-current='page'] .tabs__count {
+    background: var(--surface-3);
+    color: var(--ink-2);
+  }
+
+  /* Static indicator (no JS yet) … */
   .tabs__item[aria-current='page']::after {
     content: '';
     position: absolute;
     left: 0;
     right: 0;
-    bottom: -1px;
+    bottom: 0;
     height: 2px;
-    border-radius: 2px;
+    border-radius: 2px 2px 0 0;
     background: var(--ink);
   }
-  .tabs__count {
-    color: var(--ink-3);
-    font-weight: var(--weight-regular);
-    font-size: var(--text-sm);
+  /* … replaced by one sliding indicator once client/indicator.ts has measured. */
+  .tabs[data-indicator-ready] .tabs__item::after {
+    content: none;
+  }
+  .tabs[data-indicator-ready]::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: var(--ind-w, 0);
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--ink);
+    opacity: var(--ind-o, 0);
+    transform: translateX(var(--ind-x, 0));
+  }
+  .tabs.is-sliding::after {
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      width var(--dur-base) var(--ease-out);
   }
 </style>

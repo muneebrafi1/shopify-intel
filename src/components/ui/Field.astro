@@ -56,6 +56,8 @@ const { label, for: htmlFor, hint, error, optional = false, class: className } =
     color: var(--critical);
   }
   .field--error :global(.input) {
-    box-shadow: inset 0 0 0 1px var(--critical);
+    box-shadow:
+      inset 0 0 0 1px var(--critical),
+      0 0 0 3px var(--critical-soft);
   }
 </style>

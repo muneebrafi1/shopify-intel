@@ -1,8 +1,10 @@
 ---
 /**
- * Screenshot tile: a warm-gray well with the top of a full-page capture inset in it. The
- * capture bleeds off the bottom edge on purpose: it reads as "this page keeps going".
- * Works identically for drawn placeholders and real captures (only `src` differs).
+ * Screenshot tile: a --surface-2 well (radius 10, inset hairline) with the top of a full-page
+ * capture inset in it. The capture bleeds off the bottom edge on purpose: "this page keeps
+ * going". Captures are always light store pages; in dark mode the well gets a --line-strong
+ * border so they don't glare. Works the same for drawn placeholders and real captures.
+ * `flush`: no rounded corners/border (when the Shot is the media well of a <Card>).
  */
 import type { Device } from '~/lib/taxonomy';
 import { thumbCropHeight, thumbUrl } from '~/lib/media';
@@ -23,6 +25,8 @@ interface Props {
   tag?: string;
   /** `sizes` hint for responsive images. */
   sizes?: string;
+  /** Sit flush inside a parent frame (Card media well): no radius, no border. */
+  flush?: boolean;
   class?: string;
 }
 
@@ -36,6 +40,7 @@ const {
   eager = false,
   ratio,
   tag,
+  flush = false,
   class: className,
 } = Astro.props;
 const cropH = thumbCropHeight(width, height, device);
@@ -45,7 +50,7 @@ const Tag = href ? 'a' : 'div';
 
 <Tag
   href={href}
-  class:list={['shot', `shot--${device}`, className]}
+  class:list={['shot', `shot--${device}`, { 'shot--flush': flush }, className]}
   style={ratio ? `--ratio:${ratio}` : undefined}
   data-shot
 >
@@ -72,10 +77,21 @@ const Tag = href ? 'a' : 'div';
     display: block;
     aspect-ratio: var(--ratio);
     overflow: hidden;
-    border-radius: var(--radius-lg);
-    background: var(--tile);
+    border-radius: var(--radius-well);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
     isolation: isolate;
-    transition: background-color var(--dur-base) var(--ease-out);
+    transition:
+      background-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+  :global([data-theme='dark']) .shot:not(.shot--flush) {
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .shot--flush {
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
   }
   .shot--mobile {
     --ratio: 4 / 5;
@@ -92,32 +108,35 @@ const Tag = href ? 'a' : 'div';
     transform: translateX(-50%);
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
     box-shadow: var(--shadow-shot);
-    background: var(--surface);
+    background: var(--capture-bg);
     transition: transform var(--dur-slow) var(--ease-out);
   }
   .shot--mobile .shot__img {
     border-radius: 14px 14px 0 0;
   }
   a.shot:hover {
-    background: var(--tile-hover);
+    background: var(--surface-3);
   }
   a.shot:hover .shot__img {
     transform: translateX(-50%) translateY(-3px);
-  }
-  a.shot:focus-visible {
-    border-radius: var(--radius-lg);
   }
   .shot__tag {
     position: absolute;
     left: 10px;
     bottom: 10px;
     z-index: 1;
-    padding: 4px 9px;
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
     border-radius: var(--radius-pill);
     background: var(--surface);
-    box-shadow: var(--shadow-float);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-sm);
     color: var(--ink);
+    font-family: var(--font-mono);
     font-size: var(--text-2xs);
-    font-weight: var(--weight-medium);
+    letter-spacing: 0.01em;
   }
 </style>

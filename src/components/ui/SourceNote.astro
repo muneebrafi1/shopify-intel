@@ -1,4 +1,5 @@
 ---
+/** "Source: … · 17 Nov 2026. How we detect" — the footnote under any block of numbers. */
 import Icon from './Icon.astro';
 
 interface Props {
@@ -11,7 +12,7 @@ const { source, asOf, href = '/methodology', class: className } = Astro.props;
 ---
 
 <p class:list={['source-note', className]}>
-  <Icon name="info" size={12} />
+  <Icon name="info" size={13} />
   <span>
     Source: {source}
     {asOf && (
@@ -32,16 +33,20 @@ const { source, asOf, href = '/methodology', class: className } = Astro.props;
     align-items: flex-start;
     color: var(--ink-3);
     font-size: var(--text-xs);
-    line-height: 1.4;
+    line-height: 1.45;
   }
   .source-note :global(.icon) {
-    margin-top: 2px;
+    margin-top: 1px;
+    color: var(--ink-4);
   }
   .source-note a {
+    margin-left: 2px;
     color: var(--ink-2);
     text-decoration: underline;
     text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
-    margin-left: 2px;
+  }
+  .source-note a:hover {
+    text-decoration-color: currentColor;
   }
 </style>

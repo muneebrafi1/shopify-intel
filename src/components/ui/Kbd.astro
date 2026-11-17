@@ -1,7 +1,12 @@
 ---
+/** Keyboard key: <Kbd>⌘</Kbd><Kbd>K</Kbd>. Mono 11px on --surface with a --line-strong border. */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
 ---
 
-<kbd class="kbd">
+<kbd class:list={['kbd', className]}>
   <slot />
 </kbd>
 
@@ -16,12 +21,12 @@
     border-radius: var(--radius-xs);
     background: var(--surface);
     box-shadow:
-      inset 0 0 0 1px var(--line),
-      0 1px 0 var(--line);
+      inset 0 0 0 1px var(--line-strong),
+      0 1px 0 var(--line-strong);
     color: var(--ink-3);
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: var(--text-2xs);
-    font-weight: var(--weight-medium);
+    font-weight: 450;
     line-height: 1;
   }
 </style>

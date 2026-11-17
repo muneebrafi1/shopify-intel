@@ -1,50 +1,68 @@
 ---
 /**
- * Heading for a block within a page: optional mono label, title with superscript count,
- * description, and a "view all" link. Sits on a hairline (catalogue style).
+ * Heading for a block within a page: eyebrow, (two-tone) title, description, "view all" link.
+ *
+ *   <SectionHeader eyebrow="Themes" title="The most-used themes."
+ *     titleMuted="Counted across 930 scanned stores." href="/themes" linkLabel="All themes" />
+ *
+ * size: md (h2 scale, app pages) or lg (display-md, marketing sections on home/Pro).
+ * Default slot: extra controls next to the link (e.g. a Segmented).
+ * v1 props kept: `label` (= eyebrow), `count` (mono number after the title), `rule` (hairline
+ * above), `level` (h2/h3), `id`.
  */
-import Count from './Count.astro';
-import MonoLabel from './MonoLabel.astro';
-
 interface Props {
   title: string;
+  /** Muted continuation for a two-tone title (use at most once per section). */
+  titleMuted?: string;
   description?: string;
-  /** Mono label above the title, e.g. "02 — Themes". */
+  eyebrow?: string;
+  /** v1 name for `eyebrow`. */
   label?: string;
   href?: string;
   linkLabel?: string;
   count?: number;
   level?: 2 | 3;
-  /** Draw the top hairline. */
+  size?: 'md' | 'lg';
+  align?: 'start' | 'center';
+  /** Draw a hairline above. */
   rule?: boolean;
   id?: string;
   class?: string;
 }
 const {
   title,
+  titleMuted,
   description,
+  eyebrow,
   label,
   href,
   linkLabel = 'View all',
   count,
   level = 2,
+  size = 'md',
+  align = 'start',
   rule = false,
   id,
   class: className,
 } = Astro.props;
 const H = `h${level}` as 'h2' | 'h3';
+const kicker = eyebrow ?? label;
 ---
 
-<div class:list={['sh', { 'sh--rule': rule }, className]}>
+<div class:list={['sh', `sh--${size}`, `sh--${align}`, { 'sh--rule': rule }, className]}>
   <div class="sh__text">
-    {label && (
-      <MonoLabel as="p" class="sh__label">
-        {label}
-      </MonoLabel>
-    )}
-    <H class="sh__title" id={id}>
+    {kicker && <p class="sh__eyebrow eyebrow">{kicker}</p>}
+    <H class:list={['sh__title', size === 'lg' ? 'display-md' : 'h2']} id={id}>
       {title}
-      {typeof count === 'number' && <Count value={count} />}
+      {titleMuted && (
+        <>
+          {' '}
+          <span class="tone-muted">{titleMuted}</span>
+        </>
+      )}
+      {typeof count === 'number' && (
+        <span class="sh__count num">{count.toLocaleString('en-US')}</span>
+      )}
     </H>
     {description && <p class="sh__desc">{description}</p>}
   </div>
@@ -54,7 +72,16 @@ const H = `h${level}` as 'h2' | 'h3';
       {href && (
         <a class="sh__link" href={href}>
           {linkLabel}
-          <span aria-hidden="true">→</span>
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path
+              d="M3 8h9.5M8.5 4l4 4-4 4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
         </a>
       )}
     </div>
@@ -66,34 +93,52 @@ const H = `h${level}` as 'h2' | 'h3';
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: var(--space-4);
+    gap: var(--space-4) var(--space-6);
     margin-bottom: var(--space-6);
   }
+  .sh--lg {
+    margin-bottom: var(--space-8);
+  }
+  @media (min-width: 1024px) {
+    .sh--lg {
+      margin-bottom: var(--space-12);
+    }
+  }
   .sh--rule {
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--ink);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
   }
   .sh__text {
     min-width: 0;
+    max-width: 720px;
   }
-  .sh__label {
+  .sh__eyebrow {
     margin-bottom: var(--space-3);
   }
-  .sh__title {
-    font-size: clamp(1.375rem, 1.1rem + 0.9vw, 1.875rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.025em;
-    line-height: 1.1;
-  }
   h3.sh__title {
-    font-size: var(--text-lg);
-    letter-spacing: var(--tracking-snug);
+    font-size: var(--text-h3);
+    letter-spacing: -0.015em;
+  }
+  .sh__count {
+    margin-left: 0.4em;
+    font-family: var(--font-mono);
+    font-size: max(0.45em, 12px);
+    font-weight: 450;
+    letter-spacing: 0;
+    color: var(--ink-3);
+    vertical-align: 0.3em;
   }
   .sh__desc {
     margin-top: var(--space-2);
     color: var(--ink-3);
-    font-size: var(--text-base);
-    max-width: 560px;
+    font-size: var(--text-body);
+    line-height: 1.55;
+    max-width: 600px;
+  }
+  .sh--lg .sh__desc {
+    margin-top: var(--space-3);
+    font-size: var(--text-lead);
+    color: var(--ink-2);
   }
   .sh__actions {
     display: flex;
@@ -103,23 +148,36 @@ const H = `h${level}` as 'h2' | 'h3';
   }
   .sh__link {
     display: inline-flex;
+    align-items: center;
     gap: 6px;
-    color: var(--ink);
+    min-height: 32px;
+    color: var(--ink-2);
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
     white-space: nowrap;
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.25em;
-    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out);
   }
   .sh__link:hover {
-    text-decoration-color: currentColor;
+    color: var(--ink);
   }
-  .sh__link span {
-    transition: transform var(--dur-fast) var(--ease-out);
+  .sh__link svg {
+    transition: transform var(--dur-base) var(--ease-out);
   }
-  .sh__link:hover span {
+  .sh__link:hover svg {
     transform: translateX(2px);
+  }
+  .sh--center {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .sh--center .sh__text,
+  .sh--center .sh__desc {
+    margin-inline: auto;
+  }
+  @media (max-width: 639px) {
+    .sh:not(.sh--center) {
+      flex-wrap: wrap;
+    }
   }
 </style>

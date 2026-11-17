@@ -1,6 +1,18 @@
 ---
+/**
+ * A store as a v2 card: capture in a --surface-2 well, then a title row with the store's mark,
+ * its name and one meta line, and optional badges. The whole card is one link (the title is a
+ * .stretched-link), so it is one tab stop.
+ *
+ *   <StoreCard domain="youngla.com" name="YoungLA" meta="Prestige · 11 apps"
+ *     shot={{ src, width, height }} tag="Home" badges={[{ label: 'Curated', tone: 'accent' }]} />
+ *
+ * `n` (v1 specimen number) is accepted and ignored. `aside` slot: extra content at the right of
+ * the title row.
+ */
 import Shot from '~/components/media/Shot.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
+import Badge from '~/components/ui/Badge.astro';
 import type { Device } from '~/lib/taxonomy';
 
 interface Props {
@@ -8,10 +20,12 @@ interface Props {
   name?: string | null;
   href?: string;
   shot?: { src: string; width: number; height: number; device?: Device } | null;
-  /** One quiet meta line, e.g. "Prestige · 11 apps". */
+  /** One quiet meta line, e.g. "Prestige · 11 apps". Defaults to the domain. */
   meta?: string;
+  /** Small label on the capture, e.g. the page type. */
   tag?: string;
-  /** Specimen number shown at the end of the caption (N°014). */
+  badges?: { label: string; tone?: 'neutral' | 'outline' | 'accent' | 'positive' | 'caution' }[];
+  /** @deprecated v1 specimen number; ignored. */
   n?: number;
   eager?: boolean;
   class?: string;
@@ -23,7 +37,7 @@ const {
   shot,
   meta,
   tag,
-  n,
+  badges = [],
   eager,
   class: className,
 } = Astro.props;
@@ -31,78 +45,120 @@ const title = name || domain;
 ---
 
 <article class:list={['store-card', className]}>
-  {shot ? (
-    <Shot
-      src={shot.src}
-      width={shot.width}
-      height={shot.height}
-      device={shot.device ?? 'desktop'}
-      alt={`${title} ${shot.device === 'mobile' ? 'mobile' : 'desktop'} home page`}
-      href={href}
-      eager={eager}
-      tag={tag}
-    />
-  ) : (
-    <a href={href} class="store-card__empty">
-      <span class="store-card__empty-domain">{domain}</span>
-      <span class="store-card__empty-note">Not captured yet</span>
-    </a>
-  )}
-  <div class="store-card__caption">
-    <StoreMark domain={domain} name={name} size={20} />
+  <div class="store-card__media">
+    {shot ? (
+      <Shot
+        src={shot.src}
+        width={shot.width}
+        height={shot.height}
+        device={shot.device ?? 'desktop'}
+        alt={`${title} ${shot.device === 'mobile' ? 'mobile' : 'desktop'} home page`}
+        eager={eager}
+        tag={tag}
+        ratio="16 / 10"
+        flush
+      />
+    ) : (
+      <div class="store-card__empty">
+        <span class="store-card__empty-domain">{domain}</span>
+        <span class="store-card__empty-note">Not captured yet</span>
+      </div>
+    )}
+  </div>
+  <div class="store-card__body">
+    <StoreMark domain={domain} name={name} size={28} />
     <div class="store-card__text">
       <h3 class="store-card__title">
-        <a href={href}>{title}</a>
+        <a href={href} class="stretched-link">
+          {title}
+        </a>
       </h3>
-      {meta && <p class="store-card__meta">{meta}</p>}
+      <p class="store-card__meta">{meta ?? domain}</p>
     </div>
-    {typeof n === 'number' && <span class="store-card__n">N°{String(n).padStart(3, '0')}</span>}
+    {badges.length > 0 && (
+      <span class="store-card__badges">
+        {badges.map((b) => (
+          <Badge tone={b.tone ?? 'neutral'} size="sm">
+            {b.label}
+          </Badge>
+        ))}
+      </span>
+    )}
     <slot name="aside" />
   </div>
 </article>
 
 <style>
   .store-card {
-    min-width: 0;
-  }
-  .store-card__caption {
+    position: relative;
     display: flex;
-    align-items: flex-start;
-    gap: var(--space-2);
-    margin-top: var(--space-3);
+    flex-direction: column;
+    min-width: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
   }
-  .store-card__caption :global(.store-mark) {
-    margin-top: 1px;
+  .store-card:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+    transform: translateY(-2px);
+  }
+  .store-card:hover :global(.shot__img) {
+    transform: translateX(-50%) translateY(-3px);
+  }
+  .store-card:has(.stretched-link:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .store-card .stretched-link:focus-visible {
+    outline: none;
+  }
+  .store-card__media {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    background: var(--surface-2);
+    box-shadow: inset 0 -1px 0 var(--line);
+  }
+  .store-card__body {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4) var(--space-4);
   }
   .store-card__text {
     flex: 1;
     min-width: 0;
   }
   .store-card__title {
-    font-size: var(--text-base);
-    font-weight: var(--weight-medium);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .store-card__n {
-    flex: none;
-    margin-top: 2px;
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    color: var(--ink-3);
-  }
   .store-card__meta {
-    margin-top: 2px;
+    margin-top: 1px;
     color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    font-size: var(--text-sm);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .store-card__badges {
+    display: flex;
+    flex: none;
+    gap: var(--space-1);
   }
   .store-card__empty {
     display: flex;
@@ -110,23 +166,15 @@ const title = name || domain;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    aspect-ratio: 4 / 3;
-    border-radius: var(--radius-lg);
-    background:
-      repeating-linear-gradient(-45deg, transparent 0 10px, rgb(25 24 22 / 0.025) 10px 11px),
-      var(--tile);
-    transition: background-color var(--dur-base) var(--ease-out);
-  }
-  .store-card__empty:hover {
-    background-color: var(--tile-hover);
+    aspect-ratio: 16 / 10;
   }
   .store-card__empty-domain {
-    font-size: var(--text-md);
-    font-weight: var(--weight-medium);
     color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
   }
   .store-card__empty-note {
-    font-size: var(--text-xs);
     color: var(--ink-3);
+    font-size: var(--text-xs);
   }
 </style>

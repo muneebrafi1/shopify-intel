@@ -56,7 +56,7 @@ const Tag = href ? 'a' : 'button';
     padding: 0 12px;
     border-radius: var(--radius-pill);
     background: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--line);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
     color: var(--ink-2);
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
@@ -65,7 +65,8 @@ const Tag = href ? 'a' : 'button';
     transition:
       background-color var(--dur-fast) var(--ease-out),
       box-shadow var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
   }
   .chip--sm {
     height: 26px;
@@ -74,23 +75,25 @@ const Tag = href ? 'a' : 'button';
   }
   .chip:hover {
     color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
+    background: var(--surface-2);
   }
-  .chip:focus-visible {
-    border-radius: var(--radius-pill);
+  .chip:active {
+    transform: scale(0.98);
   }
   .chip__count {
     color: var(--ink-3);
-    font-weight: var(--weight-regular);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: 450;
   }
   .chip--selected,
   .chip--selected:hover {
-    background: var(--inverse);
-    color: var(--ink-inverse);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
     box-shadow: none;
   }
   .chip--selected .chip__count {
-    color: var(--ink-inverse-2);
+    color: var(--btn-fg-2);
   }
   .chip__x {
     margin-right: -2px;

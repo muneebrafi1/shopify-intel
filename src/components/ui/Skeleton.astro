@@ -25,8 +25,13 @@ const items = variant === 'line' ? Array.from({ length: lines }, (_, i) => i) : 
 <style>
   .skeleton {
     display: block;
-    background: linear-gradient(90deg, var(--fill) 0%, var(--fill-hover) 40%, var(--fill) 80%) 0 0 /
-      300% 100%;
+    background: linear-gradient(
+        90deg,
+        var(--surface-2) 0%,
+        var(--surface-3) 40%,
+        var(--surface-2) 80%
+      )
+      0 0 / 300% 100%;
     animation: shimmer 1.6s linear infinite;
   }
   .skeleton--line {
@@ -42,7 +47,7 @@ const items = variant === 'line' ? Array.from({ length: lines }, (_, i) => i) : 
     height: 120px;
   }
   .skeleton--tile {
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-well);
     aspect-ratio: 4 / 3;
   }
   .skeleton--circle {

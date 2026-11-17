@@ -1,4 +1,18 @@
 ---
+/**
+ * Pill-track switch for small 2–3-way choices: Desktop/Mobile, Monthly/Yearly, Grid/List.
+ * A --surface thumb slides to the selected item (client/indicator.ts); without JS the selected
+ * item draws its own thumb.
+ *
+ *   Links (URL state; preferred):   items[].href + selected → aria-current="true"
+ *   Buttons (client state):         no href → aria-pressed; a click selects the item and fires
+ *                                   `segmented:change` on the group ({ detail: { name, value } }).
+ *
+ *   <Segmented label="Device" size="sm" items={[
+ *     { label: 'Desktop', value: 'desktop', icon: 'desktop', href: '?device=desktop', selected: true },
+ *     { label: 'Mobile', value: 'mobile', icon: 'device-mobile', href: '?device=mobile' },
+ *   ]} />
+ */
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
 
@@ -16,18 +30,21 @@ interface Props {
   items: SegmentedItem[];
   label: string;
   size?: 'sm' | 'md';
+  /** Stretch to the container width with equal segments. */
+  full?: boolean;
   /** Name used by client scripts to listen for changes (button mode). */
   name?: string;
   class?: string;
 }
-const { items, label, size = 'md', name, class: className } = Astro.props;
+const { items, label, size = 'md', full = false, name, class: className } = Astro.props;
 ---
 
 <div
-  class:list={['seg', `seg--${size}`, className]}
+  class:list={['seg', `seg--${size}`, { 'seg--full': full }, className]}
   role="group"
   aria-label={label}
   data-segmented={name}
+  data-indicator
 >
   {items.map((item) => {
     const inner = (
@@ -40,19 +57,21 @@ const { items, label, size = 'md', name, class: className } = Astro.props;
     return item.href ? (
       <a
         href={item.href}
-        class="seg__item"
+        class:list={['seg__item', { 'seg__item--icon': item.iconOnly }]}
         aria-current={item.selected ? 'true' : undefined}
         data-value={item.value}
         rel="nofollow"
+        title={item.iconOnly ? item.label : undefined}
       >
         {inner}
       </a>
     ) : (
       <button
         type="button"
-        class="seg__item"
+        class:list={['seg__item', { 'seg__item--icon': item.iconOnly }]}
         aria-pressed={item.selected ? 'true' : 'false'}
         data-value={item.value}
+        title={item.iconOnly ? item.label : undefined}
       >
         {inner}
       </button>
@@ -60,21 +79,60 @@ const { items, label, size = 'md', name, class: className } = Astro.props;
   })}
 </div>
 
+<script>
+  import '~/components/ui/client/indicator';
+
+  // Button mode: select on click and announce the change. Link mode is plain navigation (pages
+  // may intercept it and flip aria-current themselves; the indicator follows either way).
+  document.addEventListener('click', (event) => {
+    const item = (event.target as Element | null)?.closest<HTMLButtonElement>(
+      '.seg button.seg__item',
+    );
+    const group = item?.closest<HTMLElement>('.seg');
+    if (!item || !group || item.getAttribute('aria-pressed') === 'true') return;
+    group.querySelectorAll('button.seg__item').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b === item));
+    });
+    group.dispatchEvent(
+      new CustomEvent('segmented:change', {
+        bubbles: true,
+        detail: { name: group.dataset.segmented, value: item.dataset.value },
+      }),
+    );
+  });
+</script>
+
 <style>
   .seg {
+    --seg-h: 36px;
+    position: relative;
+    isolation: isolate;
     display: inline-flex;
     flex: none;
-    padding: 2px;
+    height: var(--seg-h);
+    padding: 3px;
     gap: 2px;
     border-radius: var(--radius-pill);
-    background: var(--fill);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .seg--sm {
+    --seg-h: 30px;
+  }
+  .seg--full {
+    display: flex;
+    width: 100%;
+  }
+  .seg--full .seg__item {
+    flex: 1;
   }
   .seg__item {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 30px;
+    height: 100%;
     padding: 0 12px;
     border-radius: var(--radius-pill);
     color: var(--ink-3);
@@ -86,26 +144,55 @@ const { items, label, size = 'md', name, class: className } = Astro.props;
       background-color var(--dur-fast) var(--ease-out);
   }
   .seg--sm .seg__item {
-    height: 26px;
     padding: 0 10px;
     font-size: var(--text-xs);
+  }
+  .seg__item--icon {
+    aspect-ratio: 1;
+    padding: 0;
+  }
+  .seg--sm .seg__item--icon {
+    padding: 0;
   }
   .seg__item:hover {
     color: var(--ink);
   }
   .seg__item:focus-visible {
-    border-radius: var(--radius-pill);
+    outline-offset: 0;
   }
   .seg__item[aria-current='true'],
   .seg__item[aria-pressed='true'] {
-    background: var(--surface);
     color: var(--ink);
-    box-shadow:
-      0 0 0 1px rgb(25 24 22 / 0.06),
-      0 1px 2px rgb(25 24 22 / 0.08);
   }
   .seg__count {
     color: var(--ink-3);
     font-weight: var(--weight-regular);
+  }
+
+  /* Thumb: drawn by the selected item until the sliding indicator is measured. */
+  .seg:not([data-indicator-ready]) .seg__item:is([aria-current='true'], [aria-pressed='true']),
+  .seg[data-indicator-ready]::before {
+    background: var(--raised);
+    box-shadow:
+      0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+  }
+  .seg[data-indicator-ready]::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 3px;
+    bottom: 3px;
+    left: 0;
+    width: var(--ind-w, 0);
+    border-radius: var(--radius-pill);
+    opacity: var(--ind-o, 0);
+    transform: translateX(var(--ind-x, 0));
+  }
+  .seg.is-sliding::before {
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      width var(--dur-base) var(--ease-out);
   }
 </style>

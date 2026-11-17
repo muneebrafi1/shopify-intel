@@ -3,16 +3,14 @@
 ---
 
 <div class="preview-notice" role="note">
-  <div class="container preview-notice__inner">
-    <span class="preview-notice__dot" aria-hidden="true"></span>
+  <div class="container--wide preview-notice__inner">
+    <span class="preview-notice__badge">Preview</span>
     <p>
       <span class="preview-notice__long">
-        Preview: store screenshots are drawn from each page's detected sections until our first
-        capture run. Detection data is real.
+        Store screenshots are drawn from each page’s detected sections until our first capture run.
+        Detection data is real.
       </span>
-      <span class="preview-notice__short">
-        Screenshots are layout previews until our first capture run.
-      </span>{' '}
+      <span class="preview-notice__short"> Screenshots are layout previews for now.</span>{' '}
       <a href="/methodology#screenshots">How it works</a>
     </p>
   </div>
@@ -20,33 +18,48 @@
 
 <style>
   .preview-notice {
-    background: var(--inverse);
-    color: var(--ink-inverse-2);
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
     font-size: var(--text-xs);
   }
   .preview-notice__inner {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: var(--space-2);
-    min-height: 32px;
+    min-height: 36px;
     padding-block: 6px;
-    text-align: center;
   }
-  .preview-notice__dot {
+  @media (min-width: 768px) {
+    .preview-notice__inner {
+      justify-content: center;
+      text-align: center;
+    }
+  }
+  .preview-notice__badge {
     flex: none;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 7px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
   .preview-notice a {
-    margin-left: 4px;
-    color: var(--ink-inverse);
+    margin-left: 2px;
+    color: var(--ink);
     text-decoration: underline;
-    text-decoration-color: rgb(255 255 255 / 0.35);
+    text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
     white-space: nowrap;
+  }
+  .preview-notice a:hover {
+    text-decoration-color: currentColor;
   }
   .preview-notice__long {
     display: none;

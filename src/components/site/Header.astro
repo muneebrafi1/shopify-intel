@@ -1,91 +1,97 @@
 ---
+/**
+ * Global header (direction.md → Header). 64px (56 on mobile), sticky; transparent at the top,
+ * --header-bg + blur + hairline once the page has scrolled ([data-scrolled]).
+ *
+ * ≥1024: logo · nav (Stores … Compare) · search trigger (input look ≥1200, icon below) · theme
+ *        toggle · Sign in (ghost) · Get Pro (primary).
+ * <1024: logo · search · menu button → full-height sheet (native <dialog>: focus trap, Esc,
+ *        scroll lock) with nav + live counts, secondary links, theme switch and the Pro CTA.
+ */
 import { PRIMARY_NAV } from '~/config/site';
 import Logo from './Logo.astro';
 import Icon from '~/components/ui/Icon.astro';
 import Kbd from '~/components/ui/Kbd.astro';
-import Count from '~/components/ui/Count.astro';
+import Button from '~/components/ui/Button.astro';
+import ThemeToggle from '~/components/ui/ThemeToggle.astro';
+import ThemeSwitch from '~/components/ui/ThemeSwitch.astro';
 
 interface Props {
-  /** Minimal chrome: logo only (focused flows such as sign-in). */
+  /** Minimal chrome: logo + theme toggle only (focused flows such as sign-in). */
   minimal?: boolean;
-  /** Live counts shown as superscripts after nav items, keyed by nav href ("/stores"). */
+  /** Live counts shown in the mobile menu, keyed by nav href ("/stores"). */
   counts?: Record<string, number>;
+  /** Align with gallery pages (1440 content) instead of 1200. */
+  wide?: boolean;
 }
-const { minimal = false, counts = {} } = Astro.props;
+const { minimal = false, counts = {}, wide = false } = Astro.props;
 const path = Astro.url.pathname;
 const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 
 const SECONDARY_NAV = [
-  { href: '/compare', label: 'Compare' },
   { href: '/alternatives', label: 'Alternatives' },
-  { href: '/pro', label: 'Pro' },
-  { href: '/developers', label: 'API & MCP' },
+  { href: '/apps/categories', label: 'App categories' },
+  { href: '/developers', label: 'Developers' },
   { href: '/methodology', label: 'Methodology' },
   { href: '/about', label: 'About' },
+  { href: '/pro', label: 'Pricing' },
 ];
 ---
 
-<header class="header">
-  <div class="header__inner container">
+<header class="header" data-header>
+  <div class:list={['header__inner', wide ? 'container--wide' : 'container']}>
     <a href="/" class="header__logo" aria-label="Home">
       <Logo />
     </a>
 
     {!minimal && (
-      <>
-        <nav class="header__nav" aria-label="Main">
-          {PRIMARY_NAV.map((item) => (
-            <a
-              href={item.href}
-              class="header__link"
-              aria-current={isActive(item.href) ? 'page' : undefined}
-            >
-              {item.label}
-              {typeof counts[item.href] === 'number' && <Count value={counts[item.href]!} />}
-            </a>
-          ))}
-        </nav>
+      <nav class="header__nav" aria-label="Main">
+        {PRIMARY_NAV.map((item) => (
+          <a
+            href={item.href}
+            class="header__link"
+            aria-current={isActive(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+    )}
 
-        <a href="/search" class="search-trigger" data-palette-open>
+    <div class="header__actions">
+      {!minimal && (
+        <a href="/search" class="search-trigger" data-palette-open aria-label="Search">
           <Icon name="magnifying-glass" size={16} />
-          <span class="search-trigger__label">Search stores, themes, apps</span>
-          <span class="search-trigger__kbd" data-kbd-hint>
+          <span class="search-trigger__label" aria-hidden="true">
+            Search
+          </span>
+          <span class="search-trigger__kbd" data-kbd-hint aria-hidden="true">
             <Kbd>⌘</Kbd>
             <Kbd>K</Kbd>
           </span>
         </a>
-
-        <div class="header__actions">
-          <a
-            href="/pro"
-            class="header__link header__pro"
-            aria-current={isActive('/pro') ? 'page' : undefined}
-          >
-            Pro
-          </a>
-          <a href="/sign-in" class="header__signin">
+      )}
+      <ThemeToggle class="header__desktop" />
+      {!minimal && (
+        <>
+          <Button href="/sign-in" variant="ghost" class="header__desktop">
             Sign in
-          </a>
-          <a
-            href="/search"
-            class="icon-btn header__mobile-only"
-            data-palette-open
-            aria-label="Search"
-          >
-            <Icon name="magnifying-glass" size={20} />
-          </a>
+          </Button>
+          <Button href="/pro" variant="primary" class="header__desktop header__pro">
+            Get Pro
+          </Button>
           <button
             type="button"
-            class="icon-btn header__mobile-only"
+            class="header__menu-btn"
             aria-label="Open menu"
             aria-haspopup="dialog"
             data-menu-open
           >
             <Icon name="list" size={20} />
           </button>
-        </div>
-      </>
-    )}
+        </>
+      )}
+    </div>
   </div>
 
   {!minimal && (
@@ -94,38 +100,55 @@ const SECONDARY_NAV = [
         <a href="/" aria-label="Home">
           <Logo />
         </a>
-        <button type="button" class="icon-btn" aria-label="Close menu" data-menu-close>
+        <button type="button" class="header__menu-btn" aria-label="Close menu" data-menu-close>
           <Icon name="x" size={20} />
         </button>
       </div>
-      <nav class="menu__body container" aria-label="Main">
-        <ul class="menu__primary">
-          {PRIMARY_NAV.map((item) => (
-            <li>
-              <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-        <ul class="menu__secondary">
-          {SECONDARY_NAV.map((item) => (
-            <li>
-              <a href={item.href}>{item.label}</a>
-            </li>
-          ))}
-        </ul>
-        <a href="/sign-in" class="menu__signin">
+      <div class="menu__scroll">
+        <nav class="menu__body container" aria-label="Main">
+          <ul class="menu__primary">
+            {PRIMARY_NAV.map((item) => (
+              <li>
+                <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+                  <span>{item.label}</span>
+                  {typeof counts[item.href] === 'number' && (
+                    <span class="menu__count num">
+                      {counts[item.href]!.toLocaleString('en-US')}
+                    </span>
+                  )}
+                  <Icon name="caret-right" size={14} class="menu__caret" />
+                </a>
+              </li>
+            ))}
+          </ul>
+          <ul class="menu__secondary">
+            {SECONDARY_NAV.map((item) => (
+              <li>
+                <a href={item.href}>{item.label}</a>
+              </li>
+            ))}
+          </ul>
+          <div class="menu__theme">
+            <span class="eyebrow">Appearance</span>
+            <ThemeSwitch labels />
+          </div>
+        </nav>
+      </div>
+      <div class="menu__cta container">
+        <Button href="/sign-in" variant="secondary" size="lg" full>
           Sign in
-        </a>
-      </nav>
+        </Button>
+        <Button href="/pro" variant="primary" size="lg" full>
+          Get Pro
+        </Button>
+      </div>
     </dialog>
   )}
 </header>
 
 <script>
-  // Search trigger: if a command palette is mounted it handles the event; otherwise we
-  // fall through to the /search page (works without JS too).
+  // Search trigger: if the command palette is mounted it handles the event; otherwise we fall
+  // through to the /search page (works without JS too).
   document.querySelectorAll<HTMLAnchorElement>('[data-palette-open]').forEach((el) => {
     el.addEventListener('click', (event) => {
       const handled = !document.dispatchEvent(
@@ -142,11 +165,45 @@ const SECONDARY_NAV = [
     });
   }
 
+  // Scrolled state: hairline + blur once the page moves.
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  if (header) {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      header.toggleAttribute('data-scrolled', window.scrollY > 4);
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true },
+    );
+    update();
+  }
+
+  // Mobile sheet. showModal() makes the page inert (focus stays inside) and Esc closes it.
   const menu = document.querySelector<HTMLDialogElement>('[data-menu]');
-  document.querySelector('[data-menu-open]')?.addEventListener('click', () => menu?.showModal());
-  document.querySelector('[data-menu-close]')?.addEventListener('click', () => menu?.close());
+  const opener = document.querySelector<HTMLButtonElement>('[data-menu-open]');
+  opener?.addEventListener('click', () => {
+    menu?.showModal();
+    opener.setAttribute('aria-expanded', 'true');
+  });
+  menu?.addEventListener('close', () => {
+    opener?.setAttribute('aria-expanded', 'false');
+    opener?.focus();
+  });
+  menu?.querySelector('[data-menu-close]')?.addEventListener('click', () => menu.close());
   menu?.addEventListener('click', (event) => {
     if (event.target === menu) menu.close();
+  });
+  // The sheet only exists below 1024px; close it if the window grows past that.
+  matchMedia('(min-width: 1024px)').addEventListener('change', (event) => {
+    if (event.matches && menu?.open) menu.close();
   });
 </script>
 
@@ -155,12 +212,25 @@ const SECONDARY_NAV = [
     position: sticky;
     top: 0;
     z-index: var(--z-header);
-    background: color-mix(in srgb, var(--bg) 94%, transparent);
-    border-bottom: 1px solid var(--line);
+    background: transparent;
+    box-shadow: 0 1px 0 transparent;
+    transition:
+      background-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+  .header[data-scrolled] {
+    background: var(--header-bg);
+    box-shadow: 0 1px 0 var(--line);
   }
   @supports (backdrop-filter: blur(1px)) {
-    .header {
-      backdrop-filter: saturate(1.4) blur(10px);
+    .header[data-scrolled] {
+      backdrop-filter: saturate(1.5) blur(12px);
+    }
+  }
+  /* Without backdrop blur the 80% background would let text show through. */
+  @supports not (backdrop-filter: blur(1px)) {
+    .header[data-scrolled] {
+      background: var(--bg);
     }
   }
   .header__inner {
@@ -171,136 +241,132 @@ const SECONDARY_NAV = [
   }
   .header__logo {
     flex: none;
-    border-radius: var(--radius-sm);
+    display: inline-flex;
+    padding: 4px;
+    margin: -4px;
+    border-radius: var(--radius-control);
   }
+
+  /* Nav */
   .header__nav {
     display: none;
     align-items: center;
-    gap: var(--space-0-5);
+    gap: 2px;
   }
   .header__link {
     display: inline-flex;
     align-items: center;
     height: 32px;
-    padding: 0 var(--space-3);
+    padding: 0 11px;
     border-radius: var(--radius-pill);
-    font-size: var(--text-base);
+    font-size: var(--text-ui);
     font-weight: var(--weight-medium);
     color: var(--ink-2);
+    white-space: nowrap;
     transition:
       color var(--dur-fast) var(--ease-out),
       background-color var(--dur-fast) var(--ease-out);
   }
   .header__link:hover {
     color: var(--ink);
+    background: var(--surface-2);
   }
   .header__link[aria-current='page'] {
     color: var(--ink);
-    background: var(--fill);
   }
 
-  .search-trigger {
-    display: none;
-    align-items: center;
-    gap: var(--space-2);
-    flex: 1 1 auto;
-    max-width: 380px;
-    height: 36px;
-    margin-left: auto;
-    padding: 0 var(--space-2) 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    background: var(--fill);
-    color: var(--ink-3);
-    font-size: var(--text-base);
-    transition: background-color var(--dur-fast) var(--ease-out);
-  }
-  .search-trigger:hover {
-    background: var(--fill-hover);
-  }
-  .search-trigger__label {
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .search-trigger__kbd {
-    display: inline-flex;
-    gap: 2px;
-  }
-
+  /* Right side */
   .header__actions {
     display: flex;
     align-items: center;
     gap: var(--space-1);
     margin-left: auto;
   }
-  .header__pro,
-  .header__signin {
+  .header__actions :global(.header__desktop) {
     display: none;
   }
-  .header__signin {
-    align-items: center;
-    height: 32px;
-    padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    font-weight: var(--weight-medium);
-    background: var(--inverse);
-    color: var(--ink-inverse);
-    transition: background-color var(--dur-fast) var(--ease-out);
-  }
-  .header__signin:hover {
-    background: var(--inverse-2);
-  }
-  .icon-btn {
+  .search-trigger {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: var(--space-2);
     width: 40px;
     height: 40px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-control);
+    color: var(--ink-2);
+    font-size: var(--text-ui);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .search-trigger:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .search-trigger__label,
+  .search-trigger__kbd {
+    display: none;
+  }
+  .header__menu-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-right: -8px;
+    border-radius: var(--radius-control);
     color: var(--ink);
     transition: background-color var(--dur-fast) var(--ease-out);
   }
-  .icon-btn:hover {
-    background: var(--fill);
+  .header__menu-btn:hover {
+    background: var(--surface-2);
   }
 
   @media (min-width: 1024px) {
-    .header__nav,
-    .search-trigger {
+    .header__nav {
       display: flex;
     }
     .header__actions {
-      margin-left: 0;
+      gap: var(--space-2);
     }
-    .header__pro,
-    .header__signin {
+    .header__actions :global(.header__desktop) {
       display: inline-flex;
     }
-    .header__mobile-only {
+    .header__actions :global(.header__pro) {
+      margin-left: 2px;
+    }
+    .header__menu-btn {
       display: none;
     }
+    .search-trigger {
+      width: 36px;
+      height: 36px;
+    }
   }
-  .header__signin,
-  .header__link {
-    white-space: nowrap;
-  }
-  @media (min-width: 1024px) and (max-width: 1199px) {
+  @media (min-width: 1200px) {
     .header__inner {
-      gap: var(--space-4);
+      gap: var(--space-8);
     }
-    .header__link {
-      padding: 0 var(--space-2);
+    .search-trigger {
+      justify-content: flex-start;
+      width: 200px;
+      margin-right: var(--space-1);
+      padding: 0 6px 0 10px;
+      background: var(--surface-2);
+      box-shadow: inset 0 0 0 1px var(--line);
+      color: var(--ink-3);
     }
-    /* Live counts return at 1200px; at this width the five labels need the room. */
-    .header__nav :global(.count-sup) {
-      display: none;
+    .search-trigger:hover {
+      background: var(--surface-3);
+      color: var(--ink-2);
     }
     .search-trigger__label {
-      font-size: var(--text-sm);
+      display: inline;
+      flex: 1;
     }
     .search-trigger__kbd {
-      display: none;
+      display: inline-flex;
+      gap: 2px;
     }
   }
 
@@ -315,12 +381,17 @@ const SECONDARY_NAV = [
     border: 0;
     background: var(--bg);
     color: var(--ink);
+    flex-direction: column;
+  }
+  .menu[open] {
+    display: flex;
+    animation: menu-in var(--dur-slow) var(--ease-out);
   }
   .menu::backdrop {
     background: transparent;
   }
-  .menu[open] {
-    animation: menu-in var(--dur-base) var(--ease-out);
+  :global(html:has(dialog.menu[open])) {
+    overflow: hidden;
   }
   @keyframes menu-in {
     from {
@@ -330,48 +401,85 @@ const SECONDARY_NAV = [
   }
   .menu__top {
     display: flex;
+    flex: none;
     align-items: center;
     justify-content: space-between;
     height: var(--header-h);
     border-bottom: 1px solid var(--line);
   }
+  .menu__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
   .menu__body {
-    padding-block: var(--space-6) var(--space-10);
+    padding-block: var(--space-2) var(--space-8);
   }
   .menu__primary a {
-    display: block;
-    padding: var(--space-2) 0;
-    font-size: var(--text-3xl);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 56px;
+    border-bottom: 1px solid var(--line);
+    font-size: 1.1875rem;
     font-weight: var(--weight-medium);
-    letter-spacing: var(--tracking-tight);
-    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+  .menu__primary a span:first-child {
+    flex: 1;
   }
   .menu__primary a[aria-current='page'] {
-    color: var(--accent-text);
+    color: var(--ink);
+  }
+  .menu__primary a[aria-current='page'] span:first-child::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-left: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    vertical-align: middle;
+  }
+  .menu__count {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 450;
+  }
+  .menu :global(.menu__caret) {
+    color: var(--ink-4);
   }
   .menu__secondary {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-1) var(--space-4);
-    margin-top: var(--space-8);
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--line);
+    gap: 0 var(--space-4);
+    margin-top: var(--space-5);
   }
   .menu__secondary a {
-    display: block;
-    padding: var(--space-2) 0;
-    font-size: var(--text-md);
-    color: var(--ink-2);
-  }
-  .menu__signin {
     display: flex;
     align-items: center;
-    justify-content: center;
-    height: 44px;
-    margin-top: var(--space-8);
-    border-radius: var(--radius-pill);
-    background: var(--inverse);
-    color: var(--ink-inverse);
-    font-weight: var(--weight-medium);
+    min-height: 44px;
+    font-size: var(--text-body);
+    color: var(--ink-2);
+  }
+  .menu__theme {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+  .menu__cta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+    flex: none;
+    padding-block: var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--bg);
   }
 </style>

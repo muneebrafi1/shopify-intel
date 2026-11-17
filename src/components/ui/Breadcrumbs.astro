@@ -42,6 +42,7 @@ const { items, class: className } = Astro.props;
   .crumbs li + li::before {
     content: '/';
     color: var(--ink-4);
+    font-weight: 300;
   }
   .crumbs a {
     transition: color var(--dur-fast) var(--ease-out);

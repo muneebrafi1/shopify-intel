@@ -1,5 +1,9 @@
 ---
-/** Mono spec label: `■ DETECTED 17 NOV 2026`. The square bullet is on by default. */
+/**
+ * Mono eyebrow label: `DETECTED 17 NOV 2026` (same look as the `.eyebrow` class).
+ * v1 drew a square bullet; `bullet` is accepted and ignored in v2. tone: muted | ink
+ * ('accent' is accepted and renders like muted: accent text is reserved for state).
+ */
 interface Props {
   bullet?: boolean;
   tone?: 'muted' | 'ink' | 'accent';
