@@ -1,0 +1,1112 @@
+[
+  {
+    "domain": "youngla.com",
+    "url": "https://www.youngla.com",
+    "theme": {
+      "slug": "prestige",
+      "name": "Prestige",
+      "version": "9.3.0",
+      "raw_name": "Prestige"
+    },
+    "apps": [
+      {
+        "slug": "loox",
+        "confidence": null
+      },
+      {
+        "slug": "attentive",
+        "confidence": null
+      },
+      {
+        "slug": "gdpr-backpack",
+        "confidence": null
+      },
+      {
+        "slug": "trustpilot",
+        "confidence": null
+      },
+      {
+        "slug": "global-e-crossborder",
+        "confidence": null
+      },
+      {
+        "slug": "gift-card-loyalty-program",
+        "confidence": null
+      },
+      {
+        "slug": "rivo-loyalty",
+        "confidence": null
+      },
+      {
+        "slug": "automizely-messages",
+        "confidence": null
+      },
+      {
+        "slug": "navidium-shipping-protection",
+        "confidence": null
+      },
+      {
+        "slug": "easylocation",
+        "confidence": null
+      },
+      {
+        "slug": "nofraud",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "northbeam"
+    ],
+    "currency": "USD",
+    "tranco_rank": 47673,
+    "detected_at": "2026-11-17T09:21:19.299Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "thursdayboots.com",
+    "url": "https://thursdayboots.com",
+    "theme": {
+      "slug": "atlantic",
+      "name": "Atlantic",
+      "version": "13.4.0",
+      "raw_name": "Atlantic"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "zendesk",
+        "confidence": null
+      },
+      {
+        "slug": "backinstock",
+        "confidence": null
+      },
+      {
+        "slug": "loop-returns",
+        "confidence": null
+      },
+      {
+        "slug": "redo",
+        "confidence": null
+      },
+      {
+        "slug": "global-e-crossborder",
+        "confidence": null
+      },
+      {
+        "slug": "form-builder-by-hulkapps",
+        "confidence": null
+      },
+      {
+        "slug": "amp-back-in-stock",
+        "confidence": null
+      },
+      {
+        "slug": "truevault-polaris",
+        "confidence": null
+      },
+      {
+        "slug": "product-options-by-hulkapps-1",
+        "confidence": null
+      },
+      {
+        "slug": "justuno",
+        "confidence": null
+      },
+      {
+        "slug": "edgetag",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "ga4",
+      "google-ads",
+      "gtm",
+      "heap",
+      "liveintent",
+      "meta-pixel",
+      "microsoftuet",
+      "northbeam",
+      "pinterest-tag"
+    ],
+    "currency": "USD",
+    "tranco_rank": 61872,
+    "detected_at": "2026-11-17T09:20:52.130Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "lskd.co",
+    "url": "https://www.lskd.co",
+    "theme": {
+      "slug": "impulse",
+      "name": "Impulse",
+      "version": "7.3.1",
+      "raw_name": "Impulse"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "yotpo",
+        "confidence": null
+      },
+      {
+        "slug": "helpdesk",
+        "confidence": null
+      },
+      {
+        "slug": "gdpr-cookie-consent",
+        "confidence": null
+      },
+      {
+        "slug": "algolia-search",
+        "confidence": null
+      },
+      {
+        "slug": "backinstock",
+        "confidence": null
+      },
+      {
+        "slug": "pushowl",
+        "confidence": null
+      },
+      {
+        "slug": "loop-returns",
+        "confidence": null
+      },
+      {
+        "slug": "tolstoy",
+        "confidence": null
+      },
+      {
+        "slug": "gift-card-loyalty-program",
+        "confidence": null
+      },
+      {
+        "slug": "rivo-loyalty",
+        "confidence": null
+      },
+      {
+        "slug": "rakuten-advertising",
+        "confidence": null
+      },
+      {
+        "slug": "alia",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "gtm",
+      "triplewhale"
+    ],
+    "currency": "AUD",
+    "tranco_rank": 62805,
+    "detected_at": "2026-11-17T09:18:48.536Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "thesill.com",
+    "url": "https://www.thesill.com",
+    "theme": {
+      "slug": "horizon",
+      "name": "Horizon",
+      "version": "3.2.0",
+      "raw_name": "Horizon"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "recharge",
+        "confidence": null
+      },
+      {
+        "slug": "helpdesk",
+        "confidence": null
+      },
+      {
+        "slug": "stamped",
+        "confidence": null
+      },
+      {
+        "slug": "instafeed",
+        "confidence": null
+      },
+      {
+        "slug": "form-builder-contact-form",
+        "confidence": null
+      },
+      {
+        "slug": "monk-free-gift-with-purchase",
+        "confidence": null
+      },
+      {
+        "slug": "giftnote",
+        "confidence": null
+      },
+      {
+        "slug": "wishlistplus",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "ga4",
+      "gtm"
+    ],
+    "currency": "USD",
+    "tranco_rank": 147195,
+    "detected_at": "2026-11-17T09:20:50.478Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "negativeunderwear.com",
+    "url": "https://negativeunderwear.com",
+    "theme": {
+      "slug": "dawn",
+      "name": "Dawn",
+      "version": "10.0.0",
+      "raw_name": "Dawn"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "helpdesk",
+        "confidence": null
+      },
+      {
+        "slug": "okendo-reviews",
+        "confidence": null
+      },
+      {
+        "slug": "intelligems",
+        "confidence": null
+      },
+      {
+        "slug": "global-e-crossborder",
+        "confidence": null
+      },
+      {
+        "slug": "shopmy",
+        "confidence": null
+      },
+      {
+        "slug": "afterpay-messaging",
+        "confidence": null
+      },
+      {
+        "slug": "polar-analytics",
+        "confidence": null
+      },
+      {
+        "slug": "gift-card-loyalty-program",
+        "confidence": null
+      },
+      {
+        "slug": "automizely-messages",
+        "confidence": null
+      },
+      {
+        "slug": "nofraud",
+        "confidence": null
+      },
+      {
+        "slug": "alia",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "google-ads",
+      "gtm"
+    ],
+    "currency": "USD",
+    "tranco_rank": 191383,
+    "detected_at": "2026-11-17T09:19:23.287Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "eatfishwife.com",
+    "url": "https://eatfishwife.com",
+    "theme": {
+      "slug": "blockshop",
+      "name": "Blockshop",
+      "version": "6.6.0",
+      "raw_name": "Blockshop"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "postscript",
+        "confidence": null
+      },
+      {
+        "slug": "okendo-reviews",
+        "confidence": null
+      },
+      {
+        "slug": "intelligems",
+        "confidence": null
+      },
+      {
+        "slug": "shopmy",
+        "confidence": null
+      },
+      {
+        "slug": "afterpay-messaging",
+        "confidence": null
+      },
+      {
+        "slug": "fondue-cashback-promotions",
+        "confidence": null
+      },
+      {
+        "slug": "black-crow-ai",
+        "confidence": null
+      },
+      {
+        "slug": "friendbuy-lite",
+        "confidence": null
+      },
+      {
+        "slug": "wholesale-gorilla",
+        "confidence": null
+      },
+      {
+        "slug": "nofraud",
+        "confidence": null
+      },
+      {
+        "slug": "retention-com",
+        "confidence": null
+      },
+      {
+        "slug": "alia",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "ga4",
+      "gtm"
+    ],
+    "currency": "USD",
+    "tranco_rank": 306884,
+    "detected_at": "2026-11-17T09:17:25.334Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "koh.com",
+    "url": "https://koh.com",
+    "theme": {
+      "slug": "impact",
+      "name": "Impact",
+      "version": "3.0.0",
+      "raw_name": "Impact"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "rebuy",
+        "confidence": null
+      },
+      {
+        "slug": "helpdesk",
+        "confidence": null
+      },
+      {
+        "slug": "okendo-reviews",
+        "confidence": null
+      },
+      {
+        "slug": "pushowl",
+        "confidence": null
+      },
+      {
+        "slug": "intelligems",
+        "confidence": null
+      },
+      {
+        "slug": "reviewsio",
+        "confidence": null
+      },
+      {
+        "slug": "orbe",
+        "confidence": null
+      },
+      {
+        "slug": "alia",
+        "confidence": null
+      }
+    ],
+    "pixels": [],
+    "currency": "AUD",
+    "tranco_rank": 423205,
+    "detected_at": "2026-11-17T09:18:31.986Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "wearicy.com",
+    "url": "https://wearicy.com",
+    "theme": {
+      "slug": "berlin",
+      "name": "Berlin",
+      "version": "1.2.2",
+      "raw_name": "Berlin"
+    },
+    "apps": [
+      {
+        "slug": "judgeme",
+        "confidence": null
+      },
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "intelligems",
+        "confidence": null
+      },
+      {
+        "slug": "bundle-deals",
+        "confidence": null
+      },
+      {
+        "slug": "customer-support",
+        "confidence": null
+      },
+      {
+        "slug": "applovin",
+        "confidence": null
+      },
+      {
+        "slug": "social-snowball",
+        "confidence": null
+      },
+      {
+        "slug": "nofraud",
+        "confidence": null
+      },
+      {
+        "slug": "alia",
+        "confidence": null
+      },
+      {
+        "slug": "sezzle-widget",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "ga4",
+      "gtm",
+      "triplewhale"
+    ],
+    "currency": "USD",
+    "tranco_rank": 451758,
+    "detected_at": "2026-11-17T09:21:08.899Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "flybyjing.com",
+    "url": "https://flybyjing.com",
+    "theme": {
+      "slug": "shapes",
+      "name": "Shapes",
+      "version": "3.0.4",
+      "raw_name": "Shapes"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "rebuy",
+        "confidence": null
+      },
+      {
+        "slug": "helpdesk",
+        "confidence": null
+      },
+      {
+        "slug": "okendo-reviews",
+        "confidence": null
+      },
+      {
+        "slug": "amp-back-in-stock",
+        "confidence": null
+      },
+      {
+        "slug": "osano-cmp",
+        "confidence": null
+      },
+      {
+        "slug": "inveterate",
+        "confidence": null
+      }
+    ],
+    "pixels": [],
+    "currency": "USD",
+    "tranco_rank": 606792,
+    "detected_at": "2026-11-17T09:17:39.091Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "ncf.co.uk",
+    "url": "https://ncf.co.uk",
+    "theme": {
+      "slug": "enterprise",
+      "name": "Enterprise",
+      "version": "2.0.0",
+      "raw_name": "Enterprise"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "loox",
+        "confidence": null
+      },
+      {
+        "slug": "gdpr-cookie-consent",
+        "confidence": null
+      },
+      {
+        "slug": "trustpilot",
+        "confidence": null
+      },
+      {
+        "slug": "form-builder-contact-form",
+        "confidence": null
+      },
+      {
+        "slug": "event-promotion-bar",
+        "confidence": null
+      },
+      {
+        "slug": "custom-options",
+        "confidence": null
+      },
+      {
+        "slug": "uploadery",
+        "confidence": null
+      },
+      {
+        "slug": "server-gtm",
+        "confidence": null
+      },
+      {
+        "slug": "mulwi-shopping-feeds",
+        "confidence": null
+      },
+      {
+        "slug": "product-options-by-hulkapps-1",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "luckyorange"
+    ],
+    "currency": "GBP",
+    "tranco_rank": 808503,
+    "detected_at": "2026-11-17T09:19:23.137Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "4wks.com",
+    "url": "https://4wks.com",
+    "theme": {
+      "slug": "barcelona",
+      "name": "Barcelona",
+      "version": "1.0.8",
+      "raw_name": "Barcelona"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "stamped",
+        "confidence": null
+      },
+      {
+        "slug": "appstlesubscriptions",
+        "confidence": null
+      },
+      {
+        "slug": "instafeed",
+        "confidence": null
+      }
+    ],
+    "pixels": [],
+    "currency": "ZAR",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:15:46.589Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "alfheimbeauty.com",
+    "url": "https://alfheimbeauty.com",
+    "theme": {
+      "slug": "be-yours",
+      "name": "Be Yours",
+      "version": "9.5.1",
+      "raw_name": "Be Yours"
+    },
+    "apps": [
+      {
+        "slug": "judgeme",
+        "confidence": null
+      },
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "mailchimp",
+        "confidence": null
+      },
+      {
+        "slug": "okendo-reviews",
+        "confidence": null
+      },
+      {
+        "slug": "sealsubscriptions",
+        "confidence": null
+      },
+      {
+        "slug": "instafeed",
+        "confidence": null
+      },
+      {
+        "slug": "applovin",
+        "confidence": null
+      }
+    ],
+    "pixels": [],
+    "currency": "USD",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:15:47.651Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "blacksheepniagara.com",
+    "url": "https://blacksheepniagara.com",
+    "theme": {
+      "slug": "bespoke",
+      "name": "Bespoke",
+      "version": "1.0.3",
+      "raw_name": "Bespoke"
+    },
+    "apps": [
+      {
+        "slug": "appstlesubscriptions",
+        "confidence": null
+      },
+      {
+        "slug": "alireviews",
+        "confidence": null
+      },
+      {
+        "slug": "instafeed",
+        "confidence": null
+      },
+      {
+        "slug": "cowlendar",
+        "confidence": null
+      }
+    ],
+    "pixels": [],
+    "currency": "USD",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:16:36.522Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "flexfit.com.au",
+    "url": "https://flexfit.com.au",
+    "theme": {
+      "slug": "athens",
+      "name": "Athens",
+      "version": "2.6.0",
+      "raw_name": "Athens"
+    },
+    "apps": [
+      {
+        "slug": "judgeme",
+        "confidence": null
+      },
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "vitals",
+        "confidence": null
+      },
+      {
+        "slug": "mailchimp",
+        "confidence": null
+      },
+      {
+        "slug": "form-builder-contact-form",
+        "confidence": null
+      },
+      {
+        "slug": "globo-color-swatches",
+        "confidence": null
+      },
+      {
+        "slug": "upsell-cross-sell-kit-1",
+        "confidence": null
+      },
+      {
+        "slug": "volume-discounts-dealeasy",
+        "confidence": null
+      },
+      {
+        "slug": "ez-terms-and-conditions-checkbox",
+        "confidence": null
+      }
+    ],
+    "pixels": [],
+    "currency": "AUD",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:17:37.973Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "guestsonearth.com",
+    "url": "https://www.guestsonearth.com",
+    "theme": {
+      "slug": "broadcast",
+      "name": "Broadcast",
+      "version": "8.0.0",
+      "raw_name": "Broadcast"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "recharge",
+        "confidence": null
+      },
+      {
+        "slug": "rebuy",
+        "confidence": null
+      },
+      {
+        "slug": "helpdesk",
+        "confidence": null
+      },
+      {
+        "slug": "okendo-reviews",
+        "confidence": null
+      },
+      {
+        "slug": "instafeed",
+        "confidence": null
+      },
+      {
+        "slug": "intelligems",
+        "confidence": null
+      },
+      {
+        "slug": "octane-ai-quiz-personalization",
+        "confidence": null
+      },
+      {
+        "slug": "shopmy",
+        "confidence": null
+      },
+      {
+        "slug": "fontify-change-customize-font-for-your-store",
+        "confidence": null
+      },
+      {
+        "slug": "green-shipping-protection",
+        "confidence": null
+      },
+      {
+        "slug": "alia",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "triplewhale"
+    ],
+    "currency": "USD",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:18:01.808Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "hikeepebike.com",
+    "url": "https://www.hikeepebike.com",
+    "theme": {
+      "slug": "concept",
+      "name": "Concept",
+      "version": "5.1.0",
+      "raw_name": "Concept"
+    },
+    "apps": [
+      {
+        "slug": "judgeme",
+        "confidence": null
+      },
+      {
+        "slug": "smile-io",
+        "confidence": null
+      },
+      {
+        "slug": "free-shipping-bar",
+        "confidence": null
+      },
+      {
+        "slug": "omnisend",
+        "confidence": null
+      },
+      {
+        "slug": "shopify-forms",
+        "confidence": null
+      },
+      {
+        "slug": "event-promotion-bar",
+        "confidence": null
+      },
+      {
+        "slug": "goaffpro",
+        "confidence": null
+      },
+      {
+        "slug": "omnise",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "luckyorange"
+    ],
+    "currency": "USD",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:18:09.331Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "hofstrawagner.dk",
+    "url": "https://hofstrawagner.dk",
+    "theme": {
+      "slug": "hyper",
+      "name": "Hyper",
+      "version": "1.4.0",
+      "raw_name": "Hyper"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "loox",
+        "confidence": null
+      },
+      {
+        "slug": "trustpilot",
+        "confidence": null
+      },
+      {
+        "slug": "instafeed",
+        "confidence": null
+      },
+      {
+        "slug": "essential-countdown-timer",
+        "confidence": null
+      },
+      {
+        "slug": "customer-support",
+        "confidence": null
+      },
+      {
+        "slug": "order-limits-minmaxify",
+        "confidence": null
+      },
+      {
+        "slug": "fast-product-colors",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "triplewhale"
+    ],
+    "currency": "DKK",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:18:10.535Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "mayatea.com",
+    "url": "https://www.mayatea.com",
+    "theme": {
+      "slug": "flow",
+      "name": "Flow",
+      "version": "41.0.1",
+      "raw_name": "Flow"
+    },
+    "apps": [
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "loox",
+        "confidence": null
+      },
+      {
+        "slug": "free-shipping-bar",
+        "confidence": null
+      },
+      {
+        "slug": "shopify-forms",
+        "confidence": null
+      },
+      {
+        "slug": "sc-product-options",
+        "confidence": null
+      },
+      {
+        "slug": "bold-subscriptions",
+        "confidence": null
+      },
+      {
+        "slug": "boldupsell",
+        "confidence": null
+      },
+      {
+        "slug": "product-upsell",
+        "confidence": null
+      }
+    ],
+    "pixels": [],
+    "currency": "USD",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:19:01.034Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "shopcolorgame.com",
+    "url": "https://shopcolorgame.com",
+    "theme": {
+      "slug": "stretch",
+      "name": "Stretch",
+      "version": "2.1.1",
+      "raw_name": "Stretch"
+    },
+    "apps": [
+      {
+        "slug": "judgeme",
+        "confidence": null
+      },
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "smile-io",
+        "confidence": null
+      },
+      {
+        "slug": "affliate-by-secomapp",
+        "confidence": null
+      },
+      {
+        "slug": "instafeed",
+        "confidence": null
+      },
+      {
+        "slug": "restock-rocket-1",
+        "confidence": null
+      },
+      {
+        "slug": "pusher-sections-builder",
+        "confidence": null
+      }
+    ],
+    "pixels": [],
+    "currency": "USD",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:20:17.609Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  },
+  {
+    "domain": "shopharveys.com",
+    "url": "https://shopharveys.com",
+    "theme": {
+      "slug": "symmetry",
+      "name": "Symmetry",
+      "version": "8.2.0",
+      "raw_name": "Symmetry"
+    },
+    "apps": [
+      {
+        "slug": "judgeme",
+        "confidence": null
+      },
+      {
+        "slug": "klaviyo",
+        "confidence": null
+      },
+      {
+        "slug": "gdpr-cookie-consent",
+        "confidence": null
+      },
+      {
+        "slug": "wishlistplus",
+        "confidence": null
+      },
+      {
+        "slug": "backinstock",
+        "confidence": null
+      },
+      {
+        "slug": "intelligems",
+        "confidence": null
+      },
+      {
+        "slug": "redo",
+        "confidence": null
+      },
+      {
+        "slug": "amp-back-in-stock",
+        "confidence": null
+      },
+      {
+        "slug": "automizely-messages",
+        "confidence": null
+      }
+    ],
+    "pixels": [
+      "triplewhale"
+    ],
+    "currency": "USD",
+    "tranco_rank": null,
+    "detected_at": "2026-11-17T09:20:18.425Z",
+    "source": "storepeek scan 2026-11-17 (pre-v7 rules)"
+  }
+]

@@ -1,0 +1,862 @@
+[
+  {
+    "slug": "algolia-search",
+    "app_store_handle": "algolia-search",
+    "name": "Algolia AI Search & Discovery",
+    "developer": "Algolia",
+    "category": "Search & Merchandising",
+    "tagline": "Drive higher conversions and shopper engagement at scale",
+    "rating": 3.7,
+    "reviews": 45,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/df5eea6375c938fb30ff095238fd154e/icon/CLmzsKjGjfsCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/algolia-search",
+    "scan": {
+      "stores": 4
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "alireviews",
+    "app_store_handle": "ali-reviews",
+    "name": "Ali Reviews: AI Product Review",
+    "developer": "FireApps",
+    "category": "Reviews",
+    "tagline": "Product reviews importer - Boost dropshipping sales w/ reviews",
+    "rating": 4.8,
+    "reviews": 1438,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/1ff5e1954776a87c29b55388172a662f/icon/CN-n0K7RtI4DEAE=.png",
+    "app_store_url": "https://apps.shopify.com/ali-reviews",
+    "scan": {
+      "stores": 3
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "amp-back-in-stock",
+    "app_store_handle": null,
+    "name": "AMP Back in Stock",
+    "developer": "AMP",
+    "category": "Wishlist & Back in Stock",
+    "tagline": "Back-in-stock and restock alerts.",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://useamp.com/",
+    "scan": {
+      "stores": 34
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "black-crow-ai",
+    "app_store_handle": null,
+    "name": "Black Crow AI",
+    "developer": "Black Crow",
+    "category": "Testing & Personalization",
+    "tagline": "Predictive AI for audiences and onsite conversion.",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://www.blackcrow.ai/",
+    "scan": {
+      "stores": 9
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "bold-subscriptions",
+    "app_store_handle": "bold-subscriptions",
+    "name": "Bold Subscriptions App",
+    "developer": "Bold",
+    "category": "Subscriptions",
+    "tagline": "Maximize Subscriptions Sales and Sell More to Every Subscriber",
+    "rating": 4.0,
+    "reviews": 379,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/ce6794be6752d5cccc7cc432f7deafc7/icon/CK_7qejTuPsCEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/bold-subscriptions",
+    "scan": {
+      "stores": 9
+    },
+    "affiliate": {
+      "url": "https://platform.shoffi.app/r/rl_JfghhMac",
+      "program": "Shoffi"
+    }
+  },
+  {
+    "slug": "boldupsell",
+    "app_store_handle": "product-upsell",
+    "name": "Bold AI Upsell & Cross‑Sell",
+    "developer": "Bold",
+    "category": "Upsell & Bundles",
+    "tagline": "Boost AOV w/ Checkout Upsells and Post Purchase Upsell Funnels",
+    "rating": 4.4,
+    "reviews": 598,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/ad48625f75f509b7fec5de894a62d003/icon/CMm2js3guPsCEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/product-upsell",
+    "scan": {
+      "stores": 9
+    },
+    "affiliate": {
+      "url": "https://platform.shoffi.app/r/rl_bf0f8fI3",
+      "program": "Shoffi"
+    }
+  },
+  {
+    "slug": "bundle-deals",
+    "app_store_handle": "bundle-deals",
+    "name": "Kaching Bundles App & Upsells",
+    "developer": "Kaching Bundles & Upsells",
+    "category": "Upsell & Bundles",
+    "tagline": "Boost AOV with quantity breaks, product bundles & upsell app",
+    "rating": 5.0,
+    "reviews": 6758,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/74f3a88ca9004748ce9210ea2cda82ca/icon/CMKZ_Z_RoowDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/bundle-deals",
+    "scan": {
+      "stores": 14
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "cowlendar",
+    "app_store_handle": "cowlendar",
+    "name": "Appointment Booking Cowlendar",
+    "developer": "Booking Appointment Cowlendar",
+    "category": "Store Design",
+    "tagline": "Booking app for appointments, rentals, events & booking forms.",
+    "rating": 4.9,
+    "reviews": 2269,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/e297c43d07c087a231c656afcdca283f/icon/CMnisvit1pADEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/cowlendar",
+    "scan": {
+      "stores": 2
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "custom-options",
+    "app_store_handle": "custom-options",
+    "name": "Infinite Options",
+    "developer": "ShopPad Inc.",
+    "category": "Product Options & Sizing",
+    "tagline": "Custom product options, variant options, product bundles +more",
+    "rating": 4.7,
+    "reviews": 2637,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/52dd8791d661a97a8215f93347889de6/icon/CNGpqrO6r5YDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/custom-options",
+    "scan": {
+      "stores": 13
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "customer-support",
+    "app_store_handle": "customer-support",
+    "name": "Richpanel: AI Customer Support",
+    "developer": "Richpanel Inc",
+    "category": "Chat & Support",
+    "tagline": "Most loved Customer Service & Ticketing App for Shopify…",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://apps.shopify.com/customer-support",
+    "scan": {
+      "stores": 6
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "easylocation",
+    "app_store_handle": "search",
+    "name": "Search results for \"\" – Ecommerce Plugins for Online Stores – Shopify App Store",
+    "developer": "EasyLocation",
+    "category": "Currency & Translation",
+    "tagline": "Redirects visitors to the right country store.",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://apps.shopify.com/search",
+    "scan": {
+      "stores": 9
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "edgetag",
+    "app_store_handle": "edgetag",
+    "name": "Blotout EdgeTag",
+    "developer": "Blotout",
+    "category": "Analytics",
+    "tagline": "Increase re-marketing audiences real time on all your channels",
+    "rating": 4.7,
+    "reviews": 26,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/2d271308bcb2be468da3ebf694b73e07/icon/CLmmrunQsZYDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/edgetag",
+    "scan": {
+      "stores": 4
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "essential-countdown-timer",
+    "app_store_handle": "essential-countdown-timer",
+    "name": "Essential Countdown Timer Bar",
+    "developer": "Essential Apps",
+    "category": "Popups & Social Proof",
+    "tagline": "Boost BFCM Flash Sales Urgency with Sales Countdown Timer Bar.",
+    "rating": 5.0,
+    "reviews": 1737,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/f84bf9e49eca8bd84c2af7488461363b/icon/CPzKxLTD4_UCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/essential-countdown-timer",
+    "scan": {
+      "stores": 17
+    },
+    "affiliate": {
+      "url": "https://platform.shoffi.app/r/rl_eWyvvRYV",
+      "program": "Shoffi"
+    }
+  },
+  {
+    "slug": "event-promotion-bar",
+    "app_store_handle": "event-promotion-bar",
+    "name": "Hextom: Countdown Timer Bar",
+    "developer": "Hextom",
+    "category": "Popups & Social Proof",
+    "tagline": "Show sale deadlines with scheduled countdown timers",
+    "rating": 4.9,
+    "reviews": 762,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/904be13e4bba460880341eba1a5579e1/icon/CKCYtc2d5oYDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/event-promotion-bar",
+    "scan": {
+      "stores": 4
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "ez-terms-and-conditions-checkbox",
+    "app_store_handle": "ez-terms-and-conditions-checkbox",
+    "name": "R Terms and Condition Checkbox",
+    "developer": "Relentless Apps",
+    "category": "Privacy & Security",
+    "tagline": "Terms and conditions checkbox checkout rules, age verification",
+    "rating": 5.0,
+    "reviews": 207,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/6fbcd0307f83631cb484dc9ba12caa6f/icon/CL3ry7nkrvwCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/ez-terms-and-conditions-checkbox",
+    "scan": {
+      "stores": 3
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "fast-product-colors",
+    "app_store_handle": "fast-product-colors",
+    "name": "Platmart Color Swatches",
+    "developer": "Platmart",
+    "category": "Store Design",
+    "tagline": "Group products with swatches as combined listings",
+    "rating": 5.0,
+    "reviews": 146,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/6be806dc21880584226841ac7ea64ef9/icon/CMDphr6OqJADEAE=.png",
+    "app_store_url": "https://apps.shopify.com/fast-product-colors",
+    "scan": {
+      "stores": 7
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "fondue-cashback-promotions",
+    "app_store_handle": "fondue-cashback-promotions",
+    "name": "Fondue CashBack Promotions",
+    "developer": "Fondue Promotions",
+    "category": "Loyalty & Rewards",
+    "tagline": "Offer flexible post-purchase rewards that protect your margin.",
+    "rating": 5.0,
+    "reviews": 39,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/256c123483855bb15c70abb8ea8d97fb/icon/CP2P86CQ-Y4DEAE=.png",
+    "app_store_url": "https://apps.shopify.com/fondue-cashback-promotions",
+    "scan": {
+      "stores": 5
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "fontify-change-customize-font-for-your-store",
+    "app_store_handle": "fontify-change-customize-font-for-your-store",
+    "name": "Fontify: Google & Custom Fonts",
+    "developer": "Nitro Apps",
+    "category": "Store Design",
+    "tagline": "Change store fonts and typography on any theme, no code",
+    "rating": 4.9,
+    "reviews": 776,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/882f68aac7edf55a4ba456d5aae6e978/icon/CODFzd7v5pEDEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/fontify-change-customize-font-for-your-store",
+    "scan": {
+      "stores": 15
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "friendbuy-lite",
+    "app_store_handle": "friendbuy-lite",
+    "name": "Friendbuy: Referrals & Loyalty",
+    "developer": "Friendbuy, Inc",
+    "category": "Affiliate & Referral",
+    "tagline": "Referral and Loyalty Programs for Leading E-commerce Brands",
+    "rating": 4.9,
+    "reviews": 14,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/7b319f2b8a8aded0e793f68942cabf55/icon/CK_D8v_d3vwCEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/friendbuy-lite",
+    "scan": {
+      "stores": 4
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "giftnote",
+    "app_store_handle": "giftnote",
+    "name": "Giftnote: Gift Message & Cards",
+    "developer": "Giftnote",
+    "category": "Upsell & Bundles",
+    "tagline": "Gift messages sent on delivery, plus gift cards & bulk...",
+    "rating": 5.0,
+    "reviews": 185,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/aafcd2d7a7e2a91499a62e4892e0c051/icon/COnc9NTHsvsCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/giftnote",
+    "scan": {
+      "stores": 2
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "globo-color-swatches",
+    "app_store_handle": "globo-color-swatches",
+    "name": "GLO Color Swatch Variant Image",
+    "developer": "Globo Options",
+    "category": "Product Options & Sizing",
+    "tagline": "Increase conversions by showing product variants as swatches",
+    "rating": 4.9,
+    "reviews": 1922,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/9995b073cfe955d98eb8e9961e8dd7be/icon/CM-Kw8-05_4CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/globo-color-swatches",
+    "scan": {
+      "stores": 7
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "green-shipping-protection",
+    "app_store_handle": "green-shipping-protection",
+    "name": "Green Shipping Protection by Corso",
+    "developer": "Corso",
+    "category": "Shipping & Returns",
+    "tagline": "Shipping & Tracking",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://apps.shopify.com/green-shipping-protection",
+    "scan": {
+      "stores": 5
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "inveterate",
+    "app_store_handle": "inveterate",
+    "name": "Inveterate by Onward",
+    "developer": "Inveterate",
+    "category": "Subscriptions",
+    "tagline": "Reward brand loyalty with tiered membership programs",
+    "rating": 4.9,
+    "reviews": 12,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/69b939a17f3130869b45f8b73a30f23d/icon/CM_gwNXn3fcCEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/inveterate",
+    "scan": {
+      "stores": 2
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "justuno",
+    "app_store_handle": "justuno-pop-ups-email-conversion",
+    "name": "Pop‑Ups & Spotlight by Justuno",
+    "developer": "Justuno",
+    "category": "Email & SMS",
+    "tagline": "Combine AI Pop-ups & Spotlight Anonymous Visitor ID",
+    "rating": 4.6,
+    "reviews": 668,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/f68d217d1bd4ab41909557332d744d44/icon/CI_UvcCVzpYDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/justuno-pop-ups-email-conversion",
+    "scan": {
+      "stores": 7
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "monk-free-gift-with-purchase",
+    "app_store_handle": "monk-free-gift-with-purchase",
+    "name": "Monk Free Gift with Purchase",
+    "developer": "Monk Commerce",
+    "category": "Upsell & Bundles",
+    "tagline": "(Black Friday Offer) Free gift with purchase & BOGO for...",
+    "rating": 4.9,
+    "reviews": 616,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/31a67b74175808b89b146d03a5cd8580/icon/CJqht4TCl4kDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/monk-free-gift-with-purchase",
+    "scan": {
+      "stores": 3
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "mulwi-shopping-feeds",
+    "app_store_handle": "mulwi-shopping-feeds",
+    "name": "Mulwi | 200+ Shopping Feeds",
+    "developer": "Mirasvit Ecommerce Solutions",
+    "category": "Ads & Channels",
+    "tagline": "Product feeds for Google Shopping, Facebook, custom & more",
+    "rating": 5.0,
+    "reviews": 626,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/c9bd5ab35ded02cc1cd728ca2cf81581/icon/CLSt77Wm3oEDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/mulwi-shopping-feeds",
+    "scan": {
+      "stores": 2
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "navidium-shipping-protection",
+    "app_store_handle": "navidium-shipping-protection",
+    "name": "Navidium Shipping Protection",
+    "developer": "Navidium Apps",
+    "category": "Shipping & Returns",
+    "tagline": "Shipping protection/shipping insurance fee as a cart upsell",
+    "rating": 4.7,
+    "reviews": 404,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/ceb3cf4a79ead6d9b1b117d1b80533e1/icon/CNjSo-DfwJUDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/navidium-shipping-protection",
+    "scan": {
+      "stores": 2
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "nofraud",
+    "app_store_handle": null,
+    "name": "NoFraud",
+    "developer": "NoFraud",
+    "category": "Privacy & Security",
+    "tagline": "Fraud prevention and chargeback guarantee.",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://www.nofraud.com/",
+    "scan": {
+      "stores": 21
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "octane-ai-quiz-personalization",
+    "app_store_handle": "octane-ai-quiz-personalization",
+    "name": "Octane AI: Advanced Quiz Maker",
+    "developer": "Octane AI",
+    "category": "Email & SMS",
+    "tagline": "AI quiz maker and analytics for ecommerce brands",
+    "rating": 4.7,
+    "reviews": 210,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/660d02b21dc203afa3147b8a84d27cf3/icon/CPi6_-Sg3pADEAE=.png",
+    "app_store_url": "https://apps.shopify.com/octane-ai-quiz-personalization",
+    "scan": {
+      "stores": 9
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "order-limits-minmaxify",
+    "app_store_handle": "order-limits-minmaxify",
+    "name": "Minmaxify Order Limits",
+    "developer": "Intillium",
+    "category": "Cart & Checkout",
+    "tagline": "Set product and collection limits on your cart",
+    "rating": 4.8,
+    "reviews": 180,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/a04c143bd308483d7a0f055ee1be9d64/icon/CLjmhfDv2vACEAE=.png",
+    "app_store_url": "https://apps.shopify.com/order-limits-minmaxify",
+    "scan": {
+      "stores": 17
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "osano-cmp",
+    "app_store_handle": "osano-cmp",
+    "name": "Osano Cookie Consent",
+    "developer": "Osano",
+    "category": "Privacy & Security",
+    "tagline": "Get Simple Cookie Consent",
+    "rating": 0.0,
+    "reviews": null,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/0d5d2553bdd3e99d0cd2f24d718c73dc/icon/CIXOnKXaqYcDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/osano-cmp",
+    "scan": {
+      "stores": 6
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "polar-analytics",
+    "app_store_handle": "polar-analytics",
+    "name": "Polar:AI Platform for commerce",
+    "developer": "Polar Analytics",
+    "category": "Analytics",
+    "tagline": "Analytics that unify your data, track LTV, and grow revenue",
+    "rating": 4.9,
+    "reviews": 116,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/168e780c1bd063b97d507417cc056c89/icon/CKeDyNC1m4EDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/polar-analytics",
+    "scan": {
+      "stores": 7
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "postscript",
+    "app_store_handle": "postscript-sms-marketing",
+    "name": "Postscript SMS Marketing",
+    "developer": "Postscript",
+    "category": "Email & SMS",
+    "tagline": "AI-powered SMS, RCS & email that maximize every shopper’s LTV",
+    "rating": 4.7,
+    "reviews": 1205,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/54fb9eb4e59e94fa0e3b1b173de78ca4/icon/CPDanN66poUDEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/postscript-sms-marketing",
+    "scan": {
+      "stores": 12
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "product-upsell",
+    "app_store_handle": "product-upsell",
+    "name": "Bold AI Upsell & Cross‑Sell",
+    "developer": "Bold",
+    "category": "Upsell & Bundles",
+    "tagline": "Boost AOV w/ Checkout Upsells and Post Purchase Upsell Funnels",
+    "rating": 4.4,
+    "reviews": 598,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/ad48625f75f509b7fec5de894a62d003/icon/CMm2js3guPsCEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/product-upsell",
+    "scan": {
+      "stores": 11
+    },
+    "affiliate": {
+      "url": "https://platform.shoffi.app/r/rl_bf0f8fI3",
+      "program": "Shoffi"
+    }
+  },
+  {
+    "slug": "pusher-sections-builder",
+    "app_store_handle": "pusher-sections-builder",
+    "name": "Puco Sections: Theme Sections",
+    "developer": "Puco.io",
+    "category": "Store Design",
+    "tagline": "Build a high converting store with 200+ premium theme sections",
+    "rating": 5.0,
+    "reviews": 149,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/5a1479e431df4989c4aad0af02604271/icon/CPyokdXGq4UDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/pusher-sections-builder",
+    "scan": {
+      "stores": 2
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "pushowl",
+    "app_store_handle": "pushowl",
+    "name": "Brevo PushOwl: Email,Push,SMS",
+    "developer": "Brevo PushOwl",
+    "category": "Email & SMS",
+    "tagline": "Grow Sales via Email Marketing, PopUp, Push Notifications, SMS",
+    "rating": 4.8,
+    "reviews": 2321,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/62a4f829cd277d0296259f678226ae19/icon/CMTe68iT-5EDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/pushowl",
+    "scan": {
+      "stores": 16
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "rakuten-advertising",
+    "app_store_handle": null,
+    "name": "Rakuten Advertising",
+    "developer": "Rakuten",
+    "category": "Affiliate & Referral",
+    "tagline": "Affiliate network tracking tag.",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://rakutenadvertising.com/",
+    "scan": {
+      "stores": 11
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "retention-com",
+    "app_store_handle": null,
+    "name": "Retention.com",
+    "developer": "Retention.com",
+    "category": "Email & SMS",
+    "tagline": "Identity resolution for abandoned-cart email.",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://www.retention.com/",
+    "scan": {
+      "stores": 10
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "reviewsio",
+    "app_store_handle": "reviews-co-uk-product-and-merchant-review-collection",
+    "name": "REVIEWS.io Product Reviews",
+    "developer": "Reviews.io",
+    "category": "Reviews",
+    "tagline": "Reviews",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://apps.shopify.com/reviews-co-uk-product-and-merchant-review-collection",
+    "scan": {
+      "stores": 8
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "sc-product-options",
+    "app_store_handle": "product-options",
+    "name": "SC Product Options ",
+    "developer": "Shop Circle",
+    "category": "Product Options & Sizing",
+    "tagline": "Customize products with variants & color swatches to boost AOV",
+    "rating": 4.6,
+    "reviews": 1253,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/9a0bf1159f79c6ab0660ec422f350445/icon/CP2Uwo_GuYIDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/product-options",
+    "scan": {
+      "stores": 9
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "sealsubscriptions",
+    "app_store_handle": "seal-subscriptions",
+    "name": "Seal Subscriptions App",
+    "developer": "Seal Subscriptions",
+    "category": "Subscriptions",
+    "tagline": "Increase sales & retention with subscriptions & memberships!",
+    "rating": 4.9,
+    "reviews": 3175,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/2238eba39a98da1ae85cfb8a609b4cbe/icon/CPiyy56YvZMDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/seal-subscriptions",
+    "scan": {
+      "stores": 16
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "server-gtm",
+    "app_store_handle": "server-gtm",
+    "name": "Stape Conversion Tracking",
+    "developer": "Stape",
+    "category": "Analytics",
+    "tagline": "Maximize ROAS with server-side GTM conversion tracking",
+    "rating": 4.2,
+    "reviews": 44,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/6ad17d7651df903803b7a1c47669abb5/icon/CLOriKCLyv0CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/server-gtm",
+    "scan": {
+      "stores": 10
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "sezzle-widget",
+    "app_store_handle": "sezzle-widget",
+    "name": "Sezzle Widget",
+    "developer": "Sezzle",
+    "category": "Payments & BNPL",
+    "tagline": "Increase sales and average order value with Sezzle messaging.",
+    "rating": 3.0,
+    "reviews": 67,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/79c8c55261eca72ff7f439df15f626ee/icon/COSzlrL5yvcCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/sezzle-widget",
+    "scan": {
+      "stores": 11
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "shopmy",
+    "app_store_handle": null,
+    "name": "ShopMy Creator Affiliates",
+    "developer": "ShopMy",
+    "category": "Affiliate & Referral",
+    "tagline": "Creator and influencer affiliate platform.",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://shopmy.us/",
+    "scan": {
+      "stores": 28
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "social-snowball",
+    "app_store_handle": "social-snowball",
+    "name": "Snowball: Affiliate Marketing",
+    "developer": "Social Snowball",
+    "category": "Affiliate & Referral",
+    "tagline": "Scale your influencer, affiliate, and referral marketing",
+    "rating": 4.5,
+    "reviews": 212,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/072534c7bf6f4db65ce2b5d494ced571/icon/CMvo-sP0lu8CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/social-snowball",
+    "scan": {
+      "stores": 11
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "stamped",
+    "app_store_handle": "product-reviews-addon",
+    "name": "Stamped Product Reviews & UGC ",
+    "developer": "Stamped.io",
+    "category": "Reviews",
+    "tagline": "Build trust, drive acquisition and sales with customer reviews",
+    "rating": 4.7,
+    "reviews": 3754,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/00f756e9e94e8c3cfb14266ae483d0f0/icon/CN_Vw8LTppADEAE=.png",
+    "app_store_url": "https://apps.shopify.com/product-reviews-addon",
+    "scan": {
+      "stores": 11
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "tolstoy",
+    "app_store_handle": "tolstoy",
+    "name": "Tolstoy: Shoppable Video & UGC",
+    "developer": "Tolstoy",
+    "category": "Video & UGC",
+    "tagline": "Import once. Sell with video across your store and Shop...",
+    "rating": 4.6,
+    "reviews": 288,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/8bd7122773fa7246870cdd8376857423/icon/CMO26ZC3qIMDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/tolstoy",
+    "scan": {
+      "stores": 14
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "truevault-polaris",
+    "app_store_handle": null,
+    "name": "TrueVault Polaris",
+    "developer": "TrueVault",
+    "category": "Privacy & Security",
+    "tagline": "Privacy compliance (CCPA) and consent.",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://www.truevault.com/",
+    "scan": {
+      "stores": 3
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "uploadery",
+    "app_store_handle": "uploadery",
+    "name": "File Upload by Uploadery",
+    "developer": "ShopPad Inc.",
+    "category": "Product Options & Sizing",
+    "tagline": "Let customers upload images or upload files when ordering",
+    "rating": 4.6,
+    "reviews": 185,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/c16d594d80c7653ba7a1d1ee9670000b/icon/CIvRpe-szpYDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/uploadery",
+    "scan": {
+      "stores": 12
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "vitals",
+    "app_store_handle": "vitals",
+    "name": "Vitals: Reviews, Bundles & 40+",
+    "developer": "Vitals",
+    "category": "Upsell & Bundles",
+    "tagline": "Add reviews, bundles & 40+ marketing tools, all in one...",
+    "rating": 4.9,
+    "reviews": 2977,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/90600ebf22ca801b5fc543ad9b7553f0/icon/CPGxj-7H6IcDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/vitals",
+    "scan": {
+      "stores": 13
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "volume-discounts-dealeasy",
+    "app_store_handle": "volume-discounts-dealeasy",
+    "name": "Dealeasy: Volume Discounts App",
+    "developer": "Logbase",
+    "category": "Upsell & Bundles",
+    "tagline": "Run Quantity Discounts, Tiered Pricing & Buy One Get One...",
+    "rating": 4.9,
+    "reviews": 653,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/03e2757162e7829527df06c44cf0dfbc/icon/COP94o_zlYADEAE=.png",
+    "app_store_url": "https://apps.shopify.com/volume-discounts-dealeasy",
+    "scan": {
+      "stores": 8
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "wholesale-gorilla",
+    "app_store_handle": "wholesale-gorilla",
+    "name": "Wholesale Gorilla B2B Tools",
+    "developer": "Wholesale Gorilla",
+    "category": "Cart & Checkout",
+    "tagline": "B2B Wholesale suite for your store. Grow your B2B revenue...",
+    "rating": 4.8,
+    "reviews": 320,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/326d3092e8c11d3e7b0e1d64c91fa653/icon/COPi36_3mv0CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/wholesale-gorilla",
+    "scan": {
+      "stores": 5
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "zendesk",
+    "app_store_handle": "zendesk",
+    "name": "Zendesk",
+    "developer": "Zendesk",
+    "category": "Chat & Support",
+    "tagline": "Omnichannel customer service and engagement platform",
+    "rating": 3.2,
+    "reviews": 96,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/d315fe70bcb98753afbe6aed7a9bffcd/icon/CLHzxd_0lu8CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/zendesk",
+    "scan": {
+      "stores": 7
+    },
+    "affiliate": null
+  }
+]

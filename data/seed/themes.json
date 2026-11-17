@@ -1,0 +1,264 @@
+[
+  {
+    "slug": "dawn",
+    "name": "Dawn",
+    "vendor": "Shopify",
+    "theme_store_id": 887,
+    "price": "Free",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/dawn",
+    "affiliate": null,
+    "scan": {
+      "stores": 20
+    }
+  },
+  {
+    "slug": "horizon",
+    "name": "Horizon",
+    "vendor": "Shopify",
+    "theme_store_id": 2481,
+    "price": "Free",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/horizon",
+    "affiliate": null,
+    "scan": {
+      "stores": 14
+    }
+  },
+  {
+    "slug": "prestige",
+    "name": "Prestige",
+    "vendor": "Maestrooo",
+    "theme_store_id": 855,
+    "price": "$400",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/prestige",
+    "affiliate": null,
+    "scan": {
+      "stores": 13
+    }
+  },
+  {
+    "slug": "broadcast",
+    "name": "Broadcast",
+    "vendor": "Presidio",
+    "theme_store_id": 868,
+    "price": "$420",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/broadcast",
+    "affiliate": null,
+    "scan": {
+      "stores": 10
+    }
+  },
+  {
+    "slug": "concept",
+    "name": "Concept",
+    "vendor": "RoarTheme",
+    "theme_store_id": 2412,
+    "price": "$400",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/concept",
+    "affiliate": null,
+    "scan": {
+      "stores": 9
+    }
+  },
+  {
+    "slug": "hyper",
+    "name": "Hyper",
+    "vendor": "FoxEcom",
+    "theme_store_id": 3247,
+    "price": "$400",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/hyper",
+    "affiliate": {
+      "url": "https://themes.shopify.com/themes/hyper/presets/hyper?utm_source=storepeek&utm_campaign=17525446&utm_medium=affiliate"
+    },
+    "scan": {
+      "stores": 8
+    }
+  },
+  {
+    "slug": "impact",
+    "name": "Impact",
+    "vendor": "Maestrooo",
+    "theme_store_id": 1190,
+    "price": "$400",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/impact",
+    "affiliate": null,
+    "scan": {
+      "stores": 8
+    }
+  },
+  {
+    "slug": "impulse",
+    "name": "Impulse",
+    "vendor": "Archetype Themes",
+    "theme_store_id": 857,
+    "price": "$500",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/impulse",
+    "affiliate": null,
+    "scan": {
+      "stores": 8
+    }
+  },
+  {
+    "slug": "flow",
+    "name": "Flow",
+    "vendor": "Eight Themes",
+    "theme_store_id": 801,
+    "price": "$320",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/flow",
+    "affiliate": null,
+    "scan": {
+      "stores": 7
+    }
+  },
+  {
+    "slug": "symmetry",
+    "name": "Symmetry",
+    "vendor": "Clean Canvas",
+    "theme_store_id": 568,
+    "price": "$420",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/symmetry",
+    "affiliate": null,
+    "scan": {
+      "stores": 7
+    }
+  },
+  {
+    "slug": "be-yours",
+    "name": "Be Yours",
+    "vendor": "RoarTheme",
+    "theme_store_id": 1399,
+    "price": "$380",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/be-yours",
+    "affiliate": null,
+    "scan": {
+      "stores": 6
+    }
+  },
+  {
+    "slug": "blockshop",
+    "name": "Blockshop",
+    "vendor": "Troop Themes",
+    "theme_store_id": 606,
+    "price": "$420",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/blockshop",
+    "affiliate": null,
+    "scan": {
+      "stores": 6
+    }
+  },
+  {
+    "slug": "enterprise",
+    "name": "Enterprise",
+    "vendor": "Clean Canvas",
+    "theme_store_id": 1657,
+    "price": "$420",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/enterprise",
+    "affiliate": null,
+    "scan": {
+      "stores": 6
+    }
+  },
+  {
+    "slug": "shapes",
+    "name": "Shapes",
+    "vendor": "Switch",
+    "theme_store_id": 1535,
+    "price": "$420",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/shapes",
+    "affiliate": null,
+    "scan": {
+      "stores": 6
+    }
+  },
+  {
+    "slug": "stretch",
+    "name": "Stretch",
+    "vendor": "Maestrooo",
+    "theme_store_id": 1765,
+    "price": "$400",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/stretch",
+    "affiliate": null,
+    "scan": {
+      "stores": 6
+    }
+  },
+  {
+    "slug": "athens",
+    "name": "Athens",
+    "vendor": "Truly Fine Pixels",
+    "theme_store_id": 1608,
+    "price": "$320",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/athens",
+    "affiliate": null,
+    "scan": {
+      "stores": 5
+    }
+  },
+  {
+    "slug": "atlantic",
+    "name": "Atlantic",
+    "vendor": "Pixel Union",
+    "theme_store_id": 566,
+    "price": "$300",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/atlantic",
+    "affiliate": null,
+    "scan": {
+      "stores": 5
+    }
+  },
+  {
+    "slug": "barcelona",
+    "name": "Barcelona",
+    "vendor": "Apparent Collective",
+    "theme_store_id": 2324,
+    "price": "$380",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/barcelona",
+    "affiliate": null,
+    "scan": {
+      "stores": 5
+    }
+  },
+  {
+    "slug": "berlin",
+    "name": "Berlin",
+    "vendor": "Apparent Collective",
+    "theme_store_id": 2138,
+    "price": "$380",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/berlin",
+    "affiliate": null,
+    "scan": {
+      "stores": 5
+    }
+  },
+  {
+    "slug": "bespoke",
+    "name": "Bespoke",
+    "vendor": "Red Plug Design Co.",
+    "theme_store_id": 2732,
+    "price": "$100",
+    "marketplace": "Shopify Theme Store",
+    "official_url": "https://themes.shopify.com/themes/bespoke",
+    "affiliate": null,
+    "scan": {
+      "stores": 5
+    }
+  }
+]

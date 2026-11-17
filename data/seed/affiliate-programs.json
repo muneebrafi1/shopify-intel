@@ -1,0 +1,197 @@
+[
+  {
+    "program": "Gorgias",
+    "network": "PartnerStack",
+    "status": "approved"
+  },
+  {
+    "program": "Yotpo",
+    "network": "Impact",
+    "status": "not-submitted"
+  },
+  {
+    "program": "Omnisend",
+    "network": "Impact",
+    "status": "not-submitted"
+  },
+  {
+    "program": "Loox",
+    "network": "own",
+    "status": "pending"
+  },
+  {
+    "program": "Okendo",
+    "network": "own",
+    "status": "no-public-program"
+  },
+  {
+    "program": "PageFly",
+    "network": "own",
+    "status": "pending"
+  },
+  {
+    "program": "Tidio",
+    "network": "PartnerStack",
+    "status": "not-available"
+  },
+  {
+    "program": "Privy",
+    "network": "PartnerStack",
+    "status": "not-available"
+  },
+  {
+    "program": "PushOwl/Brevo",
+    "network": "PartnerStack",
+    "status": "on-hold"
+  },
+  {
+    "program": "Postscript",
+    "network": "PartnerStack",
+    "status": "on-hold"
+  },
+  {
+    "program": "Stamped",
+    "network": "PartnerStack",
+    "status": "on-hold"
+  },
+  {
+    "program": "Pixel Union",
+    "network": "PartnerStack",
+    "status": "pending"
+  },
+  {
+    "program": "PartnerStack Network",
+    "network": "PartnerStack",
+    "status": "pending"
+  },
+  {
+    "program": "Smile.io",
+    "network": "own",
+    "status": "no-public-program"
+  },
+  {
+    "program": "Recharge",
+    "network": "own",
+    "status": "no-public-program"
+  },
+  {
+    "program": "Rebuy",
+    "network": "own",
+    "status": "blocked"
+  },
+  {
+    "program": "Vitals",
+    "network": "own",
+    "status": "pending"
+  },
+  {
+    "program": "AfterShip",
+    "network": "own",
+    "status": "pending"
+  },
+  {
+    "program": "HulkApps (Shop Circle)",
+    "network": "own",
+    "status": "pending"
+  },
+  {
+    "program": "Avada",
+    "network": "own",
+    "status": "pending"
+  },
+  {
+    "program": "Appstle",
+    "network": "FirstPromoter",
+    "status": "approved"
+  },
+  {
+    "program": "Secomapp",
+    "network": "own",
+    "status": "blocked"
+  },
+  {
+    "program": "Kaching Bundles",
+    "network": "own",
+    "status": "pending"
+  },
+  {
+    "program": "Fast Bundle",
+    "network": "HubSpot form",
+    "status": "not-applied"
+  },
+  {
+    "program": "FoxEcom",
+    "network": "own",
+    "status": "approved"
+  },
+  {
+    "program": "Judge.me",
+    "network": "none",
+    "status": "no-public-program"
+  },
+  {
+    "program": "Shoffi (35 connected)",
+    "network": "Shoffi",
+    "status": "approved"
+  },
+  {
+    "program": "Envato Elements",
+    "network": "Impact",
+    "status": "blocked"
+  },
+  {
+    "program": "Krown Themes",
+    "network": "own",
+    "status": "not-eligible"
+  },
+  {
+    "program": "Fluorescent",
+    "network": "Typeform",
+    "status": "pending"
+  },
+  {
+    "program": "TemplateMonster",
+    "network": "own",
+    "status": "signed-up"
+  },
+  {
+    "program": "Booster Theme",
+    "network": "Tapfiliate",
+    "status": "approved"
+  },
+  {
+    "program": "Shrine",
+    "network": "own",
+    "status": "pending"
+  },
+  {
+    "program": "Out of the Sandbox/Archetype/Clean Canvas",
+    "network": "PartnerStack (Pixel Union)",
+    "status": "pending"
+  },
+  {
+    "program": "The4 (Kalles)",
+    "network": "UpPromote",
+    "status": "not-submitted"
+  },
+  {
+    "program": "Replo",
+    "network": "own",
+    "status": "not-applied"
+  },
+  {
+    "program": "Shogun",
+    "network": "own",
+    "status": "no-program"
+  },
+  {
+    "program": "GemPages",
+    "network": "own",
+    "status": "not-found"
+  },
+  {
+    "program": "EcomSolid",
+    "network": "own",
+    "status": "unreachable"
+  }
+]

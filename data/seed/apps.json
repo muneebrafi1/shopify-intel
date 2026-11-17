@@ -1,0 +1,5215 @@
+[
+  {
+    "slug": "klaviyo",
+    "app_store_handle": "klaviyo-email-marketing",
+    "name": "Klaviyo: Email Marketing & SMS",
+    "developer": "Klaviyo",
+    "category": "Email & SMS",
+    "tagline": "Email marketing, SMS, & WhatsApp that turn messages into sales",
+    "rating": 4.7,
+    "reviews": 3450,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/5edd9000b933a8fa88c152d1e498531f/icon/CP6B2OOv3PYCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/klaviyo-email-marketing",
+    "launched": "September 20, 2012",
+    "built_for_shopify": false,
+    "app_store_category": "Email marketing",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free to install",
+        "features": [
+          "Set up directly in Shopify Admin",
+          "One place for forms, emails, and flows",
+          "Up to 250 active profiles",
+          "Up to 500 emails/month",
+          "Built-in dashboard & reporting",
+          "AI-assisted, on-brand content",
+          "Guided onboarding setup",
+          "Seamless migration to full platform"
+        ]
+      },
+      {
+        "name": "SMS",
+        "price": "$15",
+        "period": "month",
+        "features": [
+          "Multi-channel segmentation and flows",
+          "Smart opt-in & multi-channel list growth",
+          "SMS AI for campaign creation",
+          "Automated two-way conversations",
+          "Transactional SMS",
+          "Branded SMS links",
+          "Multi-channel A/B testing",
+          "Customizable multi-channel attribution"
+        ]
+      },
+      {
+        "name": "Email",
+        "price": "$20",
+        "period": "month",
+        "features": [
+          "Multi-channel segmentation and flows",
+          "Personalized product recommendations",
+          "Reputation repair AI for deliverability",
+          "Email AI for campaign creation",
+          "Send time optimization",
+          "Predictive analytics",
+          "Multi-channel A/B testing",
+          "160+ campaign templates"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 15.0,
+    "trial_days": null,
+    "features": [
+      "Unify and activate real-time data from Shopify and 350+ apps across the journey",
+      "Use Composer to build launch-ready, on-brand marketing campaigns across channels",
+      "Create AI-powered segments and flow triggers using historical and real-time data",
+      "Drive conversions with personalized email, SMS, WhatsApp, mobile push & pop-ups",
+      "Turn service moments into shopping moments with Customer Hub and Customer Agent"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Aftership",
+      "Gorgias",
+      "Meta Advertising",
+      "Recharge",
+      "TikTok Advertising",
+      "Typeform"
+    ],
+    "languages": [
+      "English",
+      "French",
+      "Spanish",
+      "German",
+      "Portuguese (Brazil)",
+      "Korean",
+      "Italian",
+      "Polish",
+      "Swedish",
+      "Dutch",
+      "Japanese"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 383,
+      "pct_of_scanned": 41.18,
+      "co_installed": [
+        "judgeme",
+        "instafeed",
+        "helpdesk",
+        "yotpo",
+        "rebuy",
+        "okendo-reviews",
+        "intelligems",
+        "redo"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "judgeme",
+    "app_store_handle": "judgeme",
+    "name": "Judge.me Product Reviews App",
+    "developer": "Judge.me",
+    "category": "Reviews",
+    "tagline": "Collect unlimited product reviews, star ratings, testimonials",
+    "rating": 5.0,
+    "reviews": 50275,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/8cada0f5da411a64e756606bb036f1ed/icon/CIfp9fWd34sDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/judgeme",
+    "launched": "June 25, 2015",
+    "built_for_shopify": true,
+    "app_store_category": "Product reviews",
+    "plans": [
+      {
+        "name": "Forever Free",
+        "price": "Free",
+        "features": [
+          "Unlimited product and store reviews",
+          "Unlimited visual reviews (photos/videos)",
+          "Review widget & star rating badge",
+          "Carousels (Video, Cards, Testimonials)",
+          "Google reviews sync & rich snippets",
+          "Trust badge and medals",
+          "Sync with Shop App, Etsy, Amazon",
+          "Reviews importer & AliExpress sync"
+        ]
+      },
+      {
+        "name": "Awesome",
+        "price": "$15",
+        "period": "month",
+        "trial_days": 15,
+        "features": [
+          "AI (replies, summary, translations)",
+          "130+ integrations, inc. Klaviyo, Gorgias",
+          "16 widgets (Snippets, Q&A, Reviews Page)",
+          "Advanced collection (auto-reminder, etc)",
+          "Coupons & Referrals",
+          "Google Shopping",
+          "Meta & TikTokShop sync, SocialMedia push",
+          "Customize widgets and email design, CSS"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 15.0,
+    "trial_days": 15,
+    "features": [
+      "Collect and manage unlimited reviews, photos, videos, testimonials, ratings",
+      "Display eye-catching review widgets, testimonial sliders and product ratings",
+      "Send coupons and referrals to drive more reviews and repeat sales",
+      "Syndicate reviews to Google, Meta & Shop App. Share on Facebook/Instagram/X",
+      "Import reviews from Yotpo, Loox, Amazon, Etsy & other platforms"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Flow",
+      "Shopify Admin",
+      "AfterShip: Order Tracking",
+      "Gorgias: Chat/Support",
+      "Klaviyo: Email Marketing",
+      "LoyaltyLion: Loyalty & Rewards",
+      "PageFly Landing Page Builder",
+      "PushOwl: Push Notifications"
+    ],
+    "languages": [
+      "English",
+      "Spanish",
+      "French",
+      "Italian",
+      "Portuguese (Brazil)",
+      "German",
+      "Dutch",
+      "Japanese",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)",
+      "Turkish",
+      "Polish",
+      "Swedish",
+      "Danish",
+      "Romanian"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 221,
+      "pct_of_scanned": 23.76,
+      "co_installed": [
+        "klaviyo",
+        "instafeed",
+        "shopify-forms",
+        "goaffpro",
+        "omnise",
+        "smile-io",
+        "mailchimp",
+        "omnisend"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "instafeed",
+    "app_store_handle": "instafeed",
+    "name": "Instafeed ‑ Instagram Feed",
+    "developer": "Mintt Studio",
+    "category": "Video & UGC",
+    "tagline": "Display Instagram feeds, Reels & Insta UGC as shoppable videos",
+    "rating": 4.9,
+    "reviews": 2300,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/ff3b61a8718cbdeb80d3a8dcf0b25014/icon/CMuQhfjG05EDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/instafeed",
+    "launched": "September 30, 2016",
+    "built_for_shopify": true,
+    "app_store_category": "Social proof",
+    "plans": [
+      {
+        "name": "Starter",
+        "price": "Free",
+        "features": [
+          "Fully responsive grid or slider layout",
+          "Instagram Reels & photo posts",
+          "Customize pop-ups",
+          "Unlimited views",
+          "No branding or watermarks",
+          "Hourly auto-sync",
+          "For all devices & themes",
+          "API access"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$8",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Tag products & collections",
+          "Shop now & add to cart buttons",
+          "Instagram Stories & carousel posts",
+          "Product reviews & prices",
+          "Up to 3 different feeds",
+          "SEO & AI discoverability",
+          "Embed feed in marketing emails",
+          "7-day free trial"
+        ]
+      },
+      {
+        "name": "Plus",
+        "price": "$20",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Auto-tag products",
+          "Product & collection feeds",
+          "UGC - Instagram tagged posts",
+          "Custom media uploads",
+          "Hide, pin, reorder & filter by hashtags",
+          "Performance analytics",
+          "Unlimited feeds",
+          "Shoppable videos on the Shop app"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 8.0,
+    "trial_days": 7,
+    "features": [
+      "Display Instagram Reels, posts, videos & UGC in auto-syncing feeds",
+      "Create shoppable feeds with product & collection tagging",
+      "Auto-tag products and enable shop now or add to cart from Instagram posts",
+      "Grid or slider layouts optimized for all devices",
+      "Upload, pin, hide & reorder posts for full feed control"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Admin",
+      "Facebook",
+      "GemPages",
+      "Instagram",
+      "Judge.me",
+      "Loox",
+      "Shop App"
+    ],
+    "languages": [
+      "English",
+      "Spanish",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Japanese",
+      "French",
+      "German",
+      "Italian",
+      "Swedish",
+      "Danish",
+      "Dutch",
+      "Norwegian (Bokmål)",
+      "Chinese (Simplified)",
+      "Korean",
+      "Turkish"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 157,
+      "pct_of_scanned": 16.88,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "shopify-forms",
+        "mailchimp",
+        "yotpo",
+        "helpdesk",
+        "loox",
+        "smile-io"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "shopify-forms",
+    "app_store_handle": "shopify-forms",
+    "name": "Shopify Forms",
+    "developer": "Shopify",
+    "category": "Email & SMS",
+    "tagline": "Capture customer information to grow your marketing list",
+    "rating": 4.5,
+    "reviews": 774,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/4f9f6772986151b160e59ae5d34ba8dd/icon/CObsj-qpiYADEAE=.png",
+    "app_store_url": "https://apps.shopify.com/shopify-forms",
+    "launched": "November 1, 2022",
+    "built_for_shopify": false,
+    "app_store_category": "Email marketing",
+    "plans": null,
+    "free_plan": true,
+    "from_price": 0,
+    "trial_days": null,
+    "features": [
+      "Add pop-ups and inline forms to capture leads, and tag new customers",
+      "Customize forms with text, images, metafields, discounts, and triggers",
+      "Translate forms in-app to align with localized store content",
+      "Boost conversions among 200M+ Shop users, automatically",
+      "Store, segment, and leverage customer data—all within a secure platform"
+    ],
+    "works_with": [
+      "Shopify Admin",
+      "Shopify Email"
+    ],
+    "languages": [
+      "English",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)",
+      "Czech",
+      "Danish",
+      "Dutch",
+      "Finnish",
+      "French",
+      "German",
+      "Italian",
+      "Japanese",
+      "Korean",
+      "Norwegian",
+      "Polish",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Spanish",
+      "Swedish",
+      "Thai",
+      "Turkish",
+      "Vietnamese"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 96,
+      "pct_of_scanned": 10.32,
+      "co_installed": [
+        "judgeme",
+        "klaviyo",
+        "instafeed",
+        "mailchimp",
+        "yotpo",
+        "goaffpro",
+        "omnisend",
+        "omnise"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "mailchimp",
+    "app_store_handle": "mailchimp",
+    "name": "Mailchimp Email SMS Marketing",
+    "developer": "Intuit Mailchimp",
+    "category": "Email & SMS",
+    "tagline": "Drive sales with email marketing, SMS, forms, and automation",
+    "rating": 4.8,
+    "reviews": 1585,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/5a5385cf8a756c3fc55c4fb80706f9f6/icon/CLa98_yf6PMCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/mailchimp",
+    "launched": "November 28, 2018",
+    "built_for_shopify": false,
+    "app_store_category": "Email marketing",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "Email",
+          "Marketing CRM",
+          "Creative Assistant",
+          "Sign Up Forms",
+          "Landing Pages",
+          "Social posting",
+          "Surveys",
+          "Reports"
+        ]
+      },
+      {
+        "name": "Essentials",
+        "price": "$13",
+        "period": "month",
+        "features": [
+          "Everything in Free, plus",
+          "Email Templates",
+          "Marketing Automation - Up to 4",
+          "24/7 Email/Chat Support",
+          "SMS is available as an add-on",
+          "Pricing based on number of contacts.",
+          "<div"
+        ]
+      },
+      {
+        "name": "Standard",
+        "price": "$20",
+        "period": "month",
+        "features": [
+          "Everything in Essentials, plus",
+          "Marketing Automation - Up to 200",
+          "Send Time Optimization",
+          "Behavioral Targeting",
+          "Pricing based on number of contacts.",
+          "<div"
+        ]
+      },
+      {
+        "name": "Premium",
+        "price": "$350",
+        "period": "month",
+        "features": [
+          "Everything in Standard, plus",
+          "Advanced Segmentation",
+          "Multivariate Testing",
+          "Unlimited Seats & Role-Based Access",
+          "Phone Support",
+          "Unlimited contact",
+          "Pricing based on number of contacts.",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 13.0,
+    "trial_days": null,
+    "features": [
+      "Automate welcome, abandoned cart, and back-in-stock emails to boost conversions",
+      "Sync  your Shopify store’s segments to personalize email and SMS campaigns",
+      "Drive sales with automated single-use codes, SMS discounts, and pop-up forms",
+      "Turn Shopify customer events into personalized segments for smarter targeting",
+      "Track attributed revenue in Shopify to measure campaign performance and ROI"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Flow",
+      "Shopify Admin",
+      "2048 Variants",
+      "judge.me",
+      "QuickBooks Online",
+      "Smile.io",
+      "Yotpo"
+    ],
+    "languages": [
+      "English",
+      "Spanish",
+      "French",
+      "German",
+      "Portuguese (Brazil)"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 77,
+      "pct_of_scanned": 8.28,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "instafeed",
+        "shopify-forms",
+        "powr-popup",
+        "form-builder-contact-form",
+        "free-shipping-bar",
+        "loox"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "yotpo",
+    "app_store_handle": "yotpo-social-reviews",
+    "name": "Yotpo: Product Reviews App",
+    "developer": "Yotpo",
+    "category": "Reviews",
+    "tagline": "Build trust and boost revenue with product reviews & UGC",
+    "rating": 4.8,
+    "reviews": 4620,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/659062da3dcade1068da9e28c3d120c5/icon/CIzTtYS0i4cDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/yotpo-social-reviews",
+    "launched": "November 15, 2011",
+    "built_for_shopify": false,
+    "app_store_category": "Product reviews",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "Up to 50 Monthly Orders",
+          "Automatic Review Requests",
+          "Email Templates Library",
+          "Sentiment and Profanity Check",
+          "Display Reviews On-Site",
+          "AI Chat Support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Starter",
+        "price": "$15",
+        "period": "month",
+        "features": [
+          "Pricing changes based on order volume",
+          "Collect Photos/Video",
+          "Google Rich Snippets",
+          "Google Shopping Ads",
+          "Reviews Carousel",
+          "AI Chat Support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$119",
+        "period": "month",
+        "features": [
+          "Pricing changes based on order volume",
+          "Google Seller Rating",
+          "Custom Questions",
+          "AI Reviews Summary",
+          "Smart Sorting",
+          "AI Chat Support",
+          "Technical Support via Email",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 15.0,
+    "trial_days": null,
+    "features": [
+      "Collect product & site reviews on auto-pilot with email templates.",
+      "Display eye-catching reviews and use Smart Filters to build trust",
+      "Stand out in search with Google Seller Ratings and Google Shoppable Ads",
+      "Add beautiful, customizable review widgets (carousels, AI summaries, & more)",
+      "Easily sync reviews to and from other platforms (TikTok, Walmart, & more)"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Facebook",
+      "Google",
+      "Instagram",
+      "Klaviyo",
+      "pagefly"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 77,
+      "pct_of_scanned": 8.28,
+      "co_installed": [
+        "klaviyo",
+        "swell",
+        "helpdesk",
+        "attentive",
+        "instafeed",
+        "shopmy",
+        "rebuy",
+        "onetrust"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "helpdesk",
+    "app_store_handle": "helpdesk",
+    "name": "Gorgias: AI Helpdesk & Chat",
+    "developer": "Gorgias Inc.",
+    "category": "Chat & Support",
+    "tagline": "Save time with AI customer support and live chat.",
+    "rating": 4.3,
+    "reviews": 709,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/d783d0d0ded4ab7a13c20f47533819a3/icon/CNOe1Y-4vocDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/helpdesk",
+    "launched": "March 1, 2017",
+    "built_for_shopify": false,
+    "app_store_category": "Helpdesk",
+    "plans": [
+      {
+        "name": "Starter plan",
+        "price": "$10",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "3 customer support agents",
+          "50 tickets per month included",
+          "Live chat",
+          "AI Agent add-on available",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Basic plan",
+        "price": "$60",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Unlimited customer support agents",
+          "300 tickets per month included",
+          "Live chat",
+          "Customer service",
+          "AI Agent add-on available",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro plan",
+        "price": "$360",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Up to 500 customer support agents",
+          "2000 tickets included",
+          "Live chat",
+          "Customer service",
+          "AI Agent add-on available",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Advanced plan",
+        "price": "$900",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Up to 500 customer support agents",
+          "5000 tickets included",
+          "Live chat",
+          "Customer service",
+          "AI Agent add-on available",
+          "7-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options"
+        ]
+      }
+    ],
+    "free_plan": false,
+    "from_price": 10.0,
+    "trial_days": 7,
+    "features": [
+      "AI Agent that handles order, shipping and return questions 24/7",
+      "Shopify-native helpdesk: edit orders, refund and cancel inside tickets",
+      "Unified inbox for email, live chat, SMS, social and voice",
+      "Rules, macros and auto-tagging to automate repetitive tickets",
+      "Support analytics and revenue tracking to measure customer experience"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Flow",
+      "AfterShip",
+      "Attentive",
+      "Klaviyo",
+      "Loop Returns",
+      "Recharge",
+      "Yotpo"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 76,
+      "pct_of_scanned": 8.17,
+      "co_installed": [
+        "klaviyo",
+        "yotpo",
+        "okendo-reviews",
+        "rebuy",
+        "shopmy",
+        "alia",
+        "intelligems",
+        "instafeed"
+      ]
+    },
+    "affiliate": {
+      "url": "https://partner.gorgias.com/jf0wzazs25qx",
+      "program": "Gorgias (PartnerStack)"
+    }
+  },
+  {
+    "slug": "loox",
+    "app_store_handle": "loox",
+    "name": "Loox ‑ Product Reviews App",
+    "developer": "Loox",
+    "category": "Reviews",
+    "tagline": "Convert more with visual product reviews, superpowered by AI",
+    "rating": 4.9,
+    "reviews": 10116,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/252ae7c55fa0e8a35df7f6ff3c8c1596/icon/CPLp1Kb0lu8CEAE=.jpg",
+    "app_store_url": "https://apps.shopify.com/loox",
+    "launched": "October 16, 2015",
+    "built_for_shopify": true,
+    "app_store_category": "Product reviews",
+    "plans": [
+      {
+        "name": "Beginner",
+        "price": "Free",
+        "features": [
+          "Review request emails & reminders",
+          "Offer discounts for photo reviews",
+          "17+ widgets (Snippets, Carousels, etc.)",
+          "SEO: Google rich snippets & schema",
+          "Turn reviews into social posts & stories",
+          "Shop app syndication",
+          "24/7 chat and email support",
+          "Up to 500 orders"
+        ]
+      },
+      {
+        "name": "Convert",
+        "price": "$49.99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "AI Smart Sorting & Review Highlights",
+          "AI Summaries & Review Stories",
+          "AI Translations & Replies",
+          "Video reviews",
+          "Reviews on product bundles",
+          "Referrals: Post-purchase and on-site",
+          "Google, Meta, TikTok syndication",
+          "Integrations, API access, and webhooks"
+        ]
+      },
+      {
+        "name": "Unlimited",
+        "price": "$299.99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Unlimited access to all features",
+          "Priority support",
+          "14-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options",
+          "Reviews",
+          "(10,116)",
+          "Overall rating"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 49.99,
+    "trial_days": 14,
+    "features": [
+      "Collect more photo & video reviews automatically w emails, QR codes, discounts",
+      "Stand out with stunning, on-brand widgets that load fast, optimized for mobile",
+      "AI Superpowers: Review Stories, Smart Sorting, Highlights, Translations, Replies",
+      "Sync reviews to & from Shop App, and to Meta Shops, Google Shopping, TikTok Shop",
+      "Turn reviews to social posts/stories with Loox Studio; Reward customer referrals"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Google Shopping and SEO",
+      "Klaviyo Email Marketing & SMS",
+      "Loyalty Lion Rewards Referrals",
+      "Meta Shops Facebook Instagram",
+      "Omnisend Email Marketing & SMS",
+      "Shop App"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 54,
+      "pct_of_scanned": 5.81,
+      "co_installed": [
+        "klaviyo",
+        "instafeed",
+        "shopify-forms",
+        "free-shipping-bar",
+        "mailchimp",
+        "smile-io",
+        "upsell-cross-sell-kit-1",
+        "intelligems"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "okendo-reviews",
+    "app_store_handle": "okendo-reviews",
+    "name": "Okendo: Reviews & Loyalty",
+    "developer": "Okendo",
+    "category": "Loyalty & Rewards",
+    "tagline": "Create Superfans with Reviews, Loyalty, Referrals & Quizzes",
+    "rating": 4.8,
+    "reviews": 1454,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/fe55626671bd5da73785c606c2b0752f/icon/CNKRrIWatfoCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/okendo-reviews",
+    "launched": "June 12, 2018",
+    "built_for_shopify": false,
+    "app_store_category": "Product reviews",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "Up to 50 orders/month",
+          "Automated Review Request Emails",
+          "Smart Review Form",
+          "Review Rewards Engine",
+          "Review Displays",
+          "Google SEO Snippets",
+          "Review Grouping",
+          "Review Moderation"
+        ]
+      },
+      {
+        "name": "Essential",
+        "price": "$19",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Up to 200 orders/month",
+          "Everything in Free",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Growth",
+        "price": "$119",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Up to 1,500 orders/month",
+          "Everything in Essential, plus:",
+          "AI Review Summaries",
+          "AI Review Keywords",
+          "TikTok Shop Integration",
+          "Q&A Widget",
+          "Many more features...",
+          "14-day free trial"
+        ]
+      },
+      {
+        "name": "Power",
+        "price": "$299",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Up to 3,500 orders/month",
+          "Everything in Growth, plus:",
+          "Review Campaigns",
+          "Advanced CSS Editor",
+          "Email & SMS Integrations",
+          "Advanced Reporting",
+          "Managed Onboarding",
+          "Many more features..."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 19.0,
+    "trial_days": 14,
+    "features": [
+      "AI-powered Review displays and UGC collection automations.",
+      "Loyalty programs based on points, perks, store credit & direct rewards.",
+      "Product recommendation quizes, community badges & dynamic surveys and polls.",
+      "Integrations with Shop, TikTok, Google, Klaviyo, Walmart and 50+ 3rd party apps.",
+      "Hands-on, 24-7 customer support and strategy guidance for all users"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Google",
+      "Gorgias",
+      "Klaviyo",
+      "Meta",
+      "Postscript"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 48,
+      "pct_of_scanned": 5.16,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "intelligems",
+        "alia",
+        "rebuy",
+        "recharge",
+        "applovin",
+        "shopmy"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "rebuy",
+    "app_store_handle": "rebuy",
+    "name": "Rebuy Personalization Engine",
+    "developer": "Rebuy",
+    "category": "Upsell & Bundles",
+    "tagline": "AI personalization & upsells",
+    "rating": null,
+    "reviews": null,
+    "icon_url": null,
+    "app_store_url": "https://apps.shopify.com/rebuy",
+    "launched": null,
+    "built_for_shopify": null,
+    "app_store_category": null,
+    "plans": null,
+    "free_plan": false,
+    "from_price": null,
+    "trial_days": null,
+    "features": null,
+    "works_with": null,
+    "languages": null,
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 47,
+      "pct_of_scanned": 5.05,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "yotpo",
+        "attentive",
+        "okendo-reviews",
+        "redo",
+        "shopmy",
+        "amp-back-in-stock"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "redo",
+    "app_store_handle": "redo",
+    "name": "Redo",
+    "developer": "Redo Tech, Inc",
+    "category": "Shipping & Returns",
+    "tagline": "Everything your brand needs. In one intelligent platform.",
+    "rating": 4.9,
+    "reviews": 870,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/0b8778a11e8f31ccf0ccc703a398f917/icon/COnBipby-5cDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/redo",
+    "launched": "May 25, 2020",
+    "built_for_shopify": false,
+    "app_store_category": "Returns and exchanges",
+    "plans": [
+      {
+        "name": "Conversion",
+        "price": "Free to install",
+        "features": [
+          "Optimize checkouts with A/B testing",
+          "Reclaim: AI chargeback disputes",
+          "<div"
+        ]
+      },
+      {
+        "name": "Returns",
+        "price": "Free",
+        "features": [
+          "Returns and claims portal",
+          "AI exchange agent for +17% exchange rate",
+          "Variant-level returns analytics",
+          "Monthly AI returns analysis report",
+          "Full customizable return flow",
+          "<div"
+        ]
+      },
+      {
+        "name": "Email and SMS",
+        "price": "$10",
+        "period": "month",
+        "features": [
+          "Cross-sell from order tracking emails",
+          "Shoppable emails",
+          "<div"
+        ]
+      },
+      {
+        "name": "Fulfillment",
+        "price": "$99",
+        "period": "month",
+        "features": [
+          "Fulfillment software",
+          "Auto Batch to optimize fulfillment speed",
+          "Auto Merge orders to save on costs",
+          "Bulk ship identical orders automatically",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options",
+          "Reviews",
+          "(870)"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 10.0,
+    "trial_days": null,
+    "features": [
+      "Increase profit at each touchpoint of the buyer journey.",
+      "Increase exchange rates and decrease return rates with AI personalization",
+      "AI-first customer service in one unified inbox. Both for desktop and mobile app.",
+      "A full email and sms platform with shoppable email and AI persona targeting",
+      "Increase conversion rates in your checkout flow with AI-driven A/B testing"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "CommentSold",
+      "Gorgias",
+      "Klaviyo",
+      "NetSuite",
+      "Shop Mini",
+      "Yotpo"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 43,
+      "pct_of_scanned": 4.62,
+      "co_installed": [
+        "klaviyo",
+        "rebuy",
+        "helpdesk",
+        "okendo-reviews",
+        "attentive",
+        "shopmy",
+        "intelligems",
+        "amp-back-in-stock"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "smile-io",
+    "app_store_handle": "smile-io",
+    "name": "Smile: Loyalty Program Rewards",
+    "developer": "Smile.io",
+    "category": "Loyalty & Rewards",
+    "tagline": "Customer loyalty points, VIP tiers, referrals, rewards program",
+    "rating": 4.9,
+    "reviews": 4679,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/439617d93d452f065b8cd6122493ccc3/icon/CPHVlb70lu8CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/smile-io",
+    "launched": "December 2, 2014",
+    "built_for_shopify": true,
+    "app_store_category": "Loyalty and rewards",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "Points, rewards & referrals",
+          "15+ ways to earn & redeem",
+          "Discounts & free shipping rewards",
+          "Full branding customization",
+          "Multi-language support (20+ languages)",
+          "Works seamlessly with Shopify POS",
+          "Up to 200 monthly orders",
+          "<div"
+        ]
+      },
+      {
+        "name": "Essential",
+        "price": "$15",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Dedicated loyalty page",
+          "Free product rewards",
+          "Nudges (on-site reminders)",
+          "Analytics & reporting",
+          "Trigger rewards with Shopify Flow",
+          "1 integration (e.g. Klaviyo)",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Standard",
+        "price": "$79",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Bonus events (e.g. 2x points weekend)",
+          "Embed points on product pages",
+          "Promote points on order thank you page",
+          "Subscription & gift card rewards",
+          "Loyalty segments, ROI and CLV insights",
+          "2 integrations (e.g. Klaviyo, Judge.me)",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Growth",
+        "price": "$199",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Loyalty Hub (for signed-in members)",
+          "Redeem at checkout (Shopify Plus)",
+          "VIP tiers & Points expiry",
+          "Performance benchmarks",
+          "25+ pre-built loyalty reports",
+          "Unlimited integrations",
+          "14-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 15.0,
+    "trial_days": 14,
+    "features": [
+      "Launch a loyalty program with points, VIP tiers and referrals in minutes",
+      "Reward shoppers online and in store with native Shopify POS",
+      "Loyalty on product pages, checkout, a loyalty page and customer accounts",
+      "Benchmark your program against top brands with prebuilt loyalty reports",
+      "Deeply integrated with Klaviyo, Judge.me, Gorgias and 30+ other tools you love"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Gorgias",
+      "Judge.me",
+      "Klaviyo",
+      "Loox",
+      "Mailchimp"
+    ],
+    "languages": [
+      "English",
+      "French",
+      "Japanese",
+      "German",
+      "Italian",
+      "Chinese (Simplified)",
+      "Portuguese (Brazil)",
+      "Dutch",
+      "Spanish"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 42,
+      "pct_of_scanned": 4.52,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "instafeed",
+        "shopify-forms",
+        "goaffpro",
+        "mailchimp",
+        "loox",
+        "order-limits-minmaxify"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "omnise",
+    "app_store_handle": "omnise",
+    "name": "Omnise ✧ AI Page Builder",
+    "developer": "Omnise.com",
+    "category": "Page Builders & Sections",
+    "tagline": "Turn ideas into high-converting pages with AI.",
+    "rating": 4.9,
+    "reviews": 873,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/3db283686bdf064c04e98e5cf61875ee/icon/CIGxi6nhspUDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/omnise",
+    "launched": "November 22, 2021",
+    "built_for_shopify": true,
+    "app_store_category": "Page builder",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "1 published slot with watermark",
+          "10 draft pages",
+          "AI usage tier 01",
+          "Live chat support (low priority)",
+          "<div"
+        ]
+      },
+      {
+        "name": "Start",
+        "price": "$19.99",
+        "period": "month",
+        "features": [
+          "3 published slots",
+          "A/B Testing section-level",
+          "AI usage tier 02",
+          "Live chat support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$39.99",
+        "period": "month",
+        "features": [
+          "10 published slots",
+          "A/B Testing section-level",
+          "AI usage tier 03",
+          "Live chat support 24/7",
+          "<div"
+        ]
+      },
+      {
+        "name": "Max",
+        "price": "$79.99",
+        "period": "month",
+        "features": [
+          "25 published slots",
+          "A/B Testing section-level",
+          "AI usage tier max",
+          "Live chat support (high priority)",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options",
+          "Reviews",
+          "(873)"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 19.99,
+    "trial_days": null,
+    "features": [
+      "Turn ideas into beautiful, high-converting pages with AI in just minutes",
+      "Generate complete pages, sections, images, and content from a single prompt",
+      "Customize every page visually with a powerful no-code drag-and-drop editor",
+      "Plan smarter with AI Blueprint before building to create better page flows",
+      "Optimize page performance with built-in A/B testing and continuous improvement"
+    ],
+    "works_with": [
+      "Shopify Admin",
+      "Aftership, Omnisend, Seguno",
+      "Growave, TYDAL, Ryviu, Stamped",
+      "Klaviyo, Loox, Yotpo, Judgeme",
+      "Recharge, Selleasy, Pumper",
+      "T Lab, Bundler, Fera, Okendo",
+      "Vitals, Bold, Hulk, Appstle"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 42,
+      "pct_of_scanned": 4.52,
+      "co_installed": [
+        "omnisend",
+        "judgeme",
+        "klaviyo",
+        "instafeed",
+        "shopify-forms",
+        "goaffpro",
+        "restock-rocket-1",
+        "smile-io"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "omnisend",
+    "app_store_handle": "omnisend",
+    "name": "Omnisend Email Marketing & SMS",
+    "developer": "Omnisend",
+    "category": "Email & SMS",
+    "tagline": "Drive sales with email marketing, newsletters, SMS, and popups",
+    "rating": 4.7,
+    "reviews": 3219,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/9b0c952ebdfd9d278f559665ecf48f5c/icon/CI_zwN7rmpYDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/omnisend",
+    "launched": "March 10, 2014",
+    "built_for_shopify": false,
+    "app_store_category": "Email marketing",
+    "plans": [
+      {
+        "name": "FREE",
+        "price": "Free",
+        "features": [
+          "Email up to 250 people",
+          "Send 500 emails per month",
+          "Use Omnisend inside ChatGPT/Claude (MCP)",
+          "Grow your email list with popups & forms",
+          "Automate abandoned cart & welcome emails",
+          "Describe a segment, built-in AI makes it",
+          "250+ customizable email templates",
+          "24/7 live support — even on Free"
+        ]
+      },
+      {
+        "name": "STANDARD",
+        "price": "$16",
+        "period": "month",
+        "features": [
+          "EVERYTHING in Free plan, plus:",
+          "Send 6,000 emails per month",
+          "Send unlimited web push notifications",
+          "Describe a popup and Forms AI builds it",
+          "No Omnisend branding on emails & forms",
+          "Meet our email expert on $400/mo+ plans",
+          "Starter deal: 30% off for first 3 months",
+          "<div"
+        ]
+      },
+      {
+        "name": "PRO",
+        "price": "$59",
+        "period": "month",
+        "features": [
+          "EVERYTHING in Standard plan, plus:",
+          "Send unlimited emails",
+          "Advanced reporting",
+          "Personalized product recommender AI",
+          "Dynamic content personalization",
+          "Add SMS starting at $0.007/message",
+          "Starter deal: 30% off for first 3 months",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 16.0,
+    "trial_days": null,
+    "features": [
+      "Create & send email marketing, newsletters & SMS from ready-made templates",
+      "Grow your email list with exit-intent popups, spin-to-win, & more signup forms",
+      "Recover sales with welcome, abandoned cart & post-purchase automation workflows",
+      "Personalize emails with AI product recommendations, subject lines & content",
+      "Ask ChatGPT or Claude to build campaigns & automations in Omnisend via MCP"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Flow",
+      "Aftership",
+      "Gorgias",
+      "Justuno",
+      "Loox",
+      "Recharge",
+      "Yotpo"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 39,
+      "pct_of_scanned": 4.19,
+      "co_installed": [
+        "omnise",
+        "judgeme",
+        "shopify-forms",
+        "instafeed",
+        "klaviyo",
+        "restock-rocket-1",
+        "goaffpro",
+        "gsc-instagram-feed-instafeed"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "recharge",
+    "app_store_handle": "subscription-payments",
+    "name": "Recharge Subscriptions App",
+    "developer": "Recharge",
+    "category": "Subscriptions",
+    "tagline": "The subscription platform built for the fastest-growing brands",
+    "rating": 4.8,
+    "reviews": 3159,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/0009de8c024a6126315f5dcd4250fd61/icon/CK6otpbp4PwCEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/subscription-payments",
+    "launched": "October 14, 2014",
+    "built_for_shopify": false,
+    "app_store_category": "Subscriptions",
+    "plans": [
+      {
+        "name": "Starter",
+        "price": "$149",
+        "period": "month",
+        "trial_days": 60,
+        "features": [
+          "Subscription-first product page widget",
+          "No-code customer portal",
+          "Upsell & Cross-sell tools",
+          "Smart Cancellation Prevention",
+          "Failed Payment Recovery",
+          "Analytics & industry benchmarks",
+          "60-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Scale",
+        "price": "$499",
+        "period": "month",
+        "features": [
+          "Starter features, plus:",
+          "Hands-on implementation",
+          "Customizable bundles & tiered discounts",
+          "Surprise & delight gifting",
+          "Subscriber journey A/B testing",
+          "Concierge SMS",
+          "Javascript SDK & Storefront API",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": false,
+    "from_price": 149.0,
+    "trial_days": 60,
+    "features": [
+      "No-code customer portal — subscribers skip, swap, and reschedule on their own",
+      "Churn prevention — stop cancels, recover failed payments, win back lapsed buyers",
+      "Bundles — let customers build their own, or buy the sets you curate",
+      "Loyalty rewards - credits that subscribers keep coming back for",
+      "Retention analytics — compare your cohorts to thousands of brands"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "Attentive",
+      "Avalara",
+      "Gorgias",
+      "Klaviyo",
+      "Stripe",
+      "Triple Whale"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 38,
+      "pct_of_scanned": 4.09,
+      "co_installed": [
+        "klaviyo",
+        "okendo-reviews",
+        "helpdesk",
+        "attentive",
+        "instafeed",
+        "yotpo",
+        "rebuy",
+        "applovin"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "attentive",
+    "app_store_handle": "attentive",
+    "name": "Attentive: AI‑led Email &SMS",
+    "developer": "Attentive",
+    "category": "Email & SMS",
+    "tagline": "SMS & Email helping brands increase ROI",
+    "rating": 4.7,
+    "reviews": 112,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/5da194592c59cd145b825b53019db33c/icon/CIKipOGl7-8CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/attentive",
+    "launched": "July 2, 2020",
+    "built_for_shopify": false,
+    "app_store_category": "Email marketing",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free to install",
+        "trial_days": 30
+      }
+    ],
+    "free_plan": true,
+    "from_price": 0,
+    "trial_days": 30,
+    "features": [
+      "Fast List Growth: Patented two-tap units convert traffic into",
+      "subscribers faster",
+      "Delivery Optimized: Industry-leading deliverability with above average CTRs",
+      "Identity: Power segmentation and personalization with rich identity data points",
+      "Messaging: Drive high CTRs in the customer lifecycle with personalized messages",
+      "Compliance: In-house TCPA experts & templates ensure your program is compliant"
+    ],
+    "works_with": [
+      "Checkout",
+      "Gorgias",
+      "Loop Returns",
+      "LoyaltyLion",
+      "Okendo",
+      "Rebuy",
+      "Zendesk"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 38,
+      "pct_of_scanned": 4.09,
+      "co_installed": [
+        "klaviyo",
+        "yotpo",
+        "helpdesk",
+        "rebuy",
+        "redo",
+        "recharge",
+        "swell",
+        "shopmy"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "trustpilot",
+    "app_store_handle": "trustpilot-widgets",
+    "name": "Trustgear: Review Widgets",
+    "developer": "Trustgear",
+    "category": "Reviews",
+    "tagline": "Make Trustpilot widgets a part of your page editor",
+    "rating": 0.0,
+    "reviews": null,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/0ef8d8d7e5568d74407c24f2a51b569a/icon/CIaJi7a0zv0CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/trustpilot-widgets",
+    "launched": "March 17, 2023",
+    "built_for_shopify": false,
+    "app_store_category": "Product reviews",
+    "plans": [
+      {
+        "name": "Starter",
+        "price": "$2.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Trustpilot widgets within theme editor",
+          "Use Widgets from your Trustpilot account",
+          "7-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "Reviews",
+          "Overall rating",
+          "0"
+        ]
+      }
+    ],
+    "free_plan": false,
+    "from_price": 2.99,
+    "trial_days": 7,
+    "features": [
+      "Use Shopify theme editor for adding widgets into your page.",
+      "Add service reviews widgets to any page of your shop.",
+      "Add product reviews widgets to all your product pages at once."
+    ],
+    "works_with": null,
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 37,
+      "pct_of_scanned": 3.98,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "instafeed",
+        "mailchimp",
+        "form-builder-contact-form",
+        "shopify-forms",
+        "gdpr-cookie-consent",
+        "goaffpro"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "intelligems",
+    "app_store_handle": "intelligems",
+    "name": "Intelligems: A/B Testing",
+    "developer": "Intelligems",
+    "category": "Testing & Personalization",
+    "tagline": "A/B test prices, content, shipping, checkout & post-purchase",
+    "rating": 4.8,
+    "reviews": 204,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/63fb68ea6dcc0f2694c656e6dd5a895f/icon/CMeOqL2y3Y8DEAE=.png",
+    "app_store_url": "https://apps.shopify.com/intelligems",
+    "launched": "December 1, 2021",
+    "built_for_shopify": false,
+    "app_store_category": "Pricing optimization",
+    "plans": [
+      {
+        "name": "Smart Content",
+        "price": "$69",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Test landing pages, themes, and content",
+          "Personalize every page by audience",
+          "Use AI to make content edits quickly",
+          "Know which content tests to run next",
+          "See profit per visitor on every test",
+          "Connect to Slack, Claude, ChatGPT & more",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Smart Merchandise",
+        "price": "$112.10",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "All Smart Content features, plus:",
+          "Test discount types and amounts",
+          "Add progress bars and messaging",
+          "Add PDP and cart upsells",
+          "Add quantity breaks and bundles",
+          "Automate free gift with purchase",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Smart Shipping",
+        "price": "$112.10",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "All Smart Content features, plus:",
+          "Find your best free shipping threshold",
+          "Add free shipping progress bar",
+          "Test flat, weight, and zone rates",
+          "Personalize rates by audience",
+          "Track profit on every shipping test",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Unlimited",
+        "price": "$349",
+        "period": "month",
+        "features": [
+          "All Smart Content features, plus:",
+          "Smart Merchandising",
+          "Smart Pricing and Smart Shipping",
+          "Smart Checkout & Post-Purchase",
+          "Run unlimited tests & uncapped AI usage",
+          "Receive a storefront audit and roadmap",
+          "Launch with white glove onboarding",
+          "Get a dedicated Customer Success Manager"
+        ]
+      }
+    ],
+    "free_plan": false,
+    "from_price": 69.0,
+    "trial_days": 14,
+    "features": [
+      "A/B test prices, content, shipping, checkout & post-purchase to grow profit",
+      "Use AI to discover ideas, build tests, and analyze results in Claude & Slack",
+      "Measure revenue, profit, and COGS side by side on every experiment",
+      "Personalize by source, device, Klaviyo segment, or customer behavior",
+      "Launch your first experience in minutes — no code required"
+    ],
+    "works_with": [
+      "Checkout",
+      "Claude",
+      "Google Analytics",
+      "Heatmap.com",
+      "Klaviyo",
+      "Microsoft Clarity",
+      "ReCharge"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 37,
+      "pct_of_scanned": 3.98,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "alia",
+        "okendo-reviews",
+        "yotpo",
+        "redo",
+        "global-e-crossborder",
+        "nofraud"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "restock-rocket-1",
+    "app_store_handle": "restock-rocket-1",
+    "name": "Restock Rocket ‑ Back in Stock",
+    "developer": "A.N. ADVISORY",
+    "category": "Wishlist & Back in Stock",
+    "tagline": "Back in stock alerts in under 60 seconds. Recover lost...",
+    "rating": 0.0,
+    "reviews": null,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/ff903058f2f23a8dd55e4708964cbd85/icon/CJfX9OmsqJYDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/restock-rocket-1",
+    "launched": "September 1, 2026",
+    "built_for_shopify": false,
+    "app_store_category": "Stock alerts",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "50 alerts per month",
+          "Notify me widget",
+          "Recovered sales tracking",
+          "<div"
+        ]
+      },
+      {
+        "name": "Growth",
+        "price": "$19",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "500 alerts per month",
+          "Custom email branding",
+          "Double opt-in",
+          "Demand Report",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$49",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Everything in Growth",
+          "Unlimited alerts",
+          "Demand Report & subscriber CSV export",
+          "14-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "Reviews",
+          "Overall rating",
+          "0"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 19.0,
+    "trial_days": 14,
+    "features": [
+      "Notify me widget appears automatically on sold-out variants — no code",
+      "Restock alerts emailed in under 60 seconds — latency measured & displayed",
+      "See recovered sales & revenue: orders within 72 h of an alert click",
+      "Demand Report: your most-wanted out-of-stock products, exportable to CSV",
+      "GDPR-ready: optional double opt-in, real deletion, anti-spam built in"
+    ],
+    "works_with": [
+      "Shopify Admin"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 34,
+      "pct_of_scanned": 3.66,
+      "co_installed": [
+        "klaviyo",
+        "instafeed",
+        "judgeme",
+        "rebuy",
+        "helpdesk",
+        "yotpo",
+        "omnisend",
+        "omnise"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "backinstock",
+    "app_store_handle": "back-in-stock",
+    "name": "Amp Back in Stock & Preorder +",
+    "developer": "HEL SG PTE LTD",
+    "category": "Wishlist & Back in Stock",
+    "tagline": "Back in stock alerts, preorders & low stock badges",
+    "rating": 4.9,
+    "reviews": 1014,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/08346a36a0a313120feec14003bedbc3/icon/CJbKmrvYgYwDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/back-in-stock",
+    "launched": "May 18, 2011",
+    "built_for_shopify": true,
+    "app_store_category": "Stock alerts",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "10 notifications/month",
+          "Unlimited registrations",
+          "Follow-up notifications",
+          "Notify Me button and form",
+          "Wishlists",
+          "Low Stock badges",
+          "Activity reports",
+          "Multi-language support"
+        ]
+      },
+      {
+        "name": "Starter",
+        "price": "$19",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "500 notifications/month",
+          "Unlimited preorders",
+          "SMS notifications",
+          "Wishlists & Low Stock badges",
+          "Customizable Notify Me button and form",
+          "Follow-up notifications",
+          "Multi-language support",
+          "Activity reports"
+        ]
+      },
+      {
+        "name": "Growth",
+        "price": "$49",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "2000 notifications/month",
+          "Unlimited preorders",
+          "SMS notifications",
+          "Wishlists & Low Stock badges",
+          "Klaviyo & Mailchimp integration",
+          "Custom domain support",
+          "Delivery window and policy customization",
+          "Multi-language support"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Unlimited notifications",
+          "Unlimited preorders",
+          "SMS notifications",
+          "Wishlists & Low Stock badges",
+          "Klaviyo & Mailchimp integration",
+          "Custom domain support",
+          "API access & webhoks",
+          "Claude & ChatGPT Integration"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 19.0,
+    "trial_days": 14,
+    "features": [
+      "Instant restock alerts via email, SMS & push - recapture buyers automatically",
+      "Preorder & pre-sell: collect payment before your inventory even arrives",
+      "Low-stock badges - capture demand at every stage of the journey",
+      "Fully branded Notify Me & Preorder buttons - set up in minutes, no code needed",
+      "Demand insights: know exactly what to restock, when, and how much to order"
+    ],
+    "works_with": [
+      "Shopify Flow",
+      "Shopify Admin",
+      "ChatGPT & Claude",
+      "Flow",
+      "Klaviyo",
+      "MailChimp",
+      "Sidekick",
+      "Zapier"
+    ],
+    "languages": [
+      "English",
+      "German",
+      "Spanish",
+      "French",
+      "Italian",
+      "Dutch",
+      "Portuguese (Brazil)",
+      "Swedish",
+      "Danish",
+      "Norwegian",
+      "Japanese"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 33,
+      "pct_of_scanned": 3.55,
+      "co_installed": [
+        "klaviyo",
+        "amp-back-in-stock",
+        "helpdesk",
+        "yotpo",
+        "rebuy",
+        "shopify-forms",
+        "mailchimp",
+        "global-e-crossborder"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "goaffpro",
+    "app_store_handle": "goaffpro",
+    "name": "GOAFFPRO ‑ Affiliate Marketing",
+    "developer": "GoAffPro",
+    "category": "Affiliate & Referral",
+    "tagline": "Powerful affiliate and referral marketing for your store",
+    "rating": 4.7,
+    "reviews": 947,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/eda11fcd576a556494594ddd4660db71/icon/CLXQoaeknv0CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/goaffpro",
+    "launched": "April 1, 2019",
+    "built_for_shopify": false,
+    "app_store_category": "Affiliate programs",
+    "plans": [
+      {
+        "name": "Free Plan",
+        "price": "Free",
+        "features": [
+          "Unlimited Affiliates",
+          "Unlimited Revenue",
+          "Branded Affiliate portal",
+          "Welcome Emails",
+          "Analytics",
+          "Post checkout popup",
+          "Mobile Apps",
+          "<div"
+        ]
+      },
+      {
+        "name": "Premium Plan",
+        "price": "$49",
+        "period": "month",
+        "trial_days": 15,
+        "features": [
+          "Everything in Free plan",
+          "Multi Level Marketing",
+          "Affiliate portal on your own Domain",
+          "Bulk Email",
+          "Advanced Analytics",
+          "30+ Customization options",
+          "15-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 49.0,
+    "trial_days": 15,
+    "features": [
+      "Unlimited affiliates, unlimited sales, unlimited traffic, unlimited potential",
+      "Branded portal for your affiliates to get their referral links, see their stats",
+      "Automated referral tracking, order attribution. Numerous payout options",
+      "Android + iPhone mobile apps with push notifications to keep affiliates engaged",
+      "Advanced multi level capabilities with customizable compensation and party plans"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify POS",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Klaviyo",
+      "Mailchimp",
+      "Omnisend",
+      "PayPal",
+      "ReCharge Payments",
+      "shiprocket"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 33,
+      "pct_of_scanned": 3.55,
+      "co_installed": [
+        "judgeme",
+        "klaviyo",
+        "instafeed",
+        "shopify-forms",
+        "smile-io",
+        "mailchimp",
+        "omnise",
+        "powr-popup"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "gdpr-backpack",
+    "app_store_handle": "gdpr-backpack",
+    "name": "Consentmo GDPR Compliance",
+    "developer": "Consentmo",
+    "category": "Privacy & Security",
+    "tagline": "GDPR/CCPA Cookies Compliance,Web Accessibility & EU Withdrawal",
+    "rating": 5.0,
+    "reviews": 2035,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/63ef59b872952601351925e45905ae6e/icon/CPfuk--TuJEDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/gdpr-backpack",
+    "launched": "May 3, 2019",
+    "built_for_shopify": false,
+    "app_store_category": "Cookie consent",
+    "plans": [
+      {
+        "name": "Free Plan",
+        "price": "Free",
+        "features": [
+          "UNLIMITED BANNER IMPRESSIONS",
+          "3 banner styles + preferences",
+          "Global geolocation support",
+          "Customer data requests (DSAR) & Logs",
+          "Compliance center & reports",
+          "Free cookie scan",
+          "All EU languages supported",
+          "Basic script blocking + admin preview"
+        ]
+      },
+      {
+        "name": "Standard Plan",
+        "price": "$10",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All Free features +",
+          "Integrations scanner plus alerts",
+          "Google Consent Mode v2",
+          "Meta/TikTok Pixel, UET Consent Mode, GPC",
+          "Unlimited cookie scans",
+          "US Opt Out Signals",
+          "Cookie management table",
+          "Multilingual banner translations"
+        ]
+      },
+      {
+        "name": "Plus Plan",
+        "price": "$37",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All in Standard +",
+          "Web Accessibility (ADA/WCAG/EEA)",
+          "Smart region-specific banner",
+          "Terms & Conditions checkbox",
+          "Cookie widget & Implied consent support",
+          "EU WIthdrawal page - Directive 2023/2673",
+          "Age verification",
+          "AI auto-categorizes cookies"
+        ]
+      },
+      {
+        "name": "Max Plan",
+        "price": "$99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All in Plus +",
+          "Consent Monitoring",
+          "Proof of Consent",
+          "Insights statistics on your banner",
+          "Smart Privacy Center & Cookie Policy",
+          "Alt Text Manager & Generator",
+          "IAB TCF 2.4 Compliance",
+          "Stop bots/crawlers from fake consent"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 10.0,
+    "trial_days": 7,
+    "features": [
+      "Google-Certified Consent Mode v2, TCF v2.4, SOC 2, ISO 27001, DSAR pages",
+      "Auto-detects visitor location and shows the right banner for GDPR CCPA LGPD etc",
+      "Scans Google, Meta, TikTok & Microsoft pixels and alerts what needs fixing",
+      "AI cookie scanner with auto-sort, scheduled scans, import/export and history",
+      "ADA/WCAG accessibility widget, EU order withdrawal, Age gate, 24/7 live support"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Admin",
+      "Amazon, TikTok & Meta Pixel",
+      "Google Ads & Analytics / GTM",
+      "Google Consent Mode V2",
+      "Klaviyo,Judge.me, Loox, Okendo",
+      "Microsoft Consent Mode",
+      "Sidekick, Claude, ChatGPT,Muse"
+    ],
+    "languages": [
+      "English",
+      "Spanish",
+      "French",
+      "German",
+      "Italian",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Japanese",
+      "Dutch"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 32,
+      "pct_of_scanned": 3.44,
+      "co_installed": [
+        "klaviyo",
+        "instafeed",
+        "okendo-reviews",
+        "global-e-crossborder",
+        "helpdesk",
+        "yotpo",
+        "intelligems",
+        "swell"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "alia",
+    "app_store_handle": "alia",
+    "name": "Alia: Email & SMS Popups",
+    "developer": "Alia",
+    "category": "Email & SMS",
+    "tagline": "AI-powered popups for email and SMS list growth",
+    "rating": 4.7,
+    "reviews": 113,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/ec5421f209a29b78e4ebb5f38ff37d86/icon/CIy1yJSj4o4DEAE=.png",
+    "app_store_url": "https://apps.shopify.com/alia",
+    "launched": "April 3, 2023",
+    "built_for_shopify": true,
+    "app_store_category": "Pop-ups",
+    "plans": [
+      {
+        "name": "20,000 visitors/mo",
+        "price": "$100",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "All features",
+          "Up to 20,000 monthly visitors",
+          "Live chat & email support",
+          "Capture email and SMS",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "50,000 visitors/mo",
+        "price": "$200",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "All features",
+          "Up to 50,000 monthly visitors",
+          "Live chat & email support",
+          "Capture email and SMS",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "100k visitors/mo",
+        "price": "$300",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "All features",
+          "Up to 100,000 monthly visitors",
+          "Live chat & email support",
+          "Capture email and SMS",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "300k visitors/mo",
+        "price": "$400",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "All features",
+          "Up to 300,000 monthly visitors",
+          "Live chat & email support",
+          "Larger plans available on website",
+          "14-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options",
+          "Reviews"
+        ]
+      }
+    ],
+    "free_plan": false,
+    "from_price": 100.0,
+    "trial_days": 14,
+    "features": [
+      "Personalize popups in real time with dynamic elements that adapt to each visitor",
+      "Use AI to A/B test, learn, and improve popup performance automatically",
+      "Target visitors by behavior, source, location, Klaviyo user data, and more",
+      "Track revenue, CVR, LTV, and more with advanced analytics and custom reports",
+      "24/7 live chat support and white-glove onboarding included on every plan"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Admin",
+      "Attentive",
+      "Klaviyo",
+      "Omnisend",
+      "Postscript",
+      "Sendlane",
+      "Yotpo"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 32,
+      "pct_of_scanned": 3.44,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "intelligems",
+        "okendo-reviews",
+        "applovin",
+        "shopmy",
+        "rebuy",
+        "instafeed"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "global-e-crossborder",
+    "app_store_handle": "global-e-crossborder",
+    "name": "Global‑e CrossBorder",
+    "developer": "Global-e Online Ltd.",
+    "category": "Currency & Translation",
+    "tagline": "Localize the international shopping experience",
+    "rating": 4.6,
+    "reviews": 8,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/c63271db421bfd98e71d2424c385970b/icon/CL_22M_tuvUCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/global-e-crossborder",
+    "launched": "October 21, 2021",
+    "built_for_shopify": false,
+    "app_store_category": "Payment experience",
+    "plans": null,
+    "free_plan": true,
+    "from_price": 0,
+    "trial_days": null,
+    "features": [
+      "Localized pricing strategy",
+      "Global-e shipping services",
+      "Global-e duties and taxes calculations"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Admin"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 31,
+      "pct_of_scanned": 3.33,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "yotpo",
+        "intelligems",
+        "amp-back-in-stock",
+        "loop-returns",
+        "attentive",
+        "onetrust"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "product-options-by-hulkapps-1",
+    "app_store_handle": "product-options-by-hulkapps-1",
+    "name": "Hulk Product Options, Variants",
+    "developer": "HulkApps",
+    "category": "Product Options & Sizing",
+    "tagline": "Product customizer and product personalizer with file upload.",
+    "rating": 4.8,
+    "reviews": 1220,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/4a60d8b5eaf751b3d02d0dc8c28a23b4/icon/COfb5p7_lP4CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/product-options-by-hulkapps-1",
+    "launched": "March 1, 2018",
+    "built_for_shopify": false,
+    "app_store_category": "Product variants",
+    "plans": [
+      {
+        "name": "Development stores",
+        "price": "Free",
+        "features": [
+          "Free for all partner development stores",
+          "Test any plan on development stores",
+          "<div"
+        ]
+      },
+      {
+        "name": "Basic Plan",
+        "price": "$10",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Unlimited Options",
+          "10 Option Types",
+          "Color/Image Swatches",
+          "File Upload",
+          "Price Add-ons",
+          "Dynamic Checkout Button",
+          "Apply Option Sets To Entire Collections",
+          "7-day free trial"
+        ]
+      },
+      {
+        "name": "Advanced Plan",
+        "price": "$20",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Everything in Basic, plus…",
+          "20 Option Types",
+          "Conditional Logic",
+          "Edit in Cart",
+          "Change Product Images per Option",
+          "Color/Image Swatches & Dropdown",
+          "One-time, Percent Charges",
+          "7-day free trial"
+        ]
+      },
+      {
+        "name": "Enterprise Plan",
+        "price": "$49.90",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Everything in Advanced, plus…",
+          "Inventory/SKU Management",
+          "Enhanced Conditional Logic",
+          "Quantity Selector",
+          "Formula-based Option",
+          "Google Font Picker",
+          "Mailchimp/Klaviyo integration",
+          "POS Compatible"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 10.0,
+    "trial_days": 7,
+    "features": [
+      "Unlimited product options and variant options beyond the standard Shopify limits",
+      "Conditional logic shows or hides options and changes product images per choice",
+      "Add-on pricing with fixed, percentage or formula-based charges per option",
+      "Color swatch, image swatches, file upload and Google Font text personalization",
+      "Inventory and SKU tracking, bulk option sets by CSV, plus Markets, B2B and POS"
+    ],
+    "works_with": [
+      "Shopify Admin",
+      "HulkApps Mobile App Builder",
+      "HulkApps VolumeBoost",
+      "Identixweb",
+      "LogBase",
+      "PageFly",
+      "POS"
+    ],
+    "languages": [
+      "Danish",
+      "German",
+      "English",
+      "Spanish",
+      "Finnish",
+      "French",
+      "Japanese",
+      "Italian",
+      "Korean",
+      "Norwegian (Bokmål)",
+      "Dutch",
+      "Swedish",
+      "Thai",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)",
+      "Czech",
+      "Polish",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Turkish"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 31,
+      "pct_of_scanned": 3.33,
+      "co_installed": [
+        "form-builder-by-hulkapps",
+        "klaviyo",
+        "instafeed",
+        "judgeme",
+        "yotpo",
+        "mailchimp",
+        "product-options-pro",
+        "applovin"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "pagefly",
+    "app_store_handle": "pagefly",
+    "name": "PageFly ✦ AI Page Builder",
+    "developer": "PageFly | AI Landing Page Builder & CRO",
+    "category": "Page Builders & Sections",
+    "tagline": "AI CRO funnel builder: build pages, find leaks, A/B test...",
+    "rating": 4.9,
+    "reviews": 5927,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/f85ee597169457da8ee70b6652cae768/icon/CKmsycCOx_YCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/pagefly",
+    "launched": "September 28, 2017",
+    "built_for_shopify": true,
+    "app_store_category": "Page builder",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "1 published slot (1 page or 1 section)",
+          "10 AI credits per month",
+          "320+ page and section templates",
+          "200+ third-party app integrations",
+          "24/7 live chat support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Builder",
+        "price": "$24",
+        "period": "month",
+        "features": [
+          "From 5 published pages or sections",
+          "From 80 AI credits per month",
+          "320+ templates and drag-and-drop editor",
+          "Dashboard analytics",
+          "24/7 live chat support",
+          "AI Translator",
+          "<div"
+        ]
+      },
+      {
+        "name": "Accelerate",
+        "price": "$99",
+        "period": "month",
+        "features": [
+          "Unlimited published pages and sections",
+          "400 AI credits per month",
+          "Everything in Builder, plus:",
+          "A/B testing and sales funnel",
+          "AI Translator and AI Page Checkup",
+          "Heatmap and AEO optimizer",
+          "Cart drawer and Markets (beta)",
+          "<div"
+        ]
+      },
+      {
+        "name": "Enterprise",
+        "price": "$299",
+        "period": "month",
+        "features": [
+          "1,600 AI credits per month for 1 store",
+          "Tech Lead ASAP queue",
+          "Priority support, front of queue",
+          "PageFly Page Health Monitor",
+          "Founder's Office Hours: 1x 45-min async",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options",
+          "Reviews"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 24.0,
+    "trial_days": null,
+    "features": [
+      "Build pages from a prompt with FlyMate AI, or drag and drop from templates",
+      "AI Page Checkup scores each page and shows what's costing you sales",
+      "Works in Claude, ChatGPT and Sidekick via MCP: build and publish pages by chat.",
+      "A/B test pages, see click heatmaps and where your sales funnel drops off",
+      "Cart drawer (beta): Upsells, bundles, and shipping goals inside the cart."
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Admin",
+      "BON Loyalty, Selleasy & Vitals",
+      "Judge.me, Loox, Yotpo & Okendo",
+      "Kaching Bundles & Recurpay",
+      "Klaviyo, Omnisend & Avada",
+      "Meta Pixel & Google Analytics",
+      "Sidekick"
+    ],
+    "languages": [
+      "French",
+      "English",
+      "German",
+      "Japanese",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)",
+      "Portuguese (Brazil)",
+      "Italian",
+      "Spanish"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 29,
+      "pct_of_scanned": 3.12,
+      "co_installed": [
+        "klaviyo",
+        "instafeed",
+        "free-shipping-bar",
+        "judgeme",
+        "shopify-forms",
+        "mailchimp",
+        "powr-popup",
+        "goaffpro"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "swell",
+    "app_store_handle": "swell",
+    "name": "Yotpo: Loyalty Rewards Program",
+    "developer": "Yotpo - L&R",
+    "category": "Loyalty & Rewards",
+    "tagline": "Build customer loyalty with points, rewards & referrals",
+    "rating": 4.7,
+    "reviews": 965,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/f693caaaf4c437600611eb42fc8da5d3/icon/CI_cy9bMiocDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/swell",
+    "launched": "July 28, 2015",
+    "built_for_shopify": false,
+    "app_store_category": "Loyalty and rewards",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free to install",
+        "features": [
+          "Rewards Sticky Bar",
+          "Earn Points for Purchases",
+          "Points Exchanged for Discounts",
+          "Referral Program",
+          "Reporting and Analytics",
+          "AI Chat Support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$199",
+        "period": "month",
+        "features": [
+          "Rewards Page",
+          "Additional Ways to Earn",
+          "More Rewards",
+          "Redeem Points at Checkout",
+          "Webhooks",
+          "Addtl Integrations (KLV, Recharge, etc)",
+          "AI Chat Support",
+          "Technical Support via Email"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 199.0,
+    "trial_days": null,
+    "features": [
+      "Customize, launch, and manage your loyalty and rewards program with no code",
+      "Incentivize repeat purchases & engagement with a variety of rewards & VIP tiers",
+      "Easily reward customers for valuable actions with 20+ out-of-the-box campaigns",
+      "Target loyalty segments based on points balance, number of referrals, & more",
+      "Track revenue growth, engagement, and more with advanced dashboards"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "2048 Variants",
+      "Gorgias",
+      "Klaviyo",
+      "ReCharge",
+      "Yotpo"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 29,
+      "pct_of_scanned": 3.12,
+      "co_installed": [
+        "klaviyo",
+        "yotpo",
+        "helpdesk",
+        "attentive",
+        "shopmy",
+        "rebuy",
+        "instafeed",
+        "recharge"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "form-builder-contact-form",
+    "app_store_handle": "form-builder-contact-form",
+    "name": "Powerful Contact Form Builder",
+    "developer": "Powerful Form",
+    "category": "Email & SMS",
+    "tagline": "Your all-in-one form app for custom forms, registration forms",
+    "rating": 4.9,
+    "reviews": 2681,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/7919647ec002bc41691875d798fc4339/icon/COmlwLH0lu8CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/form-builder-contact-form",
+    "launched": "October 12, 2017",
+    "built_for_shopify": true,
+    "app_store_category": "Forms",
+    "plans": [
+      {
+        "name": "FREE",
+        "price": "Free",
+        "features": [
+          "1 form, display anywhere",
+          "Unlimited fields",
+          "40 submissions/month",
+          "200MB storage, 20MB file upload",
+          "Date & file upload fields",
+          "Custom SMTP & Mail API",
+          "hCaptcha & reCAPTCHA",
+          "AI form creation"
+        ]
+      },
+      {
+        "name": "PREMIUM",
+        "price": "$7.45",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "FREE+",
+          "Unlimited forms, 2K submissions/month",
+          "5GB storage, 30MB file upload",
+          "Create, verify & approve customers",
+          "Customer metafields, tags & notes",
+          "Cart, bulk order & floating forms",
+          "Import/export submissions",
+          "Shopify Flow & conditional logic"
+        ]
+      },
+      {
+        "name": "PRO",
+        "price": "$12.45",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "PREMIUM+",
+          "10K submissions/month",
+          "20GB storage, 100MB file upload",
+          "Make.com & n8n integration",
+          "Zapier & Google integrations",
+          "Share form links",
+          "Block email domains",
+          "Submissions list on account page"
+        ]
+      },
+      {
+        "name": "ADVANCED",
+        "price": "$24.95",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "PRO+",
+          "20K submissions/month",
+          "50GB storage",
+          "250MB file upload limit",
+          "7-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options",
+          "Reviews"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 7.45,
+    "trial_days": 7,
+    "features": [
+      "Customer account registration forms, customer fields.",
+      "Create custom forms with file upload, image upload option.",
+      "Send autoresponder emails and integrate form data with Klaviyo, MailChimp, etc.",
+      "Easy to build contact us form with captcha, condition logic, etc.",
+      "Easy to build Feedback Form, Popup Form, Wholesale Order Form, Wholesale form..."
+    ],
+    "works_with": [
+      "Customer accounts",
+      "Shopify Flow",
+      "Shopify Admin",
+      "ActiveCampaign & Zapier",
+      "Campaign Monitor & reCaptcha",
+      "GetResponse & Sendinblue",
+      "Google Calendar / Google Sheet",
+      "Hubspot & Omnisend",
+      "Mailchimp & Klaviyo"
+    ],
+    "languages": [
+      "English",
+      "French",
+      "Japanese",
+      "Italian",
+      "German",
+      "Chinese (Simplified)",
+      "Spanish",
+      "Dutch"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 29,
+      "pct_of_scanned": 3.12,
+      "co_installed": [
+        "klaviyo",
+        "mailchimp",
+        "judgeme",
+        "instafeed",
+        "trustpilot",
+        "loox",
+        "recharge",
+        "gdpr-cookie-consent"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "gdpr-cookie-consent",
+    "app_store_handle": "gdpr-cookie-consent",
+    "name": "Pandectes GDPR Compliance",
+    "developer": "Pandectes",
+    "category": "Privacy & Security",
+    "tagline": "GDPR Legal Cookie, CCPA, Web Accessibility & EU Withdrawal",
+    "rating": 5.0,
+    "reviews": 3120,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/3f0b68db732b6704928d685690b753c8/icon/CNyiwYaTi_wCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/gdpr-cookie-consent",
+    "launched": "September 26, 2018",
+    "built_for_shopify": true,
+    "app_store_category": "Cookie consent",
+    "plans": [
+      {
+        "name": "Basic",
+        "price": "Free",
+        "features": [
+          "UNLIMITED IMPRESSIONS",
+          "Customizable GDPR Cookie Banner",
+          "Geolocation Options",
+          "Customer Data Requests",
+          "Customer Account Extension",
+          "Translated in all EU languages",
+          "Consent Tracking Report",
+          "Auto Scanning Cookies"
+        ]
+      },
+      {
+        "name": "Plus",
+        "price": "$9",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All in Basic+",
+          "Cookie details & Preferences banner",
+          "AI powered Cookie & Tracker Scanner",
+          "Google Consent Mode V2",
+          "Custom Pixel Support",
+          "Meta Pixel, UET Consent Mode & Clarity",
+          "Automated Cookie Policy Page",
+          "Multiple languages & translations"
+        ]
+      },
+      {
+        "name": "Premium",
+        "price": "$29",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All in Plus+",
+          "Web Accessibility (ADA/WCAG/EEA)",
+          "Auto blocker for popular services",
+          "Advanced blocking rules",
+          "Checkout banner (thank you page only)",
+          "Design support with custom CSS",
+          "EU WIthdrawal page - Directive 2023/2673",
+          "Live in-store preview & Admin preview"
+        ]
+      },
+      {
+        "name": "Enterprise",
+        "price": "$49",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All in Premium+",
+          "Scan Scheduler & Behind the Password",
+          "Bots/Crawlers Blocking",
+          "Inline Script Blocking",
+          "Checkout banner for Shopify Plus stores",
+          "TCF/IAB v2.4 Banner",
+          "Headless & Hydrogen Storefront support",
+          "JS API (Props, Methods, Consts & Events)"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 9.0,
+    "trial_days": 7,
+    "features": [
+      "Add a GDPR Cookie Banner via Checkout and Theme App Extensions for OS 2.0",
+      "Show multilingual cookie banners and Accessibility Widget text to your customers",
+      "Collect your customers' data requests, send email alerts, and export DSAR CSV",
+      "Schedule cookie scans detecting scripts, classify cookies, and import/export CSV",
+      "Google Certified CMP & Microsoft Certified CMP with TCF v2.4 and Consent Mode"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Admin",
+      "A11y, Microsoft Ads, Adwords",
+      "EAA, ADA, WCAG, GPC, CCPA",
+      "Markets, Microsoft Clarity",
+      "Microsoft Consent Mode (UET)",
+      "Sidekick, Claude, ChatGPT, GA4",
+      "TikTok, Meta Pixel, Klaviyo"
+    ],
+    "languages": [
+      "English",
+      "French",
+      "Italian",
+      "Spanish",
+      "German",
+      "Portuguese (Brazil)",
+      "Japanese",
+      "Dutch",
+      "Portuguese (Portugal)"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 28,
+      "pct_of_scanned": 3.01,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "helpdesk",
+        "yotpo",
+        "intelligems",
+        "okendo-reviews",
+        "instafeed",
+        "redo"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "powr-popup",
+    "app_store_handle": "powr-popup",
+    "name": "POWR Sales & Promo Popup",
+    "developer": "POWR.io",
+    "category": "Popups & Social Proof",
+    "tagline": "Announce sales, promo codes, and flash deals on any page",
+    "rating": 4.6,
+    "reviews": 436,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/91ab22ba9470462aea9405a5c70eb423/icon/CP2tisaV85YDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/powr-popup",
+    "launched": "January 15, 2016",
+    "built_for_shopify": false,
+    "app_store_category": "Pop-ups",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "25 submissions/mo",
+          "Undo/redo edits",
+          "Responses dashboard",
+          "Autoresponder email",
+          "Coupon codes",
+          "Shopify Customers",
+          "24/7 email support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Starter",
+        "price": "$7.04",
+        "period": "month",
+        "features": [
+          "25 submissions/mo",
+          "Undo/redo edits",
+          "Responses dashboard",
+          "Autoresponder email",
+          "Coupon codes",
+          "Delayed display",
+          "Scroll display",
+          "Live chat support"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$15.29",
+        "period": "month",
+        "features": [
+          "All Free + Starter features",
+          "1,000 submissions/mo",
+          "Advanced triggering/scheduling",
+          "Advanced display controls",
+          "Integrations: Mailchimp, Google, Klaviyo",
+          "Live chat support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Business",
+        "price": "$98.99",
+        "period": "month",
+        "features": [
+          "All Free + Starter + Pro features",
+          "Unlimited submissions/mo",
+          "All advanced features unlocked",
+          "All integrations available",
+          "Premium access to all 60+ POWR apps",
+          "Form Builder, Instagram Feed, and more",
+          "10k email sends/mo",
+          "Live chat support"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 7.04,
+    "trial_days": null,
+    "features": [
+      "Promote any sale with a sales popup: 250+ templates for discounts and promos",
+      "Add countdown timers, images, GIFs, and custom CTAs with 20+ popup elements",
+      "Show popups on page load, after a delay, on scroll, or with a custom trigger",
+      "Schedule campaigns for limited-time offers, product launches, and promo sales",
+      "Track popup views, clicks, and responses with built-in analytics"
+    ],
+    "works_with": [
+      "Shopify Admin",
+      "Google Sheets",
+      "Klaviyo",
+      "Mailchimp"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 27,
+      "pct_of_scanned": 2.9,
+      "co_installed": [
+        "klaviyo",
+        "mailchimp",
+        "instafeed",
+        "judgeme",
+        "goaffpro",
+        "amp-back-in-stock",
+        "smile-io",
+        "loox"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "upsell-cross-sell-kit-1",
+    "app_store_handle": "upsell-cross-sell-kit-1",
+    "name": "Upsell & Cross Sell — Selleasy",
+    "developer": "Logbase",
+    "category": "Upsell & Bundles",
+    "tagline": "In cart upsell, checkout upsell, product add ons, FBT for...",
+    "rating": 4.9,
+    "reviews": 2791,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/50d1becb99d333549c4316fc695bc00e/icon/CJGWisGV0oADEAE=.png",
+    "app_store_url": "https://apps.shopify.com/upsell-cross-sell-kit-1",
+    "launched": "July 15, 2021",
+    "built_for_shopify": false,
+    "app_store_category": "Upsell and cross-sell",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "Unlimited orders",
+          "Up to 5 campaigns",
+          "18 upsell & cross sell strategies",
+          "Shopify & manual recommendations",
+          "Chat, email, and Zoom support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Starter",
+        "price": "$9",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "Everything in Free plan",
+          "Unlimited orders",
+          "Unlimited campaigns",
+          "50 free AI recommendations",
+          "Free setup on a call with us",
+          "30-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$29",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "Everything in Starter plan",
+          "1000 AI recommendations / month",
+          "AI campaign optimizer",
+          "Checkout upsell for Shopify Plus",
+          "Advanced campaign targeting",
+          "Metafield bulk recommendations",
+          "30-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Max",
+        "price": "$59",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "Everything in Pro plan",
+          "2500 AI recommendations / month",
+          "Advanced customizations",
+          "Powerful rules engine",
+          "AOV advisor",
+          "Priority support",
+          "30-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 9.0,
+    "trial_days": 30,
+    "features": [
+      "Amazon-style frequently bought together & product upsell bundles with discounts.",
+      "Cross sell and upsell product add ons on product pages as list, grid, carousel.",
+      "Product bundle up sell, cart drawer upsell & in-cart upsells, styled to theme.",
+      "Post purchase page upsell & upsell product page with cross sale & upsale offers.",
+      "Upseller shows AI recommended products on thank you page & order status page."
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Admin",
+      "AppHQ Slide Cart",
+      "Conversion Bear",
+      "Geolocation",
+      "PageFly",
+      "Pickup Delivery Date Pickeasy"
+    ],
+    "languages": [
+      "English",
+      "German",
+      "French",
+      "Spanish",
+      "Dutch",
+      "Portuguese (Brazil)",
+      "Chinese (Simplified)",
+      "Turkish",
+      "Japanese"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 27,
+      "pct_of_scanned": 2.9,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "mailchimp",
+        "loox",
+        "volume-discounts-dealeasy",
+        "shopify-forms",
+        "instafeed",
+        "dondy-marketing-ai"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "free-shipping-bar",
+    "app_store_handle": "ultimate-sales-boost",
+    "name": "Hextom: Upsell Sales Boost",
+    "developer": "Hextom",
+    "category": "Cart & Checkout",
+    "tagline": "Upsell, BOGO, bundles, post-purchase offers, timers & badges",
+    "rating": 4.8,
+    "reviews": 1512,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/999f9fea413c682a9ef65825272813e8/icon/CJGbwPjx24YDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/ultimate-sales-boost",
+    "launched": "April 4, 2018",
+    "built_for_shopify": true,
+    "app_store_category": "Countdown timer",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "$200 lifetime attributed revenue",
+          "1 active campaign",
+          "BOGO, bundle, volume & promo discounts",
+          "One-click post-purchase upsell",
+          "Smart product recommendations",
+          "Session & stock countdown timers",
+          "Payment badges & product page message",
+          "Free shipping rewards on any offer"
+        ]
+      },
+      {
+        "name": "Starter",
+        "price": "$9.99",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "Everything in Free",
+          "$500/mo attributed revenue incl.",
+          "Up to $45/mo overage usage",
+          "5 active campaigns",
+          "Get-it-by, pre-order & date timers",
+          "Image labels, stickers & card messages",
+          "Trust badges, cart badges & animations",
+          "Custom widget positions"
+        ]
+      },
+      {
+        "name": "Growth",
+        "price": "$29.99",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "Everything in Starter",
+          "$2,000/mo attributed revenue incl.",
+          "Up to $150/mo overage usage",
+          "Unlimited active campaigns",
+          "Geo location & markets targeting",
+          "Customer tag & previous-order targeting",
+          "Product-tag targeting",
+          "Campaign scheduling"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$79.99",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "Everything in Growth",
+          "$5,000/mo attributed revenue incl.",
+          "Up to $300/mo overage usage",
+          "Built for high-volume stores",
+          "30-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "Reviews",
+          "(1,512)"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 9.99,
+    "trial_days": 30,
+    "features": [
+      "Boost AOV with BOGO, bundles, volume discounts, promos & smart recommendations",
+      "One-click post-purchase upsell after payment, on every plan including Free",
+      "AI assistant suggests offers from your catalog and orders and sets them up",
+      "Add urgency & trust: countdown, get-it-by & stock timers, labels & badges",
+      "Target by customer tag, previous orders, market & schedule on Growth and Pro"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Admin",
+      "Boost AI Search & Filter",
+      "Globo product filter",
+      "Hextom: Bulk Product Edit",
+      "Hextom: Translate & Currency",
+      "PageFly, GemPages, EComposer",
+      "UpCart cart drawer"
+    ],
+    "languages": [
+      "English",
+      "French",
+      "German",
+      "Spanish",
+      "Italian",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)",
+      "Japanese"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 27,
+      "pct_of_scanned": 2.9,
+      "co_installed": [
+        "klaviyo",
+        "yotpo",
+        "mailchimp",
+        "loox",
+        "pagefly",
+        "shopify-forms",
+        "judgeme",
+        "amp-back-in-stock"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "essential-post-purchase-upsell",
+    "app_store_handle": "essential-post-purchase-upsell",
+    "name": "Essential Upsell & Cross Sell",
+    "developer": "Essential Bundles & Upsells",
+    "category": "Upsell & Bundles",
+    "tagline": "Lift AOV with Frequently Bought Together Cross-sell Upsell App",
+    "rating": 5.0,
+    "reviews": 2504,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/ddc901de538fba4cee75f53bf6c0832e/icon/COncqaiPv4YDEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/essential-post-purchase-upsell",
+    "launched": "June 10, 2024",
+    "built_for_shopify": true,
+    "app_store_category": "Upsell and cross-sell",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "Up to $100 additional revenue generated",
+          "Product page offers",
+          "Post-purchase offers",
+          "Analytics​",
+          "Translations",
+          "<div"
+        ]
+      },
+      {
+        "name": "Starter",
+        "price": "$9.99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Up to $500 additional revenue generated",
+          "Product page offers",
+          "Post-purchase offers",
+          "Analytics​",
+          "Translations",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Essential",
+        "price": "$19.99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Up to $1000 additional revenue generated",
+          "Cart page offers",
+          "Product page offers",
+          "Post-purchase offers",
+          "Analytics​",
+          "Translations",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Growth",
+        "price": "$39.99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Up to $2500 additional revenue generated",
+          "Cart page offers",
+          "Product page offers",
+          "Post-purchase offers",
+          "Analytics​",
+          "Translations",
+          "14-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 9.99,
+    "trial_days": 14,
+    "features": [
+      "Show frequently bought products (FBT), related products, product recommendations",
+      "Post purchase upsell & cross sell: Product addons, bought together bundles",
+      "Automatic discount promotions: Add discounts to upsell & \"also bought\" products",
+      "Product page upsell: Add one click upsell & cross-sell products & BOGO bundles",
+      "Cart upsell: Add upsell cart app, cross-sell & product add-ons to cart drawer"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Admin",
+      "Bundles, Discounts, Functions",
+      "Essent Cart Drawer Cart Upsell",
+      "Essent Preorder Back in Stock",
+      "Essential Subscriptions App",
+      "PageFly Landing Page Builder"
+    ],
+    "languages": [
+      "English",
+      "French",
+      "German",
+      "Italian",
+      "Spanish",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Japanese",
+      "Czech",
+      "Danish",
+      "Finnish",
+      "Korean",
+      "Norwegian (Bokmål)",
+      "Polish",
+      "Swedish",
+      "Thai",
+      "Turkish",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)",
+      "Dutch"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 26,
+      "pct_of_scanned": 2.8,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "instafeed",
+        "shopify-forms",
+        "yotpo",
+        "helpdesk",
+        "omnise",
+        "essential-countdown-timer"
+      ]
+    },
+    "affiliate": {
+      "url": "https://platform.shoffi.app/r/rl_GoHXcSwp",
+      "program": "Shoffi"
+    }
+  },
+  {
+    "slug": "gift-card-loyalty-program",
+    "app_store_handle": "gift-card-loyalty-program",
+    "name": "Rise Gift Cards & Store Credit",
+    "developer": "Rise.ai",
+    "category": "Loyalty & Rewards",
+    "tagline": "Store Credit Wallet for Giftcards, Cashback, Loyalty & Rewards",
+    "rating": 4.8,
+    "reviews": 766,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/7040e1b6bfce598796f505cf07f1682f/icon/CMLOsJeX-JUDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/gift-card-loyalty-program",
+    "launched": "December 17, 2014",
+    "built_for_shopify": false,
+    "app_store_category": "Gift cards",
+    "plans": [
+      {
+        "name": "Starter",
+        "price": "$19.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "100 Monthly Store Orders Included",
+          "Advanced Gift Card Program",
+          "Manually Issue Store Credit",
+          "Referrals",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Small-Business",
+        "price": "$59.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "400 Monthly Total Store Orders Included",
+          "All Starter plan features",
+          "Claim Page Customization",
+          "Check Balance Page",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$199.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "2000 Monthly Total Store Orders Included",
+          "All Small Business plan features",
+          "Apply Store Credit Button",
+          "Bulk Gift Card Creation",
+          "7-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options",
+          "Reviews"
+        ]
+      }
+    ],
+    "free_plan": false,
+    "from_price": 19.99,
+    "trial_days": 7,
+    "features": [
+      "AI Retention Agent finds revenue opportunities & recommends your next move",
+      "Unify gift cards, loyalty and rewards, cashback & refunds in one customer wallet",
+      "Run cash back campaigns to increase AOV and drive repeat purchases",
+      "Reward loyalty with store credit for signups, referrals, VIPs & lifetime spend",
+      "Sell branded digital & physical gift cards online & at POS"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "AfterShip",
+      "Attentive",
+      "Gorgias",
+      "Klaviyo",
+      "Loop Returns",
+      "Tapcart"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 24,
+      "pct_of_scanned": 2.58,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "okendo-reviews",
+        "attentive",
+        "yotpo",
+        "nofraud",
+        "global-e-crossborder",
+        "shopmy"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "applovin",
+    "app_store_handle": "applovin",
+    "name": "AppLovin",
+    "developer": "AppLovin Corporation",
+    "category": "Ads & Channels",
+    "tagline": "Grow your eCommerce business with AppLovin Ads",
+    "rating": 3.5,
+    "reviews": 27,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/04a4ab01ee2c268d09a30a1da9e5c4c6/icon/CNbCjpDj_5QDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/applovin",
+    "launched": "June 10, 2025",
+    "built_for_shopify": false,
+    "app_store_category": "Ads",
+    "plans": [
+      {
+        "name": "free to install",
+        "price": "Free"
+      }
+    ],
+    "free_plan": true,
+    "from_price": 0,
+    "trial_days": null,
+    "features": [
+      "Unlock a new customer acquisition channel beyond social and search",
+      "No manual pixel setup or code integration required",
+      "Reach new customers at massive scale in premium mobile games",
+      "Launch Dynamic Product Ads with real-time Shopify product data",
+      "Track purchases and accurately attribute revenue to your campaigns"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Admin",
+      "AppLovin Ads Manager"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 24,
+      "pct_of_scanned": 2.58,
+      "co_installed": [
+        "klaviyo",
+        "okendo-reviews",
+        "attentive",
+        "yotpo",
+        "alia",
+        "recharge",
+        "judgeme",
+        "instafeed"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "loop-returns",
+    "app_store_handle": "loop-returns",
+    "name": "Loop Returns & Exchanges",
+    "developer": "Loop",
+    "category": "Shipping & Returns",
+    "tagline": "Manage returns, exchanges, tracking, order editing & more!",
+    "rating": 4.6,
+    "reviews": 450,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/fb481cc20acd47c8418668393630e4b8/icon/CPTi4piCp5MDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/loop-returns",
+    "launched": "May 27, 2021",
+    "built_for_shopify": false,
+    "app_store_category": "Returns and exchanges",
+    "plans": [
+      {
+        "name": "Checkout+",
+        "price": "Free",
+        "features": [
+          "Free for brands with 5k+ annual orders",
+          "Returns software",
+          "US & Canada domestic return labels",
+          "Return Bars",
+          "Advanced features",
+          "Package protection",
+          "More at link below ↓",
+          "<div"
+        ]
+      },
+      {
+        "name": "Returns",
+        "price": "$340",
+        "period": "month",
+        "features": [
+          "Starting at $340 / month",
+          "Includes up to 1,000 returns annually",
+          "Shop Now",
+          "Instant exchange",
+          "Bonus credit",
+          "Fraud prevention",
+          "More at link below ↓",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 340.0,
+    "trial_days": null,
+    "features": [
+      "Optimize return costs with Workflows, Logistics, Point of Sale, and more",
+      "Incentivize exchanges using Bonus Credit, Shop Now, and Instant Exchanges",
+      "Protect against return fraud using Workflows, Custom Rules, and Blocklists",
+      "Provide a premium experience with at-home pickup and simple, self-serve returns",
+      "Build confidence with Tracking and learn about behavior with Intelligence"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Attentive",
+      "Global-E",
+      "Gorgias",
+      "Klaviyo",
+      "NetSuite"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 21,
+      "pct_of_scanned": 2.26,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "yotpo",
+        "global-e-crossborder",
+        "intelligems",
+        "attentive",
+        "swell",
+        "alia"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "freegifts",
+    "app_store_handle": "freegifts",
+    "name": "BOGOS: Free Gift Bundle Upsell",
+    "developer": "BOGOS",
+    "category": "Upsell & Bundles",
+    "tagline": "Trusted app for free gift with purchase, bundles & buy...",
+    "rating": 5.0,
+    "reviews": 4726,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/181c217c862c543710a39e03910a2c86/icon/CNfm2b_S3YcDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/freegifts",
+    "launched": "December 17, 2014",
+    "built_for_shopify": true,
+    "app_store_category": "Product bundles",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "30 free orders lifetime by BOGOS",
+          "BOGO, BXGY & free gift with purchase",
+          "Custom bundle, mix and match",
+          "Volume discount, bulk product discount",
+          "Frequently bought together",
+          "Progress bar, announcement bar",
+          "Real-time analytics",
+          "Live chat, video & email support"
+        ]
+      },
+      {
+        "name": "Basic",
+        "price": "$29.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Only for Shopify Basic stores",
+          "All features in Free Plan",
+          "AI Assistant",
+          "Bundle builder (build a box)",
+          "Work with other offers",
+          "Run offers on the POS and mobile app",
+          "Integration",
+          "Multiplier gifts"
+        ]
+      },
+      {
+        "name": "Grow",
+        "price": "$49.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "For Grow/Shopify/Professional stores",
+          "All features in Basic Plan",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Plus",
+        "price": "$109.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Only for Shopify Plus stores",
+          "All premium features",
+          "Checkout upsell",
+          "Headless/Hydrogen API",
+          "Comprehensive support with priority",
+          "7-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 29.99,
+    "trial_days": 7,
+    "features": [
+      "Responsive progress bar, announcement bar, today offer widget, and offer page",
+      "Auto-add to cart or show a free gift popup for buy one get one, BXGY, and GWP",
+      "Create product bundles, bundle builder (build a box), and mix and match bundles",
+      "Set up volume discounts, tiered discounts, cart discount, discount on cheapest",
+      "Checkout upsell using discount code, frequently bought together & thank you page"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify POS",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Cart Drawers - Slide Cart",
+      "Facebook Pixels",
+      "Gift card",
+      "Headless - Hydrogen",
+      "Subscriptions",
+      "Transcy"
+    ],
+    "languages": [
+      "English",
+      "French",
+      "Japanese",
+      "German",
+      "Spanish",
+      "Dutch",
+      "Italian",
+      "Chinese (Simplified)"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 21,
+      "pct_of_scanned": 2.26,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "mailchimp",
+        "yotpo",
+        "loyaltylion",
+        "smile-io",
+        "product-options-by-hulkapps-1",
+        "instafeed"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "blockify",
+    "app_store_handle": "blockify",
+    "name": "Blockify Fraud Filter, Blocker",
+    "developer": "Blockify",
+    "category": "Privacy & Security",
+    "tagline": "Block fraud with IP blocker, bot blocker and country blocker",
+    "rating": 4.9,
+    "reviews": 1875,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/1fea2c06cad29a7a2ff47ed9c5b1b5cc/icon/CKv3zsyr-vcCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/blockify",
+    "launched": "March 13, 2018",
+    "built_for_shopify": true,
+    "app_store_category": "Fraud",
+    "plans": [
+      {
+        "name": "FREE FOREVER",
+        "price": "Free",
+        "features": [
+          "Limited to 2 active block IP/country",
+          "Analytics: Track the first 200 visitors",
+          "Basic visitor analytics & block rules",
+          "Live chat support 24/7",
+          "<div"
+        ]
+      },
+      {
+        "name": "PREMIUM",
+        "price": "$9.99",
+        "period": "month",
+        "trial_days": 3,
+        "features": [
+          "Up to 50 active block & redirect rules",
+          "Auto-block VPN/Proxy/Spam bot",
+          "Content protection",
+          "Fraud order analytics",
+          "Live chat support 24/7 (medium priority)",
+          "3-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "ENTERPRISE",
+        "price": "$29.99",
+        "period": "month",
+        "trial_days": 3,
+        "features": [
+          "Unlimited active block & redirect rules",
+          "Block TOR/visitor placing fraud order",
+          "Block ISP/referrer URLs/User agents",
+          "Block checkout with conditions",
+          "Fraud order filters",
+          "Full advanced fraud analytics",
+          "MCP, Klavyo, Flow integration",
+          "Live chat support 24/7 (high priority)"
+        ]
+      },
+      {
+        "name": "SHOPIFY PLUS",
+        "price": "$59.99",
+        "period": "month",
+        "trial_days": 3,
+        "features": [
+          "ACCESS ALL FEATURES",
+          "FULL Fraud Prevention & Filter",
+          "FULL Fraud order & visitor analytics",
+          "FULL Checkout Prevention",
+          "FULL Bot & Risk Prevention",
+          "Custom SLA & Intergration",
+          "Dedicated onboarding support",
+          "Top-tier 24/7 Live chat support"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 9.99,
+    "trial_days": 3,
+    "features": [
+      "IP Blocker & Country Blocker: Block IP, Block Country, Block Bots by geolocation",
+      "Bot Blocker, fraud control, DMCA claim: Block bot spy, Card Testing by Proxy/VPN",
+      "Order & Visitor Analytics: Fraud prevention, block fraud orders & block visitors",
+      "Block location or country redirect: Geolocation redirect visitors to other URLS",
+      "Checkout Block: based on email, phone, name & anti-copy, disable right-click"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Checkout UI",
+      "Fraud Filter",
+      "Fraud Order Analytics",
+      "IP & Country Blocker",
+      "Klaviyo",
+      "Visitor Analytics"
+    ],
+    "languages": [
+      "English",
+      "Hindi",
+      "Chinese (Simplified)",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Spanish",
+      "French",
+      "Italian",
+      "Dutch"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 21,
+      "pct_of_scanned": 2.26,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "instafeed",
+        "helpdesk",
+        "powr-popup",
+        "pushowl",
+        "restock-rocket-1",
+        "omnisend"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "form-builder-by-hulkapps",
+    "app_store_handle": "form-builder-by-hulkapps",
+    "name": "Hulk Contact Form Builder",
+    "developer": "HulkApps",
+    "category": "Email & SMS",
+    "tagline": "Easy contact us form, custom forms & survey with form...",
+    "rating": 4.9,
+    "reviews": 2048,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/5f594019010246ebf55d691bd099265f/icon/CPLUib3Tpv0CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/form-builder-by-hulkapps",
+    "launched": "August 11, 2017",
+    "built_for_shopify": true,
+    "app_store_category": "Forms",
+    "plans": [
+      {
+        "name": "Basic Plan",
+        "price": "Free",
+        "features": [
+          "1 Form, 50 Submissions",
+          "Export Submissions",
+          "File Upload (Unlimited Storage)",
+          "Respondent & Admin Email Notifications",
+          "Customize Style",
+          "Captcha",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro Plan",
+        "price": "$12.90",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Unlimited Forms and Submissions",
+          "UTM Tracking",
+          "Popup Form",
+          "Create Customer Accounts Through Forms",
+          "Facebook Pixel Integration",
+          "Set Up Custom Sending Domain",
+          "Form Schedule",
+          "Customize Auto Response Message"
+        ]
+      },
+      {
+        "name": "Pro+ Plan",
+        "price": "$24.90",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Unlimited Forms and Submissions",
+          "Multi Page Form",
+          "Slack Integration",
+          "Zapier Integration",
+          "File Upload Limit Up to 100 MB",
+          "Restrict Submissions to Logged In Users",
+          "Booking Element",
+          "Advanced Conditional Logic"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 12.9,
+    "trial_days": 7,
+    "features": [
+      "Create custom registration forms, contact forms, survey & more with file uploads",
+      "Design your forms by using advanced conditional and dynamic field logic",
+      "Personalized forms are designed to fit the aesthetic of your shop",
+      "File uploads with unlimited storage, including on the free plan",
+      "Schedule popup forms for sign-ups, launches and early sale access"
+    ],
+    "works_with": [
+      "Shopify Flow",
+      "Shopify Admin",
+      "Google Sheets",
+      "Klaviyo",
+      "MailChimp",
+      "Slack",
+      "Stripe, PayPal",
+      "Zapier, ZeroBounce"
+    ],
+    "languages": [
+      "Danish",
+      "German",
+      "English",
+      "Spanish",
+      "Finnish",
+      "French",
+      "Italian",
+      "Japanese",
+      "Korean",
+      "Norwegian (Bokmål)",
+      "Dutch",
+      "Portuguese (Brazil)",
+      "Swedish",
+      "Thai",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)",
+      "Czech",
+      "Polish",
+      "Portuguese (Portugal)",
+      "Turkish"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 21,
+      "pct_of_scanned": 2.26,
+      "co_installed": [
+        "product-options-by-hulkapps-1",
+        "klaviyo",
+        "instafeed",
+        "judgeme",
+        "yotpo",
+        "applovin",
+        "onetrust",
+        "recharge"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "wishlistplus",
+    "app_store_handle": "swym-relay",
+    "name": "Swym Wishlist Plus",
+    "developer": "Swym Corporation",
+    "category": "Wishlist & Back in Stock",
+    "tagline": "Increase your store conversions with a full featured wishlist",
+    "rating": 4.7,
+    "reviews": 1476,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/d612f58ce0decfaba38849af3396fb5b/icon/CKKXmdzFx_MCEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/swym-relay",
+    "launched": "July 29, 2016",
+    "built_for_shopify": false,
+    "app_store_category": "Wishlists",
+    "plans": [
+      {
+        "name": "Starter",
+        "price": "$29.99",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "3,000 Wishlist Actions/month",
+          "Add & view wishlists",
+          "Collections & Quick View",
+          "Share via social media",
+          "Email opt-in capture",
+          "Automated reminders",
+          "Price drop & stock alerts",
+          "30-day free trial"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$59.99",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "10,000 Wishlist actions/mo",
+          "Meta ads retargeting",
+          "Customer Segments",
+          "Wishlist summary alerts",
+          "Klaviyo, Attentive, Tapcart & Omnisend",
+          "Email + Chat Support",
+          "30-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Premium",
+        "price": "$99.99",
+        "period": "month",
+        "trial_days": 30,
+        "features": [
+          "25,000 Wishlist actions/mo",
+          "REST APIs access",
+          "JavaScript SDK",
+          "Custom Data models",
+          "Advanced configuration",
+          "24/5 support <4 hour response",
+          "30-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": false,
+    "from_price": 29.99,
+    "trial_days": 30,
+    "features": [
+      "Integrated with Shopify Sidekick so you can customize with simple AI prompts",
+      "Empower your sales staff with access to customer wishlists via Shopify POS",
+      "Automate marketing Emails/SMS for wishlist reminders, restock and price drop",
+      "Share wishlists via email, social media, SMS, or a direct link.",
+      "Reduce cart abandonment by enabling shoppers to save products for later."
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "Shopify Admin",
+      "BlueCore-Bloomreach-Ometria",
+      "Klaviyo - Yotpo - Mailchimp",
+      "Listrak - ReSci - DotDigital",
+      "Postscript-Attentive-Twillio",
+      "Sailthru-Omnisend-Hubspot"
+    ],
+    "languages": [
+      "English",
+      "German",
+      "French",
+      "Italian",
+      "Spanish",
+      "Japanese",
+      "Polish"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 21,
+      "pct_of_scanned": 2.26,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "yotpo",
+        "swell",
+        "attentive",
+        "backinstock",
+        "redo",
+        "product-reviews"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "orbe",
+    "app_store_handle": "orbe",
+    "name": "Orbe Geolocation",
+    "developer": "Orbe",
+    "category": "Currency & Translation",
+    "tagline": "Geolocation country redirects with right currency and language",
+    "rating": 5.0,
+    "reviews": 340,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/300c7396da3de51b6c2a5df448979f2a/icon/CN3Jo8iivpcDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/orbe",
+    "launched": "April 18, 2022",
+    "built_for_shopify": true,
+    "app_store_category": "Geolocation",
+    "plans": [
+      {
+        "name": "Basic",
+        "price": "Free",
+        "features": [
+          "Free up to 300 user redirections/month",
+          "Geolocation Popup",
+          "Unlimited Selectors",
+          "Shopify Markets Integration",
+          "Customize your design",
+          "Automatic Redirect",
+          "Redirect Analytics",
+          "UTM parameters"
+        ]
+      },
+      {
+        "name": "Advanced",
+        "price": "$29",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All features",
+          "SEO-friendly popups",
+          "Unlimited redirects",
+          "Advanced Geolocation Settings",
+          "Translated popup",
+          "Klaviyo Integration",
+          "Custom CSS",
+          "7-day free trial"
+        ]
+      },
+      {
+        "name": "Plus",
+        "price": "$59",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All features",
+          "Redirect between multiple stores",
+          "Adapt your welcome popup by country",
+          "Multi-store country selector",
+          "7-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options",
+          "Reviews"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 29.0,
+    "trial_days": 7,
+    "features": [
+      "Customize your geolocation popup and country selector from the theme editor",
+      "Translate popup, use dynamic variables and set up your geolocation app settings",
+      "Save user preferences and automatically country redirect in future visits",
+      "Redirect while maintaining attribution parameters of your marketing campaigns",
+      "Add a country selector and language switcher native to Shopify Markets"
+    ],
+    "works_with": [
+      "Shopify Admin",
+      "Global-e",
+      "Klaviyo",
+      "Markets Pro",
+      "Translate & Adapt"
+    ],
+    "languages": [
+      "English",
+      "Danish",
+      "German",
+      "French",
+      "Italian",
+      "Dutch",
+      "Portuguese (Brazil)",
+      "Turkish",
+      "Swedish",
+      "Spanish"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 20,
+      "pct_of_scanned": 2.15,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "intelligems",
+        "instafeed",
+        "global-e-crossborder",
+        "yotpo",
+        "rebuy",
+        "shopify-forms"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "bundler-product-bundles",
+    "app_store_handle": "bundler-product-bundles",
+    "name": "Bundler » Product Bundles App",
+    "developer": "Bundler.app",
+    "category": "Upsell & Bundles",
+    "tagline": "Set up quantity breaks, volume discounts & bundle offers",
+    "rating": 4.9,
+    "reviews": 2796,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/d9d0cab92dc90366549d3dddaef00f84/icon/CLi92uraqI8DEAE=.png",
+    "app_store_url": "https://apps.shopify.com/bundler-product-bundles",
+    "launched": "July 2, 2019",
+    "built_for_shopify": true,
+    "app_store_category": "Product bundles",
+    "plans": [
+      {
+        "name": "FREE FOR EVERYONE",
+        "price": "Free",
+        "features": [
+          "Unlimited revenue & orders",
+          "Buy X get Y",
+          "Volume discounts & Quantity Breaks",
+          "Flexible volume conditions",
+          "Flexible discounts (%, $, ...)",
+          "Product page upsells",
+          "Shopify POS",
+          "Auto-apply discount"
+        ]
+      },
+      {
+        "name": "Premium",
+        "price": "$9.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Mix & Match",
+          "Tiered Mix & Match",
+          "Sectioned Mix & Match",
+          "Quantity Break combinations",
+          "Custom landing pages",
+          "Free shipping",
+          "Funnel upsells",
+          "7-day free trial"
+        ]
+      },
+      {
+        "name": "Executive",
+        "price": "$19.99",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Bundle analytics",
+          "Total revenue",
+          "Average order value",
+          "Conversions graph",
+          "Total sales graph",
+          "Applied discounts graph",
+          "Most popular bundles insight",
+          "7-day free trial"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 9.99,
+    "trial_days": 7,
+    "features": [
+      "Create & upsell volume discount quantity breaks & bundles in your shop",
+      "Set up Quantity Breaks, Classic Bundles, Mix-And-Match Bundles, Tiered Discounts",
+      "Choose bundle discount type: percentage discount, fixed amount, fixed price etc.",
+      "Increase conversions with bundle landing pages and upsell cross-sell offers",
+      "Seamlessly integrate bundles with subscription products for recurring revenue."
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify POS",
+      "Shopify Admin",
+      "Cartbot: Gift with purchase",
+      "Multicurrency converter apps",
+      "PageFly Landing Page Builder",
+      "Point of sale (POS)",
+      "Seal Subscriptions",
+      "Subscription options"
+    ],
+    "languages": [
+      "English",
+      "German",
+      "Spanish",
+      "French",
+      "Italian",
+      "Japanese",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Slovenian",
+      "Chinese (Traditional)",
+      "Chinese (Simplified)",
+      "Arabic",
+      "Polish",
+      "Dutch",
+      "Swedish",
+      "Turkish",
+      "Hebrew"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 20,
+      "pct_of_scanned": 2.15,
+      "co_installed": [
+        "klaviyo",
+        "instafeed",
+        "pop-convert",
+        "shopify-forms",
+        "sealsubscriptions",
+        "judgeme",
+        "simple-bundles",
+        "wishlistplus"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "affliate-by-secomapp",
+    "app_store_handle": "affliate-by-secomapp",
+    "name": "UpPromote Affiliate Marketing",
+    "developer": "UpPromote",
+    "category": "Affiliate & Referral",
+    "tagline": "Drive referral sales loops with influencer & affiliate program",
+    "rating": 4.9,
+    "reviews": 3942,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/9c2f67b482aeae04937fd544c0bfe6a8/icon/CMjv-JmUpv0CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/affliate-by-secomapp",
+    "launched": "May 15, 2019",
+    "built_for_shopify": true,
+    "app_store_category": "Affiliate programs",
+    "plans": [
+      {
+        "name": "Free plan",
+        "price": "Free",
+        "features": [
+          "Review $3,000 referral sales/month",
+          "Creator Discovery (optional add-on)",
+          "Tracking by affiliate link/coupon",
+          "Special product commission",
+          "Sidekick extension integration",
+          "Analytics, Fraud protection",
+          "Manual payout, W9 form supported",
+          "Live chat support 24/7 for all plans"
+        ]
+      },
+      {
+        "name": "Growth",
+        "price": "$29.99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Review 300 referrals/month",
+          "Creator Discovery (add-on from $39/mo)",
+          "Unlimited programs",
+          "Customer referral program",
+          "Premium registration templates",
+          "Store credit",
+          "White-label email",
+          "Affiliate in-app chat"
+        ]
+      },
+      {
+        "name": "Professional",
+        "price": "$89.99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Review 600 referrals/month",
+          "Creator Discovery (add-on from $39/mo)",
+          "Anti-leak discount",
+          "Custom affiliate link & Auto-gen coupon",
+          "PayPal auto-payment",
+          "Auto-tier commission, Gift, Bonus",
+          "Invoice, 1099 tax form generation",
+          "API, MCP"
+        ]
+      },
+      {
+        "name": "Enterprise",
+        "price": "$199.99",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Approve/deny unlimited referral orders",
+          "Creator Discovery (add-on from $39/mo)",
+          "Custom development (extra fee may apply)",
+          "Multi-store",
+          "Special coupon commission",
+          "Unlimited staff accounts",
+          "Prioritized 1-1 support",
+          "Custom pricing for your business scale"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 29.99,
+    "trial_days": 14,
+    "features": [
+      "Run programs with flexible commissions & manage them with AI via Sidekick & MCP",
+      "Vet creators with full audience reports, authenticity scores & past collabs",
+      "Protect profits with anti-leak discount links, fraud detection & block lists",
+      "Automate tracking, approvals, discounts & PayPal payouts to save hours"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Admin",
+      "Facebook pixel",
+      "Hydrogen - Headless",
+      "Klaviyo, Mailchimp, Omnisend",
+      "Pagefly, EComposer",
+      "PayPal",
+      "Recharge, Appstle subscription"
+    ],
+    "languages": [
+      "English",
+      "German",
+      "French",
+      "Danish",
+      "Spanish",
+      "Finnish",
+      "Indonesian",
+      "Italian",
+      "Japanese",
+      "Korean",
+      "Malay",
+      "Dutch",
+      "Russian",
+      "Thai",
+      "Turkish",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 20,
+      "pct_of_scanned": 2.15,
+      "co_installed": [
+        "klaviyo",
+        "instafeed",
+        "judgeme",
+        "restock-rocket-1",
+        "shopify-forms",
+        "pop-convert",
+        "sealsubscriptions",
+        "freegifts"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "appstlesubscriptions",
+    "app_store_handle": "subscriptions-by-appstle",
+    "name": "Appstle℠ Subscriptions App",
+    "developer": "Appstle Inc.",
+    "category": "Subscriptions",
+    "tagline": "Retain customers with subscriptions, subscription box, bundles",
+    "rating": 5.0,
+    "reviews": 9289,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/80b36c79c341ba709db28b0a5294fda0/icon/COeuk9_065QDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/subscriptions-by-appstle",
+    "launched": "April 8, 2021",
+    "built_for_shopify": true,
+    "app_store_category": "Subscriptions",
+    "plans": [
+      {
+        "name": "FREE",
+        "price": "Free",
+        "features": [
+          "*Upto $500 in subscriptions per month*",
+          "Pay As You Go & Pre-paid Subscriptions",
+          "Hands-on Migration + App Integrations",
+          "Shopify Native Customer Portal",
+          "Multiple Frequencies and Payment Retry",
+          "Custom Shipping and Built-in Emails",
+          "Performance Analytics + Churn Control",
+          "24/7 Human Support in Minutes + More!"
+        ]
+      },
+      {
+        "name": "STARTER",
+        "price": "$10",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "0% Transaction Fee & No Hidden Charges",
+          "All Features in the Free Plan +",
+          "Manual Subscription Creation",
+          "Customer Portal Passwordless Login",
+          "Loyalty Features: Discount, Rewards, etc",
+          "Weekly Performance Summary Reports",
+          "Inventory Forecast + SMS Notifications",
+          "24/7 Human Support in Minutes + More!"
+        ]
+      },
+      {
+        "name": "BUSINESS (Biz)",
+        "price": "$30",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "0% Transaction Fee & No Hidden Charges",
+          "All Features in the Starter Plan +",
+          "Build-a-Box, Bundling, & Action Logs",
+          "Customized Widget Themes & Locations",
+          "Quickview & Cart Page Widget Placement",
+          "Retention Tools & Cancellation Control",
+          "Advance Customer Portal & Bulk Operation",
+          "24/7 Human Support in Minutes + More!"
+        ]
+      },
+      {
+        "name": "BUSINESS PREMIUM",
+        "price": "$100",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "0% Transaction Fee & No Hidden Charges",
+          "All Features in the Business Plan +",
+          "Product Swap + Auto Price & Address Sync",
+          "Checkout Links & Quick Action Emails",
+          "Custom Email Domain for Store Branding",
+          "Order Unification + Add to Subscriptions",
+          "24/7 Human Support in Minutes + More!",
+          "*PING US FOR ENTERPRISE, APIs & WEBHOOK*"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 10.0,
+    "trial_days": 14,
+    "features": [
+      "Sell subscriptions with shopper trial, payment options, build a box, and more",
+      "Achieve high engagement with subscription boxes and multi-language/translation",
+      "Provide tiered discounts, custom shipping, gifts, and more with loyalty features",
+      "Present feature rich customer portal with one click login and quick action links",
+      "Maximize ROI with upsells, bundling, bulk automation, retention tools, and more"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Gorgias",
+      "Growave",
+      "Klaviyo",
+      "PageFly",
+      "Stripe"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 19,
+      "pct_of_scanned": 2.04,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "instafeed",
+        "goaffpro",
+        "appstle-loyalty",
+        "yotpo",
+        "stamped",
+        "restock-rocket-1"
+      ]
+    },
+    "affiliate": {
+      "url": "https://subscription-admin.appstle.com/affiliates?fpr=muneeb-rafi-66b670",
+      "program": "Appstle"
+    }
+  },
+  {
+    "slug": "automizely-messages",
+    "app_store_handle": "automizely-messages",
+    "name": "AfterShip Email Marketing,SMS",
+    "developer": "AfterShip",
+    "category": "Email & SMS",
+    "tagline": "Email & SMS automation tools that convert more customers",
+    "rating": 4.8,
+    "reviews": 2344,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/b8bc9d365792ea16185361099864182c/icon/COb3zP2Pwv4CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/automizely-messages",
+    "launched": "July 30, 2019",
+    "built_for_shopify": false,
+    "app_store_category": "Email marketing",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "3,000 emails for up to 300 contacts",
+          "All popup features",
+          "All conversion tools",
+          "Campaign analytics",
+          "Web push notifications",
+          "Coupons",
+          "<div"
+        ]
+      },
+      {
+        "name": "Essentials",
+        "price": "$11",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "All popup features",
+          "All conversion tools",
+          "Campaign analytics",
+          "Web push notifications",
+          "Coupons",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$119",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Everything in Essentials plan, plus;",
+          "Upsell popups",
+          "Unique coupon campaigns",
+          "Product recommendations",
+          "Countdown timer",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Premium",
+        "price": "$179",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "Everything in Pro, plus;",
+          "Customer segmentation",
+          "AI-powered & on-site recommendations",
+          "Birthday emails",
+          "Price-drop & back-in-stock emails",
+          "7-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 11.0,
+    "trial_days": 7,
+    "features": [
+      "Personalized, automated email flows based on customer shopping behavior",
+      "Pre-built templates for emails and SMS, and conversion popups like spin wheels",
+      "A/B tests and easy performance monitoring through one dashboard",
+      "Built-in CRM to create relevant and meaningful customer segments",
+      "Functionality of multiple marketing apps in a single no-code, unified platform"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Flow",
+      "AfterShip",
+      "Automizely",
+      "Klaviyo"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 19,
+      "pct_of_scanned": 2.04,
+      "co_installed": [
+        "klaviyo",
+        "judgeme",
+        "instafeed",
+        "intelligems",
+        "alia",
+        "shopify-forms",
+        "octane-ai-quiz-personalization",
+        "okendo-reviews"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "bazaarvoice",
+    "app_store_handle": "bazaarvoice-reviews-photos-social",
+    "name": "Bazaarvoice Ratings & Reviews",
+    "developer": "Bazaarvoice Inc.",
+    "category": "Reviews",
+    "tagline": "Collect product ratings, reviews that inspire customers to buy",
+    "rating": 3.8,
+    "reviews": 15,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/16e28f7698fddac56db2a803783cf974/icon/CN_DsfeR8voCEAE=.png",
+    "app_store_url": "https://apps.shopify.com/bazaarvoice-reviews-photos-social",
+    "launched": "November 4, 2022",
+    "built_for_shopify": false,
+    "app_store_category": "Product reviews",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free to install"
+      }
+    ],
+    "free_plan": true,
+    "from_price": 0,
+    "trial_days": null,
+    "features": [
+      "Source high-volume, high quality, diverse mix of shopper voices",
+      "Transform static storefronts into high-converting destinations",
+      "Scale authentic, social proof across our global network"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Facebook",
+      "Google",
+      "Instagram",
+      "Pinterest",
+      "TikTok"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 19,
+      "pct_of_scanned": 2.04,
+      "co_installed": [
+        "klaviyo",
+        "rebuy",
+        "attentive",
+        "helpdesk",
+        "yotpo",
+        "nofraud",
+        "amp-back-in-stock",
+        "recharge"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "ecomsend",
+    "app_store_handle": "ecomsend",
+    "name": "CWILL Popup Email Marketing",
+    "developer": "CWILL INC",
+    "category": "Email & SMS",
+    "tagline": "Turn sign ups into sales: email popups, newsletters & messages",
+    "rating": 4.9,
+    "reviews": 7664,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/bda73e80e3a30463cb353d7ee7aa3edc/icon/CIj8-qCylZcDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/ecomsend",
+    "launched": "October 27, 2022",
+    "built_for_shopify": true,
+    "app_store_category": "Pop-ups",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "Free",
+        "features": [
+          "30 new subscribers/month",
+          "2,000 marketing emails/month",
+          "Unlimited popup views and store traffic",
+          "Unlimited stored contacts",
+          "24/7 support",
+          "<div"
+        ]
+      },
+      {
+        "name": "Essential",
+        "price": "$11.90",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "150 new subscribers/month",
+          "5,000 marketing emails/month",
+          "Unlimited popup widgets and views",
+          "Unlimited stored contacts",
+          "Preset email automations",
+          "Custom sending domain",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Pro",
+        "price": "$29.90",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "500 new subscribers/month",
+          "20,000 marketing emails/month",
+          "Unlimited popup widgets and views",
+          "Unlimited stored contacts",
+          "Custom email flows",
+          "Multi-language email templates",
+          "7-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "Premium",
+        "price": "$79.90",
+        "period": "month",
+        "trial_days": 7,
+        "features": [
+          "2,000 new subscribers/month",
+          "60,000 marketing emails/month",
+          "Unlimited popup widgets and views",
+          "Unlimited stored contacts",
+          "Custom email flows",
+          "Customer success support",
+          "7-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days."
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 11.9,
+    "trial_days": 7,
+    "features": [
+      "Grow email list: popups, sign up forms, exit intent, spin the wheel, contact us",
+      "Create email campaigns with drag-and-drop editor and professional templates.",
+      "Automate welcome emails, cart recovery, discount alerts, and customer win-back.",
+      "Customize email templates and popup designs to perfectly match your brand style.",
+      "Drive sales with popup discount. Works with Klaviyo, Mailchimp, SMSBump, Privy."
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Flow",
+      "forms"
+    ],
+    "languages": [
+      "English",
+      "Chinese (Simplified)",
+      "Chinese (Traditional)",
+      "Turkish",
+      "Portuguese (Brazil)",
+      "Portuguese (Portugal)",
+      "Japanese",
+      "Italian",
+      "French",
+      "German",
+      "Dutch",
+      "Czech",
+      "Danish",
+      "Spanish",
+      "Norwegian",
+      "Norwegian Nynorsk",
+      "Norwegian (Bokmål)",
+      "Polish",
+      "Somali",
+      "Finnish",
+      "Swedish",
+      "Thai",
+      "Korean"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 19,
+      "pct_of_scanned": 2.04,
+      "co_installed": [
+        "instafeed",
+        "judgeme",
+        "goaffpro",
+        "shopify-forms",
+        "klaviyo",
+        "pagefly",
+        "free-shipping-bar",
+        "smile-io"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "rivo-loyalty",
+    "app_store_handle": "rivo-loyalty",
+    "name": "Rivo: Loyalty Program, Rewards",
+    "developer": "Rivo",
+    "category": "Loyalty & Rewards",
+    "tagline": "Retain customers with loyalty, rewards, referrals & accounts",
+    "rating": 4.7,
+    "reviews": 1441,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/b96869f381aa0371ff39dd2c7aa3cb52/icon/CMXC_YXqmoYDEAE=.png",
+    "app_store_url": "https://apps.shopify.com/rivo-loyalty",
+    "launched": "January 18, 2021",
+    "built_for_shopify": false,
+    "app_store_category": "Loyalty and rewards",
+    "plans": [
+      {
+        "name": "100% FREE FOREVER",
+        "price": "Free",
+        "features": [
+          "[COMPARE OUR FREE PLAN TO OTHERS]",
+          "Up to 200 monthly orders",
+          "Loyalty Points Program",
+          "Ways to earn and redeem",
+          "Branding",
+          "Automated Email Campaigns",
+          "<div"
+        ]
+      },
+      {
+        "name": "Essential",
+        "price": "$15",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Dedicated loyalty & referral page",
+          "Theme extensions (Embed on product page)",
+          "On-site prompts",
+          "Advanced ways to earn",
+          "Email branding",
+          "2 integrations",
+          "Shopify POS integration",
+          "24/7 human support"
+        ]
+      },
+      {
+        "name": "Scale",
+        "price": "$49",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Everything in Essential",
+          "Advanced Branding (Custom CSS + Fonts)",
+          "VIP Tiers",
+          "Points Expiry",
+          "Analytics",
+          "Bonus Campaigns",
+          "24/7 human support",
+          "Referrals Program"
+        ]
+      },
+      {
+        "name": "Plus",
+        "price": "$499",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "Everything in Scale",
+          "Custom Integrations (eg: Klaviyo events)",
+          "Advanced Analytics",
+          "Rivo Developer Toolkit",
+          "Checkout Extensions",
+          "14-day free trial",
+          "All charges are billed in USD. Recurring and usage-based charges are billed every 30 days.",
+          "See all pricing options"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 15.0,
+    "trial_days": 14,
+    "features": [
+      "A fully customizable loyalty and referrals platform, that moves your metrics.",
+      "Loyalty, Rewards & Referrals built for fast growing DTC brands.",
+      "24/7 world class live chat support",
+      "Instantly integrates with your stack. Klaviyo, Gorgias, Postscript, etc.",
+      "Need more? Unlock full customization with the Rivo Developer Toolkit"
+    ],
+    "works_with": [
+      "Checkout",
+      "Customer accounts",
+      "Shopify POS",
+      "Shopify Flow",
+      "Shopify Admin",
+      "Attentive",
+      "Fuego",
+      "Gorgias",
+      "Klaviyo",
+      "Postscript"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 18,
+      "pct_of_scanned": 1.94,
+      "co_installed": [
+        "klaviyo",
+        "instafeed",
+        "rakuten-advertising",
+        "attentive",
+        "helpdesk",
+        "gift-card-loyalty-program",
+        "shopmy",
+        "black-crow-ai"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "afterpay-messaging",
+    "app_store_handle": "afterpay-messaging",
+    "name": "Afterpay On‑Site Messaging",
+    "developer": "Afterpay",
+    "category": "Payments & BNPL",
+    "tagline": "Increase customer sales with pay-over-time onsite messaging",
+    "rating": 3.3,
+    "reviews": 57,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/884b82b320ee4979360a376405752942/icon/CNe00YP80fwCEAE=.jpeg",
+    "app_store_url": "https://apps.shopify.com/afterpay-messaging",
+    "launched": "February 10, 2021",
+    "built_for_shopify": false,
+    "app_store_category": "Payment experience",
+    "plans": null,
+    "free_plan": true,
+    "from_price": 0,
+    "trial_days": null,
+    "features": [
+      "Add messaging easily to product and cart pages with a visual editor",
+      "Adjust mobile view, add footer icons, and personalize theme to match your brand",
+      "Set minimum/maximum order limit messaging to match your account"
+    ],
+    "works_with": [
+      "Shopify Admin"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 18,
+      "pct_of_scanned": 1.94,
+      "co_installed": [
+        "klaviyo",
+        "helpdesk",
+        "attentive",
+        "judgeme",
+        "shopmy",
+        "intelligems",
+        "global-e-crossborder",
+        "yotpo"
+      ]
+    },
+    "affiliate": null
+  },
+  {
+    "slug": "product-customizer",
+    "app_store_handle": "product-customizer",
+    "name": "PC ‑ Custom Product Options",
+    "developer": "Product Customizer",
+    "category": "Product Options & Sizing",
+    "tagline": "Add variant option to personalizing and customizing products",
+    "rating": 4.7,
+    "reviews": 1175,
+    "icon_url": "https://cdn.shopify.com/app-store/listing_images/8e319abfd8696f17d53ffb83c2e9dead/icon/CI_IhL70lu8CEAE=.png",
+    "app_store_url": "https://apps.shopify.com/product-customizer",
+    "launched": "November 5, 2012",
+    "built_for_shopify": true,
+    "app_store_category": "Product variants",
+    "plans": [
+      {
+        "name": "Free plan",
+        "price": "Free",
+        "features": [
+          "Unlimited basic options fields",
+          "Unlimited products on your store",
+          "Line text & paragraph text",
+          "Radio buttons, dropdown menus",
+          "Checkbox groups, required selection",
+          "Free app technical support - all themes",
+          "<div"
+        ]
+      },
+      {
+        "name": "BASIC CUSTOMIZER",
+        "price": "$8.90",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "UNLIMITED product options",
+          "UNLIMITED variant options",
+          "10+ option field types, including:",
+          "File upload, date picker, font picker",
+          "Color swatch & Image swatch",
+          "TEMPLATES: bulk-apply sets of options",
+          "14-day free trial",
+          "<div"
+        ]
+      },
+      {
+        "name": "PREMIUM CUSTOMIZER",
+        "price": "$18.90",
+        "period": "month",
+        "trial_days": 14,
+        "features": [
+          "UNLIMITED product options",
+          "UNLIMITED variant options",
+          "10+ option field types, including:",
+          "File upload, date picker, font picker",
+          "Color swatch & image swatch",
+          "TEMPLATES: bulk-apply sets of options",
+          "CONDITIONAL LOGIC: hide / display fields",
+          "UPCHARGE PRICING: upcharge $$ per option"
+        ]
+      }
+    ],
+    "free_plan": true,
+    "from_price": 8.9,
+    "trial_days": 14,
+    "features": [
+      "ADD UNLIMITED PRODUCT OPTIONS FIELDS - to unlimited product pages on your store",
+      "UPCHARGE PRICING - charge more $$$ for options to increase Shopify revenue",
+      "1-CLICK OPTIONS TEMPLATES - create and apply whole templates (sets) of fields",
+      "PREMIUM OPTIONS FIELD TYPES - File uploads, color or image swatches & much more",
+      "ROBUST CONDITIONAL LOGIC - hide/display options fields based on prior selections"
+    ],
+    "works_with": [
+      "Checkout",
+      "Shopify Admin",
+      "file upload",
+      "product customizer",
+      "product options",
+      "product personalization",
+      "product personalizer",
+      "product variants"
+    ],
+    "languages": [
+      "English"
+    ],
+    "app_store_checked_on": "2026-11-17",
+    "scan": {
+      "stores": 17,
+      "pct_of_scanned": 1.83,
+      "co_installed": [
+        "klaviyo",
+        "mailchimp",
+        "instafeed",
+        "recharge",
+        "helpdesk",
+        "judgeme",
+        "goaffpro",
+        "visually-io"
+      ]
+    },
+    "affiliate": null
+  }
+]
