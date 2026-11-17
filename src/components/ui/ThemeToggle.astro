@@ -1,0 +1,80 @@
+---
+/**
+ * Header icon button that flips the effective theme (light ↔ dark) and stores the choice.
+ * The sun/moon crossfade is pure CSS from <html data-theme>, so it is right before JS runs;
+ * client/theme.ts sets aria-pressed (pressed = dark) and handles the click (delegated).
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['theme-toggle', className]}
+  aria-label="Dark theme"
+  aria-pressed="false"
+  title="Toggle dark theme"
+  data-theme-toggle
+>
+  <Icon name="sun" size={18} class="theme-toggle__sun" />
+  <Icon name="moon" size={18} class="theme-toggle__moon" />
+</button>
+
+<style>
+  .theme-toggle {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-control);
+    color: var(--ink-2);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .theme-toggle:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .theme-toggle :global(.icon) {
+    grid-area: 1 / 1;
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+  /* Light: show the moon (what you switch to); dark: show the sun. */
+  .theme-toggle :global(.theme-toggle__sun) {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+  :global([data-theme='dark']) .theme-toggle :global(.theme-toggle__sun) {
+    opacity: 1;
+    transform: none;
+  }
+  :global([data-theme='dark']) .theme-toggle :global(.theme-toggle__moon) {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme])) .theme-toggle :global(.theme-toggle__sun) {
+      opacity: 1;
+      transform: none;
+    }
+    :global(:root:not([data-theme])) .theme-toggle :global(.theme-toggle__moon) {
+      opacity: 0;
+    }
+  }
+  @media (pointer: coarse) {
+    .theme-toggle::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+    }
+  }
+</style>

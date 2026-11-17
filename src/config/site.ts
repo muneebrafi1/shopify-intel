@@ -7,6 +7,9 @@ export const SITE_NAME = 'Vitrine';
 /** Short descriptor used next to the name in titles and meta. */
 export const SITE_TAGLINE = 'Real Shopify stores, page by page';
 
+/** Legal entity that operates the site (footer copyright line, legal pages). */
+export const LEGAL_ENTITY = 'Xovist';
+
 /** Production domain (placeholder until the brand is chosen). Used for canonicals and sitemaps. */
 export const SITE_DOMAIN = 'vitrine.example';
 export const SITE_URL = `https://${SITE_DOMAIN}`;
@@ -24,6 +27,7 @@ export const PRIMARY_NAV = [
   { href: '/apps', label: 'Apps' },
   { href: '/sections', label: 'Sections' },
   { href: '/teardowns', label: 'Teardowns' },
+  { href: '/compare', label: 'Compare' },
 ] as const;
 
 export const API_VERSION = 'v1';
