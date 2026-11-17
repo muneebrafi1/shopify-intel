@@ -1,19 +1,146 @@
 ---
-/** Shows the flash message carried by `?ok=` / `?err=` after a form post. */
+/**
+ * The flash message carried by `?ok=` / `?err=` after a form post (Post/Redirect/Get).
+ * Success and info show as a toast at the bottom of the screen (dismissible, fades out after a
+ * while with JS); errors show as an inline banner at the top of the content, where they stay.
+ * Exactly one role="status" region per page (the e2e suite reads it).
+ */
+import Icon from '~/components/ui/Icon.astro';
 import Notice from '~/components/ui/Notice.astro';
 import { readFlash } from '~/server/admin/flash';
 
 const flash = readFlash(Astro.url);
 ---
 
-{flash && (
-  <div class="flash" role="status">
-    <Notice tone={flash.tone}>{flash.text}</Notice>
-  </div>
-)}
+{flash &&
+  (flash.tone === 'critical' ? (
+    <div class="flash-banner" role="status">
+      <Notice tone="critical">{flash.text}</Notice>
+    </div>
+  ) : (
+    <div class:list={['toast', `toast--${flash.tone}`]} role="status" data-toast>
+      <Icon
+        name={flash.tone === 'positive' ? 'check-circle' : 'info'}
+        size={16}
+        class="toast__icon"
+      />
+      <p class="toast__text">{flash.text}</p>
+      <button type="button" class="toast__close" aria-label="Dismiss" data-toast-close>
+        <Icon name="x" size={14} />
+      </button>
+    </div>
+  ))}
+
+<script>
+  // Let the toast go after a while (paused while hovered or focused).
+  const toast = document.querySelector<HTMLElement>('[data-toast]');
+  if (toast) {
+    let timer = 0;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const hide = () => (still ? (toast.hidden = true) : toast.setAttribute('data-leaving', ''));
+    const arm = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(hide, 8000);
+    };
+    toast.addEventListener('transitionend', () => {
+      if (toast.hasAttribute('data-leaving')) toast.hidden = true;
+    });
+    toast.addEventListener('mouseenter', () => window.clearTimeout(timer));
+    toast.addEventListener('focusin', () => window.clearTimeout(timer));
+    toast.addEventListener('mouseleave', arm);
+    toast.querySelector('[data-toast-close]')?.addEventListener('click', () => {
+      toast.hidden = true;
+    });
+    arm();
+  }
+</script>
 
 <style>
-  .flash {
-    margin-bottom: var(--space-6);
+  .flash-banner {
+    margin-bottom: var(--space-5);
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: var(--space-5);
+    z-index: var(--z-toast);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2-5, 10px);
+    width: max-content;
+    max-width: min(calc(100vw - 32px), 480px);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-lg),
+      var(--highlight);
+    font-size: var(--text-sm);
+    transform: translateX(-50%);
+    animation: toast-in var(--dur-slow) var(--ease-out);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+  .toast[data-leaving] {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 8px);
+    }
+  }
+  .toast :global(.toast__icon) {
+    flex: none;
+    color: var(--positive);
+  }
+  .toast--info :global(.toast__icon) {
+    color: var(--ink-3);
+  }
+  .toast__text {
+    min-width: 0;
+    line-height: var(--leading-normal);
+  }
+  .toast__close {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    color: var(--ink-3);
+  }
+  .toast__close:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  html:not(.js) .toast__close {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .toast {
+      left: auto;
+      right: var(--space-6);
+      bottom: var(--space-6);
+      transform: none;
+    }
+    .toast[data-leaving] {
+      transform: translateY(8px);
+    }
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toast {
+      animation: none;
+    }
   }
 </style>

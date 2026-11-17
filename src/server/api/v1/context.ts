@@ -2,8 +2,10 @@
  * Per-call context shared by every handler and repository: the database, environment, the data
  * provenance read from the `meta` table, and request info (HTTP calls only).
  */
+import type { MediaStore } from '../../admin/actions.ts';
 import type { Db } from '../../db/types.ts';
 import type { MediaOptions } from '../../media/urls.ts';
+import type { Notifier, WaitUntil } from '../../notify.ts';
 
 /** Environment variables the API reads (names documented in .env.example). */
 export interface ApiEnv {
@@ -11,6 +13,8 @@ export interface ApiEnv {
   IP_HASH_SALT?: string;
   /** Absolute origin for captured media, e.g. an R2 custom domain. Optional. */
   MEDIA_BASE_URL?: string;
+  /** Recipient of admin notifications (new removal requests). Optional; see notify.ts. */
+  ADMIN_NOTIFY_EMAIL?: string;
 }
 
 export interface Source {
@@ -38,9 +42,18 @@ export interface DataInfo {
   sources: Record<string, Source>;
 }
 
+/** Who is calling a guarded (admin) endpoint, as established by the mount's guard. */
+export interface Principal {
+  /** Written to the audit log: an Access email, 'admin' (password) or 'api-token'. */
+  actor: string;
+  method: 'access' | 'password' | 'token';
+}
+
 export interface RequestInfo {
   /** Client IP from CF-Connecting-IP; null in-process. Never stored raw. */
   ip: string | null;
+  /** Set only on guarded (admin) routes, after the guard allowed the request. */
+  principal?: Principal | null;
 }
 
 export interface Ctx {
@@ -50,6 +63,12 @@ export interface Ctx {
   media: MediaOptions;
   now: () => Date;
   request: RequestInfo | null;
+  /** Admin notifications (src/server/notify.ts). Never throws. */
+  notifier: Notifier;
+  /** Workers `waitUntil` for work after the response; null in tests and scripts. */
+  waitUntil: WaitUntil | null;
+  /** R2 subset used to delete media (admin removals); null when unbound. */
+  mediaStore: MediaStore | null;
 }
 
 export async function loadDataInfo(db: Db): Promise<DataInfo> {

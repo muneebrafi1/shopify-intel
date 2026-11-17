@@ -134,6 +134,18 @@ export const FacetSchema = named(
   z.object({ value: z.string(), label: z.string(), count: int() }),
 );
 
+/**
+ * `facets` on list endpoints: false skips the facet queries when a caller only shows the items
+ * (the facets come back empty, same shape).
+ */
+export const facetsFlag = (empty: string) =>
+  z
+    .boolean()
+    .default(true)
+    .describe(
+      `false = items and pagination only: skips the facet counts (${empty}). For callers that only show the items.`,
+    );
+
 export const PageInfoSchema = named(
   'PageInfo',
   z.object({

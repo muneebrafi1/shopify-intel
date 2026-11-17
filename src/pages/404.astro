@@ -1,175 +1,125 @@
 ---
-/** Not found: an empty plate, a search box and the main ways back in. No data calls. */
+/** Not found: what happened, a search box and the main ways back in. No data calls. */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Button from '~/components/ui/Button.astro';
 import Icon from '~/components/ui/Icon.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import type { IconName } from '~/components/ui/icons';
 
 Astro.response.status = 404;
 Astro.response.headers.set('Cache-Control', 'no-store');
 
-const WAYS = [
-  { href: '/stores', label: 'Stores', note: 'Real storefronts, page by page' },
-  { href: '/themes', label: 'Themes', note: 'Every theme on the stores using it' },
-  { href: '/apps', label: 'Apps', note: 'Where each app shows up' },
-  { href: '/sections', label: 'Sections', note: 'Headers, heroes, buy boxes and more' },
+const WAYS: { href: string; label: string; note: string; icon: IconName }[] = [
+  { href: '/stores', label: 'Stores', note: 'Real storefronts, page by page', icon: 'storefront' },
+  {
+    href: '/themes',
+    label: 'Themes',
+    note: 'Every theme on the stores using it',
+    icon: 'paint-brush',
+  },
+  { href: '/apps', label: 'Apps', note: 'Where each app shows up', icon: 'puzzle-piece' },
+  {
+    href: '/sections',
+    label: 'Sections',
+    note: 'Headers, heroes, buy boxes and more',
+    icon: 'stack',
+  },
+  { href: '/teardowns', label: 'Teardowns', note: 'One store, read closely', icon: 'article' },
+  { href: '/compare', label: 'Compare', note: 'Apps and themes side by side', icon: 'scales' },
 ];
 ---
 
 <BaseLayout title="Page not found" description="This page isn’t here." noindex>
   <div class="nf container">
-    <div class="nf__plate marks" aria-hidden="true">
-      <span class="nf__page">
-        <span class="nf__bar"></span>
-        <span class="nf__block"></span>
-        <span class="nf__line"></span>
-        <span class="nf__line nf__line--short"></span>
-      </span>
-      <span class="nf__no">N°404</span>
+    <div class="nf__intro">
+      <p class="eyebrow">Error 404</p>
+      <h1 class="display-md nf__title">We can’t find that page.</h1>
+      <p class="lead nf__sub">
+        The link may be out of date, or the store may have been removed at its owner’s request.
+        Search for it, or start from one of these.
+      </p>
+
+      <form class="nf__search" action="/search" method="get" role="search">
+        <label class="visually-hidden" for="nf-q">
+          Search stores, themes, apps and sections
+        </label>
+        <span class="nf__field">
+          <Icon name="magnifying-glass" size={18} />
+          <input
+            id="nf-q"
+            name="q"
+            type="search"
+            placeholder="Search stores, themes, apps"
+            autocomplete="off"
+          />
+        </span>
+        <Button type="submit" variant="primary" size="lg">
+          Search
+        </Button>
+      </form>
+
+      <p class="nf__owner">
+        Own a store and looking for its page? It may have been removed on request.{' '}
+        <a href="/opt-out">Removal and corrections</a>
+      </p>
     </div>
 
-    <MonoLabel as="p" class="nf__flag">
-      Not found
-    </MonoLabel>
-    <h1 class="nf__title display">This page isn’t in the archive.</h1>
-    <p class="nf__sub">
-      The link may be out of date, or the store may have been removed at its owner’s request. Try a
-      search, or start from one of these.
-    </p>
-
-    <form class="nf__search" action="/search" method="get" role="search">
-      <label class="visually-hidden" for="nf-q">
-        Search stores, themes, apps and sections
-      </label>
-      <span class="nf__search-field">
-        <Icon name="magnifying-glass" size={16} />
-        <input
-          id="nf-q"
-          name="q"
-          type="search"
-          placeholder="Search stores, themes, apps"
-          autocomplete="off"
-        />
-      </span>
-      <Button type="submit" variant="primary" size="lg">
-        Search
-      </Button>
-    </form>
-
-    <ol class="nf__ways">
-      {WAYS.map((w, i) => (
-        <li>
-          <a href={w.href}>
-            <span class="nf__n">{String(i + 1).padStart(2, '0')}</span>
-            <span class="nf__label">{w.label}</span>
-            <span class="nf__note">{w.note}</span>
-            <span class="nf__arrow" aria-hidden="true">
-              →
-            </span>
-          </a>
-        </li>
-      ))}
-    </ol>
+    <nav class="nf__ways" aria-label="Start from">
+      <ul>
+        {WAYS.map((w) => (
+          <li>
+            <a href={w.href} class="nf__way">
+              <Icon name={w.icon} size={20} class="nf__icon" />
+              <span class="nf__label">{w.label}</span>
+              <span class="nf__note">{w.note}</span>
+              <Icon name="arrow-right" size={16} class="nf__arrow" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   </div>
 </BaseLayout>
 
 <style>
   .nf {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 640px;
-    padding-top: var(--space-16);
-    text-align: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    padding-block: var(--space-12) var(--section-y);
   }
-
-  .nf__plate {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 168px;
-    aspect-ratio: 4 / 3;
-    margin-bottom: var(--space-10);
-    border-radius: var(--radius-lg);
-    background: var(--tile);
-  }
-  .nf__page {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    width: 58%;
-    height: 72%;
-    padding: 9px;
-    border-radius: 4px;
-    background: var(--surface);
-    box-shadow: var(--shadow-shot);
-  }
-  .nf__bar {
-    height: 5px;
-    border-radius: 3px;
-    background: var(--ph-line);
-  }
-  .nf__block {
-    flex: 1;
-    border-radius: 3px;
-    background: var(--ph-block);
-  }
-  .nf__line {
-    height: 4px;
-    width: 80%;
-    border-radius: 2px;
-    background: var(--ph-line);
-  }
-  .nf__line--short {
-    width: 50%;
-  }
-  .nf__no {
-    position: absolute;
-    right: 8px;
-    bottom: 6px;
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.04em;
-  }
-
-  .nf :global(.nf__flag) {
-    margin-bottom: var(--space-4);
+  .nf__intro {
+    min-width: 0;
+    max-width: 560px;
   }
   .nf__title {
-    font-size: var(--text-5xl);
+    margin-top: var(--space-3);
   }
   .nf__sub {
-    max-width: 460px;
     margin-top: var(--space-4);
-    color: var(--ink-2);
-    font-size: var(--text-md);
-    line-height: var(--leading-normal);
   }
 
   .nf__search {
     display: flex;
     gap: var(--space-2);
-    width: 100%;
-    max-width: 460px;
     margin-top: var(--space-8);
   }
-  .nf__search-field {
+  .nf__field {
     display: flex;
     flex: 1;
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
     height: 44px;
-    padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-control);
     background: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-xs);
     color: var(--ink-3);
     transition: box-shadow var(--dur-fast) var(--ease-out);
   }
-  .nf__search-field:focus-within {
+  .nf__field:focus-within {
     box-shadow:
       inset 0 0 0 1px var(--ink),
       0 0 0 3px var(--accent-wash);
@@ -181,74 +131,116 @@ const WAYS = [
     border: 0;
     background: none;
     color: var(--ink);
-    font-size: var(--text-md);
+    font-size: var(--text-body);
   }
   .nf__search input:focus-visible {
     outline: none;
     box-shadow: none;
   }
   .nf__search input::placeholder {
-    color: var(--ink-4);
+    color: var(--ink-3);
   }
-
-  .nf__ways {
-    width: 100%;
-    margin-top: var(--space-12);
-    border-top: 1px solid var(--ink);
-    text-align: left;
+  .nf__owner {
+    margin-top: var(--space-6);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    line-height: 1.5;
   }
-  .nf__ways a {
-    display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 2px var(--space-3);
-    padding: var(--space-3) 0;
-    border-bottom: 1px solid var(--line);
-    transition: background-color var(--dur-fast) var(--ease-out);
-  }
-  .nf__ways a:hover .nf__label {
+  .nf__owner a {
+    color: var(--ink-2);
     text-decoration: underline;
+    text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
   }
-  .nf__n {
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
+  .nf__owner a:hover {
+    color: var(--ink);
+  }
+
+  .nf__ways ul {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .nf__way {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'icon label arrow'
+      'icon note arrow';
+    align-items: center;
+    gap: 2px var(--space-3);
+    min-height: 64px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .nf__way:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+    transform: translateY(-2px);
+  }
+  .nf__way :global(.nf__icon) {
+    grid-area: icon;
+    color: var(--ink-2);
   }
   .nf__label {
-    font-size: var(--text-md);
-    font-weight: var(--weight-medium);
+    grid-area: label;
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
   }
   .nf__note {
-    grid-column: 2;
+    grid-area: note;
     color: var(--ink-3);
     font-size: var(--text-sm);
   }
-  .nf__arrow {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-    align-self: center;
+  .nf__way :global(.nf__arrow) {
+    grid-area: arrow;
     color: var(--ink-3);
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .nf__way:hover :global(.nf__arrow) {
+    color: var(--ink);
+    transform: translateX(2px);
   }
 
-  @media (max-width: 639px) {
-    .nf {
-      padding-top: var(--space-10);
+  @media (min-width: 640px) {
+    .nf__ways ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .nf__title {
-      font-size: var(--text-4xl);
+    .nf__way {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'icon arrow'
+        'label label'
+        'note note';
+      align-items: start;
+      min-height: 132px;
+      padding: var(--space-5);
+    }
+    .nf__label {
+      margin-top: var(--space-4);
     }
   }
-  @media (min-width: 640px) {
-    .nf__ways a {
-      grid-template-columns: 2rem 8rem minmax(0, 1fr) auto;
+  @media (min-width: 1024px) {
+    .nf {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: var(--space-16);
+      align-items: start;
+      padding-top: var(--space-20);
     }
-    .nf__note {
-      grid-column: 3;
-    }
-    .nf__arrow {
-      grid-column: 4;
-      grid-row: auto;
+    .nf__ways {
+      padding-top: var(--space-8);
     }
   }
 </style>

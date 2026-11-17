@@ -1,0 +1,220 @@
+---
+/**
+ * A window onto part of a full-page capture (from `from` px, `view` px tall), with the page's
+ * sections drawn on it. Used by "How it works" and the teardown card: the same page can be shown
+ * plain, sliced (dashed outlines), tagged (pinned labels, the FullPage language) or annotated
+ * (numbered markers). Static: no JS. The capture always renders with light tokens, like every
+ * store page in the product.
+ *
+ * Coordinates are CSS px of the full capture; everything is positioned in percentages, so the
+ * crop scales with its box and works the same for placeholders and real captures.
+ */
+import { thumbUrl } from '~/lib/media';
+
+export interface CropRegion {
+  key: string | number;
+  y: number;
+  h: number;
+  x?: number | null;
+  w?: number | null;
+  /** Tag text, e.g. "Reviews · Loox". */
+  label?: string;
+  /** Marker number for `mode="notes"`. */
+  n?: number;
+  /** Accent outline (the region the visual is about). */
+  active?: boolean;
+}
+interface Props {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  /** First visible capture px (top of the crop). */
+  from?: number;
+  /** Visible capture height in px (the box keeps width : view). */
+  view: number;
+  regions?: CropRegion[];
+  mode?: 'plain' | 'sliced' | 'tagged' | 'notes';
+  eager?: boolean;
+  class?: string;
+}
+const {
+  src,
+  width,
+  height,
+  alt,
+  from = 0,
+  view,
+  regions = [],
+  mode = 'plain',
+  eager = false,
+  class: className,
+} = Astro.props;
+const start = Math.max(0, Math.min(from, height - view));
+// The top of a page only needs the top slice (placeholders render just that).
+const img = start === 0 ? thumbUrl(src, { cropHeight: Math.min(height, view) }) : src;
+const imgH = start === 0 ? Math.min(height, view) : height;
+const pctY = (n: number) => `${((n / height) * 100).toFixed(4)}%`;
+const pctX = (n: number) => `${((n / width) * 100).toFixed(4)}%`;
+const visible = regions
+  .map((r, i) => ({ ...r, i }))
+  .filter((r) => r.y + r.h > start && r.y < start + view);
+const pad = (n: number) => String(n).padStart(2, '0');
+// A section that starts above the crop keeps its label at the crop's top edge.
+const pinTop = (r: CropRegion) =>
+  r.y < start ? `top:calc(${(((start - r.y) / r.h) * 100).toFixed(3)}% + 7px)` : undefined;
+---
+
+<div
+  class:list={['cc', `cc--${mode}`, className]}
+  style={`aspect-ratio:${width} / ${Math.min(view, height)}`}
+  data-theme="light"
+>
+  <div
+    class="cc__page"
+    style={`aspect-ratio:${width} / ${height};transform:translateY(-${((start / height) * 100).toFixed(4)}%)`}
+  >
+    <img
+      class:list={['cc__img', { 'cc__img--slice': start === 0 }]}
+      src={img}
+      alt={alt}
+      width={width}
+      height={imgH}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+    {mode !== 'plain' &&
+      visible.map((r) => (
+        <span
+          class:list={['cc__region', { 'cc__region--active': r.active && mode !== 'sliced' }]}
+          style={`top:${pctY(r.y)};height:${pctY(r.h)}${
+            r.x != null && r.w != null && r.w < width
+              ? `;left:${pctX(r.x)};width:${pctX(r.w)};right:auto`
+              : ''
+          }`}
+          aria-hidden="true"
+        >
+          {mode === 'sliced' && r.h / width >= 0.04 && (
+            <span class="cc__num num">{pad(r.i + 1)}</span>
+          )}
+          {mode === 'tagged' && r.label && (r.active || r.h / width >= 0.05) && (
+            <span class="cc__tag" style={pinTop(r)}>
+              {r.label}
+            </span>
+          )}
+          {mode === 'notes' && r.n != null && (
+            <span class="cc__marker num" style={pinTop(r)}>
+              {pad(r.n)}
+            </span>
+          )}
+        </span>
+      ))}
+  </div>
+</div>
+
+<style>
+  .cc {
+    --tag-line: rgb(18 18 17 / 0.26);
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    background: var(--capture-bg);
+    box-shadow: var(--shadow-shot);
+    container-type: inline-size;
+  }
+  .cc__page {
+    position: relative;
+    width: 100%;
+  }
+  .cc__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  /* A top slice covers only the visible part: give it the box of the slice, not the page. */
+  .cc__img--slice {
+    height: auto;
+    bottom: auto;
+  }
+  .cc__region {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+  .cc__region::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 3px;
+    border: 1.5px dashed var(--tag-line);
+  }
+  .cc--sliced .cc__region::before {
+    border-color: rgb(18 18 17 / 0.42);
+  }
+  /* Sliced: a quiet section number per slice (types come in the next step). */
+  .cc__num {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 5px;
+    border-radius: 4px;
+    background: rgb(18 18 17 / 0.08);
+    color: rgb(18 18 17 / 0.62);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .cc__region--active::before {
+    border: 1.5px solid var(--accent);
+    background: var(--accent-wash);
+  }
+  .cc__tag {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    display: inline-flex;
+    align-items: center;
+    max-width: calc(100% - 14px);
+    height: 18px;
+    padding: 0 7px;
+    border-radius: var(--radius-pill);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  }
+  .cc__region--active .cc__tag {
+    background: var(--accent-btn);
+    color: var(--accent-fg);
+  }
+  .cc__marker {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    display: grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  }
+  @container (min-width: 420px) {
+    .cc__tag {
+      height: 20px;
+      font-size: var(--text-2xs);
+    }
+  }
+</style>

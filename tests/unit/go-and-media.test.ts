@@ -19,9 +19,9 @@ const clicks = async (id: number) =>
 describe('/go/<id>', () => {
   it('302s to the affiliate URL and counts the click per day', async () => {
     const link = await db.first<{ id: number; url: string }>(
-      "SELECT id, url FROM affiliate_links WHERE target_type = 'theme' AND target_id IS NOT NULL",
+      'SELECT id, url FROM affiliate_links WHERE target_id IS NOT NULL AND active = 1 ORDER BY id',
     );
-    if (!link) throw new Error('seed has no theme link');
+    if (!link) throw new Error('seed has no resolved affiliate link');
     const res = await affiliateRedirect(db, String(link.id), req(), FIXED_NOW);
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toBe(link.url);

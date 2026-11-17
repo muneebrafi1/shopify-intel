@@ -1,30 +1,31 @@
 ---
 /**
- * One search result: a visual on the left (page thumbnail, section crop, app icon or store
- * mark), the title with the matched word starts marked, a mono subtitle, and the kind.
+ * One search result row: a picture (page thumbnail, section crop, app icon, store mark or the
+ * kind's glyph), the title with the matched word starts highlighted, the subtitle, the kind
+ * (in mixed lists) and the action. The whole row is one link.
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
+import Icon from '~/components/ui/Icon.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
 import { thumbUrl } from '~/lib/media';
 import type { SearchHit } from '~/server/api/v1/types';
 import { highlightParts } from './highlight';
+import { KIND } from './kinds';
 
 interface Props {
   hit: SearchHit;
   words: string[];
-  kindLabel: string;
+  /** Show the kind label (mixed lists). */
+  showKind?: boolean;
   eager?: boolean;
 }
-const { hit, words, kindLabel, eager = false } = Astro.props;
+const { hit, words, showKind = false, eager = false } = Astro.props;
+const kind = KIND[hit.kind];
 const parts = highlightParts(hit.title, words);
 const t = hit.thumbnail;
 const isCrop = hit.kind === 'section-type';
-const thumb = t
-  ? isCrop
-    ? t.src
-    : thumbUrl(t.src, { cropHeight: Math.min(t.height, Math.round(t.width * 0.62)), width: 240 })
-  : null;
-const thumbH = t ? (isCrop ? t.height : Math.min(t.height, Math.round(t.width * 0.62))) : 0;
+const cropH = t ? (isCrop ? t.height : Math.min(t.height, Math.round(t.width * 0.62))) : 0;
+const thumb = t ? (isCrop ? t.src : thumbUrl(t.src, { cropHeight: cropH, width: 240 })) : null;
 ---
 
 <li class="hit">
@@ -34,23 +35,24 @@ const thumbH = t ? (isCrop ? t.height : Math.min(t.height, Math.round(t.width * 
         'hit__media',
         { 'hit__media--shot': thumb && !isCrop, 'hit__media--crop': thumb && isCrop },
       ]}
+      data-theme={thumb ? 'light' : undefined}
     >
       {thumb ? (
         <img
           src={thumb}
           alt=""
           width={t!.width}
-          height={thumbH}
+          height={cropH}
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
         />
       ) : hit.kind === 'app' ? (
-        <AppIcon src={hit.icon_url} name={hit.title} size={36} />
+        <AppIcon src={hit.icon_url} name={hit.title} size={32} />
       ) : hit.kind === 'store' ? (
-        <StoreMark domain={hit.ref} name={hit.title} size={36} />
+        <StoreMark domain={hit.ref} name={hit.title} size={32} />
       ) : (
         <span class="hit__glyph" aria-hidden="true">
-          {hit.title.charAt(0).toUpperCase()}
+          <Icon name={kind.icon} size={16} />
         </span>
       )}
     </span>
@@ -60,37 +62,44 @@ const thumbH = t ? (isCrop ? t.height : Math.min(t.height, Math.round(t.width * 
       </span>
       {hit.subtitle && <span class="hit__sub">{hit.subtitle}</span>}
     </span>
-    <span class="hit__kind">{kindLabel}</span>
-    <span class="hit__arrow" aria-hidden="true">
-      →
+    {showKind && <span class="hit__kind">{kind.one}</span>}
+    <span class="hit__action">
+      <span class="hit__action-label">{kind.action}</span>
+      <Icon name="arrow-right" size={14} class="hit__arrow" />
     </span>
   </a>
 </li>
 
 <style>
-  .hit {
-    border-bottom: 1px solid var(--line);
-  }
   .hit__link {
+    position: relative;
     display: grid;
-    grid-template-columns: 72px minmax(0, 1fr) auto;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
     align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-3) 0;
+    gap: var(--space-3);
+    min-height: 60px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-control);
     transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .hit__link:hover {
+    background: var(--surface-2);
+  }
+  .hit__link:focus-visible {
+    outline-offset: -2px;
   }
   .hit__media {
     display: grid;
     place-items: center;
-    width: 72px;
-    height: 46px;
-    overflow: hidden;
-    border-radius: var(--radius-sm);
+    width: 56px;
+    height: 36px;
   }
   .hit__media--shot,
   .hit__media--crop {
-    background: var(--tile);
-    box-shadow: inset 0 0 0 1px rgb(25 24 22 / 0.05);
+    overflow: hidden;
+    border-radius: 6px;
+    background: var(--capture-bg);
+    box-shadow: var(--shadow-shot);
   }
   .hit__media--shot img {
     width: 100%;
@@ -98,86 +107,99 @@ const thumbH = t ? (isCrop ? t.height : Math.min(t.height, Math.round(t.width * 
     object-fit: cover;
     object-position: top;
   }
+  .hit__media--crop {
+    background: var(--surface-2);
+  }
   .hit__media--crop img {
     width: 100%;
     height: 100%;
-    padding: 4px;
+    padding: 3px;
     object-fit: contain;
   }
   .hit__glyph {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 9px;
-    background: var(--fill);
-    color: var(--ink-3);
-    font-weight: var(--weight-semibold);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-2);
   }
   .hit__text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     min-width: 0;
   }
   .hit__title {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--text-md);
+    color: var(--ink);
+    font-size: var(--text-ui);
     font-weight: var(--weight-medium);
-    line-height: 1.35;
+    line-height: 1.4;
   }
   .hit__hl {
-    background: none;
-    color: inherit;
+    padding: 0 1px;
+    border-radius: 3px;
+    background: var(--accent-soft);
+    color: var(--ink);
     font-weight: var(--weight-semibold);
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-decoration-thickness: 1.5px;
-    text-underline-offset: 0.18em;
   }
   .hit__sub {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.03em;
+    font-size: var(--text-sm);
   }
   .hit__kind {
     display: none;
+  }
+  .hit__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--ink-3);
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
   }
-  .hit__arrow {
-    color: var(--ink-4);
-    transition:
-      transform var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
+  .hit__action-label {
+    display: none;
   }
-  .hit__link:hover .hit__title {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.2em;
+  .hit__link :global(.hit__arrow) {
+    transition: transform var(--dur-base) var(--ease-out);
   }
-  .hit__link:hover .hit__arrow {
+  .hit__link:hover .hit__action {
     color: var(--ink);
-    transform: translateX(3px);
+  }
+  .hit__link:hover :global(.hit__arrow) {
+    transform: translateX(2px);
   }
   @media (min-width: 768px) {
     .hit__link {
-      grid-template-columns: 96px minmax(0, 1fr) 96px 16px;
-      gap: var(--space-5);
+      grid-template-columns: 64px minmax(0, 1fr) auto auto;
+      gap: var(--space-4);
     }
     .hit__media {
-      width: 96px;
-      height: 60px;
+      width: 64px;
+      height: 40px;
     }
     .hit__kind {
-      display: block;
-      text-align: right;
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+      padding: 0 8px;
+      border-radius: var(--radius-pill);
+      box-shadow: inset 0 0 0 1px var(--line-strong);
+      color: var(--ink-3);
+      font-size: var(--text-xs);
+    }
+    .hit__action-label {
+      display: inline;
     }
   }
 </style>

@@ -1,12 +1,14 @@
 ---
 /**
  * Account overview — designed placeholder until accounts open with Pro (Whop). Shows the slots
- * the real page will fill (plan, boards, settings) with honest empty values. noindex.
+ * the real page will fill (plan, boards, profile, settings) with honest empty values. noindex.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Card from '~/components/ui/Card.astro';
 import AccountShell from '~/components/static/AccountShell.astro';
+import { MONTHLY_PRICE } from '~/components/static/content';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
@@ -37,68 +39,80 @@ const SETTINGS = [
 <BaseLayout title="Account" description="Your plan, boards and settings." noindex>
   <AccountShell current="overview">
     <header class="ov__head">
-      <h1 class="ov__title">Account</h1>
+      <h1 class="h2">Account</h1>
+      <p class="ov__sub">Your plan, boards and settings.</p>
     </header>
 
-    <dl class="ov__spec">
-      <div class="ov__row">
-        <dt>
-          <MonoLabel>Plan</MonoLabel>
-        </dt>
-        <dd>
-          <span class="ov__value">Free</span>
-          <a class="ov__link" href="/pro">
-            Compare plans <span aria-hidden="true">→</span>
-          </a>
-        </dd>
-      </div>
-      <div class="ov__row">
-        <dt>
-          <MonoLabel>Boards</MonoLabel>
-        </dt>
-        <dd>
-          <span class="ov__value num">0</span>
-          <a class="ov__link" href="/account/boards">
-            Open boards <span aria-hidden="true">→</span>
-          </a>
-        </dd>
-      </div>
-      <div class="ov__row">
-        <dt>
-          <MonoLabel>Email</MonoLabel>
-        </dt>
-        <dd>
-          <span class="ov__value ov__value--muted">Not signed in</span>
-        </dd>
-      </div>
-      <div class="ov__row">
-        <dt>
-          <MonoLabel>Member since</MonoLabel>
-        </dt>
-        <dd>
-          <span class="ov__value ov__value--muted">—</span>
-        </dd>
-      </div>
-    </dl>
+    <div class="ov__grid">
+      <Card padding="md" class="ov__card">
+        <p class="ov__label">Plan</p>
+        <p class="ov__value">
+          Free{' '}
+          <Badge tone="neutral" size="sm">
+            Current
+          </Badge>
+        </p>
+        <p class="ov__note">
+          Home page screenshots and basic theme and app data. Pro adds every page type, full-page
+          and section screenshots and exports, from ${MONTHLY_PRICE.pro} a month.
+        </p>
+        <div class="ov__actions">
+          <Button href="/pro" variant="accent" size="sm" arrow>
+            Compare plans
+          </Button>
+        </div>
+      </Card>
+      <Card padding="md" class="ov__card">
+        <p class="ov__label">Boards</p>
+        <p class="ov__value num">0</p>
+        <p class="ov__note">Save stores, pages and sections to compare them or share them.</p>
+        <div class="ov__actions">
+          <Button href="/account/boards" variant="secondary" size="sm" arrow>
+            Open boards
+          </Button>
+        </div>
+      </Card>
+      <Card padding="md" class="ov__card">
+        <p class="ov__label">Profile</p>
+        <dl class="ov__facts">
+          <div>
+            <dt>Email</dt>
+            <dd class="ov__muted">Not signed in</dd>
+          </div>
+          <div>
+            <dt>Member since</dt>
+            <dd class="ov__muted">—</dd>
+          </div>
+          <div>
+            <dt>Seats</dt>
+            <dd class="num">1</dd>
+          </div>
+        </dl>
+      </Card>
+    </div>
 
     <section class="ov__settings" aria-labelledby="settings-title">
-      <h2 class="ov__h2" id="settings-title">
-        Settings
-      </h2>
-      <p class="ov__sub">Available once you’re signed in.</p>
-      <ul class="ov__list">
-        {SETTINGS.map((s) => (
-          <li class="ov__setting">
-            <div>
-              <h3 class="ov__setting-title">{s.title}</h3>
-              <p class="ov__setting-body">{s.body}</p>
-            </div>
-            <Button variant="secondary" size="sm" disabled>
-              {s.action}
-            </Button>
-          </li>
-        ))}
-      </ul>
+      <div class="ov__settings-head">
+        <h2 class="h3" id="settings-title">
+          Settings
+        </h2>
+        <p class="ov__sub">Available once you’re signed in.</p>
+      </div>
+      <Card padding="none">
+        <ul class="ov__list">
+          {SETTINGS.map((s) => (
+            <li class="ov__setting">
+              <div>
+                <h3 class="ov__setting-title">{s.title}</h3>
+                <p class="ov__setting-body">{s.body}</p>
+              </div>
+              <Button variant="secondary" size="sm" disabled>
+                {s.action}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </Card>
     </section>
   </AccountShell>
 </BaseLayout>
@@ -107,74 +121,85 @@ const SETTINGS = [
   .ov__head {
     padding-block: var(--space-8) var(--space-6);
   }
-  .ov__title {
-    font-size: var(--text-3xl);
-    letter-spacing: var(--tracking-tight);
-    line-height: var(--leading-tight);
-  }
-  .ov__spec {
-    max-width: 720px;
-    border-top: 1px solid var(--ink);
-  }
-  .ov__row {
-    display: grid;
-    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
-    gap: var(--space-4);
-    align-items: center;
-    min-height: 52px;
-    border-bottom: 1px solid var(--line);
-  }
-  .ov__row dd {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-1) var(--space-4);
-  }
-  .ov__value {
-    color: var(--ink);
-    font-size: var(--text-md);
-    font-weight: var(--weight-medium);
-  }
-  .ov__value--muted {
-    color: var(--ink-3);
-    font-weight: var(--weight-regular);
-  }
-  .ov__link {
-    color: var(--ink-2);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    transition: color var(--dur-fast) var(--ease-out);
-  }
-  .ov__link:hover {
-    color: var(--ink);
-  }
-  .ov__settings {
-    max-width: 720px;
-    margin-top: var(--space-16);
-  }
-  .ov__h2 {
-    font-size: var(--text-xl);
-    letter-spacing: var(--tracking-snug);
-  }
   .ov__sub {
     margin-top: var(--space-1);
     color: var(--ink-3);
+    font-size: var(--text-ui);
   }
-  .ov__list {
-    margin-top: var(--space-5);
-    border-top: 1px solid var(--line);
+  .ov__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .ov__label {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .ov__value {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    color: var(--ink);
+    font-size: var(--text-h2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+  .ov__note {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+  }
+  .ov__actions {
+    margin-top: auto;
+    padding-top: var(--space-4);
+  }
+  .ov__facts {
+    margin-top: var(--space-2);
+  }
+  .ov__facts > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .ov__facts > div:last-child {
+    border-bottom: 0;
+  }
+  .ov__facts dt {
+    color: var(--ink-3);
+  }
+  .ov__facts dd {
+    color: var(--ink);
+  }
+  .ov__facts dd.ov__muted {
+    color: var(--ink-3);
+  }
+
+  .ov__settings {
+    margin-top: var(--space-10);
+  }
+  .ov__settings-head {
+    margin-bottom: var(--space-4);
   }
   .ov__setting {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-6);
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--line);
+    padding: var(--space-4) var(--space-5);
+  }
+  .ov__setting + .ov__setting {
+    border-top: 1px solid var(--line);
   }
   .ov__setting-title {
-    font-size: var(--text-base);
+    color: var(--ink);
+    font-size: var(--text-ui);
     font-weight: var(--weight-semibold);
   }
   .ov__setting-body {
@@ -182,9 +207,15 @@ const SETTINGS = [
     color: var(--ink-3);
     font-size: var(--text-sm);
   }
-  @media (min-width: 1024px) {
-    .ov__head {
-      padding-top: var(--space-10);
+
+  @media (min-width: 640px) {
+    .ov__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1280px) {
+    .ov__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 </style>

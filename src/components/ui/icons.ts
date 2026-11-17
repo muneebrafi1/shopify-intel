@@ -1,5 +1,7 @@
 /**
- * Icon registry (Phosphor, regular weight, MIT). Import only what we use so the bundle stays small.
+ * Icon registry (Phosphor, MIT). Regular weight everywhere; `-fill` and `-bold` variants only
+ * where noted in docs/DESIGN.md (ratings, saved state, pricing check marks). Icons are inlined at
+ * build time (no client JS), so import only what we use.
  * Add an icon: import its raw SVG here and add it to `icons`. Names mirror Phosphor's.
  */
 import magnifyingGlass from '@phosphor-icons/core/assets/regular/magnifying-glass.svg?raw';
@@ -56,6 +58,16 @@ import arrowsOut from '@phosphor-icons/core/assets/regular/arrows-out.svg?raw';
 import arrowSquareOut from '@phosphor-icons/core/assets/regular/arrow-square-out.svg?raw';
 import funnelSimple from '@phosphor-icons/core/assets/regular/funnel-simple.svg?raw';
 import cornersOut from '@phosphor-icons/core/assets/regular/corners-out.svg?raw';
+import sun from '@phosphor-icons/core/assets/regular/sun.svg?raw';
+import moon from '@phosphor-icons/core/assets/regular/moon.svg?raw';
+import monitor from '@phosphor-icons/core/assets/regular/monitor.svg?raw';
+import caretUpDown from '@phosphor-icons/core/assets/regular/caret-up-down.svg?raw';
+import tagSimple from '@phosphor-icons/core/assets/regular/tag-simple.svg?raw';
+import browser from '@phosphor-icons/core/assets/regular/browser.svg?raw';
+import table from '@phosphor-icons/core/assets/regular/table.svg?raw';
+import signIn from '@phosphor-icons/core/assets/regular/sign-in.svg?raw';
+import checkBold from '@phosphor-icons/core/assets/bold/check-bold.svg?raw';
+import minusBold from '@phosphor-icons/core/assets/bold/minus-bold.svg?raw';
 import starFill from '@phosphor-icons/core/assets/fill/star-fill.svg?raw';
 import bookmarkSimpleFill from '@phosphor-icons/core/assets/fill/bookmark-simple-fill.svg?raw';
 import checkCircleFill from '@phosphor-icons/core/assets/fill/check-circle-fill.svg?raw';
@@ -115,6 +127,16 @@ export const icons = {
   'arrow-square-out': arrowSquareOut,
   'funnel-simple': funnelSimple,
   'corners-out': cornersOut,
+  sun: sun,
+  moon: moon,
+  monitor: monitor,
+  'caret-up-down': caretUpDown,
+  'tag-simple': tagSimple,
+  browser: browser,
+  table: table,
+  'sign-in': signIn,
+  'check-bold': checkBold,
+  'minus-bold': minusBold,
   'star-fill': starFill,
   'bookmark-simple-fill': bookmarkSimpleFill,
   'check-circle-fill': checkCircleFill,

@@ -1,0 +1,79 @@
+---
+/**
+ * The small pill above a hero headline (Attio pattern): a badge, one line of text, an arrow.
+ *
+ *   <AnnouncementPill href="/teardowns/youngla" badge="New">Teardown: how YoungLA sells</AnnouncementPill>
+ *
+ * Keep the text under ~48 characters; it truncates on small screens.
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  href: string;
+  /** Leading badge text. Pass '' to omit. */
+  badge?: string;
+  class?: string;
+}
+const { href, badge = 'New', class: className } = Astro.props;
+---
+
+<a href={href} class:list={['announce', className]}>
+  {badge && <span class="announce__badge">{badge}</span>}
+  <span class="announce__text">
+    <slot />
+  </span>
+  <Icon name="arrow-right" size={14} class="announce__arrow" />
+</a>
+
+<style>
+  .announce {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 100%;
+    height: 32px;
+    padding: 0 12px 0 4px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-xs);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .announce:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .announce:not(:has(.announce__badge)) {
+    padding-left: 12px;
+  }
+  .announce__badge {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    font-size: var(--text-xs);
+  }
+  .announce__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .announce :global(.announce__arrow) {
+    color: var(--ink-3);
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .announce:hover :global(.announce__arrow) {
+    transform: translateX(2px);
+  }
+</style>

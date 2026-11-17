@@ -190,6 +190,54 @@ export async function sectionCards(
   return rows.map((r) => toSectionCard(r, ctx));
 }
 
+/** Columns a ranked card query adds: the group key, rank within it and the group's size. */
+export interface RankedCardCols {
+  g_key: SqlValue;
+  g_rn: number;
+  g_total: number;
+}
+
+/**
+ * The card query as a window: every card matching `where`, with its 1-based rank within its
+ * `group` in `order` and the group's size (`COUNT(*)` over the same rows). `where` and `order`
+ * use the card aliases (s, sh, st, t, a). Wrap it and cut on `g_rn` to keep the first N cards of
+ * every group in one statement instead of one query per group.
+ */
+export const rankedCardsSql = (group: string, where: string, order: string) =>
+  `SELECT ${SECTION_CARD_COLS}, ${group} AS g_key,
+     ROW_NUMBER() OVER (PARTITION BY ${group} ORDER BY ${order}) AS g_rn,
+     COUNT(*) OVER (PARTITION BY ${group}) AS g_total
+   ${SECTION_CARD_FROM} WHERE ${where}`;
+
+/**
+ * The first `per` section cards of each group, and each group's total, in one query (see
+ * `rankedCardsSql`). Groups without a matching card are absent from the map.
+ */
+export async function groupedSectionCards(
+  ctx: Ctx,
+  opts: {
+    group: string;
+    where: string;
+    params: readonly SqlValue[];
+    order: string;
+    per: number;
+  },
+): Promise<Map<SqlValue, { total: number; cards: SectionCard[] }>> {
+  // At least one row per group is read so its total is known even when `per` is 0.
+  const rows = await ctx.db.all<SectionCardRow & RankedCardCols>(
+    `SELECT * FROM (${rankedCardsSql(opts.group, opts.where, opts.order)})
+     WHERE g_rn <= ? ORDER BY g_key, g_rn`,
+    [...opts.params, Math.max(1, opts.per)],
+  );
+  const out = new Map<SqlValue, { total: number; cards: SectionCard[] }>();
+  for (const r of rows) {
+    let group = out.get(r.g_key);
+    if (!group) out.set(r.g_key, (group = { total: r.g_total, cards: [] }));
+    if (r.g_rn <= opts.per) group.cards.push(toSectionCard(r, ctx));
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Screenshot detail (shot + every section on it)
 // ---------------------------------------------------------------------------------------------

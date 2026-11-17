@@ -1,0 +1,112 @@
+---
+/**
+ * Detail-page side panel: a card with a title, key/value rows and a source + date footnote.
+ * Sticky under the header at ≥1024 when `sticky` (the main column scrolls past it).
+ *
+ *   <FactsCard title="Theme facts" items={facts} source="Shopify Theme Store" asOf="17 Nov 2026">
+ *     <Button slot="actions" variant="primary" full arrow href="/go/prestige">Get Prestige</Button>
+ *   </FactsCard>
+ *
+ * Slots: default (extra rows inside the <dl>), actions (buttons under the rows), footer.
+ */
+import Facts, { type Fact } from './Facts.astro';
+
+interface Props {
+  title?: string;
+  items: Fact[];
+  /** Where these facts come from (shown as a footnote with the date). */
+  source?: string;
+  asOf?: string;
+  /** Link for the footnote ("How we detect"). Pass '' to hide. */
+  sourceHref?: string;
+  sticky?: boolean;
+  class?: string;
+}
+const {
+  title,
+  items,
+  source,
+  asOf,
+  sourceHref = '/methodology',
+  sticky = false,
+  class: className,
+} = Astro.props;
+---
+
+<aside class:list={['fcard', { 'fcard--sticky': sticky }, className]}>
+  {title && <h2 class="fcard__title">{title}</h2>}
+  <Facts items={items} ruled={false} class="fcard__facts">
+    <slot />
+  </Facts>
+  {Astro.slots.has('actions') && (
+    <div class="fcard__actions">
+      <slot name="actions" />
+    </div>
+  )}
+  {(source || asOf || Astro.slots.has('footer')) && (
+    <div class="fcard__foot">
+      {(source || asOf) && (
+        <p>
+          {source && <>Source: {source}</>}
+          {source && asOf && ' · '}
+          {asOf && <span class="num">{asOf}</span>}
+          {sourceHref && (
+            <>
+              {' · '}
+              <a href={sourceHref}>Method</a>
+            </>
+          )}
+        </p>
+      )}
+      <slot name="footer" />
+    </div>
+  )}
+</aside>
+
+<style>
+  .fcard {
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+  }
+  @media (min-width: 1024px) {
+    .fcard--sticky {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+  .fcard__title {
+    padding: var(--space-4) var(--space-5) 0;
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.005em;
+  }
+  .fcard :global(.fcard__facts) {
+    padding: var(--space-1) var(--space-5);
+  }
+  .fcard__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-5) var(--space-5);
+  }
+  .fcard__foot {
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--line);
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
+    background: var(--bg-subtle);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.45;
+  }
+  .fcard__foot a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+</style>

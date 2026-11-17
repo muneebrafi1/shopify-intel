@@ -1,0 +1,220 @@
+---
+/**
+ * The themes index as a table (?view=index), for the data-minded: usage rank (ties share it), a
+ * small crop of the theme on a real store, vendor, price, stores and share of the scan with a
+ * bar scaled to the most-used theme on the page. The whole row is one link (the theme name).
+ * Below 640px vendor, price and share fold into the theme cell.
+ */
+import Badge from '~/components/ui/Badge.astro';
+import { thumbCropHeight, thumbUrl } from '~/lib/media';
+import { formatCount, formatPercent } from '~/lib/format';
+import type { ThemeListItem } from '~/server/api/v1/types';
+import { rankLabel } from './params';
+
+interface Props {
+  themes: ThemeListItem[];
+  label?: string;
+  class?: string;
+}
+const { themes, label = 'Themes', class: className } = Astro.props;
+const maxShare = Math.max(0.0001, ...themes.map((t) => t.usage.share));
+const thumb = (t: ThemeListItem) => {
+  const shot = t.previews.find((p) => p.device === 'desktop') ?? null;
+  if (!shot) return null;
+  const h = thumbCropHeight(shot.image.width, shot.image.height, 'desktop');
+  return {
+    src: thumbUrl(shot.image.src, { cropHeight: h, width: 160 }),
+    width: shot.image.width,
+    height: h,
+  };
+};
+---
+
+<div class:list={['table-wrap', 'ttable', className]}>
+  <table class="table">
+    <caption class="visually-hidden">{label}</caption>
+    <thead>
+      <tr>
+        <th scope="col" class="ttable__rank">
+          #
+        </th>
+        <th scope="col">Theme</th>
+        <th scope="col" class="ttable__opt">
+          Vendor
+        </th>
+        <th scope="col" class="ttable__opt">
+          Price
+        </th>
+        <th scope="col" class="is-num">
+          Stores
+        </th>
+        <th scope="col" class="is-num ttable__opt ttable__share-h">
+          Share of scan
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {themes.map((t) => {
+        const img = thumb(t);
+        const price = t.price.is_free ? 'Free' : (t.price.label ?? '—');
+        return (
+          <tr>
+            <td
+              class="ttable__rank num"
+              title={t.usage.rank ? `Rank ${t.usage.rank} by stores using it` : undefined}
+            >
+              {rankLabel(t.usage.rank)}
+            </td>
+            <td>
+              <div class="ttable__theme">
+                <span class="ttable__thumb" aria-hidden="true">
+                  {img && (
+                    <img
+                      src={img.src}
+                      alt=""
+                      width={img.width}
+                      height={img.height}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </span>
+                <span class="ttable__id">
+                  <a href={t.href} class="ttable__name stretched-link">
+                    {t.name}
+                  </a>
+                  <span class="ttable__sub">
+                    {[t.vendor ?? 'Unknown vendor', price, formatPercent(t.usage.share * 100)].join(
+                      ' · ',
+                    )}
+                  </span>
+                </span>
+              </div>
+            </td>
+            <td class="ttable__opt ttable__vendor">{t.vendor ?? '—'}</td>
+            <td class="ttable__opt">
+              <Badge tone={t.price.is_free ? 'positive' : 'neutral'} size="sm">
+                {price}
+              </Badge>
+            </td>
+            <td class="is-num ttable__stores">{formatCount(t.usage.stores)}</td>
+            <td class="is-num ttable__opt">
+              <span class="ttable__share">
+                <span class="ttable__track" aria-hidden="true">
+                  <span
+                    class="ttable__bar"
+                    style={`--w:${((t.usage.share / maxShare) * 100).toFixed(1)}%`}
+                  />
+                </span>
+                <span class="num">{formatPercent(t.usage.share * 100)}</span>
+              </span>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .ttable tbody tr {
+    position: relative;
+  }
+  .ttable tbody tr:has(.stretched-link:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  .ttable .stretched-link:focus-visible {
+    outline: none;
+  }
+  .ttable__rank {
+    width: 56px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .ttable__theme {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .ttable__thumb {
+    flex: none;
+    width: 64px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: var(--radius-xs);
+    background: var(--capture-bg);
+    box-shadow: var(--shadow-shot);
+  }
+  .ttable__thumb img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .ttable__id {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .ttable__name {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .ttable__sub {
+    display: none;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .ttable__vendor {
+    color: var(--ink-2);
+  }
+  .ttable__stores {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .ttable__share-h {
+    width: 200px;
+  }
+  .ttable__share {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    width: 100%;
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .ttable__track {
+    position: relative;
+    flex: 1;
+    max-width: 120px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface-3);
+  }
+  .ttable__bar {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--w);
+    border-radius: inherit;
+    background: var(--ink-2);
+  }
+  @media (max-width: 639px) {
+    .ttable__opt {
+      display: none;
+    }
+    .ttable__rank {
+      width: 40px;
+    }
+    .ttable__thumb {
+      width: 48px;
+      height: 32px;
+    }
+    .ttable__sub {
+      display: block;
+    }
+  }
+</style>

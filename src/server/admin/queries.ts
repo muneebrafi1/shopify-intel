@@ -327,6 +327,8 @@ export interface StoreDetail {
   created_at: string;
   updated_at: string;
   tombstoned: number;
+  /** 1 when captures are blocked (capture_blocks row or tombstone). */
+  capture_blocked: number;
 }
 
 export async function getStore(db: Db, domain: string): Promise<StoreDetail | null> {
@@ -335,7 +337,9 @@ export async function getStore(db: Db, domain: string): Promise<StoreDetail | nu
        c.name AS category_name, s.tranco_rank, s.is_curated, s.is_captured, s.status,
        s.opted_out_at, s.first_seen, s.last_seen, s.current_theme_name, s.current_theme_version,
        t.slug AS theme_slug, t.name AS theme_name, s.app_count, s.created_at, s.updated_at,
-       EXISTS (SELECT 1 FROM store_tombstones tb WHERE tb.domain = s.domain) AS tombstoned
+       EXISTS (SELECT 1 FROM store_tombstones tb WHERE tb.domain = s.domain) AS tombstoned,
+       (EXISTS (SELECT 1 FROM capture_blocks cb WHERE cb.domain = s.domain)
+         OR EXISTS (SELECT 1 FROM store_tombstones tb WHERE tb.domain = s.domain)) AS capture_blocked
      FROM stores s
      LEFT JOIN themes t ON t.id = s.current_theme_id
      LEFT JOIN store_categories c ON c.slug = s.category_slug
@@ -523,11 +527,48 @@ export interface RemovalRow {
   store_id: number | null;
   store_name: string | null;
   store_status: string | null;
+  /** 1 when the domain has a capture block or tombstone. */
+  capture_blocked: number;
 }
 
 const REMOVAL_COLUMNS = `r.id, r.reference, r.domain, r.email, r.name, r.reason, r.scope, r.status,
   r.admin_note, r.created_at, r.handled_at, s.id AS store_id, s.name AS store_name,
-  s.status AS store_status`;
+  s.status AS store_status,
+  (EXISTS (SELECT 1 FROM capture_blocks cb WHERE cb.domain = r.domain)
+    OR EXISTS (SELECT 1 FROM store_tombstones tb WHERE tb.domain = r.domain)) AS capture_blocked`;
+
+export const REMOVAL_STATUSES = ['pending', 'approved', 'rejected', 'done'] as const;
+export type RemovalStatus = (typeof REMOVAL_STATUSES)[number];
+
+/**
+ * Removal requests filtered by one status (or all), for the admin API. Pending: oldest first;
+ * others: most recent decision first; all: newest first.
+ */
+export async function listRemovalRequests(
+  db: Db,
+  f: { status?: RemovalStatus | undefined; page?: number; limit?: number },
+): Promise<{ rows: RemovalRow[]; total: number; page: number; limit: number }> {
+  const limit = Math.min(Math.max(1, f.limit ?? PAGE_SIZE), 100);
+  const where = f.status ? 'WHERE r.status = ?' : '';
+  const params: SqlValue[] = f.status ? [f.status] : [];
+  const total =
+    (await db.first<{ n: number }>(`SELECT COUNT(*) AS n FROM removal_requests r ${where}`, params))
+      ?.n ?? 0;
+  const pages = Math.max(1, Math.ceil(total / limit));
+  const page = Math.min(Math.max(1, f.page ?? 1), pages);
+  const order =
+    f.status === 'pending'
+      ? 'r.created_at ASC, r.id ASC'
+      : f.status
+        ? 'r.handled_at DESC, r.id DESC'
+        : 'r.created_at DESC, r.id DESC';
+  const rows = await db.all<RemovalRow>(
+    `SELECT ${REMOVAL_COLUMNS} FROM removal_requests r LEFT JOIN stores s ON s.domain = r.domain
+     ${where} ORDER BY ${order} LIMIT ? OFFSET ?`,
+    [...params, limit, (page - 1) * limit],
+  );
+  return { rows, total, page, limit };
+}
 
 export async function getRemovalCounts(db: Db): Promise<Record<RemovalTab, number>> {
   const rows = await db.all<{ status: string; n: number }>(
@@ -591,6 +632,8 @@ export interface StoreMediaSummary {
   teardownsPublished: number;
   queuedJobs: number;
   tombstoned: number;
+  /** 1 when the domain has a capture block (see src/server/repo/capture.ts). */
+  captureBlocked: number;
 }
 
 export async function getStoreMediaSummary(
@@ -607,7 +650,8 @@ export async function getStoreMediaSummary(
       (SELECT COUNT(*) FROM sections WHERE store_id = ?1 AND is_current = 1) AS sections,
       (SELECT COUNT(*) FROM teardowns WHERE store_id = ?1 AND published_at IS NOT NULL) AS teardownsPublished,
       (SELECT COUNT(*) FROM scan_jobs WHERE (store_id = ?1 OR domain = ?2) AND status = 'queued') AS queuedJobs,
-      (SELECT COUNT(*) FROM store_tombstones WHERE domain = ?2) AS tombstoned`,
+      (SELECT COUNT(*) FROM store_tombstones WHERE domain = ?2) AS tombstoned,
+      (SELECT COUNT(*) FROM capture_blocks WHERE domain = ?2) AS captureBlocked`,
     [storeId ?? -1, domain],
   );
   return (
@@ -619,6 +663,7 @@ export async function getStoreMediaSummary(
       teardownsPublished: 0,
       queuedJobs: 0,
       tombstoned: 0,
+      captureBlocked: 0,
     }
   );
 }

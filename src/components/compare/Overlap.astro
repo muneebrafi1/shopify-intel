@@ -1,84 +1,312 @@
 ---
 /**
- * How the two audiences overlap in our scan: A only · both · B only, as serif numerals with
- * mono labels inside crop marks. Neutral by construction (same weight, same colour).
+ * How the two audiences overlap in our scan.
+ * Apps: one proportional bar (A only · both · B only) under three big numbers; both "only"
+ * segments share one neutral fill so neither side reads as the favourite, "both" is ink.
+ * Themes: three boxed numbers (on A now · ran both · on B now), since "ran both" is history and
+ * not a slice of the other two.
+ * Then the stores themselves in a table (the store, its theme, market and app count).
  */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
 import { formatCount } from '~/lib/format';
+import type { SideInfo } from './compare';
 
-export interface OverlapCell {
-  value: number;
-  label: string;
+export interface SharedStoreRow {
+  domain: string;
+  name: string;
+  href: string;
+  theme: string | null;
+  market: string | null;
+  apps: number | null;
 }
 interface Props {
-  cells: [OverlapCell, OverlapCell, OverlapCell];
+  a: SideInfo;
+  b: SideInfo;
+  total: number;
+  rows: SharedStoreRow[];
   source: string;
-  class?: string;
 }
-const { cells, source, class: className } = Astro.props;
+const { a, b, total, rows, source } = Astro.props;
+const isApp = a.kind === 'app';
+const onlyA = Math.max(0, a.stores - total);
+const onlyB = Math.max(0, b.stores - total);
+const union = onlyA + onlyB + total;
+const pct = (n: number) => (union ? (n / union) * 100 : 0);
+// Keep tiny but non-zero segments visible.
+const seg = (n: number) => (n > 0 ? `max(3px, ${pct(n).toFixed(2)}%)` : '0px');
+const cells = isApp
+  ? [
+      { side: a, value: onlyA, label: `${a.name} only` },
+      { side: null, value: total, label: 'Both' },
+      { side: b, value: onlyB, label: `${b.name} only` },
+    ]
+  : [
+      { side: a, value: a.stores, label: `On ${a.name} now` },
+      { side: null, value: total, label: 'Ran both' },
+      { side: b, value: b.stores, label: `On ${b.name} now` },
+    ];
 ---
 
-<figure class:list={['ovl marks', className]}>
-  <dl class="ovl__cells">
-    {cells.map((c, i) => (
-      <div class:list={['ovl__cell', { 'ovl__cell--both': i === 1 }]}>
-        <dt class="ovl__label">{c.label}</dt>
-        <dd class="ovl__value num">{formatCount(c.value)}</dd>
+<div class="ovl">
+  <figure class:list={['ovl__fig', { 'ovl__fig--app': isApp }]}>
+    <dl class="ovl__cells">
+      {cells.map((c, i) => (
+        <div class:list={['ovl__cell', { 'ovl__cell--both': i === 1, 'ovl__cell--end': i === 2 }]}>
+          <dt class="ovl__label">
+            {c.side && <AppIcon src={c.side.iconUrl} name={c.side.name} size={18} />}
+            <span>{c.label}</span>
+          </dt>
+          <dd class="ovl__value num">{formatCount(c.value)}</dd>
+        </div>
+      ))}
+    </dl>
+    {isApp && union > 0 && (
+      <div
+        class="ovl__bar"
+        style={`grid-template-columns:${seg(onlyA)} ${seg(total)} ${seg(onlyB)}`}
+        aria-hidden="true"
+      >
+        <span class="ovl__seg ovl__seg--a" />
+        <span class="ovl__seg ovl__seg--both" />
+        <span class="ovl__seg ovl__seg--b" />
       </div>
-    ))}
-  </dl>
-  <figcaption class="ovl__source">{source}</figcaption>
-</figure>
+    )}
+    <figcaption class="ovl__cap">
+      {isApp
+        ? `${formatCount(union)} of ${formatCount(a.denominator)} scanned stores run at least one of the two. ${source}.`
+        : `Stores seen on both themes at some point, for example after a switch. ${source}.`}
+    </figcaption>
+  </figure>
+
+  <div class="ovl__stores">
+    {rows.length > 0 ? (
+      <>
+        <table class="table ovl__table">
+          <caption class="visually-hidden">
+            {isApp
+              ? `Stores running ${a.name} and ${b.name}`
+              : `Stores that ran ${a.name} and ${b.name}`}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Store</th>
+              <th scope="col" class="ovl__opt">
+                Theme
+              </th>
+              <th scope="col" class="ovl__opt">
+                Market
+              </th>
+              <th scope="col" class="is-num">
+                Apps
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr>
+                <td>
+                  <a href={r.href} class="ovl__store">
+                    <StoreMark domain={r.domain} name={r.name} size={24} />
+                    <span class="ovl__store-text">
+                      <span class="ovl__store-name">{r.name}</span>
+                      {r.name !== r.domain && <span class="ovl__domain mono">{r.domain}</span>}
+                    </span>
+                  </a>
+                </td>
+                <td class="ovl__opt ovl__muted">{r.theme ?? '—'}</td>
+                <td class="ovl__opt ovl__muted mono">{r.market ?? '—'}</td>
+                <td class="is-num num">{r.apps ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {total > rows.length && (
+          <p class="ovl__more">
+            Showing {rows.length} of {formatCount(total)}, highest ranked first.
+          </p>
+        )}
+      </>
+    ) : (
+      <EmptyState
+        size="sm"
+        align="start"
+        title={isApp ? 'No scanned store runs both' : 'No scanned store has run both'}
+        body={
+          isApp
+            ? `${a.name} and ${b.name} don’t share a store in our scan of ${formatCount(a.denominator)}. Stores usually pick one.`
+            : `We haven’t seen a store switch between ${a.name} and ${b.name} yet. Switches show up here as scans repeat.`
+        }
+      />
+    )}
+  </div>
+</div>
 
 <style>
   .ovl {
-    padding: var(--space-6) var(--space-5);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+  .ovl__fig {
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
   }
   .ovl__cells {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
   }
   .ovl__cell {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
     min-width: 0;
-    padding-inline: var(--space-3);
   }
-  .ovl__cell:first-child {
-    padding-left: 0;
+  .ovl__cell--both {
+    align-items: center;
+    text-align: center;
   }
-  .ovl__cell + .ovl__cell {
-    border-left: 1px solid var(--line);
+  .ovl__cell--end {
+    align-items: flex-end;
+    text-align: right;
+  }
+  .ovl__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.3;
+  }
+  .ovl__label span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .ovl__label :global(.app-icon) {
+    flex: none;
+  }
+  .ovl__cell--end .ovl__label {
+    flex-direction: row-reverse;
   }
   .ovl__value {
     order: -1;
-    font-family: var(--font-serif);
-    font-weight: 400;
-    font-size: clamp(2.25rem, 1.5rem + 2.6vw, 4rem);
-    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.03em;
     line-height: 1;
   }
-  .ovl__label {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-2);
-    overflow-wrap: anywhere;
+  .ovl__fig:not(.ovl__fig--app) .ovl__cell + .ovl__cell {
+    padding-left: var(--space-3);
+    box-shadow: inset 1px 0 0 var(--line);
   }
-  .ovl__source {
+  .ovl__fig:not(.ovl__fig--app) .ovl__cell {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .ovl__fig:not(.ovl__fig--app) .ovl__cell--end .ovl__label {
+    flex-direction: row;
+  }
+  .ovl__bar {
+    display: grid;
+    gap: 2px;
+    height: 12px;
     margin-top: var(--space-5);
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.02em;
   }
-  @media (min-width: 768px) {
-    .ovl {
-      padding: var(--space-8);
+  .ovl__seg {
+    min-width: 0;
+    border-radius: 3px;
+  }
+  .ovl__seg--a,
+  .ovl__seg--b {
+    background: color-mix(in srgb, var(--ink) 16%, transparent);
+  }
+  .ovl__seg--both {
+    background: var(--ink);
+  }
+  .ovl__cap {
+    margin-top: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+  }
+  .ovl__store {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .ovl__store-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .ovl__store-name {
+    overflow: hidden;
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ovl__store:hover .ovl__store-name {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .ovl__domain {
+    overflow: hidden;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ovl__muted {
+    color: var(--ink-2);
+  }
+  .ovl__opt {
+    display: none;
+  }
+  .ovl__table {
+    table-layout: fixed;
+  }
+  .ovl__table th:last-child {
+    width: 56px;
+  }
+  .ovl__more {
+    margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  @media (min-width: 640px) {
+    .ovl__opt {
+      display: table-cell;
     }
-    .ovl__cell {
-      padding-inline: var(--space-6);
+    .ovl__table th:nth-child(2) {
+      width: 30%;
+    }
+    .ovl__table th:nth-child(3) {
+      width: 18%;
+    }
+    .ovl__fig {
+      padding: var(--space-6);
+    }
+  }
+  @media (min-width: 1024px) {
+    .ovl {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--space-10);
+      align-items: start;
+    }
+    .ovl__fig {
+      padding: var(--space-8);
     }
   }
 </style>

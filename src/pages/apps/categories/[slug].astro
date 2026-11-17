@@ -1,22 +1,26 @@
 ---
 /**
- * /apps/categories/<slug> — one kind of app: how many stores run one (reach), the apps ranked
- * by use, where these apps render on real store pages (their own attributed sections on curated
- * stores, on a dark stage), head-to-head links between the leaders, and the other categories.
+ * /apps/categories/<slug> — one kind of app: header with what it is and its reach, a metrics
+ * strip, the apps ranked by use within the category (the API's `category_rank`, competition
+ * ranking), where these apps show up on real store pages (their own sections, pinned on the
+ * page), curated head-to-head comparisons, and the other categories.
+ *
+ * URL state: ?device=mobile for the "where they show up" captures.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
-import Count from '~/components/ui/Count.astro';
-import Stat from '~/components/ui/Stat.astro';
+import Button from '~/components/ui/Button.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Icon from '~/components/ui/Icon.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
 import Segmented from '~/components/ui/Segmented.astro';
-import AppTable from '~/components/domain/AppTable.astro';
-import AppRow from '~/components/domain/AppRow.astro';
-import SectionCard from '~/components/domain/SectionCard.astro';
-import SpecRows, { type SpecRow } from '~/components/apps/SpecRows.astro';
-import CompareList, { type ComparePair } from '~/components/apps/CompareList.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import Stat from '~/components/ui/Stat.astro';
+import StatList from '~/components/ui/StatList.astro';
+import RankTable from '~/components/apps/RankTable.astro';
+import CaptureCard from '~/components/apps/CaptureCard.astro';
+import PairList, { type Pair } from '~/components/apps/PairList.astro';
 import { api } from '~/server/api';
 import type { SectionCard as SectionCardData } from '~/server/api/v1/types';
 import type { Device } from '~/lib/taxonomy';
@@ -25,10 +29,9 @@ import {
   appStoreSource,
   breadcrumbLd,
   pageName,
-  priceFrom,
+  rankLabel,
   sectionViewerHref,
   sharePct,
-  specimen,
   urlWith,
 } from '~/components/apps/helpers';
 
@@ -37,9 +40,8 @@ const { data: catData, meta: catMeta } = await api.listAppCategories({});
 const ordered = [...catData.items].sort(
   (a, b) => b.store_count - a.store_count || a.name.localeCompare(b.name),
 );
-const index = ordered.findIndex((c) => c.slug === slug);
-if (index < 0) return Astro.rewrite('/404');
-const cat = ordered[index]!;
+const cat = ordered.find((c) => c.slug === slug);
+if (!cat) return Astro.rewrite('/404');
 
 const url = Astro.url;
 const device: Device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
@@ -52,15 +54,27 @@ const apps = list.items;
 const denominator = apps[0]?.usage.denominator ?? Math.round(cat.store_count / (cat.share || 1));
 const inCategory = new Set(apps.map((a) => a.slug));
 const shortName = new Map(apps.map((a) => [a.slug, a.short_name]));
+const leader = apps[0];
 
-// Where these apps render: each app's own attributed sections, interleaved so the leaders
-// don't fill the sheet alone.
-const perApp = await Promise.all(
-  apps.slice(0, 8).map(async (a) => {
-    const r = await api.listSections({ app: a.slug, device, limit: 4 });
-    return { app: a, total: r.meta.pagination?.total ?? r.data.items.length, items: r.data.items };
-  }),
-);
+// Where these apps render: each leader's own attributed sections, interleaved so one app does
+// not fill the grid alone. Only categories that render a section are asked (one call, one
+// query, for all eight leaders).
+const leaders = apps.slice(0, 8);
+const byApp =
+  cat.surfaces.length && leaders.length
+    ? new Map(
+        (
+          await api.listSectionsByApps({ apps: leaders.map((a) => a.slug), device, per_app: 4 })
+        ).data.items.map((i) => [i.app_slug, i]),
+      )
+    : null;
+const perApp = byApp
+  ? leaders.map((a) => ({
+      app: a,
+      total: byApp.get(a.slug)?.total ?? 0,
+      items: byApp.get(a.slug)?.sections ?? [],
+    }))
+  : [];
 const sections: SectionCardData[] = [];
 for (let round = 0; round < 4 && sections.length < 8; round++) {
   for (const p of perApp) {
@@ -69,45 +83,23 @@ for (let round = 0; round < 4 && sections.length < 8; round++) {
   }
 }
 const renderingApps = perApp.filter((p) => p.total > 0);
-const creditNames = renderingApps.map((p) => p.app.short_name);
-const creditList =
-  creditNames.length > 3
-    ? `${creditNames.slice(0, 3).join(', ')} and ${creditNames.length - 3} more`
-    : creditNames.join(creditNames.length === 2 ? ' and ' : ', ');
+const sectionTotal = renderingApps.reduce((n, p) => n + p.total, 0);
 const otherDevice: Device = device === 'desktop' ? 'mobile' : 'desktop';
+const surfaceNames = cat.surfaces.map((s) => s.name);
 
-// Head to head between apps of this category (pairs come from the API).
-const pairs: ComparePair[] = comparisons.data.items
+// Curated head-to-head pages between apps of this category (the API only lists curated pairs).
+const pairs: Pair[] = comparisons.data.items
   .filter((c) => inCategory.has(c.a.slug) && inCategory.has(c.b.slug))
   .slice(0, 6)
   .map((c) => ({
     href: c.href,
     a: { name: shortName.get(c.a.slug) ?? c.a.name, iconUrl: c.a.icon_url },
     b: { name: shortName.get(c.b.slug) ?? c.b.name, iconUrl: c.b.icon_url },
-    note: null,
+    note:
+      typeof c.shared_stores === 'number'
+        ? `${c.shared_stores} ${c.shared_stores === 1 ? 'store runs' : 'stores run'} both`
+        : null,
   }));
-
-const top = apps[0];
-const surfaceNames = cat.surfaces.map((s) => s.name);
-const specRows: SpecRow[] = [
-  { label: 'Apps tracked', value: String(cat.app_count) },
-  {
-    label: 'Stores running one',
-    value: `${cat.store_count.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')}`,
-  },
-  {
-    label: 'Renders as',
-    value: surfaceNames.length ? surfaceNames.join(', ') : null,
-    href: cat.surfaces.length === 1 ? cat.surfaces[0]!.href : undefined,
-    missing: 'No storefront section',
-  },
-  {
-    label: 'Most used',
-    value: top ? top.short_name : null,
-    href: top?.href,
-    sub: top ? `${top.usage.stores} stores` : null,
-  },
-];
 
 const scan = catMeta.sources[cat.source];
 const appStore = listMeta.sources['shopify-app-store'];
@@ -132,6 +124,11 @@ const jsonLd = [
   breadcrumbLd(base, crumbs),
 ];
 const others = ordered.filter((c) => c.slug !== cat.slug);
+const description = `${cat.store_count.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')} scanned stores run at least one of these ${cat.app_count === 1 ? 'app' : `${cat.app_count} apps`}. ${
+  surfaceNames.length
+    ? `On the page they render as ${surfaceNames.join(' and ').toLowerCase()}.`
+    : 'They work behind the scenes, not as a section on the page.'
+}`;
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 ---
@@ -143,226 +140,203 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   noindex={[...url.searchParams.keys()].length > 0}
   jsonLd={jsonLd}
 >
-  <div class="container">
-    <Breadcrumbs items={crumbs} class="cat-crumbs" />
+  <div class="container cat">
+    <PageHeader title={cat.name} count={cat.app_count} description={description}>
+      <Breadcrumbs slot="top" items={crumbs} />
+      <Fragment slot="actions">
+        {pairs.length > 0 && (
+          <Button href="#compare" icon="scales">
+            Compare the leaders
+          </Button>
+        )}
+        <Button
+          href={`/apps?category=${encodeURIComponent(cat.slug)}`}
+          variant="ghost"
+          iconRight="arrow-right"
+        >
+          Filter all apps
+        </Button>
+      </Fragment>
+    </PageHeader>
 
-    <header class="head cols-12">
-      <div class="head__id span-8">
-        <MonoLabel as="p" tone="ink">
-          {specimen(index + 1, 2)} — Category
-        </MonoLabel>
-        <h1 class="head__title">
-          {cat.name}
-          <Count value={cat.app_count} label="apps" />
-        </h1>
-        <p class="head__statement display">
-          {cat.store_count.toLocaleString('en-US')} of {denominator.toLocaleString('en-US')} scanned
-          stores run at least one of these {cat.app_count === 1 ? 'app' : `${cat.app_count} apps`}.
-          {surfaceNames.length > 0
-            ? ` On the page, they show up as ${surfaceNames.join(' and ').toLowerCase()}.`
-            : ' They work behind the scenes, not as a page section.'}
-        </p>
-      </div>
-      <aside class="head__side start-9">
-        <dl class="head__stat marks">
-          <Stat
-            display
-            value={sharePct(cat.share)}
-            label="Reach"
-            source={`Share of ${denominator.toLocaleString('en-US')} scanned stores · ${formatDate(cat.as_of)}`}
-          />
-        </dl>
-      </aside>
-    </header>
+    <StatList boxed columns={4} class="cat__stats">
+      <Stat
+        value={sharePct(cat.share)}
+        label="Reach"
+        source={`${cat.store_count.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')} stores`}
+        asOf={formatDate(cat.as_of)}
+      />
+      <Stat value={cat.app_count} label="Apps tracked" source="With at least one detection" />
+      <Stat
+        value={leader ? leader.short_name : '—'}
+        label="Most used"
+        source={
+          leader
+            ? `${leader.usage.stores.toLocaleString('en-US')} stores · ${rankLabel(leader.usage.rank)} overall`
+            : undefined
+        }
+      />
+      <Stat
+        value={surfaceNames.length ? surfaceNames.join(', ') : 'No section'}
+        label="Renders as"
+        source={surfaceNames.length ? 'Section type on the page' : 'Scripts, widgets, back office'}
+      />
+    </StatList>
 
-    <section class="sheet cols-12" aria-label="Category facts">
-      <div class="sheet__label">
-        <p class="mlabel mlabel--bullet mlabel--ink">Spec sheet</p>
-      </div>
-      <div class="sheet__rows">
-        <SpecRows rows={specRows} />
-      </div>
-    </section>
-
-    <section class="page-block" aria-labelledby="ranked-title">
+    <section class="cat__block" id="ranking" aria-labelledby="ranked-title">
       <SectionHeader
         title={`${cat.name} apps, ranked`}
         id="ranked-title"
         count={apps.length}
-        label="By stores running each"
-        rule
+        description="By stores running each. Apps with equal usage share a rank."
       />
-      <AppTable usageLabel="Stores">
-        {apps.map((a) => (
-          <AppRow
-            slug={a.slug}
-            href={a.href}
-            name={a.short_name}
-            iconUrl={a.icon_url}
-            developer={a.developer}
-            category={a.category?.name}
-            rating={a.rating}
-            reviews={a.reviews}
-            priceLabel={priceFrom(a.pricing)}
-            storesCount={a.usage.stores}
-            sharePct={a.usage.share * 100}
-            rank={a.usage.rank ?? undefined}
-            builtForShopify={a.built_for_shopify}
-            ratingSource={a.rating ? appStoreSource(appStore?.as_of) : undefined}
-          />
-        ))}
-      </AppTable>
+      <RankTable
+        items={apps.map((a) => ({
+          app: a,
+          rank: a.category_rank,
+          sub: [a.developer, a.usage.rank ? `${rankLabel(a.usage.rank)} overall` : null]
+            .filter(Boolean)
+            .join(' · '),
+        }))}
+        max={leader?.usage.stores ?? 0}
+        showCategory={false}
+        label={`${cat.name} apps ranked by stores running them`}
+        rankTitle={`Rank in ${cat.name}`}
+        ratingSource={appStoreSource(appStore?.as_of)}
+      />
     </section>
-  </div>
 
-  <section
-    class:list={[
-      'page-block',
-      'stage',
-      { 'stage--dark': sections.length > 0 || cat.surfaces.length > 0 },
-    ]}
-    id="where"
-    aria-labelledby="where-title"
-  >
-    <div class="container">
-      <div class="stage__head cols-12">
-        <div class="span-8">
-          <MonoLabel as="p" tone="accent" class="stage__label">
-            Where these apps render
-          </MonoLabel>
-          {sections.length > 0 ? (
-            <>
-              <h2 class="stage__title" id="where-title">
-                {cat.name} on real store pages
-                <Count value={renderingApps.reduce((n, p) => n + p.total, 0)} label="sections" />
-              </h2>
-              <p class="stage__lede">
-                Sections credited to {creditList} on curated stores. Open one to see it in place on
-                the full page.
-              </p>
-            </>
-          ) : (
-            <>
-              <h2 class="stage__title" id="where-title">
-                {surfaceNames.length > 0 ? 'No plates yet' : 'Nothing to see on the page'}
-              </h2>
-              <p class="stage__lede">
-                {surfaceNames.length > 0
-                  ? `These apps render as ${surfaceNames.join(' and ').toLowerCase()}, but none of our curated stores runs one on ${device}.`
-                  : `${cat.name} apps run as scripts, widgets or in the back office, so they add no section we slice. The stores running them are on each app’s page.`}
-              </p>
-            </>
-          )}
-        </div>
-        <div class="stage__side start-9">
-          {cat.surfaces.length > 0 && (
-            <Segmented
-              label="Device"
-              size="sm"
-              items={[
-                {
-                  label: 'Desktop',
-                  value: 'desktop',
-                  icon: 'desktop',
-                  href: `${urlWith(url, { device: null })}#where`,
-                  selected: device === 'desktop',
-                },
-                {
-                  label: 'Mobile',
-                  value: 'mobile',
-                  icon: 'device-mobile',
-                  href: `${urlWith(url, { device: 'mobile' })}#where`,
-                  selected: device === 'mobile',
-                },
-              ]}
-            />
-          )}
-        </div>
-      </div>
-      {sections.length > 0 && (
-        <div class="grid grid--sections stage__grid">
-          {sections.map((s, i) => (
-            <SectionCard
-              href={sectionViewerHref(s)}
-              crop={s.crop}
-              device={s.device}
-              typeName={s.type.name}
-              storeLabel={s.store.display_name}
-              meta={[s.app?.short_name, pageName(s.page_type), s.theme?.name]
-                .filter(Boolean)
-                .join(' · ')}
-              app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
-              eager={i < 4}
-            />
-          ))}
-        </div>
-      )}
-      <div class="stage__foot">
-        <p>
-          {cat.surfaces.length > 0
-            ? 'Layout previews drawn from detected sections until captures land.'
-            : 'Sections are credited to an app only when it renders one on the page.'}
-        </p>
-        {cat.surfaces[0] && (
-          <a href={cat.surfaces[0].href} class="stage__more">
-            All {cat.surfaces[0].name.toLowerCase()} sections <span aria-hidden="true">→</span>
-          </a>
+    <section class="cat__block" id="where" aria-labelledby="where-title">
+      <SectionHeader
+        title="Where these apps show up"
+        id="where-title"
+        description={
+          sections.length > 0
+            ? `${sectionTotal} ${sectionTotal === 1 ? 'section' : 'sections'} credited to ${renderingApps.length} ${renderingApps.length === 1 ? 'app' : 'apps'} on curated stores, each pinned on its page.`
+            : undefined
+        }
+      >
+        {cat.surfaces.length > 0 && (
+          <Segmented
+            label="Device"
+            size="sm"
+            items={[
+              {
+                label: 'Desktop',
+                value: 'desktop',
+                icon: 'desktop',
+                href: `${urlWith(url, { device: null })}#where`,
+                selected: device === 'desktop',
+              },
+              {
+                label: 'Mobile',
+                value: 'mobile',
+                icon: 'device-mobile',
+                href: `${urlWith(url, { device: 'mobile' })}#where`,
+                selected: device === 'mobile',
+              },
+            ]}
+          />
         )}
-        {sections.length === 0 && cat.surfaces.length > 0 && (
-          <a
+      </SectionHeader>
+      {sections.length > 0 ? (
+        <>
+          <ul class="cat__captures">
+            {sections.map((s, i) => (
+              <li>
+                <CaptureCard
+                  section={s}
+                  href={sectionViewerHref(s)}
+                  label={s.type.name}
+                  labelMuted={s.app?.short_name}
+                  alt={`${s.app?.short_name ?? cat.name}: ${s.type.name.toLowerCase()} section on ${s.store.display_name}, ${pageName(s.page_type).toLowerCase()} page (${s.device}, layout preview)`}
+                  title={s.app?.short_name ?? s.type.name}
+                  meta={`${s.store.display_name} · ${pageName(s.page_type)}`}
+                  icon={
+                    s.app
+                      ? { kind: 'app', src: s.app.icon_url, name: s.app.short_name }
+                      : { kind: 'store', domain: s.store.domain, name: s.store.name }
+                  }
+                  eager={i < 2}
+                />
+              </li>
+            ))}
+          </ul>
+          <div class="cat__foot">
+            <p>Layout previews drawn from each page’s detected sections until captures land.</p>
+            {cat.surfaces[0] && (
+              <a href={cat.surfaces[0].href} class="cat__more">
+                All {cat.surfaces[0].name.toLowerCase()} sections
+                <Icon name="arrow-right" size={14} />
+              </a>
+            )}
+          </div>
+        </>
+      ) : cat.surfaces.length > 0 ? (
+        <EmptyState
+          level={3}
+          icon="device-mobile"
+          title={`No ${surfaceNames.join(' or ').toLowerCase()} sections on ${device} yet`}
+          body={`These apps render as ${surfaceNames.join(' and ').toLowerCase()}, but none of our curated stores runs one on ${device}.`}
+        >
+          <Button
             href={`${urlWith(url, { device: otherDevice === 'desktop' ? null : otherDevice })}#where`}
-            class="stage__more"
+            size="sm"
           >
-            Try {otherDevice} <span aria-hidden="true">→</span>
-          </a>
-        )}
-      </div>
-    </div>
-  </section>
+            Try {otherDevice}
+          </Button>
+        </EmptyState>
+      ) : (
+        <EmptyState
+          level={3}
+          icon="gear"
+          title="Nothing to pin on the page"
+          body={`${cat.name} apps run as scripts, widgets or in the back office, so they add no section we slice. Each app’s page lists the stores running it.`}
+        >
+          {leader && (
+            <Button href={leader.href} size="sm" iconRight="arrow-right">
+              Stores running {leader.short_name}
+            </Button>
+          )}
+        </EmptyState>
+      )}
+    </section>
 
-  <div class="container">
     {pairs.length > 0 && (
-      <section class="page-block compare cols-12" aria-labelledby="compare-title">
-        <div class="compare__intro">
-          <MonoLabel as="p">Head to head</MonoLabel>
-          <h2 class="compare__title" id="compare-title">
-            Compare the leaders
-          </h2>
-          <p class="compare__text">
-            The most used {cat.name.toLowerCase()} apps side by side at the same scale. No winners.
-          </p>
-        </div>
-        <div class="compare__list">
-          <CompareList items={pairs} />
-        </div>
+      <section class="cat__block" id="compare" aria-labelledby="compare-title">
+        <SectionHeader
+          title="Compare the leaders"
+          id="compare-title"
+          description={`Curated side-by-side pages for the most used ${cat.name.toLowerCase()} apps.`}
+        />
+        <PairList items={pairs} label={`${cat.name} comparisons`} />
       </section>
     )}
 
-    <section class="page-block others" aria-labelledby="others-title">
+    <section class="cat__block cat__others" aria-labelledby="others-title">
       <SectionHeader
         title="Other categories"
         id="others-title"
         count={others.length}
         href="/apps/categories"
-        linkLabel="Catalogue"
-        rule
-        level={2}
+        linkLabel="All categories"
       />
-      <ol class="others__list">
+      <ul class="others">
         {others.map((c) => (
           <li>
-            <a href={c.href}>
-              <span class="others__n">{specimen(ordered.indexOf(c) + 1, 2)}</span>
+            <a href={c.href} class="others__link">
               <span class="others__name">{c.name}</span>
-              <span class="others__reach num">{sharePct(c.share)}</span>
+              <span class="others__meta num">
+                {c.app_count} {c.app_count === 1 ? 'app' : 'apps'} · {sharePct(c.share)}
+              </span>
             </a>
           </li>
         ))}
-      </ol>
+      </ul>
     </section>
 
-    <footer class="page-block sources">
-      <SourceNote source={`${scan?.label ?? 'StorePeek scan'}: stores, reach and ranks`} />
+    <footer class="cat__sources">
+      <SourceNote source={`${scan?.label ?? 'Our scan'}: stores, reach and ranks`} />
       <SourceNote
         source="Shopify App Store listing: ratings and prices"
         asOf={`checked ${formatDate(appStore?.as_of)}`}
@@ -373,213 +347,109 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 </BaseLayout>
 
 <style>
-  :global(.cat-crumbs) {
-    padding-top: var(--space-6);
+  .cat {
+    padding-bottom: var(--space-16);
   }
-  .head {
-    align-items: end;
-    padding-block: var(--space-8) var(--space-10);
+  :global(.cat__stats) {
+    margin-top: var(--space-2);
   }
-  .head__id {
-    min-width: 0;
-  }
-  .head__title {
-    margin-top: var(--space-5);
-    font-size: clamp(2.75rem, 1.4rem + 5.4vw, 6.5rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.045em;
-    line-height: 0.95;
-  }
-  .head__statement {
-    max-width: 36ch;
-    margin-top: var(--space-6);
-    color: var(--ink-2);
-    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
-    line-height: 1.25;
-    letter-spacing: -0.01em;
-  }
-  .head__stat {
-    padding: var(--space-5) var(--space-5) var(--space-4);
-  }
-  @media (max-width: 1023px) {
-    .head {
-      padding-block: var(--space-6) var(--space-8);
-      row-gap: var(--space-8);
-    }
-    .head__stat {
-      padding: var(--space-4);
-    }
-  }
-  .sheet {
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--ink);
-  }
-  @media (min-width: 1024px) {
-    .sheet__label {
-      grid-column: 1 / 4;
-    }
-    .sheet__rows {
-      grid-column: 4 / -1;
-    }
+  .cat__block {
+    margin-top: var(--section-y-app);
+    scroll-margin-top: calc(var(--header-h) + var(--space-4));
   }
 
-  /* The page's one dark moment: plates of these apps on real store pages. */
-  .stage--dark {
-    --bg: var(--inverse);
-    --ink: var(--ink-inverse);
-    --ink-2: color-mix(in srgb, var(--ink-inverse) 84%, var(--inverse));
-    --ink-3: var(--ink-inverse-2);
-    --ink-4: color-mix(in srgb, var(--ink-inverse-2) 60%, var(--inverse));
-    --line: var(--line-inverse);
-    --line-strong: color-mix(in srgb, var(--line-inverse) 70%, var(--ink-inverse-2));
-    --tile: var(--inverse-2);
-    --tile-hover: color-mix(in srgb, var(--inverse-2) 85%, var(--ink-inverse));
-    --fill: var(--inverse-2);
-    --surface: var(--line-inverse);
-    background: var(--inverse);
-    color: var(--ink);
-    padding-block: var(--space-12) var(--space-10);
+  .cat__captures {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
   }
   @media (min-width: 1024px) {
-    .stage--dark {
-      padding-block: var(--space-16) var(--space-12);
+    .cat__captures {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-5);
     }
   }
-  /* Categories that add no page section: the same block without the dark stage. */
-  .stage:not(.stage--dark) .stage__head {
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--ink);
+  .cat__captures > li {
+    display: flex;
+    min-width: 0;
   }
-  .stage__label {
-    margin-bottom: var(--space-4);
+  .cat__captures > li > :global(.capcard) {
+    flex: 1;
   }
-  .stage__head {
-    align-items: end;
-  }
-  .stage__title {
-    font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-  }
-  .stage__lede {
-    max-width: 60ch;
-    margin-top: var(--space-4);
-    color: var(--ink-2);
-    font-size: var(--text-md);
-  }
-  @media (min-width: 1024px) {
-    .stage__side {
-      display: flex;
-      justify-content: flex-end;
-    }
-  }
-  .stage__grid {
-    margin-top: var(--space-10);
-  }
-  /* Small screens: a compact two-up contact sheet, first six plates. */
-  @media (max-width: 639px) {
-    .stage__grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-5) var(--space-3);
-      margin-top: var(--space-8);
-    }
-    .stage__grid > :global(:nth-child(n + 7)) {
-      display: none;
-    }
-  }
-  .stage__foot {
+  .cat__foot {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--space-3) var(--space-8);
-    margin-top: var(--space-10);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
+    gap: var(--space-2) var(--space-6);
+    margin-top: var(--space-4);
     color: var(--ink-3);
     font-size: var(--text-xs);
   }
-  .stage__more {
+  .cat__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     color: var(--ink);
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.25em;
   }
-  .stage__more:hover {
-    text-decoration-color: currentColor;
+  .cat__more :global(svg) {
+    transition: transform var(--dur-base) var(--ease-out);
   }
-
-  /* The intro and the list each carry their own ink rule (CompareList draws the list's). */
-  .compare__intro {
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--ink);
-  }
-  .compare__title {
-    margin-top: var(--space-3);
-    font-size: clamp(1.375rem, 1.1rem + 0.9vw, 1.875rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.025em;
-    line-height: 1.1;
-  }
-  .compare__text {
-    max-width: 36ch;
-    margin-top: var(--space-2);
-    color: var(--ink-3);
-  }
-  @media (min-width: 1024px) {
-    .compare__intro {
-      grid-column: 1 / 5;
-    }
-    .compare__list {
-      grid-column: 6 / -1;
-    }
+  .cat__more:hover :global(svg) {
+    transform: translateX(2px);
   }
 
-  .others__list {
+  .others {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     column-gap: var(--space-8);
+    border-top: 1px solid var(--line);
   }
   @media (min-width: 640px) {
-    .others__list {
+    .others {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   @media (min-width: 1024px) {
-    .others__list {
+    .others {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
-  .others__list a {
-    display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: var(--space-3);
-    padding: 10px 0;
+  .others li {
+    min-width: 0;
     border-bottom: 1px solid var(--line);
-    transition: padding var(--dur-base) var(--ease-out);
   }
-  .others__list a:hover {
-    padding-left: var(--space-2);
+  .others__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    border-radius: var(--radius-control);
+    transition: background-color var(--dur-fast) var(--ease-out);
   }
-  .others__n,
-  .others__reach {
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
+  .others__link:hover {
+    background: var(--surface-2);
   }
   .others__name {
-    font-weight: var(--weight-medium);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-weight: var(--weight-medium);
   }
-  .sources {
+  .others__meta {
+    flex: none;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .cat__sources {
     display: grid;
     gap: var(--space-2);
+    margin-top: var(--space-12);
     padding-top: var(--space-4);
     border-top: 1px solid var(--line);
   }

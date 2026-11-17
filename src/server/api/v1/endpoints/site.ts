@@ -1,4 +1,5 @@
 /** Data meta, search and the public removal-request form. */
+import { runInBackground } from '../../../notify.ts';
 import { getDataMeta } from '../../../repo/meta.ts';
 import { createRemovalRequest } from '../../../repo/removal.ts';
 import { search } from '../../../repo/search.ts';
@@ -51,7 +52,19 @@ export const createRemovalRequestEndpoint = defineEndpoint({
   input: CreateRemovalRequestInput,
   output: RemovalRequestReceiptSchema,
   handler: async (input, ctx) => {
-    const { receipt } = await createRemovalRequest(ctx, input);
+    const { receipt, stored, id } = await createRemovalRequest(ctx, input);
+    // Tell the admin (owner decision). Runs after the response where the runtime allows it and
+    // can never fail or delay the request; honeypot hits are not stored, so not notified.
+    if (stored) {
+      await runInBackground(ctx.waitUntil, () =>
+        ctx.notifier.removalRequestCreated({
+          id,
+          reference: receipt.reference,
+          scope: receipt.scope,
+          domain: receipt.domain,
+        }),
+      );
+    }
     return { data: receipt };
   },
 });

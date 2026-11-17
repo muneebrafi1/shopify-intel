@@ -2,14 +2,18 @@
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import { requireAdmin } from '~/server/admin/page';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
+import CaptureBlocked from '~/components/admin/CaptureBlocked.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
+import Panel from '~/components/admin/Panel.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
 import Button from '~/components/ui/Button.astro';
+import Icon from '~/components/ui/Icon.astro';
 import Pagination from '~/components/ui/Pagination.astro';
 import Tabs from '~/components/ui/Tabs.astro';
 import { adminDb } from '~/server/admin/env';
 import { getRemovalCounts, listRemovals, PAGE_SIZE, type RemovalTab } from '~/server/admin/queries';
 import { fullTime, hrefWith, timeAgo } from '~/server/admin/format';
+import { REMOVAL_RECORD_RETENTION_DAYS } from '~/server/repo/removal';
 
 const denied = requireAdmin(Astro);
 if (denied) return denied;
@@ -39,93 +43,108 @@ const EMPTY: Record<RemovalTab, string> = {
   approved: 'No approved requests yet.',
   rejected: 'No rejected requests.',
 };
+const STATUS_LABEL: Record<string, string> = {
+  approved: 'Media pending',
+  done: 'Done',
+};
+const years = Math.round(REMOVAL_RECORD_RETENTION_DAYS / 365);
 ---
 
-<AdminLayout title="Removals" section="removals">
+<AdminLayout title="Removals" section="removals" trail={[{ label: 'Removals' }]}>
+  <Fragment slot="actions">
+    <Button href="/opt-out" variant="secondary" size="sm" iconRight="arrow-up-right">
+      Opt-out page
+    </Button>
+  </Fragment>
   <AdminHeader
     title="Removal requests"
-    trail={[{ label: 'Removals' }]}
-    description="Store owners ask to be removed from the opt-out page. Review each request; approving one is permanent."
+    description="Store owners ask to be removed from the opt-out page. Approving is permanent, and whole-store or screenshot removals also block every future capture of that store."
   />
   <FlashNotice />
-  <Tabs items={tabs} label="Request status" />
 
-  <div class="table-wrap">
-    <table class="table a-table removals">
-      <thead>
-        <tr>
-          <th scope="col">Reference</th>
-          <th scope="col">Store</th>
-          <th scope="col">Scope</th>
-          <th scope="col">Requested by</th>
-          <th scope="col">Reason</th>
-          <th scope="col">{tab === 'pending' ? 'Received' : 'Handled'}</th>
-          {tab !== 'pending' && <th scope="col">Status</th>}
-          <th scope="col" class="is-actions">
-            <span class="visually-hidden">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 ? (
+  <Tabs items={tabs} label="Request status" class="rtabs" />
+
+  <Panel flush class="rpanel">
+    <div class="a-tablewrap">
+      <table class="table a-table a-table--stack removals">
+        <thead>
           <tr>
-            <td colspan="8" class="a-empty-cell">
-              {EMPTY[tab]}
-            </td>
+            <th scope="col">Store</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Scope</th>
+            <th scope="col">Requested by</th>
+            <th scope="col">Reason</th>
+            <th scope="col">{tab === 'pending' ? 'Received' : 'Handled'}</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="is-actions">
+              <span class="visually-hidden">Actions</span>
+            </th>
           </tr>
-        ) : (
-          rows.map((r) => {
-            const when = tab === 'pending' ? r.created_at : (r.handled_at ?? r.created_at);
-            return (
-              <tr>
-                <td class="a-mono a-nowrap">
-                  <a href={`/admin/removals/${r.id}`} class="a-row-link">
-                    {r.reference}
-                  </a>
-                </td>
-                <td>
-                  <span class="a-strong a-nowrap">{r.domain}</span>
-                  <span class="a-sub">
-                    {r.store_id
-                      ? `In library · ${(r.store_status ?? '').replace('_', ' ')}`
-                      : 'Not in library'}
-                  </span>
-                </td>
-                <td class="a-nowrap">{SCOPE[r.scope] ?? r.scope}</td>
-                <td class="who">
-                  <span class="a-truncate">{r.name ?? '—'}</span>
-                  <span class="a-sub a-truncate">{r.email}</span>
-                </td>
-                <td class="reason">
-                  <span class="reason__text">{r.reason}</span>
-                </td>
-                <td class="a-nowrap" title={fullTime(when)}>
-                  {timeAgo(when, now)}
-                </td>
-                {tab !== 'pending' && (
-                  <td>
-                    <StatusPill
-                      status={r.status}
-                      label={r.status === 'approved' ? 'Media pending' : undefined}
-                    />
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colspan="8" class="a-empty-cell">
+                {EMPTY[tab]}
+              </td>
+            </tr>
+          ) : (
+            rows.map((r) => {
+              const when = tab === 'pending' ? r.created_at : (r.handled_at ?? r.created_at);
+              return (
+                <tr>
+                  <td class="is-primary store">
+                    <span class="a-strong a-truncate">{r.domain}</span>
+                    <span class="a-sub">
+                      {r.store_id
+                        ? `In library · ${(r.store_status ?? '').replace('_', ' ')}`
+                        : 'Not in library'}
+                    </span>
                   </td>
-                )}
-                <td class="is-actions">
-                  <Button
-                    href={`/admin/removals/${r.id}`}
-                    size="sm"
-                    variant={tab === 'pending' ? 'primary' : 'secondary'}
-                  >
-                    {tab === 'pending' ? 'Review' : 'Open'}
-                  </Button>
-                </td>
-              </tr>
-            );
-          })
-        )}
-      </tbody>
-    </table>
-  </div>
+                  <td class="is-meta a-nowrap">
+                    <a href={`/admin/removals/${r.id}`} class="a-row-link a-mono">
+                      {r.reference}
+                    </a>
+                  </td>
+                  <td class="is-meta a-nowrap">{SCOPE[r.scope] ?? r.scope}</td>
+                  <td class="who a-hide-sm">
+                    <span class="a-truncate">{r.name ?? '—'}</span>
+                    <span class="a-sub a-truncate">{r.email}</span>
+                  </td>
+                  <td class="reason a-hide-sm">
+                    <span class="reason__text">{r.reason}</span>
+                  </td>
+                  <td class="is-meta a-nowrap" title={fullTime(when)}>
+                    {timeAgo(when, now)}
+                  </td>
+                  <td class="is-meta state">
+                    <span class="a-badges">
+                      <StatusPill status={r.status} label={STATUS_LABEL[r.status]} />
+                      {r.capture_blocked ? <CaptureBlocked reference={null} /> : null}
+                    </span>
+                  </td>
+                  <td class="is-actions">
+                    <Button href={`/admin/removals/${r.id}`} size="sm" variant="secondary">
+                      {tab === 'pending' ? 'Review' : 'Open'}
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+    <p slot="footer" class="retention">
+      <Icon name="clock" size={14} />
+      <span>
+        Records of closed requests are kept for {years} years ({REMOVAL_RECORD_RETENTION_DAYS} days)
+        after the decision, then purged by the admin API maintenance endpoint{' '}
+        <code>POST /api/v1/admin/maintenance/purge-removal-records</code>. Capture blocks and
+        tombstones stay for good and keep the request’s reference.
+      </span>
+    </p>
+  </Panel>
   <Pagination
     page={current}
     pageSize={PAGE_SIZE}
@@ -141,15 +160,18 @@ const EMPTY: Record<RemovalTab, string> = {
 </AdminLayout>
 
 <style>
-  .removals {
-    margin-top: var(--space-2);
+  :global(.rtabs) {
+    margin-bottom: var(--space-4);
+  }
+  .store {
+    min-width: 180px;
   }
   .who {
     max-width: 200px;
   }
   .reason {
-    min-width: 220px;
-    max-width: 360px;
+    min-width: 200px;
+    max-width: 340px;
   }
   .reason__text {
     display: -webkit-box;
@@ -157,5 +179,27 @@ const EMPTY: Record<RemovalTab, string> = {
     -webkit-box-orient: vertical;
     overflow: hidden;
     color: var(--ink-2);
+  }
+  .retention {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .retention :global(.icon) {
+    margin-top: 2px;
+  }
+  .retention code {
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 639px) {
+    .state {
+      flex-basis: 100%;
+      margin-top: var(--space-1);
+    }
+    .is-meta.state::before {
+      content: none !important;
+    }
   }
 </style>

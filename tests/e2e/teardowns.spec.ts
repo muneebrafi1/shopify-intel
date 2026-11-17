@@ -4,10 +4,12 @@ import { expectHealthyPage, prepare } from './helpers';
 /** /teardowns and /teardowns/<slug>. Runs at 390px and 1440px (playwright.config.ts). */
 
 test.describe('teardowns', () => {
-  test('index is healthy and labels samples', async ({ page }) => {
+  test('index is healthy, leads with the newest and labels samples', async ({ page }) => {
     await expectHealthyPage(page, '/teardowns');
-    await expect(page.locator('a[href="/teardowns/youngla"]').first()).toBeVisible();
+    await expect(page.locator('.lead a[href="/teardowns/youngla"]')).toBeVisible();
     await expect(page.locator('.tds')).toContainText('Sample');
+    await expect(page.locator('.tds__grid .td-card')).toHaveCount(2);
+    expect(await page.locator('main').textContent()).not.toContain('N°');
   });
 
   for (const slug of ['youngla', 'thesill', 'fishwife']) {
@@ -19,8 +21,40 @@ test.describe('teardowns', () => {
       expect(ld).toContain('"Article"');
       expect(ld).toContain('BreadcrumbList');
       await expect(page.locator('.td__sheet a[href^="/stores/"]').first()).toBeVisible();
+      await expect(page.locator('.td__byline')).toContainText('Editorial team');
+      expect(await page.locator('main').textContent()).not.toContain('N°');
     });
   }
+
+  test('reading column: 680px max, sans title, TOC only on wide screens', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/teardowns/youngla');
+    const column = await page.locator('.td__main').boundingBox();
+    expect(column!.width).toBeLessThanOrEqual(681);
+    const font = await page.locator('h1').evaluate((el) => getComputedStyle(el).fontFamily);
+    expect(font).toMatch(/^"?Instrument Sans/);
+    expect(font).not.toMatch(/Newsreader/i);
+    const wide = (page.viewportSize()?.width ?? 0) >= 1200;
+    await expect(page.locator('.td__toc')).toBeVisible({ visible: wide });
+    if (wide) {
+      await page.locator('.td__toc a', { hasText: 'The stack' }).click();
+      await expect(page.locator('#stack')).toBeInViewport();
+    }
+  });
+
+  test('the corrected YoungLA text renders: ten identified apps, no Trustgear', async ({
+    page,
+  }) => {
+    await prepare(page);
+    await page.goto('/teardowns/youngla');
+    const prose = page.locator('.td-prose');
+    await expect(prose).toContainText('Ten are identified apps');
+    await expect(prose).not.toContainText('Trustgear');
+    // Numbered takeaways keep inline code inside the item's text cell.
+    const item = prose.locator('ol.md-ol li').last();
+    await expect(item.locator('> span')).toContainText('trustpilot');
+    await expect(item.locator('> span code')).toHaveCount(1);
+  });
 
   test('note numbers match the section numbers on the capture', async ({ page }) => {
     await prepare(page);
@@ -33,11 +67,14 @@ test.describe('teardowns', () => {
       const href = await nums.nth(i).getAttribute('href');
       const id = href!.replace('#section-', '');
       // FullPage tags read "02 Header · App": same number as the rail on the store page.
-      await expect(page.locator(`[data-region="${id}"] .fp__tag`)).toContainText(num);
+      const tag = page.locator(`[data-region="${id}"] .fp__tag`);
+      await expect(tag).toContainText(num);
+      // Annotated sections keep their tag visible.
+      await expect(tag).toHaveCSS('opacity', '1');
     }
   });
 
-  test('a note scrolls to its section and plate tabs switch the plate', async ({ page }) => {
+  test('a note scrolls to its section and capture tabs switch the capture', async ({ page }) => {
     await prepare(page);
     await page.goto('/teardowns/youngla');
     const first = page.locator('.tdnote__num').first();

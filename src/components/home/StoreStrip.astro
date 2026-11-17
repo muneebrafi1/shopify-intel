@@ -1,0 +1,149 @@
+---
+/**
+ * Curated stores in hairline cells (the Stripe logo strip, with our store marks). Every cell is
+ * a real curated store and links to its viewer. 5 per row from 768px, 2 per row (six cells) below.
+ */
+import StoreMark from '~/components/ui/StoreMark.astro';
+
+export interface StripStore {
+  domain: string;
+  name: string;
+  href: string;
+  theme: string | null;
+}
+interface Props {
+  stores: StripStore[];
+  total: number;
+}
+const { stores, total } = Astro.props;
+---
+
+<section class="strip" aria-labelledby="strip-title">
+  <div class="strip__head">
+    <h2 id="strip-title" class="strip__title">
+      {total} curated stores, <span class="tone-muted">captured page by page</span>
+    </h2>
+    <a class="strip__all" href="/stores">
+      All stores <span aria-hidden="true">→</span>
+    </a>
+  </div>
+  <ul class="strip__grid">
+    {stores.map((s) => (
+      <li class="strip__cell">
+        <a class="strip__link" href={s.href}>
+          <StoreMark domain={s.domain} name={s.name} size={28} />
+          <span class="strip__text">
+            <span class="strip__name">{s.name}</span>
+            <span class="strip__meta">{s.theme ?? s.domain}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .strip__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .strip__title {
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+    letter-spacing: -0.005em;
+  }
+  .strip__all {
+    flex: none;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .strip__all:hover {
+    color: var(--ink);
+  }
+  .strip__all span {
+    display: inline-block;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .strip__all:hover span {
+    transform: translateX(2px);
+  }
+
+  /* Hairline cells: each cell draws its right and bottom line; the grid draws top and left. */
+  .strip__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+  .strip__cell {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .strip__link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 100%;
+    min-height: 64px;
+    padding: var(--space-3) var(--space-4);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .strip__link:hover {
+    background: var(--bg-subtle);
+  }
+  .strip__link:focus-visible {
+    outline-offset: -2px;
+  }
+  .strip__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .strip__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+  }
+  .strip__meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  /* Phones: an even number of cells, so the last row is never half empty. */
+  @media (max-width: 767px) {
+    .strip__cell:nth-child(n + 7) {
+      display: none;
+    }
+  }
+  @media (min-width: 768px) {
+    .strip__grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    .strip__link {
+      min-height: 72px;
+      padding: var(--space-4) var(--space-5);
+    }
+  }
+  /* Tablets: five narrow cells, so the mark sits above the name. */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .strip__link {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+      padding: var(--space-4);
+    }
+    .strip__text {
+      max-width: 100%;
+    }
+  }
+</style>

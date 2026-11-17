@@ -13,11 +13,14 @@ const ROUTES = [
   '/themes?price=400-plus&sort=name',
   '/themes?vendor=maestrooo&view=index',
   '/themes?price=paid&vendor=shopify',
+  '/themes?q=maestro',
+  '/themes?q=zzzz',
   '/themes/prestige',
   '/themes/dawn',
   '/themes/hyper',
   '/themes/enterprise',
   '/themes/prestige?page=cart&device=mobile',
+  '/themes/dawn?page=product&device=mobile',
 ];
 
 test.describe('themes pages are healthy', () => {
@@ -45,12 +48,28 @@ test.describe('themes index', () => {
     await expect(cards).toHaveCount(2);
     await expect(page.locator('.theme-card__name')).toHaveText(['Dawn', 'Horizon']);
     await expect(page.locator('.fbar__total')).toContainText('2');
-    // The active filter is shown as a removable chip that clears it.
-    const chip = page.locator('.fbar__active a', { hasText: 'Free' });
-    await expect(chip).toHaveAttribute('href', '/themes');
+    // Price is the pill row: the selected pill is marked, "Any price" clears it.
+    const pills = page.locator('.fbar__pills');
+    await expect(pills.locator('a[aria-current="true"]')).toHaveText(/Free/);
+    await expect(pills.locator('a', { hasText: 'Any price' })).toHaveAttribute('href', '/themes');
 
     await page.goto('/themes?vendor=maestrooo');
     await expect(page.locator('.theme-card__name')).toHaveText(['Prestige', 'Impact', 'Stretch']);
+    // Other filters show as removable chips that clear them.
+    const chip = page.locator('.fbar__active a', { hasText: 'Maestrooo' });
+    await expect(chip).toHaveAttribute('href', '/themes');
+  });
+
+  test('search narrows the themes and keeps the other filters', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/themes?price=paid');
+    const field = page.locator('.fbar__search input[name="q"]');
+    await field.fill('maestro');
+    await field.press('Enter');
+    await page.waitForURL(/q=maestro/);
+    expect(new URL(page.url()).searchParams.get('price')).toBe('paid');
+    await expect(page.locator('.theme-card__name')).toHaveText(['Prestige', 'Impact', 'Stretch']);
+    await expect(field).toHaveValue('maestro');
   });
 
   test('an empty filter combination says what to do next', async ({ page }) => {
@@ -64,16 +83,33 @@ test.describe('themes index', () => {
     );
   });
 
-  test('?view=index renders the numbered index', async ({ page }) => {
+  test('cards show usage share and rank; equal usage shares a rank', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/themes');
+    await expect(page.getByText(/N°/)).toHaveCount(0);
+    const card = (name: string) =>
+      page.locator('.theme-card', { has: page.locator('.theme-card__name', { hasText: name }) });
+    await expect(card('Dawn').locator('.theme-card__rank')).toHaveText('#1');
+    await expect(card('Dawn').locator('.theme-card__count')).toContainText('%');
+    // Hyper, Impact and Impulse run on the same number of stores.
+    for (const name of ['Hyper', 'Impact', 'Impulse']) {
+      await expect(card(name).locator('.theme-card__rank')).toHaveText('#6');
+    }
+    await expect(card('Flow').locator('.theme-card__rank')).toHaveText('#9');
+  });
+
+  test('?view=index renders the ranked table', async ({ page }) => {
     await prepare(page);
     await page.goto('/themes?view=index');
     await expect(page.locator('.theme-card')).toHaveCount(0);
-    const rows = page.locator('.index .irow');
+    const rows = page.locator('.ttable tbody tr');
     await expect(rows.first()).toBeVisible();
     expect(await rows.count()).toBeGreaterThan(2);
-    await expect(rows.first()).toContainText('N°001');
+    await expect(rows.first()).toContainText('#1');
     await expect(rows.first()).toContainText('Dawn');
     await expect(rows.first().locator('a')).toHaveAttribute('href', '/themes/dawn');
+    await expect(rows.filter({ hasText: 'Impact' })).toContainText('#6');
+    await expect(page.getByText(/N°/)).toHaveCount(0);
   });
 
   test('vendor index links to the vendor filter', async ({ page }) => {
@@ -85,91 +121,144 @@ test.describe('themes index', () => {
 });
 
 test.describe('theme detail', () => {
-  test('specimen header, spec rows and an official CTA', async ({ page }) => {
+  test('identity row, facts card and an official CTA', async ({ page }) => {
     await prepare(page);
     await page.goto('/themes/prestige');
     await expect(page.locator('h1')).toHaveText('Prestige');
-    await expect(page.getByText(/^N°\d{3} — Theme$/)).toBeVisible();
-    const specs = page.locator('.th-head .specs');
-    for (const label of [
-      'Vendor',
-      'Price',
-      'Theme Store ID',
-      'Latest version seen',
-      'Stores in scan',
-    ]) {
-      await expect(specs.locator('dt', { hasText: label })).toBeVisible();
-    }
-    await expect(specs.locator('a', { hasText: 'Maestrooo' })).toHaveAttribute(
+    await expect(page.getByText(/N°/)).toHaveCount(0);
+    const chips = page.locator('.th-chips');
+    await expect(chips).toContainText('$400');
+    await expect(chips).toContainText('#3 most used');
+    await expect(chips.locator('a', { hasText: 'Maestrooo' })).toHaveAttribute(
       'href',
       '/themes?vendor=maestrooo',
     );
-    const cta = page.locator('.th-head .cta a.btn');
+    const facts = page.locator('.th-side .fcard');
+    for (const label of [
+      'Price',
+      'Vendor',
+      'Stores using it',
+      'Rank by usage',
+      'Latest version seen',
+      'Theme Store ID',
+    ]) {
+      await expect(facts.locator('dt', { hasText: label })).toBeVisible();
+    }
+    await expect(facts).toContainText('#3 of 20 themes');
+    await expect(facts).toContainText('13 of 930');
+    await expect(facts).toContainText('Source:');
+
+    const actions = page.locator('.th-actions');
+    const cta = actions.locator('.cta a.btn');
+    await expect(cta).toHaveAttribute('href', 'https://themes.shopify.com/themes/prestige');
     await expect(cta).not.toHaveAttribute('rel', /sponsored/);
-    await expect(page.locator('.th-head .cta')).toContainText('No affiliate relationship');
+    await expect(actions.locator('.cta')).toContainText('No affiliate relationship');
+    await expect(actions.getByRole('link', { name: 'Compare' })).toHaveAttribute(
+      'href',
+      '#compare',
+    );
+    await expect(actions.getByRole('link', { name: 'Save' })).toHaveAttribute('href', /^\/sign-in/);
     const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
     expect(ld.join('\n')).toContain('BreadcrumbList');
   });
 
-  test('affiliate CTA is labelled and sponsored', async ({ page }) => {
+  test('Hyper links to the Theme Store without an affiliate link', async ({ page }) => {
     await prepare(page);
     await page.goto('/themes/hyper');
-    const cta = page.locator('.th-head .cta a.btn');
-    await expect(cta).toHaveAttribute('rel', /sponsored/);
-    await expect(cta).toHaveAttribute('href', /^\/go\//);
-    await expect(page.locator('.th-head .cta')).toContainText('Affiliate');
+    const cta = page.locator('.th-actions .cta a.btn');
+    await expect(cta).toHaveAttribute('href', 'https://themes.shopify.com/themes/hyper');
+    await expect(cta).not.toHaveAttribute('rel', /sponsored/);
+    await expect(page.locator('.th-actions .cta')).toContainText('No affiliate relationship');
+    await expect(page.locator('.th-actions .cta')).not.toContainText('Affiliate link');
+    // The dropped affiliate link is gone (owner decision): its redirect id is unused.
+    const go = await page.request.get('/go/4', { maxRedirects: 0 });
+    expect(go.status()).toBe(404);
+    // Ties share a rank: Hyper, Impact and Impulse all run on 8 stores.
+    await expect(page.locator('.th-chips')).toContainText('#6 most used');
   });
 
-  test('page-type tabs and the device toggle switch the plates', async ({ page }) => {
+  test('affiliate CTAs are labelled and sponsored (shared AffiliateCta path)', async ({ page }) => {
+    // No theme has an affiliate link right now; the design-system page renders the same
+    // AffiliateCta the theme page uses with isAffiliate, so the labelling path stays covered.
+    await prepare(page);
+    await page.goto('/design-system');
+    const cta = page.locator('.cta', { hasText: 'Get Prestige' });
+    await expect(cta.locator('a.btn')).toHaveAttribute('rel', /sponsored/);
+    await expect(cta).toContainText('Affiliate link');
+    await expect(cta.getByRole('link', { name: 'Disclosure' })).toHaveAttribute(
+      'href',
+      '/affiliate-disclosure',
+    );
+  });
+
+  test('page-type tabs and the device switch change the capture', async ({ page }) => {
     await prepare(page);
     await page.goto('/themes/dawn');
-    const plates = page.locator('#plates');
-    const visible = plates.locator('[data-plate-panel]:visible');
-    await expect(visible).toHaveCount(1);
-    await expect(visible).toHaveAttribute('data-page', 'home');
-    await expect(visible).toHaveAttribute('data-device', 'desktop');
+    const seen = page.locator('#seen-on');
+    const panel = seen.locator('[data-seen-panel]');
+    await expect(panel).toHaveCount(1);
+    await expect(panel).toHaveAttribute('data-page', 'home');
+    await expect(panel).toHaveAttribute('data-device', 'desktop');
+    // Every section on the capture carries a pinned tag.
+    expect(await panel.locator('.fp__region').count()).toBeGreaterThan(3);
+    await expect(panel.locator('.fp__tag').first()).toBeAttached();
 
-    await plates.locator('.plates__tabs a', { hasText: 'Collection' }).click();
-    await expect(visible).toHaveAttribute('data-page', 'collection');
-    await expect(plates.locator('.plates__tabs a[aria-current="page"]')).toHaveText('Collection');
-    await expect(page).toHaveURL(/page=collection/);
+    await seen.locator('.seen__tabs a', { hasText: 'Collection' }).click();
+    await page.waitForURL(/page=collection/);
+    await expect(panel).toHaveAttribute('data-page', 'collection');
+    await expect(seen.locator('.seen__tabs a[aria-current="page"]')).toHaveText('Collection');
 
-    await plates.locator('.plates__device a', { hasText: 'Mobile' }).click();
-    await expect(visible).toHaveAttribute('data-device', 'mobile');
-    await expect(visible).toHaveAttribute('data-page', 'collection');
-    await expect(page).toHaveURL(/device=mobile/);
-    const img = visible.locator('img').first();
+    const mobile = seen.locator('.seen__device a', { hasText: 'Mobile' });
+    await expect(mobile).toHaveAttribute('href', /page=collection&device=mobile#seen-on$/);
+    await mobile.click();
+    await page.waitForURL(/device=mobile/);
+    await expect(panel).toHaveAttribute('data-device', 'mobile');
+    await expect(panel).toHaveAttribute('data-page', 'collection');
+    const img = panel.locator('.fp__canvas > img');
     await expect(img).toBeVisible();
     await expect(img).toHaveAttribute('alt', /collection page.*mobile/);
-    // Captures link to the store page at the same page type and device.
-    await expect(visible.locator('a').first()).toHaveAttribute(
+    // The capture links to the store page at the same page type and device.
+    await expect(panel.locator('.seen__open')).toHaveAttribute(
       'href',
       /\/stores\/[^?]+\?page=collection&device=mobile/,
     );
   });
 
-  test('plate state works from the URL without JavaScript', async ({ browser }) => {
+  test('capture state works from the URL without JavaScript', async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await prepare(page);
     await page.goto('/themes/prestige?page=product&device=mobile');
-    const visible = page.locator('#plates [data-plate-panel]:visible');
-    await expect(visible).toHaveCount(1);
-    await expect(visible).toHaveAttribute('data-page', 'product');
-    await expect(visible).toHaveAttribute('data-device', 'mobile');
-    await expect(page.locator('.plates__tabs a[aria-current="page"]')).toHaveText('Product');
+    const panel = page.locator('#seen-on [data-seen-panel]');
+    await expect(panel).toHaveCount(1);
+    await expect(panel).toHaveAttribute('data-page', 'product');
+    await expect(panel).toHaveAttribute('data-device', 'mobile');
+    await expect(page.locator('.seen__tabs a[aria-current="page"]')).toHaveText('Product');
+    await expect(page.locator('.seen__device a[aria-current="true"]')).toHaveText('Mobile');
     await context.close();
   });
 
-  test('stores using the theme link to their store pages', async ({ page }) => {
+  test('every detected store using the theme is listed and links to its page', async ({ page }) => {
     await prepare(page);
     await page.goto('/themes/prestige');
-    const rows = page.locator('#stores .irow');
-    expect(await rows.count()).toBeGreaterThan(1);
+    const rows = page.locator('#stores tbody tr');
+    // All detected stores (13), not only the curated one.
+    await expect(rows).toHaveCount(13);
+    await expect(page.locator('#stores .sh__count')).toHaveText('13');
     const hrefs = await rows
       .locator('a')
       .evaluateAll((els) => els.map((a) => a.getAttribute('href')));
     for (const href of hrefs) expect(href).toMatch(/^\/stores\/[a-z0-9.-]+$/);
     await expect(page.locator('#stores')).toContainText('Not captured');
+  });
+
+  test('apps used with the theme share ranks on equal usage', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/themes/prestige');
+    const ranks = await page.locator('.tapps__rank').allTextContents();
+    expect(ranks[0]).toBe('#1');
+    // Several apps run on the same number of Prestige stores: they share one rank.
+    expect(ranks.filter((r) => r === '#4').length).toBeGreaterThan(1);
+    expect(ranks).not.toContain('#5');
   });
 });

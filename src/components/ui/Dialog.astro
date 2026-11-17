@@ -68,10 +68,13 @@ const { id, title, hideTitle = false, size = 'md', class: className } = Astro.pr
     margin: auto;
     padding: 0;
     border: 0;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-card);
     background: var(--surface);
     color: var(--ink);
-    box-shadow: var(--shadow-float);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-lg),
+      var(--highlight);
     overflow: hidden;
     flex-direction: column;
   }
@@ -80,7 +83,10 @@ const { id, title, hideTitle = false, size = 'md', class: className } = Astro.pr
     animation: dialog-in var(--dur-base) var(--ease-out);
   }
   .dialog::backdrop {
-    background: rgb(25 24 22 / 0.4);
+    background: var(--overlay);
+  }
+  :global(html:has(dialog.dialog[open])) {
+    overflow: hidden;
   }
   .dialog--sm {
     --dialog-w: 400px;
@@ -117,11 +123,12 @@ const { id, title, hideTitle = false, size = 'md', class: className } = Astro.pr
     width: 32px;
     height: 32px;
     margin-left: auto;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-control);
     color: var(--ink-2);
+    transition: background-color var(--dur-fast) var(--ease-out);
   }
   .dialog__close:hover {
-    background: var(--fill);
+    background: var(--surface-2);
     color: var(--ink);
   }
   .dialog__body {
@@ -135,6 +142,6 @@ const { id, title, hideTitle = false, size = 'md', class: className } = Astro.pr
     gap: var(--space-2);
     padding: var(--space-3) var(--space-5);
     border-top: 1px solid var(--line);
-    background: var(--bg);
+    background: var(--bg-subtle);
   }
 </style>

@@ -1,0 +1,226 @@
+---
+/**
+ * One section in the library grid: the crop in a fixed-aspect well with a pinned tag (the
+ * section type, or the page type on a type page), then the store, its domain and theme, and the
+ * app that renders it. One link per card (the store name, stretched over the card), which the
+ * lightbox intercepts. Wide desktop strips and tall mobile slices share the same well, so a
+ * mixed grid stays aligned.
+ */
+import SectionCrop from '~/components/media/SectionCrop.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import type { SectionCard } from '~/server/api/v1/types';
+import { pageLabel } from './library';
+
+interface Props {
+  section: SectionCard;
+  /** What the pinned tag names: the section type (library) or the page type (type page). */
+  tag?: 'type' | 'page';
+  /** Well ratio; mobile-only grids use a portrait well. */
+  ratio?: string;
+  eager?: boolean;
+  class?: string;
+}
+const { section: s, tag = 'type', ratio, eager = false, class: className } = Astro.props;
+const page = pageLabel(s.page_type);
+const device = s.device === 'mobile' ? 'Mobile' : 'Desktop';
+const theme = s.theme?.name ?? 'Custom theme';
+const sameName = s.store.display_name === s.store.domain;
+---
+
+<article class:list={['ccard', `ccard--${s.device}`, className]} data-ccard>
+  <SectionCrop
+    src={s.crop.src}
+    width={s.crop.width}
+    height={s.crop.height}
+    device={s.device}
+    alt={`${s.type.name} section on ${s.store.display_name}, ${page.toLowerCase()} (${s.device})`}
+    ratio={ratio}
+    eager={eager}
+    class="ccard__crop"
+  >
+    <span class="ccard__tag">
+      {tag === 'type' ? s.type.name : page}
+      {s.device === 'mobile' && <span class="ccard__dev">· Mobile</span>}
+    </span>
+  </SectionCrop>
+  <div class="ccard__body">
+    <div class="ccard__text">
+      <h3 class="ccard__title">
+        <a href={s.href} class="stretched-link" data-ccard-link>
+          {s.store.display_name}
+          <span class="visually-hidden">
+            {' '}
+            — {s.type.name}, {page.toLowerCase()}, {device.toLowerCase()}
+          </span>
+        </a>
+      </h3>
+      <p class="ccard__meta">
+        {!sameName && <span class="ccard__domain">{s.store.domain}</span>}
+        {!sameName && <span aria-hidden="true">·</span>}
+        <span class="ccard__theme">{theme}</span>
+        {tag === 'type' && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>{page.replace(/ page$/, '')}</span>
+          </>
+        )}
+      </p>
+    </div>
+    {s.app && (
+      <span class="ccard__app" title={`Rendered by ${s.app.name}`}>
+        <AppIcon src={s.app.icon_url} name={s.app.short_name} size={18} />
+        <span class="ccard__app-name">{s.app.short_name}</span>
+      </span>
+    )}
+  </div>
+</article>
+
+<style>
+  .ccard {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .ccard:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+    transform: translateY(-2px);
+  }
+  .ccard:focus-within {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-sm),
+      var(--highlight);
+  }
+  .ccard :global(.ccard__crop) {
+    margin: 6px 6px 0;
+    border-radius: calc(var(--radius-card) - 4px);
+  }
+  .ccard :global(.ccard__crop img) {
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .ccard:hover :global(.ccard__crop) {
+    background: var(--surface-3);
+  }
+  .ccard:hover :global(.ccard__crop img) {
+    transform: scale(1.015);
+  }
+
+  /* Pinned tag (the Twenty pattern): ink pill, mono 11. */
+  .ccard__tag {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: calc(100% - 16px);
+    height: 20px;
+    padding: 0 7px;
+    border-radius: var(--radius-pill);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: var(--shadow-xs);
+  }
+  .ccard__dev {
+    color: var(--btn-fg-2);
+  }
+
+  .ccard__body {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+  .ccard__text {
+    min-width: 0;
+  }
+  .ccard__title {
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ccard__title a {
+    color: var(--ink);
+  }
+  .ccard__title a:focus-visible {
+    outline: none;
+  }
+  .ccard__title a:focus-visible::after {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .ccard__meta {
+    display: flex;
+    gap: 5px;
+    margin-top: 2px;
+    min-width: 0;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .ccard__meta > span {
+    flex: none;
+  }
+  .ccard__meta > .ccard__domain,
+  .ccard__meta > .ccard__theme {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ccard__domain {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.6;
+  }
+  .ccard__app {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 45%;
+    height: 24px;
+    margin-top: -1px;
+    padding: 0 8px 0 3px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--ink-2);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+  }
+  .ccard__app :global(.app-icon) {
+    flex: none;
+  }
+  .ccard__app-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>

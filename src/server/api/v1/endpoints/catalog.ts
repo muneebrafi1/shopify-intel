@@ -44,7 +44,7 @@ export const listStoresEndpoint = defineEndpoint({
   path: '/stores',
   summary: 'List stores',
   description:
-    'Scanned stores with filters, facet counts (each facet ignores its own filter) and keyset pagination.',
+    'Stores with filters, facet counts (each facet ignores its own filter) and keyset pagination. Defaults to the curated stores (scope=curated), with or without filters; scope=all lists every detected store. facets.scope counts both.',
   tags: ['Stores'],
   cache: 'public',
   input: ListStoresInput,

@@ -1,33 +1,47 @@
 ---
 /**
- * /apps/categories — the app categories as a typographic catalogue, ordered by reach (share of
- * scanned stores running at least one app in the category), with where on the page each kind
- * of app shows up and its three most used apps.
+ * /apps/categories — the app categories as cards, ordered by reach (share of scanned stores
+ * running at least one app in the category). Split by where they live: categories whose apps
+ * render a section on the storefront, and those that work behind the scenes. Each card shows
+ * its reach and its most used apps (real icons, store counts).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import PageHeader from '~/components/ui/PageHeader.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import Button from '~/components/ui/Button.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
-import CategoryEntry from '~/components/apps/CategoryEntry.astro';
+import CategoryCard from '~/components/apps/CategoryCard.astro';
 import { api } from '~/server/api';
 import { formatDate } from '~/lib/format';
 import { breadcrumbLd } from '~/components/apps/helpers';
+import { allApps } from '~/components/apps/data';
 
-const [{ data, meta }, { data: siteMeta }] = await Promise.all([
+const [{ data, meta }, { data: siteMeta }, usage] = await Promise.all([
   api.listAppCategories({}),
   api.getMeta({}),
+  allApps(),
 ]);
 const categories = [...data.items].sort(
   (a, b) => b.store_count - a.store_count || a.name.localeCompare(b.name),
 );
 const denominator = siteMeta.counts.stores_scanned;
-const apps = siteMeta.counts.apps;
+const appCount = siteMeta.counts.apps;
 const source = meta.sources[categories[0]?.source ?? ''] ?? siteMeta.source;
-const withSurface = categories.filter((c) => c.surfaces.length > 0).length;
+const onPage = categories.filter((c) => c.surfaces.length > 0);
+const behind = categories.filter((c) => c.surfaces.length === 0);
+const maxShare = Math.max(...categories.map((c) => c.share), 0);
 
-const words = [
+// Most used apps per category, with store counts (top_apps are already ordered by use).
+const topApps = (c: (typeof categories)[number]) =>
+  c.top_apps.slice(0, 3).map((a) => ({
+    name: a.short_name,
+    href: a.href,
+    iconUrl: a.icon_url,
+    stores: usage.get(a.slug)?.usage.stores ?? null,
+  }));
+
+const WORDS = [
   'Zero',
   'One',
   'Two',
@@ -55,7 +69,7 @@ const words = [
   'Twenty-four',
   'Twenty-five',
 ];
-const countWord = words[categories.length] ?? String(categories.length);
+const countWord = WORDS[categories.length] ?? String(categories.length);
 
 const crumbs = [
   { label: 'Apps', href: '/apps' },
@@ -82,112 +96,129 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
 <BaseLayout
   title="Shopify app categories"
-  description={`${categories.length} kinds of Shopify app, ordered by how many of ${denominator} scanned stores run one — with where each kind shows up on the page and the most used apps.`}
+  description={`${categories.length} kinds of Shopify app, ordered by how many of ${denominator} scanned stores run one, with where each kind shows up on the page and the most used apps.`}
   jsonLd={jsonLd}
 >
-  <div class="container">
+  <div class="container cats">
     <PageHeader
       title="App categories"
       count={categories.length}
-      eyebrow="Catalogue — ordered by reach"
+      description={`${countWord} kinds of app, ordered by how many of ${denominator.toLocaleString('en-US')} scanned stores run at least one. ${onPage.length} of them put a section on the page.`}
     >
       <Breadcrumbs slot="top" items={crumbs} />
-      <Fragment slot="meta">
-        <p class="statement display">
-          {countWord} kinds of app, ordered by how many of {denominator.toLocaleString('en-US')}{' '}
-          scanned stores run at least one — and where on the page each kind shows up.
-        </p>
-        <div class="specline">
-          <MonoLabel>Scanned {formatDate(source?.as_of)}</MonoLabel>
-          <MonoLabel>{apps} apps</MonoLabel>
-          <MonoLabel>{withSurface} render a section</MonoLabel>
-        </div>
-      </Fragment>
+      <p slot="meta" class="cats__asof">
+        <span>Scan {formatDate(source?.as_of)}</span>
+        <span>{appCount} apps tracked</span>
+      </p>
       <Fragment slot="actions">
-        <Button href="/apps" size="sm" iconRight="arrow-right">
+        <Button href="/apps" iconRight="arrow-right">
           All apps, ranked
         </Button>
-        <Button href="/sections" size="sm" variant="quiet">
+        <Button href="/sections" variant="ghost" icon="stack">
           Sections library
         </Button>
       </Fragment>
     </PageHeader>
 
-    <div class="catalogue">
-      <div class="catalogue__head" aria-hidden="true">
-        <span>N°</span>
-        <span>Category · where it shows up</span>
-        <span>Apps</span>
-        <span>Reach</span>
-        <span>Most used</span>
-      </div>
-      <ol class="catalogue__list" aria-label="App categories by reach">
-        {categories.map((c, i) => (
-          <CategoryEntry n={i + 1} category={c} denominator={denominator} />
-        ))}
-      </ol>
-    </div>
-
-    <div class="cat-sources">
-      <SourceNote
-        source={`${source?.label ?? 'StorePeek scan'}: reach is the share of scanned stores running at least one app in the category`}
+    <section class="cats__group" aria-labelledby="on-page-title">
+      <SectionHeader
+        title="On the storefront"
+        id="on-page-title"
+        count={onPage.length}
+        description="Apps in these categories render a section shoppers see: reviews, signup forms, upsell blocks. Open one to see them pinned on real store pages."
       />
-      <p class="cat-note">
-        “Where it shows up” is the section type apps in a category usually render. Categories
-        without one work as scripts, widgets or in the back office.
-      </p>
+      <ul class="cats__grid">
+        {onPage.map((c) => (
+          <li>
+            <CategoryCard
+              category={c}
+              denominator={denominator}
+              maxShare={maxShare}
+              apps={topApps(c)}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    {behind.length > 0 && (
+      <section class="cats__group" aria-labelledby="behind-title">
+        <SectionHeader
+          title="Behind the scenes"
+          id="behind-title"
+          count={behind.length}
+          description="These apps work as scripts, widgets or in the back office. They add no section to the page, so we show where they are installed instead."
+        />
+        <ul class="cats__grid">
+          {behind.map((c) => (
+            <li>
+              <CategoryCard
+                category={c}
+                denominator={denominator}
+                maxShare={maxShare}
+                apps={topApps(c)}
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <div class="cats__sources">
+      <SourceNote
+        source={`${source?.label ?? 'Our scan'}: reach is the share of scanned stores running at least one app in the category`}
+      />
     </div>
   </div>
 </BaseLayout>
 
 <style>
-  .statement {
-    max-width: 38ch;
-    margin-top: var(--space-5);
-    color: var(--ink-2);
-    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
-    line-height: 1.25;
-    letter-spacing: -0.01em;
+  .cats {
+    padding-bottom: var(--space-16);
   }
-  .specline {
+  .cats__asof {
     display: flex;
+    margin-top: var(--space-3);
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-5);
-    margin-top: var(--space-5);
+    gap: var(--space-1) var(--space-4);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
   }
-  .catalogue {
-    margin-top: var(--space-6);
+  .cats__group {
+    margin-top: var(--section-y-app);
   }
-  .catalogue__head {
-    display: none;
+  .cats__group + .cats__group {
+    padding-top: var(--section-y-app);
+    border-top: 1px solid var(--line);
   }
-  .catalogue__list {
-    border-top: 1px solid var(--ink);
+  .cats__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  @media (min-width: 640px) {
+    .cats__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
   }
   @media (min-width: 1024px) {
-    .catalogue__head {
-      display: grid;
-      grid-template-columns: 64px minmax(0, 5fr) minmax(0, 1fr) minmax(0, 2.4fr) minmax(0, 2.6fr);
-      gap: var(--space-6);
-      padding-bottom: var(--space-2);
-      color: var(--ink-3);
-      font-family: var(--font-mono);
-      font-size: var(--text-2xs);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .catalogue__head span:last-child {
-      text-align: right;
+    .cats__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-5);
     }
   }
-  .cat-sources {
-    display: grid;
-    gap: var(--space-2);
-    margin-top: var(--space-8);
+  .cats__grid > li {
+    display: flex;
+    min-width: 0;
   }
-  .cat-note {
-    max-width: 72ch;
-    color: var(--ink-3);
-    font-size: var(--text-xs);
+  .cats__grid > li > :global(.ccard) {
+    flex: 1;
+  }
+  .cats__sources {
+    margin-top: var(--space-12);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
   }
 </style>

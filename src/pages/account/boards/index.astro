@@ -7,9 +7,8 @@
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Button from '~/components/ui/Button.astro';
-import Count from '~/components/ui/Count.astro';
+import Icon from '~/components/ui/Icon.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import AccountShell from '~/components/static/AccountShell.astro';
 import BoardCard from '~/components/static/BoardCard.astro';
 import { EXAMPLE_BOARDS } from '~/components/static/content';
@@ -43,13 +42,14 @@ const shown = examples.filter((e) => e.items.length > 0);
   <AccountShell current="boards" hideNotice={!!saveNoun}>
     {saveNoun && (
       <div class="save-note" role="status">
-        <MonoLabel as="p" tone="accent">
-          Not saved
-        </MonoLabel>
-        <p class="save-note__text">
-          <strong>Saving needs an account.</strong> Accounts open with Pro. When they do, this{' '}
-          {saveNoun} goes straight onto a board.
-        </p>
+        <Icon name="bookmark-simple" size={20} class="save-note__icon" />
+        <div class="save-note__text">
+          <p class="save-note__title">Not saved yet</p>
+          <p>
+            <strong>Saving needs an account.</strong> Accounts open with Pro. When they do, this{' '}
+            {saveNoun} goes straight onto a board.
+          </p>
+        </div>
         <div class="save-note__actions">
           <Button
             href={`/sign-in?next=${encodeURIComponent(`/account/boards?save=${save}`)}`}
@@ -67,13 +67,15 @@ const shown = examples.filter((e) => e.items.length > 0);
     )}
 
     <header class="bh">
-      <h1 class="bh__title">
-        Boards
-        <Count value={0} label="boards" />
-      </h1>
+      <div>
+        <h1 class="h2 bh__title">
+          Boards <span class="bh__count num">0</span>
+        </h1>
+        <p class="bh__sub">Collections of stores, pages and sections, for a pitch or a brief.</p>
+      </div>
       <Button
         href="/sign-in?next=/account/boards"
-        variant="secondary"
+        variant="primary"
         size="sm"
         icon="plus"
         rel="nofollow"
@@ -85,6 +87,7 @@ const shown = examples.filter((e) => e.items.length > 0);
     <EmptyState
       title="No boards yet"
       body="Save stores, pages and sections to compare them later or share them with a client."
+      icon="squares-four"
     >
       <Button href="/sections" variant="primary" size="sm">
         Browse sections
@@ -97,18 +100,19 @@ const shown = examples.filter((e) => e.items.length > 0);
     {shown.length > 0 && (
       <section class="examples" aria-labelledby="examples-title">
         <div class="examples__head">
-          <MonoLabel as="h2" tone="ink" id="examples-title">
+          <h2 class="h3" id="examples-title">
             Example boards
-          </MonoLabel>
+          </h2>
           <p class="examples__sub">
             Made from our library to show how boards work. Not yours, and not saved.
           </p>
         </div>
-        <div class="grid grid--shots">
+        <div class="examples__grid">
           {shown.map(({ board, items }) => (
             <BoardCard
               href={`/account/boards/${board.id}`}
               name={board.name}
+              description={board.description}
               count={items.length}
               thumbs={items
                 .slice(0, 3)
@@ -124,16 +128,31 @@ const shown = examples.filter((e) => e.items.length > 0);
 
 <style>
   .save-note {
-    display: grid;
-    gap: var(--space-2);
-    margin-top: var(--space-6);
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      var(--shadow-sm);
+  }
+  .save-note :global(.save-note__icon) {
+    color: var(--ink);
   }
   .save-note__text {
+    flex: 1 1 260px;
+    min-width: 0;
     color: var(--ink-2);
-    font-size: var(--text-md);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+  }
+  .save-note__title {
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
   }
   .save-note__text strong {
     color: var(--ink);
@@ -142,41 +161,53 @@ const shown = examples.filter((e) => e.items.length > 0);
   .save-note__actions {
     display: flex;
     gap: var(--space-2);
-    margin-top: var(--space-1);
   }
   .bh {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--space-4);
     padding-block: var(--space-8) var(--space-6);
   }
-  .bh__title {
-    font-size: var(--text-3xl);
-    letter-spacing: var(--tracking-tight);
-    line-height: var(--leading-tight);
+  .bh__count {
+    margin-left: 0.25em;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 450;
+    letter-spacing: 0;
+    vertical-align: 0.35em;
+  }
+  .bh__sub {
+    margin-top: var(--space-1);
+    color: var(--ink-3);
+    font-size: var(--text-ui);
   }
   .examples {
-    margin-top: var(--space-16);
+    margin-top: var(--space-12);
   }
   .examples__head {
-    margin-bottom: var(--space-6);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
-  }
-  .examples__head :global(.mlabel) {
-    display: flex;
+    margin-bottom: var(--space-4);
   }
   .examples__sub {
-    margin-top: var(--space-2);
+    margin-top: var(--space-1);
     color: var(--ink-3);
+    font-size: var(--text-ui);
   }
-  @media (min-width: 1024px) {
-    .save-note {
-      margin-top: 0;
+  .examples__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  @media (min-width: 640px) {
+    .examples__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .bh {
-      padding-top: var(--space-10);
+  }
+  @media (min-width: 1280px) {
+    .examples__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 </style>

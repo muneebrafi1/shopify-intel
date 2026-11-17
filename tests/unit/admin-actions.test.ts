@@ -16,6 +16,12 @@ import {
   type MediaStore,
 } from '../../src/server/admin/actions.ts';
 import { flashHref, readFlash } from '../../src/server/admin/flash.ts';
+import {
+  captureBlockFor,
+  isCaptureBlocked,
+  listCaptureBlocks,
+  listCaptureTargets,
+} from '../../src/server/repo/capture.ts';
 import { getOverviewCounts, listStores, likePattern } from '../../src/server/admin/queries.ts';
 import type { NodeDb } from '../../src/server/db/node-sqlite.ts';
 import { FIXED_NOW, seededDb } from './helpers/db.ts';
@@ -247,6 +253,71 @@ describe('removal requests', () => {
     ).toEqual({ n: 0 });
   });
 
+  it('screenshots scope blocks future captures of the store', async () => {
+    const store = await storeWithMedia();
+    expect(await isCaptureBlocked(db, store.domain)).toBe(false);
+    const targets = async () =>
+      (await listCaptureTargets(db, { limit: 100 })).items.map((t) => t.domain);
+    expect(await targets()).toContain(store.domain);
+    await queueJob(ctx(), { domain: store.domain, kind: 'capture' });
+    const id = await addRemoval(store.domain, 'screenshots');
+    const ref = await db.first<{ reference: string }>(
+      'SELECT reference FROM removal_requests WHERE id = ?',
+      [id],
+    );
+    // Media deletion fails: the block is written with the approval and holds anyway.
+    const failing = { delete: async () => Promise.reject(new Error('R2 down')) };
+    expect(
+      await approveRemoval(ctx({ media: failing }), id, { note: null, confirmed: true }),
+    ).toMatchObject({ ok: false, flash: 'media_failed' });
+
+    expect(await isCaptureBlocked(db, store.domain)).toBe(true);
+    expect(await isCaptureBlocked(db, `https://www.${store.domain}/`)).toBe(true);
+    expect(await captureBlockFor(db, store.domain)).toMatchObject({
+      domain: store.domain,
+      scope: 'screenshots',
+      reason: 'removal-request',
+      removal_request_id: id,
+      reference: ref?.reference,
+    });
+    expect(await targets()).not.toContain(store.domain);
+    // The queued capture job was cancelled, and no new capture can be queued.
+    expect(
+      await db.first<{ status: string }>(
+        "SELECT status FROM scan_jobs WHERE domain = ? AND kind = 'capture'",
+        [store.domain],
+      ),
+    ).toEqual({ status: 'cancelled' });
+    expect(await queueJob(ctx(), { domain: store.domain, kind: 'capture' })).toEqual({
+      ok: false,
+      flash: 'capture_blocked',
+    });
+    // Detection rescans still work: the store stays listed.
+    expect(await queueJob(ctx(), { domain: store.domain, kind: 'rescan' })).toMatchObject({
+      ok: true,
+    });
+    const [row] = await audit('removal.approve');
+    expect(JSON.parse(row?.detail_json ?? '{}')).toMatchObject({ capture_blocked: true });
+    expect(readFlash(new URL('https://x/admin?err=capture_blocked'))?.tone).toBe('critical');
+  });
+
+  it('a whole-store removal blocks captures too, and blocks are listed', async () => {
+    const id = await addRemoval('Not-In-The-Library.example', 'store');
+    await approveRemoval(ctx(), id, { note: null, confirmed: true });
+    expect(await isCaptureBlocked(db, 'not-in-the-library.example')).toBe(true);
+    // A tombstone without a block row (older opt-outs) also counts.
+    await db.run(
+      "INSERT INTO store_tombstones (domain, reason, created_at) VALUES ('old-optout.example', 'manual', '2026-01-01T00:00:00.000Z')",
+    );
+    expect(await isCaptureBlocked(db, 'old-optout.example')).toBe(true);
+    const { items, total } = await listCaptureBlocks(db, { limit: 10 });
+    expect(total).toBe(2);
+    expect(items.map((b) => [b.domain, b.scope, b.reason])).toEqual([
+      ['not-in-the-library.example', 'store', 'removal-request'],
+      ['old-optout.example', 'store', 'tombstone'],
+    ]);
+  });
+
   it('details scope is marked done without touching the store', async () => {
     const store = await storeWithMedia();
     const id = await addRemoval(store.domain, 'details');
@@ -262,6 +333,7 @@ describe('removal requests', () => {
     expect(await db.first('SELECT status FROM stores WHERE id = ?', [store.id])).toEqual({
       status: 'active',
     });
+    expect(await isCaptureBlocked(db, store.domain)).toBe(false);
   });
 
   it('rejecting needs a note and is audited', async () => {

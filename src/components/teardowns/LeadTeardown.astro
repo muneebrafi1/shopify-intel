@@ -1,0 +1,209 @@
+---
+/**
+ * The newest teardown as the index's lead: the store's home capture in a product window beside
+ * the kicker, title, dek and facts. The whole card is one link (the title).
+ */
+import Window from '~/components/ui/Window.astro';
+import Shot from '~/components/media/Shot.astro';
+import Badge from '~/components/ui/Badge.astro';
+import Icon from '~/components/ui/Icon.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import type { TeardownListItem } from '~/server/api/v1/types';
+import { formatDate } from '~/lib/format';
+
+interface Props {
+  item: TeardownListItem;
+}
+const { item } = Astro.props;
+---
+
+<article class="lead">
+  <div class="lead__media">
+    <Window url={item.store.domain} class="lead__window">
+      {item.cover ? (
+        <Shot
+          src={item.cover.image.src}
+          width={item.cover.image.width}
+          height={item.cover.image.height}
+          device="desktop"
+          alt={`${item.store.display_name} home page`}
+          ratio="16 / 10"
+          eager
+          flush
+        />
+      ) : (
+        <div class="lead__nocover">{item.store.domain}</div>
+      )}
+    </Window>
+  </div>
+  <div class="lead__body">
+    <p class="lead__kicker">
+      <Badge tone="neutral" size="sm">
+        Latest
+      </Badge>
+      {item.is_sample && (
+        <Badge tone="caution" size="sm">
+          Sample
+        </Badge>
+      )}
+      {item.published_at && <span class="num">{formatDate(item.published_at)}</span>}
+    </p>
+    <h2 class="lead__title">
+      <a href={item.href} class="stretched-link">
+        {item.title}
+      </a>
+    </h2>
+    {item.dek && <p class="lead__dek">{item.dek}</p>}
+    <dl class="lead__facts">
+      <div>
+        <dt>Store</dt>
+        <dd>
+          <StoreMark domain={item.store.domain} name={item.store.name} size={18} />
+          {item.store.display_name}
+        </dd>
+      </div>
+      {item.theme && (
+        <div>
+          <dt>Theme</dt>
+          <dd>{item.theme.name}</dd>
+        </div>
+      )}
+      <div>
+        <dt>Notes</dt>
+        <dd class="num">{item.note_count} on the captures</dd>
+      </div>
+    </dl>
+    <p class="lead__cta" aria-hidden="true">
+      Read the teardown
+      <Icon name="arrow-right" size={16} />
+    </p>
+  </div>
+</article>
+
+<style>
+  .lead {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    padding: var(--space-3);
+    border-radius: var(--radius-band);
+    background: var(--bg-subtle);
+    box-shadow: inset 0 0 0 1px var(--line);
+    transition: box-shadow var(--dur-base) var(--ease-out);
+  }
+  @media (min-width: 1024px) {
+    .lead {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: center;
+      gap: var(--space-10);
+      padding: var(--space-4) var(--space-10) var(--space-4) var(--space-4);
+    }
+  }
+  .lead:hover {
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .lead:has(.stretched-link:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .lead .stretched-link:focus-visible {
+    outline: none;
+  }
+  .lead :global(.lead__window) {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .lead:hover :global(.lead__window) {
+    transform: translateY(-2px);
+  }
+  .lead :global(.lead__window .shot__img) {
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .lead:hover :global(.lead__window .shot__img) {
+    transform: translateX(-50%) translateY(-4px);
+  }
+  .lead__nocover {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 10;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .lead__body {
+    padding: 0 var(--space-3) var(--space-4);
+  }
+  @media (min-width: 1024px) {
+    .lead__body {
+      padding: 0;
+    }
+  }
+  .lead__kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .lead__title {
+    margin-top: var(--space-4);
+    color: var(--ink);
+    font-size: var(--text-h2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+  @media (min-width: 1024px) {
+    .lead__title {
+      font-size: var(--text-display-md);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+  }
+  .lead__dek {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-lead);
+    line-height: 1.55;
+  }
+  .lead__facts {
+    display: grid;
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--line);
+  }
+  .lead__facts > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 40px;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .lead__facts dt {
+    color: var(--ink-3);
+  }
+  .lead__facts dd {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink);
+  }
+  .lead__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .lead__cta :global(.icon) {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .lead:hover .lead__cta :global(.icon) {
+    transform: translateX(2px);
+  }
+</style>

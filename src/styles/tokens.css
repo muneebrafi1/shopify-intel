@@ -1,69 +1,53 @@
 /*
- * Design tokens. Every colour, size, radius and duration used in the UI comes from here.
- * Components reference tokens only (no raw hex values in components).
+ * Design tokens, v2 ("product-grade SaaS"). Every colour, size, radius, shadow and duration in
+ * the UI comes from here; components reference tokens only (no raw hex values in components).
+ * Binding spec: docs/design/direction.md. Usage guide: docs/DESIGN.md.
  *
- * Palette: warm neutrals + one accent (vermilion). The accent is a signal, not decoration:
- * focus rings, selected sections on screenshots, active indicators, the logo mark.
- * Contrast: --ink-3 and darker pass WCAG AA for small text on --bg and --tile.
- * --accent passes 3:1 for UI graphics; use --accent-text for accent-coloured text.
+ * Themes
+ *   Light is the default. The dark set applies through
+ *     1. :root[data-theme='dark']                         (set before paint by BaseLayout)
+ *     2. @media (prefers-color-scheme: dark) on a root without data-theme='light' (no-JS path)
+ *     3. any subtree with data-theme="dark"               (dark bands inside a light page)
+ *   and any subtree with data-theme="light" is forced back to light (e.g. capture overlays).
+ *
+ *   Custom properties that reference other custom properties are resolved where they are
+ *   declared, so every alias/derived token is re-declared on `[data-theme]` subtrees as well
+ *   (see "Derived tokens" at the bottom). Add new derived tokens there, not in the theme blocks.
+ *
+ * The accent is a signal, not paint: focus, selection, the logo, selected tags, the recommended
+ * plan, the live dot and the Pro CTA. Primary buttons are ink (--btn-bg), not vermilion.
+ * Contrast: --ink-3 and stronger pass WCAG AA for small text on --bg, --surface and --surface-2.
+ * --ink-4 is for disabled and decorative marks only. Use --accent-text for accent-coloured text.
  */
+
+/* ---------- Theme-independent tokens ---------- */
 :root {
-  /* Surfaces */
-  --bg: #fcfbf9;
-  --surface: #ffffff;
-  --tile: #f1efea; /* well behind screenshots */
-  --tile-hover: #ebe8e2;
-  --fill: #f4f2ee; /* inputs, quiet buttons, chips */
-  --fill-hover: #ece9e4;
-  --fill-active: #e4e0d9;
-  --inverse: #191816;
-  --inverse-2: #2a2825;
-
-  /* Lines */
-  --line: #e7e4de;
-  --line-strong: #d6d1c8;
-  --line-inverse: #3a3733;
-
-  /* Text */
-  --ink: #191816;
-  --ink-2: #57534d;
-  --ink-3: #6f6a63;
-  --ink-4: #a9a49b; /* disabled + decorative only, never body text */
-  --ink-inverse: #faf9f6;
-  --ink-inverse-2: #b9b4ab;
-
-  /* Accent (vermilion) */
-  --accent: #e4572e;
-  --accent-text: #c23e17;
-  --accent-soft: #fbe6de;
-  --accent-wash: rgb(228 87 46 / 0.12);
-
-  /* Status */
-  --positive: #2f7d4f;
-  --positive-soft: #e3f0e7;
-  --caution: #9a6512;
-  --caution-soft: #f6ecd9;
-  --critical: #b42318;
-  --critical-soft: #f9e3e0;
-
-  /* Placeholder screenshots (drawn wireframes) */
-  --ph-paper: #ffffff;
-  --ph-block: #ebe8e2;
-  --ph-line: #ddd9d1;
-
   /* Type */
   --font-sans:
     'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, -apple-system,
     'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: 'Newsreader Variable', 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
   --font-mono:
     'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* v1 alias: there is no serif in v2. Migrate `var(--font-serif)` to `var(--font-sans)`. */
+  --font-serif: var(--font-sans);
 
+  /* Scale (desktop → 390px, fluid between 390 and 1200). See .display-* / .h* in base.css. */
+  --text-display-xl: clamp(2.5rem, 1.7778rem + 2.963vw, 4rem); /* 40 → 64, home hero */
+  --text-display-lg: clamp(2.125rem, 1.7037rem + 1.7284vw, 3rem); /* 34 → 48, marketing */
+  --text-display-md: clamp(1.75rem, 1.5093rem + 0.9877vw, 2.25rem); /* 28 → 36, page titles */
+  --text-h2: clamp(1.5rem, 1.3796rem + 0.4938vw, 1.75rem); /* 24 → 28 */
+  --text-h3: 1.25rem; /* 20 */
+  --text-h4: 1rem; /* 16 */
+  --text-lead: clamp(1rem, 0.94rem + 0.2469vw, 1.125rem); /* 16 → 18 */
+  --text-body: 0.9375rem; /* 15 reading */
+  --text-ui: 0.875rem; /* 14 interface default */
+
+  /* v1 steps (kept; still the right choice for small UI text) */
   --text-2xs: 0.6875rem; /* 11 */
   --text-xs: 0.75rem; /* 12 */
   --text-sm: 0.8125rem; /* 13 */
-  --text-base: 0.875rem; /* 14  UI default */
-  --text-md: 0.9375rem; /* 15  reading */
+  --text-base: 0.875rem; /* 14 = --text-ui */
+  --text-md: 0.9375rem; /* 15 = --text-body */
   --text-lg: 1.0625rem; /* 17 */
   --text-xl: 1.25rem; /* 20 */
   --text-2xl: 1.5rem; /* 24 */
@@ -78,11 +62,14 @@
 
   --weight-regular: 420;
   --weight-medium: 520;
+  --weight-strong: 560;
   --weight-semibold: 600;
 
+  --tracking-display: -0.035em;
   --tracking-tight: -0.02em;
   --tracking-snug: -0.01em;
   --tracking-wide: 0.04em;
+  --tracking-eyebrow: 0.06em;
 
   /* Space (4px grid) */
   --space-0-5: 2px;
@@ -96,38 +83,42 @@
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
+  --space-14: 56px;
   --space-16: 64px;
   --space-20: 80px;
   --space-24: 96px;
+  --space-32: 128px;
 
   /* Layout */
-  --page-max: 1440px;
-  --page-gutter: 16px;
+  --page-max: 1200px; /* marketing + reading pages (content width) */
+  --page-max-wide: 1440px; /* galleries: stores, themes, sections */
   --reading-max: 680px;
-  --header-h: 56px;
+  --page-gutter: 16px; /* 16 / 24 / 32 at <640 / ≥640 / ≥1024 */
+  --header-h: 56px; /* 56 mobile, 64 ≥1024 */
+  --section-y: var(--space-16); /* marketing block rhythm: 64 → 96 */
+  --section-y-app: var(--space-8); /* app page rhythm: 32 → 48 */
 
   /* Radius */
   --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   --radius-xl: 20px;
   --radius-pill: 999px;
+  --radius-control: 8px; /* buttons, inputs, menus */
+  --radius-card: 12px; /* cards, windows */
+  --radius-well: 10px; /* screenshot wells */
+  --radius-band: 20px; /* big bands */
 
-  /* Elevation: hairlines first, shadow only for things that float */
-  --shadow-hairline: 0 0 0 1px var(--line);
-  --shadow-shot: 0 0 0 1px rgb(25 24 22 / 0.06), 0 1px 2px rgb(25 24 22 / 0.06);
-  --shadow-float:
-    0 0 0 1px rgb(25 24 22 / 0.06), 0 2px 4px rgb(25 24 22 / 0.04), 0 12px 32px rgb(25 24 22 / 0.12);
-
-  /* Motion */
+  /* Motion (all collapse to 0 under prefers-reduced-motion) */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --dur-fast: 120ms;
-  --dur-base: 180ms;
-  --dur-slow: 280ms;
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms; /* colour, background */
+  --dur-base: 180ms; /* lift, border, indicator */
+  --dur-slow: 320ms; /* reveals, sheets */
 
-  /* Focus */
-  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  /* Captures are always light store pages, in either theme. */
+  --capture-bg: #ffffff;
 
   /* Z layers */
   --z-sticky: 20;
@@ -146,7 +137,9 @@
 @media (min-width: 1024px) {
   :root {
     --page-gutter: 32px;
-    --header-h: 60px;
+    --header-h: 64px;
+    --section-y: var(--space-24);
+    --section-y-app: var(--space-12);
   }
 }
 
@@ -156,4 +149,201 @@
     --dur-base: 0ms;
     --dur-slow: 0ms;
   }
+}
+
+/* ---------- Light (default) ---------- */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #ffffff;
+  --bg-subtle: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f5f5f4;
+  --surface-3: #eeeeec;
+  --raised: #ffffff; /* a control raised on surface-2 (segmented thumb) */
+  --line: #ebebe9;
+  --line-strong: #dcdcd9;
+
+  --ink: #121211;
+  --ink-2: #4b4b48;
+  --ink-3: #6b6b67;
+  --ink-4: #a6a6a1;
+
+  --accent: #e4572e;
+  --accent-hover: #d64b22;
+  --accent-text: #c23e17;
+  --accent-soft: #fdece5;
+  --accent-wash: rgb(228 87 46 / 0.1);
+  --accent-fg: #ffffff;
+  --accent-btn: #cf4519; /* accent fill behind text (AA with --accent-fg) */
+  --accent-btn-hover: #b93c13;
+
+  --btn-bg: #121211;
+  --btn-bg-hover: #2b2b29;
+  --btn-fg: #ffffff;
+  --btn-fg-2: #a3a39e; /* muted text on --btn-bg (v1 --ink-inverse-2) */
+  --btn-line: #2f2f2c; /* hairline on --btn-bg (v1 --line-inverse) */
+
+  --positive: #1d7a4c;
+  --positive-soft: #e7f4ec;
+  --caution: #95620f;
+  --caution-soft: #faf0de;
+  --critical: #c2352b;
+  --critical-soft: #fcebe9;
+
+  --shadow-xs: 0 1px 2px rgb(18 18 17 / 0.05);
+  --shadow-sm: 0 1px 2px rgb(18 18 17 / 0.04), 0 4px 12px -4px rgb(18 18 17 / 0.08);
+  --shadow-md: 0 2px 4px rgb(18 18 17 / 0.04), 0 12px 32px -12px rgb(18 18 17 / 0.18);
+  --shadow-lg: 0 24px 64px -16px rgb(18 18 17 / 0.28);
+  --highlight: 0 0 #0000; /* the lit top edge exists in dark only */
+  --shot-ring: rgb(18 18 17 / 0.07);
+
+  --overlay: rgb(18 18 17 / 0.32);
+  --spotlight: rgb(18 18 17 / 0.045);
+  --selection: #fbd9cc;
+  --scrollbar: #d4d4d0;
+
+  /* Drawn placeholder captures (wireframe blocks) */
+  --ph-paper: #ffffff;
+  --ph-block: #ebebe8;
+  --ph-line: #dededa;
+}
+
+/* ---------- Dark ---------- */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0a0a0b;
+  --bg-subtle: #0e0e10;
+  --surface: #131315;
+  --surface-2: #18181b;
+  --surface-3: #202024;
+  --raised: #252529;
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.12);
+
+  --ink: #f2f2f0;
+  --ink-2: #b3b3ae;
+  --ink-3: #8d8d88;
+  --ink-4: #5b5b58;
+
+  --accent: #ff6b3d;
+  --accent-hover: #ff815a;
+  --accent-text: #ff8f6b;
+  --accent-soft: rgb(255 107 61 / 0.14);
+  --accent-wash: rgb(255 107 61 / 0.12);
+  --accent-fg: #0a0a0b;
+  --accent-btn: #ff6b3d;
+  --accent-btn-hover: #ff815a;
+
+  --btn-bg: #f2f2f0;
+  --btn-bg-hover: #d9d9d5;
+  --btn-fg: #0a0a0b;
+  --btn-fg-2: #5b5b58;
+  --btn-line: #d0d0cc;
+
+  --positive: #4ac08a;
+  --positive-soft: rgb(74 192 138 / 0.14);
+  --caution: #e3a64a;
+  --caution-soft: rgb(227 166 74 / 0.14);
+  --critical: #f26b5f;
+  --critical-soft: rgb(242 107 95 / 0.14);
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.7);
+  --shadow-lg: 0 24px 64px -16px rgb(0 0 0 / 0.8);
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --shot-ring: rgb(255 255 255 / 0.1);
+
+  --overlay: rgb(0 0 0 / 0.6);
+  --spotlight: rgb(255 255 255 / 0.05);
+  --selection: rgb(255 107 61 / 0.32);
+  --scrollbar: #2c2c30;
+
+  --ph-paper: #1c1c1f;
+  --ph-block: #26262a;
+  --ph-line: #2f2f34;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg: #0a0a0b;
+    --bg-subtle: #0e0e10;
+    --surface: #131315;
+    --surface-2: #18181b;
+    --surface-3: #202024;
+    --raised: #252529;
+    --line: rgb(255 255 255 / 0.07);
+    --line-strong: rgb(255 255 255 / 0.12);
+
+    --ink: #f2f2f0;
+    --ink-2: #b3b3ae;
+    --ink-3: #8d8d88;
+    --ink-4: #5b5b58;
+
+    --accent: #ff6b3d;
+    --accent-hover: #ff815a;
+    --accent-text: #ff8f6b;
+    --accent-soft: rgb(255 107 61 / 0.14);
+    --accent-wash: rgb(255 107 61 / 0.12);
+    --accent-fg: #0a0a0b;
+    --accent-btn: #ff6b3d;
+    --accent-btn-hover: #ff815a;
+
+    --btn-bg: #f2f2f0;
+    --btn-bg-hover: #d9d9d5;
+    --btn-fg: #0a0a0b;
+    --btn-fg-2: #5b5b58;
+    --btn-line: #d0d0cc;
+
+    --positive: #4ac08a;
+    --positive-soft: rgb(74 192 138 / 0.14);
+    --caution: #e3a64a;
+    --caution-soft: rgb(227 166 74 / 0.14);
+    --critical: #f26b5f;
+    --critical-soft: rgb(242 107 95 / 0.14);
+
+    --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.7);
+    --shadow-lg: 0 24px 64px -16px rgb(0 0 0 / 0.8);
+    --highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
+    --shot-ring: rgb(255 255 255 / 0.1);
+
+    --overlay: rgb(0 0 0 / 0.6);
+    --spotlight: rgb(255 255 255 / 0.05);
+    --selection: rgb(255 107 61 / 0.32);
+    --scrollbar: #2c2c30;
+
+    --ph-paper: #1c1c1f;
+    --ph-block: #26262a;
+    --ph-line: #2f2f34;
+  }
+}
+
+/* ---------- Derived tokens + v1 aliases (re-resolved inside every themed subtree) ---------- */
+:root,
+[data-theme] {
+  --header-bg: color-mix(in srgb, var(--bg) 80%, transparent);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --shadow-shot: 0 0 0 1px var(--shot-ring), 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-float: 0 0 0 1px var(--line), var(--shadow-md);
+  --shadow-hairline: 0 0 0 1px var(--line);
+  --shadow-card: var(--shadow-xs), var(--highlight);
+
+  /* v1 names. Prefer the v2 names in new code; these exist so un-migrated pages still render. */
+  --tile: var(--surface-2);
+  --tile-hover: var(--surface-3);
+  --fill: var(--surface-2);
+  --fill-hover: var(--surface-3);
+  --fill-active: var(--surface-3);
+  --inverse: var(--btn-bg);
+  --inverse-2: var(--btn-bg-hover);
+  --ink-inverse: var(--btn-fg);
+  --ink-inverse-2: var(--btn-fg-2);
+  --line-inverse: var(--btn-line);
 }

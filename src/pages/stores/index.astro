@@ -1,22 +1,21 @@
 ---
 /**
- * /stores — the catalogue of stores.
- * Default: the curated stores as a contact sheet of captures (grid). The index view lists every
- * detected store as numbered rows. Filters are URL state and open the index, because they reach
- * stores we have only detected (see components/stores/query.ts).
+ * /stores — the stores catalogue (Base44 browse pattern).
+ * Page header with a Curated / All detected switch (owner decision: curated by default, with or
+ * without filters; `scope=all` includes every detected store) → browse bar (search, pills,
+ * filters, sort, grid/table) → curated stores as capture cards, or the stores table where the
+ * data is the point. All state is in the URL (see components/stores/query.ts).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Count from '~/components/ui/Count.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
 import Segmented from '~/components/ui/Segmented.astro';
-import FilterBar, { type FilterGroup } from '~/components/ui/FilterBar.astro';
+import BrowseBar, { type FilterGroup } from '~/components/ui/BrowseBar.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
 import StoreCard from '~/components/domain/StoreCard.astro';
 import StoreIndex from '~/components/stores/StoreIndex.astro';
-import RestOfArchive from '~/components/stores/RestOfArchive.astro';
-import PlanTile from '~/components/stores/PlanTile.astro';
 import { api, isApiError } from '~/server/api';
 import type { Facet, ListStoresOutput, PageInfo } from '~/server/api/v1/types';
 import { formatCount, formatDate } from '~/lib/format';
@@ -25,48 +24,49 @@ import {
   apiFilters,
   parseStoreQuery,
   storesHref,
+  themeName,
   type FilterKey,
   type StoreQuery,
+  type StoreScope,
 } from '~/components/stores/query';
 
 const q = parseStoreQuery(Astro.url);
 const PAGE = 60;
-const filters = apiFilters(q.filters);
+const filters = apiFilters(q.filters, q.q);
+const base = { q: q.q, scope: q.scope, sort: q.sort } as const;
 
-let all: { data: ListStoresOutput; meta: { pagination?: PageInfo } };
+let res: { data: ListStoresOutput; meta: { pagination?: PageInfo } };
 try {
-  all = await api.listStores({
+  res = await api.listStores({
     ...filters,
+    scope: q.scope,
     sort: q.sort,
-    limit: q.view === 'index' ? PAGE : 1,
-    ...(q.view === 'index' && q.cursor ? { cursor: q.cursor } : {}),
+    limit: PAGE,
+    ...(q.cursor ? { cursor: q.cursor } : {}),
   });
 } catch (error) {
   // A stale or hand-edited cursor: start the list again rather than failing.
   if (isApiError(error) && error.status === 400 && q.cursor) {
-    return Astro.redirect(storesHref(q.filters, { sort: q.sort, view: q.viewParam }), 302);
+    return Astro.redirect(storesHref(q.filters, { ...base, view: q.viewParam }), 302);
   }
   throw error;
 }
-const [{ data: meta }, curatedRes, restRes] = await Promise.all([
+const [{ data: meta }, detectedRes] = await Promise.all([
   api.getMeta({}),
-  q.view === 'grid'
-    ? api.listStores({ ...filters, curated: true, sort: q.sort, limit: PAGE })
-    : null,
-  q.view === 'grid' && q.filters.capture !== 'planned'
-    ? api.listStores({ ...filters, curated: false, sort: q.sort, limit: 6 })
+  // Under the curated grid: a few of the stores we only detected, as a way into the table.
+  q.scope === 'curated' && q.view === 'grid' && !q.cursor
+    ? api.listStores({ ...filters, curated: false, sort: q.sort, limit: 4 })
     : null,
 ]);
 
-const facets = all.data.facets;
-const allTotal = all.meta.pagination?.total ?? all.data.items.length;
-const curatedItems = curatedRes?.data.items ?? [];
-const curatedTotal = facets.curated;
+const items = res.data.items;
+const facets = res.data.facets;
+const total = res.meta.pagination?.total ?? items.length;
 const counts = meta.counts;
-const hasFilters = Object.keys(q.filters).length > 0;
 const filterCount = Object.keys(q.filters).length;
+const hasFilters = filterCount > 0 || !!q.q;
 
-// ---- Filter groups (links that set/unset one param; they drop view, cursor and page) ------
+// ---- Filter groups (links that set/unset one param; they keep search, scope, sort, view) ---
 const shortAppName = (label: string) => label.split(/\s*[:|]\s*|\s+[‑–-]\s+/)[0]!.trim();
 let regionNames: Intl.DisplayNames | null = null;
 try {
@@ -88,6 +88,7 @@ const withFilter = (key: FilterKey, value: string | null): StoreQuery['filters']
   else delete next[key];
   return next;
 };
+const hrefWith = (f: StoreQuery['filters']) => storesHref(f, { ...base, view: q.viewParam });
 const group = (
   key: FilterKey,
   label: string,
@@ -98,61 +99,63 @@ const group = (
   const current = q.filters[key];
   const list = options.map((f) => ({
     label: format(f),
-    href: storesHref(withFilter(key, f.value), { sort: q.sort }),
+    href: hrefWith(withFilter(key, f.value)),
     selected: current?.toLowerCase() === f.value.toLowerCase(),
     count: f.count,
   }));
   if (current && !list.some((o) => o.selected)) {
-    list.unshift({
-      label: current,
-      href: storesHref(q.filters, { sort: q.sort }),
-      selected: true,
-      count: allTotal,
-    });
+    list.unshift({ label: current, href: hrefWith(q.filters), selected: true, count: total });
   }
   return {
     key,
     label,
     options: [
-      {
-        label: allLabel,
-        href: storesHref(withFilter(key, null), { sort: q.sort }),
-        selected: !current,
-        count: null,
-      },
+      { label: allLabel, href: hrefWith(withFilter(key, null)), selected: !current, count: null },
       ...list,
     ],
   };
 };
 
+const byCount = (list: Facet[]) => [...list].sort((a, b) => b.count - a.count);
+const captureOptions: Facet[] = [
+  ...(q.filters.capture === 'planned'
+    ? [{ value: 'planned', label: 'Layout preview', count: facets.curated }]
+    : []),
+  { value: 'captured', label: 'Captured', count: facets.captured },
+];
 const groups: FilterGroup[] = [
-  group('theme', 'Theme', 'All themes', facets.themes),
+  group('category', 'Category', 'All categories', byCount(facets.categories)),
+  group('theme', 'Theme', 'All themes', byCount(facets.themes)),
   group('app', 'App', 'All apps', facets.apps, (f) => shortAppName(f.label)),
-  group('category', 'Category', 'All categories', facets.categories),
   group('currency', 'Currency', 'Any currency', facets.currencies),
   group('country', 'Country', 'Any country', facets.countries, (f) => countryName(f.value)),
-  group('capture', 'Capture', 'Any', [
-    { value: 'planned', label: 'Layout preview', count: facets.curated },
-    { value: 'captured', label: 'Captured', count: facets.captured },
-  ]),
+  // Nothing is captured before the first capture run: the group only appears once it can match
+  // (or when the URL already sets it).
+  ...(facets.captured > 0 || q.filters.capture
+    ? [group('capture', 'Capture', 'Any', captureOptions)]
+    : []),
 ];
+// The inline pills: categories for the curated stores (what people browse them by), themes
+// for every detected store (categories only cover a handful of them).
+const pills = q.scope === 'curated' ? 'category' : 'theme';
+
 const sortOptions = STORE_SORTS.map((s) => ({
   label: s.label,
-  href: storesHref(q.filters, { sort: s.value, view: q.viewParam }),
+  href: storesHref(q.filters, { ...base, sort: s.value, view: q.viewParam }),
   selected: s.value === q.sort,
 }));
-const gridHref = storesHref(q.filters, { sort: q.sort, view: 'grid' });
-const indexHref = storesHref(q.filters, { sort: q.sort, view: 'index' });
-const clearHref = storesHref({}, { sort: q.sort, view: q.view === 'index' ? 'index' : null });
+const gridHref = storesHref(q.filters, { ...base, view: 'grid' });
+const indexHref = storesHref(q.filters, { ...base, view: 'index' });
+const clearHref = storesHref({}, { scope: q.scope, sort: q.sort, view: q.viewParam });
+const scopeHref = (scope: StoreScope) => storesHref(q.filters, { q: q.q, scope, sort: q.sort });
 
-// ---- Index paging -------------------------------------------------------------------------
+// ---- Paging -------------------------------------------------------------------------------
 const offset = (q.p - 1) * PAGE;
-const nextCursor = all.meta.pagination?.next_cursor ?? null;
-const nextHref =
-  q.view === 'index' && nextCursor
-    ? storesHref(q.filters, { sort: q.sort, view: q.viewParam, cursor: nextCursor, p: q.p + 1 })
-    : null;
-const firstHref = q.cursor ? storesHref(q.filters, { sort: q.sort, view: q.viewParam }) : null;
+const nextCursor = res.meta.pagination?.next_cursor ?? null;
+const nextHref = nextCursor
+  ? storesHref(q.filters, { ...base, view: q.viewParam, cursor: nextCursor, p: q.p + 1 })
+  : null;
+const firstHref = q.cursor ? storesHref(q.filters, { ...base, view: q.viewParam }) : null;
 
 // ---- Copy ---------------------------------------------------------------------------------
 const filterSummary = (() => {
@@ -164,25 +167,40 @@ const filterSummary = (() => {
   if (q.filters.app) parts.push(`running ${appLabel ? shortAppName(appLabel) : q.filters.app}`);
   return parts.join(' ');
 })();
-const restCount = Math.max(0, allTotal - curatedTotal);
+const detectedOnly = Math.max(0, facets.scope.all - facets.scope.curated);
+const noun =
+  q.scope === 'curated'
+    ? total === 1
+      ? 'curated store'
+      : 'curated stores'
+    : total === 1
+      ? 'store'
+      : 'stores';
+const asOf = formatDate(meta.data_as_of);
 
 // ---- SEO ----------------------------------------------------------------------------------
 const singleParam =
-  filterCount === 1 && !q.cursor
+  filterCount === 1 && !q.cursor && !q.q
     ? (['theme', 'app', 'category'] as const).find((k) => q.filters[k])
     : undefined;
 const canonical = singleParam
   ? `/stores?${singleParam}=${encodeURIComponent(q.filters[singleParam]!)}`
   : '/stores';
-const noindex = filterCount >= 2 || q.p > 1 || !!q.cursor || q.filters.capture !== undefined;
-const listed = q.view === 'grid' ? curatedItems : all.data.items;
+const noindex =
+  filterCount >= 2 ||
+  q.p > 1 ||
+  !!q.cursor ||
+  !!q.q ||
+  q.scope === 'all' ||
+  q.viewParam !== null ||
+  q.filters.capture !== undefined;
 const site = Astro.site ?? Astro.url;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  name: q.view === 'grid' ? 'Curated Shopify stores' : 'Detected Shopify stores',
-  numberOfItems: q.view === 'grid' ? curatedItems.length : allTotal,
-  itemListElement: listed.slice(0, 30).map((s, i) => ({
+  name: q.scope === 'curated' ? 'Curated Shopify stores' : 'Detected Shopify stores',
+  numberOfItems: total,
+  itemListElement: items.slice(0, 30).map((s, i) => ({
     '@type': 'ListItem',
     position: offset + i + 1,
     name: s.display_name,
@@ -191,268 +209,338 @@ const jsonLd = {
 };
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
-const asOf = formatDate(meta.data_as_of);
 const title = hasFilters
-  ? `Shopify stores ${filterSummary || 'filtered'}`.trim()
+  ? `Shopify stores ${filterSummary || (q.q ? `matching “${q.q}”` : 'filtered')}`.trim()
   : 'Shopify stores, page by page';
 ---
 
 <BaseLayout
   title={title}
-  description={`${formatCount(counts.stores_scanned)} Shopify stores with their detected theme and apps. ${counts.stores_curated} curated stores are planned page by page — home, collection, product and cart, on desktop and mobile.`}
+  description={`${formatCount(counts.stores_scanned)} Shopify stores with their detected theme and apps. ${counts.stores_curated} curated stores are mapped page by page — home, collection, product and cart, on desktop and mobile.`}
   canonical={canonical}
   noindex={noindex}
   jsonLd={jsonLd}
+  wide
 >
-  <div class="container stores">
-    <header class="shead cols-12">
-      <div class="shead__main span-8">
-        <MonoLabel as="p">Index — Stores</MonoLabel>
-        <h1 class="shead__title">
-          Stores
-          <Count value={counts.stores_scanned} label="stores" />
-        </h1>
-        <p class="shead__statement display">
-          Every store we scanned, read for its theme and apps. The curated ones, page by page.
-        </p>
-      </div>
-      <dl class="shead__specs start-9" aria-label="What the numbers mean">
-        <div>
-          <dt class="mlabel mlabel--bullet mlabel--ink">
-            <span class="num">{formatCount(counts.stores_scanned)}</span>&nbsp;detected
-          </dt>
-          <dd>Theme and apps on file, from the {asOf} scan.</dd>
-        </div>
-        <div>
-          <dt class="mlabel mlabel--bullet mlabel--accent mlabel--ink">
-            <span class="num">{counts.stores_curated}</span>&nbsp;curated
-          </dt>
-          <dd>Every page planned for capture. Shown as layout previews for now.</dd>
-        </div>
-        <div>
-          <dt class="mlabel mlabel--bullet">
-            <span class="num">{counts.stores_captured}</span>&nbsp;captured
-          </dt>
-          <dd>Real screenshots arrive with the first capture run.</dd>
-        </div>
-      </dl>
-    </header>
-
-    <div class="scope">
-      <Segmented
-        label="Which stores"
-        items={[
-          {
-            label: 'Curated',
-            value: 'grid',
-            href: gridHref,
-            selected: q.view === 'grid',
-            count: curatedTotal,
-          },
-          {
-            label: 'All detected',
-            value: 'index',
-            href: indexHref,
-            selected: q.view === 'index',
-            count: allTotal,
-          },
-        ]}
-      />
-      <p class="scope__note">
-        {q.view === 'grid'
-          ? 'Curated stores, shown as captures. Switch to all detected stores for the full catalogue.'
-          : 'Every detected store, numbered. Curated stores are marked with a square and have layout previews.'}
+  <div class="container--wide stores" data-scope={q.scope}>
+    <PageHeader
+      title="Stores"
+      count={counts.stores_scanned}
+      description="Shopify stores with the theme and apps we detected on them. Curated stores are mapped page by page, section by section."
+    >
+      <p slot="meta" class="stores__facts">
+        <span>{formatCount(facets.scope.curated)} curated</span>
+        <span class="stores__sep" aria-hidden="true">
+          ·
+        </span>
+        <span>{formatCount(counts.stores_scanned)} scanned</span>
+        <span class="stores__sep" aria-hidden="true">
+          ·
+        </span>
+        <span>
+          data <time datetime={meta.data_as_of}>{asOf}</time>
+        </span>
       </p>
-    </div>
+      <div slot="actions" class="stores__scope">
+        <Segmented
+          label="Which stores"
+          items={[
+            {
+              label: 'Curated',
+              value: 'curated',
+              href: scopeHref('curated'),
+              selected: q.scope === 'curated',
+              count: facets.scope.curated,
+            },
+            {
+              label: 'All detected',
+              value: 'all',
+              href: scopeHref('all'),
+              selected: q.scope === 'all',
+              count: facets.scope.all,
+            },
+          ]}
+        />
+      </div>
+    </PageHeader>
 
-    <FilterBar
+    <BrowseBar
       groups={groups}
-      total={q.view === 'grid' ? curatedItems.length : allTotal}
-      noun={
-        q.view === 'grid'
-          ? curatedItems.length === 1
-            ? 'curated store'
-            : 'curated stores'
-          : allTotal === 1
-            ? 'store'
-            : 'stores'
-      }
+      pills={pills}
+      total={total}
+      noun={noun}
       sort={sortOptions}
-      view={{ current: q.view, gridHref, indexHref }}
+      view={q.scope === 'curated' ? { current: q.view, gridHref, indexHref } : undefined}
       clearHref={clearHref}
-      class="stores__filters"
+      search={{
+        value: q.q ?? '',
+        placeholder: 'Search stores',
+        hidden: {
+          ...(q.scope === 'all' ? { scope: 'all' } : {}),
+          ...q.filters,
+          ...(q.sort !== 'rank' ? { sort: q.sort } : {}),
+          ...(q.scope === 'curated' && q.viewParam ? { view: q.viewParam } : {}),
+        },
+      }}
+      class="stores__bar"
     />
 
-    {q.view === 'grid' ? (
-      <section class="stores__results" aria-label="Curated stores">
-        {curatedItems.length > 0 ? (
-          <div class="grid grid--shots stores__grid">
-            {curatedItems.map((s, i) => (
-              <StoreCard
-                domain={s.domain}
-                name={s.name}
-                href={s.href}
-                shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
-                meta={`${s.theme.label} · ${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`}
-                n={i + 1}
-                eager={i < 3}
-              />
-            ))}
-            {curatedItems.length % 3 === 2 && (
-              <PlanTile stores={counts.stores_curated} class="stores__plan" />
-            )}
-          </div>
-        ) : (
+    <section class="stores__results" aria-labelledby="results-title">
+      <h2 id="results-title" class="visually-hidden">
+        {q.scope === 'curated' ? 'Curated stores' : 'All detected stores'}
+      </h2>
+      {items.length === 0 ? (
+        q.scope === 'curated' && facets.scope.all > 0 ? (
           <EmptyState
             title="No curated store matches"
-            body={
-              restCount > 0
-                ? `${formatCount(restCount)} detected ${restCount === 1 ? 'store matches' : 'stores match'}, without captures. See them in the index.`
-                : 'Try removing a filter.'
-            }
+            body={`${formatCount(facets.scope.all)} detected ${facets.scope.all === 1 ? 'store matches' : 'stores match'}. They have their theme and apps on file, without captures.`}
           >
-            {restCount > 0 ? (
-              <Button href={indexHref} size="sm">
-                Open the index
-              </Button>
-            ) : (
-              <Button href={clearHref} size="sm">
-                Clear filters
-              </Button>
-            )}
+            <Button href={scopeHref('all')} variant="primary" size="sm" arrow>
+              Show all detected stores
+            </Button>
           </EmptyState>
-        )}
-      </section>
-    ) : (
-      <section class="stores__results" aria-label="All detected stores">
-        {all.data.items.length > 0 ? (
-          <StoreIndex
-            items={all.data.items}
-            offset={offset}
-            total={allTotal}
-            nextHref={nextHref}
-            firstHref={firstHref}
-            label="Detected stores"
-          />
+        ) : q.q && filterCount === 0 ? (
+          <EmptyState
+            title={`No store matches “${q.q}”`}
+            body="Search looks at the start of a store’s domain or name, across every detected store."
+          >
+            <Button href={clearHref} size="sm">
+              Clear search
+            </Button>
+          </EmptyState>
         ) : (
           <EmptyState
             title="No stores match these filters"
             body={
               q.filters.capture === 'captured'
                 ? 'No store has real screenshots yet: the first capture run hasn’t happened. Curated stores show layout previews until then.'
-                : 'Try removing a filter, or browse every detected store.'
+                : 'Try a shorter search or remove a filter.'
             }
           >
             <Button href={clearHref} size="sm">
               Clear filters
             </Button>
           </EmptyState>
+        )
+      ) : q.view === 'grid' ? (
+        <>
+          <div class="grid grid--shots stores__grid">
+            {items.map((s, i) => (
+              <StoreCard
+                domain={s.domain}
+                name={s.name}
+                href={s.href}
+                shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
+                meta={
+                  s.name
+                    ? s.domain
+                    : [s.category?.name, s.currency].filter(Boolean).join(' · ') || 'Curated store'
+                }
+                eager={i < 4}
+              >
+                <span slot="aside" class="stores__facts">
+                  <span class:list={['stores__theme', { 'is-muted': !s.theme.name }]}>
+                    {themeName(s.theme)}
+                  </span>
+                  <span class="stores__apps num">
+                    {s.app_count} {s.app_count === 1 ? 'app' : 'apps'}
+                  </span>
+                </span>
+              </StoreCard>
+            ))}
+          </div>
+          {(nextHref || firstHref) && (
+            <div class="stores__paging">
+              {firstHref && (
+                <Button href={firstHref} variant="ghost" size="sm" rel="nofollow">
+                  Back to the start
+                </Button>
+              )}
+              {nextHref && (
+                <Button href={nextHref} variant="secondary" iconRight="arrow-right" rel="nofollow">
+                  Next page
+                </Button>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <StoreIndex
+          items={items}
+          offset={offset}
+          total={total}
+          nextHref={nextHref}
+          firstHref={firstHref}
+          label={q.scope === 'curated' ? 'Curated stores' : 'Detected stores'}
+          markCurated={q.scope === 'all'}
+        />
+      )}
+    </section>
+
+    {q.scope === 'curated' && q.view === 'grid' && detectedOnly > 0 && items.length > 0 && (
+      <aside class="stores__more" aria-labelledby="more-title">
+        <div class="stores__more-text">
+          <h2 id="more-title" class="stores__more-title">
+            {formatCount(detectedOnly)} more {detectedOnly === 1 ? 'store' : 'stores'}
+            {filterSummary ? ` ${filterSummary}` : ''}, detected but not captured
+          </h2>
+          <p class="stores__more-body">
+            Theme, version and apps on file for each one. No page captures yet.
+          </p>
+        </div>
+        {(detectedRes?.data.items.length ?? 0) > 0 && (
+          <ul class="stores__peek" aria-label="A few of them">
+            {detectedRes!.data.items.map((s) => (
+              <li>
+                <a href={s.href} class="stores__peek-item">
+                  <StoreMark domain={s.domain} name={s.name} size={20} />
+                  <span>{s.domain}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         )}
-      </section>
+        <Button href={scopeHref('all')} variant="secondary" arrow class="stores__more-cta">
+          Browse all detected
+        </Button>
+      </aside>
     )}
 
-    {q.view === 'index' && (
-      <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
-    )}
+    <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
   </div>
-
-  {q.view === 'grid' && restCount > 0 && (
-    <RestOfArchive
-      count={restCount}
-      items={restRes?.data.items ?? []}
-      href={indexHref}
-      filterSummary={filterSummary}
-      source={meta.source.label}
-      asOf={asOf}
-    />
-  )}
-  {q.view === 'grid' && restCount === 0 && (
-    <div class="container">
-      <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
-    </div>
-  )}
 </BaseLayout>
 
 <style>
   .stores {
     padding-bottom: var(--space-16);
   }
-  .shead {
-    padding-block: var(--space-10) var(--space-8);
-    align-items: end;
-  }
-  .shead__title {
-    margin-top: var(--space-4);
-    font-size: clamp(3.25rem, 1.8rem + 6vw, 7.5rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.05em;
-    line-height: 0.92;
-  }
-  .shead__title :global(.count-sup) {
-    font-size: max(0.16em, 12px);
-    letter-spacing: 0;
-    transform: translateY(0.6em);
-    margin-left: 0.12em;
-  }
-  .shead__statement {
-    margin-top: var(--space-5);
-    max-width: 30ch;
-    font-size: clamp(1.375rem, 1.1rem + 1vw, 2rem);
-    line-height: 1.15;
-    color: var(--ink);
-  }
-  .shead__specs {
-    display: grid;
-    gap: var(--space-4);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
-  }
-  .shead__specs dd {
-    margin-top: 4px;
-    padding-left: 13px;
-    color: var(--ink-2);
-    font-size: var(--text-sm);
-    line-height: var(--leading-snug);
-  }
-  @media (min-width: 1024px) {
-    .shead {
-      padding-block: var(--space-16) var(--space-10);
-    }
-    .shead__specs {
-      border-top: 0;
-      padding-top: 0;
-      padding-bottom: var(--space-2);
-    }
-  }
-
-  .scope {
+  .stores__facts {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3) var(--space-5);
-    padding-bottom: var(--space-5);
-  }
-  .scope__note {
-    flex: 1 1 280px;
-    max-width: 560px;
+    gap: 2px var(--space-2);
+    margin-top: var(--space-4);
     color: var(--ink-3);
-    font-size: var(--text-sm);
-    line-height: var(--leading-snug);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.01em;
   }
-
+  .stores__sep {
+    color: var(--ink-4);
+  }
+  .stores__scope {
+    display: flex;
+    align-items: center;
+  }
   .stores__results {
-    margin-top: var(--space-8);
-  }
-  /* Only closes the last row of the three-column grid. */
-  .stores__results :global(.stores__plan) {
-    display: none;
+    margin-top: var(--space-6);
   }
   @media (min-width: 1024px) {
-    .stores__results :global(.stores__plan) {
-      display: block;
+    .stores__results {
+      margin-top: var(--space-8);
     }
   }
-  .stores__source {
+  /* The wide gallery holds four captures a row on large screens (20 curated = 5 even rows). */
+  @media (min-width: 1280px) {
+    .stores__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .stores__facts {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 44%;
+    text-align: right;
+  }
+  .stores__theme {
+    max-width: 100%;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .stores__theme.is-muted {
+    color: var(--ink-3);
+  }
+  .stores__apps {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .stores__paging {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-8);
+  }
+
+  /* The way into every detected store, under the curated grid. */
+  .stores__more {
+    display: grid;
+    gap: var(--space-4);
     margin-top: var(--space-12);
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--bg-subtle);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  @media (min-width: 1024px) {
+    .stores__more {
+      grid-template-columns: minmax(300px, 1fr) auto auto;
+      align-items: center;
+      gap: var(--space-8);
+      margin-top: var(--space-16);
+      padding: var(--space-6) var(--space-8);
+    }
+  }
+  .stores__more-title {
+    color: var(--ink);
+    font-size: var(--text-h4);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+  .stores__more-body {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .stores__peek {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1-5);
+  }
+  .stores__peek-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 32px;
+    padding: 0 var(--space-3) 0 6px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    transition:
+      box-shadow var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .stores__peek-item:hover {
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .stores__peek li:nth-child(n + 3) {
+      display: none;
+    }
+  }
+  .stores__more :global(.stores__more-cta) {
+    justify-self: start;
+  }
+  .stores :global(.stores__source) {
+    margin-top: var(--space-10);
   }
 </style>

@@ -1,11 +1,12 @@
 ---
 /**
- * A store's stack as spec rows: theme first, then the detected apps grouped by category, each
- * with where it renders on this store's plates (linking into the viewer at that section), then
- * detections we have no profile for yet and tracking pixels.
+ * A store's detected stack as a grouped list in a card: the theme first, then the apps by
+ * category, each with where it renders on this store's captures (linking into the viewer at
+ * that section), then detections we have no profile for yet and tracking pixels.
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
 import Icon from '~/components/ui/Icon.astro';
+import Badge from '~/components/ui/Badge.astro';
 import type { StoreDetail } from '~/server/api/v1/types';
 import { formatDate } from '~/lib/format';
 import { plateHref } from './plates';
@@ -88,23 +89,30 @@ const replaced = theme.history.filter((h) => h.replaced_at);
       <li class="stack__app">
         <span class="stack__name">
           <span class="stack__glyph" aria-hidden="true">
-            T
+            <Icon name="paint-brush" size={14} />
           </span>
           {themeInfo.theme ? (
-            <a href={themeInfo.theme.href}>{themeInfo.label}</a>
+            <a href={themeInfo.theme.href} class="stack__label">
+              {themeInfo.theme.name}
+            </a>
           ) : (
-            <span class:list={[{ stack__muted: !themeInfo.name }]}>{themeInfo.label}</span>
+            <span class:list={['stack__label', { stack__muted: !themeInfo.name }]}>
+              {themeInfo.name ?? themeInfo.label}
+            </span>
           )}
+          {themeInfo.version && <span class="stack__version mono">{themeInfo.version}</span>}
         </span>
         <span class="stack__where">
-          {themeInfo.theme?.vendor
-            ? `By ${themeInfo.theme.vendor}`
-            : themeInfo.is_custom
-              ? 'Custom theme'
-              : themeInfo.name
-                ? 'No theme profile yet'
-                : 'Not detected on this scan'}
-          {replaced.length > 0 && <> · replaced {replaced.length}×</>}
+          <span class="stack__muted">
+            {themeInfo.theme?.vendor
+              ? `By ${themeInfo.theme.vendor}`
+              : themeInfo.is_custom
+                ? 'Custom theme'
+                : themeInfo.name
+                  ? 'No theme profile yet'
+                  : 'Not detected on this scan'}
+            {replaced.length > 0 && ` · replaced ${replaced.length}×`}
+          </span>
         </span>
       </li>
     </ul>
@@ -122,19 +130,16 @@ const replaced = theme.history.filter((h) => h.replaced_at);
           return (
             <li class="stack__app">
               <a class="stack__name" href={a.href} title={a.name}>
-                <AppIcon src={a.icon_url} name={a.short_name} size={20} />
-                <span>{a.short_name}</span>
+                <AppIcon src={a.icon_url} name={a.short_name} size={24} />
+                <span class="stack__label">{a.short_name}</span>
               </a>
               <span class="stack__where">
                 {where.kind === 'link' ? (
-                  where.items.map((w, i) => (
-                    <>
-                      {i > 0 && <span class="stack__sep">·</span>}
-                      <a href={w.href} class="stack__jump">
-                        {w.label}
-                        <Icon name="arrow-right" size={12} />
-                      </a>
-                    </>
+                  where.items.map((w) => (
+                    <a href={w.href} class="stack__jump">
+                      {w.label}
+                      <Icon name="arrow-right" size={12} />
+                    </a>
                   ))
                 ) : (
                   <span class="stack__muted">{where.text}</span>
@@ -149,15 +154,20 @@ const replaced = theme.history.filter((h) => h.replaced_at);
 
   {apps.unresolved.count > 0 && (
     <div class="stack__group">
-      <p class="stack__cat">Unresolved</p>
+      <p class="stack__cat">
+        Unresolved
+        <span class="stack__count num">{apps.unresolved.count}</span>
+      </p>
       <div class="stack__body">
         <p class="stack__lead">
-          +{apps.unresolved.count} {apps.unresolved.count === 1 ? 'detection' : 'detections'}{' '}
-          without a profile yet
+          {apps.unresolved.count === 1 ? 'A detection' : `${apps.unresolved.count} detections`}{' '}
+          without an app profile yet
         </p>
-        <p class="stack__slugs mono">
+        <p class="stack__slugs">
           {apps.unresolved.slugs.map((slug) => (
-            <span>{slug}</span>
+            <Badge tone="outline" size="sm" mono>
+              {slug}
+            </Badge>
           ))}
         </p>
       </div>
@@ -165,116 +175,129 @@ const replaced = theme.history.filter((h) => h.replaced_at);
   )}
 
   <div class="stack__group">
-    <p class="stack__cat">Pixels</p>
+    <p class="stack__cat">
+      Tracking pixels
+      {pixels.length > 0 && <span class="stack__count num">{pixels.length}</span>}
+    </p>
     <div class="stack__body">
       {pixels.length ? (
-        <ul class="stack__pixels mono">
+        <p class="stack__slugs">
           {pixels.map((p) => (
-            <li>{p.name}</li>
+            <Badge tone="neutral" size="sm">
+              {p.name}
+            </Badge>
           ))}
-        </ul>
+        </p>
       ) : (
         <p class="stack__muted">No tracking pixels detected</p>
       )}
     </div>
   </div>
-  <p class="stack__foot mlabel">
-    Detected {formatDate(detail.detection.last_seen)} · rules{' '}
-    {detail.detection.rules_version ?? 'unknown'}
+  <p class="stack__foot">
+    Detected <span class="num">{formatDate(detail.detection.last_seen)}</span> · rules{' '}
+    <span class="mono">{detail.detection.rules_version ?? 'unknown'}</span>
   </p>
 </div>
 
 <style>
   .stack {
-    border-top: 1px solid var(--ink);
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
   }
-  .stack__group {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--line);
-  }
-  @media (min-width: 768px) {
-    .stack__group {
-      grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
-      gap: var(--space-6);
-      padding: var(--space-3) 0;
-    }
+  .stack__group + .stack__group {
+    border-top: 1px solid var(--line);
   }
   .stack__cat {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding-top: 4px;
+    align-items: center;
+    gap: var(--space-2);
+    height: 34px;
+    padding: 0 var(--space-4);
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-subtle);
+    color: var(--ink-3);
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-eyebrow, 0.06em);
     text-transform: uppercase;
-    color: var(--ink-3);
+  }
+  .stack__cat a {
+    transition: color var(--dur-fast) var(--ease-out);
   }
   .stack__cat a:hover {
     color: var(--ink);
   }
   .stack__count {
-    color: var(--ink-4);
-  }
-  .stack__apps {
-    display: grid;
+    color: var(--ink-3);
+    opacity: 0.8;
   }
   .stack__app {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 2px;
-    padding: 5px 0;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+  }
+  .stack__app + .stack__app {
+    border-top: 1px solid var(--line);
   }
   @media (min-width: 640px) {
     .stack__app {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
       align-items: center;
       gap: var(--space-4);
+      min-height: 52px;
+      padding-block: var(--space-2);
     }
-  }
-  .stack__app + .stack__app {
-    border-top: 1px dashed var(--line);
   }
   .stack__name {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-3);
     min-width: 0;
-    font-size: var(--text-md);
+    color: var(--ink);
+    font-size: var(--text-ui);
     font-weight: var(--weight-medium);
   }
-  .stack__name span {
+  .stack__label {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  a.stack__name:hover span,
+  a.stack__name:hover .stack__label,
   .stack__name a:hover {
     text-decoration: underline;
+    text-decoration-color: var(--line-strong);
     text-decoration-thickness: 1px;
     text-underline-offset: 0.2em;
+  }
+  .stack__version {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    font-weight: 400;
   }
   .stack__glyph {
     display: inline-grid;
     place-items: center;
     flex: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    background: var(--inverse);
-    color: var(--ink-inverse);
-    font-family: var(--font-serif);
-    font-size: 13px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-2);
   }
   .stack__where {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 2px 8px;
-    padding-left: 30px;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    padding-left: 36px;
     color: var(--ink-2);
     font-size: var(--text-sm);
   }
@@ -287,52 +310,54 @@ const replaced = theme.history.filter((h) => h.replaced_at);
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    min-height: 26px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
     color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.22em;
-    text-decoration-thickness: 1px;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    transition:
+      box-shadow var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
   }
   .stack__jump:hover {
-    text-decoration-color: currentColor;
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
   }
   .stack__jump :global(.icon) {
     color: var(--ink-3);
+    transition: transform var(--dur-fast) var(--ease-out);
   }
-  .stack__sep {
-    color: var(--ink-4);
+  .stack__jump:hover :global(.icon) {
+    color: var(--accent-text);
+    transform: translateX(2px);
   }
   .stack__muted {
     color: var(--ink-3);
   }
   .stack__body {
-    padding: 5px 0;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
   }
   .stack__lead {
-    font-size: var(--text-md);
-    font-weight: var(--weight-medium);
+    color: var(--ink-2);
   }
   .stack__slugs {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px 14px;
-    margin-top: 4px;
-    color: var(--ink-3);
-    font-size: var(--text-xs);
-    line-height: var(--leading-normal);
+    gap: var(--space-1-5);
+    margin-top: var(--space-2);
   }
-  .stack__slugs span {
-    white-space: nowrap;
-  }
-  .stack__pixels {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 18px;
-    font-size: var(--text-xs);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+  .stack__body > .stack__slugs:first-child {
+    margin-top: 0;
   }
   .stack__foot {
-    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--line);
+    background: var(--bg-subtle);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
   }
 </style>

@@ -1,0 +1,138 @@
+---
+/**
+ * A section type as a small card: a real crop of that type in a well, the name and how many
+ * sections the library holds. The whole card is one link to /sections/<type>. Used by the
+ * library overview and the "other types in this group" row on a type page.
+ */
+import SectionCrop from '~/components/media/SectionCrop.astro';
+import type { SectionCard } from '~/server/api/v1/types';
+import { fmt } from './library';
+
+interface Props {
+  name: string;
+  href: string;
+  count: number;
+  /** Group name, shown as a small eyebrow. */
+  group?: string;
+  preview: SectionCard | null;
+  eager?: boolean;
+  class?: string;
+}
+const { name, href, count, group, preview, eager = false, class: className } = Astro.props;
+---
+
+<article class:list={['tcard', className]}>
+  {preview ? (
+    <SectionCrop
+      src={preview.crop.src}
+      width={preview.crop.width}
+      height={preview.crop.height}
+      device={preview.device}
+      alt=""
+      eager={eager}
+      class="tcard__crop"
+    />
+  ) : (
+    <span class="tcard__crop tcard__crop--empty" aria-hidden="true" />
+  )}
+  <div class="tcard__body">
+    {group && <p class="tcard__group">{group}</p>}
+    <h3 class="tcard__name">
+      <a href={href} class="stretched-link">
+        {name}
+      </a>
+    </h3>
+    <p class="tcard__count num">
+      {fmt(count)}
+      <span class="visually-hidden">{count === 1 ? ' section' : ' sections'}</span>
+    </p>
+  </div>
+</article>
+
+<style>
+  .tcard {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 5px;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .tcard:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+    transform: translateY(-2px);
+  }
+  .tcard :global(.tcard__crop) {
+    border-radius: 8px;
+  }
+  .tcard :global(.tcard__crop img) {
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .tcard:hover :global(.tcard__crop) {
+    background: var(--surface-3);
+  }
+  .tcard:hover :global(.tcard__crop img) {
+    transform: scale(1.015);
+  }
+  .tcard__crop--empty {
+    display: block;
+    aspect-ratio: 4 / 3;
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .tcard__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: var(--space-2);
+    padding: 8px 6px 4px;
+  }
+  .tcard__group {
+    grid-column: 1 / -1;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tcard__name {
+    min-width: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.005em;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tcard__name a {
+    color: var(--ink);
+  }
+  .tcard__name a:focus-visible {
+    outline: none;
+  }
+  .tcard__name a:focus-visible::after {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .tcard__count {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+  }
+</style>

@@ -1,39 +1,53 @@
 ---
-/** "What happens next" — the short numbered sequence after a removal request. */
-import MonoLabel from '~/components/ui/MonoLabel.astro';
-import { REMOVAL_SLA } from './content';
+/**
+ * "What happens next" — the steps after a removal request, as a small vertical timeline.
+ * `done` marks how many steps are complete (the receipt passes 1: the request is in).
+ */
+import Icon from '~/components/ui/Icon.astro';
+import { REMOVAL_RETENTION, REMOVAL_SLA } from './content';
 
 interface Props {
   title?: string;
+  /** Number of steps already done (shown with a check). */
+  done?: number;
   class?: string;
 }
-const { title = 'What happens next', class: className } = Astro.props;
+const { title = 'What happens next', done = 0, class: className } = Astro.props;
 const STEPS = [
+  {
+    title: 'You send the request',
+    body: 'Our administrator gets an email about it straight away, and you get a reference.',
+  },
   {
     title: 'We check it',
     body: 'We reply to the email you gave. An address at the store’s domain lets us confirm ownership without more questions.',
   },
   {
     title: 'We remove it',
-    body: `The store or its screenshots disappear from the site and the API. We aim to do this ${REMOVAL_SLA}.`,
+    body: `The store or its screenshots disappear from the site and the API, and we stop capturing it. We aim to do this ${REMOVAL_SLA}.`,
   },
   {
     title: 'We confirm',
-    body: 'You get an email with your reference once it’s done. The domain stays on our block list so the crawler never adds it back.',
+    body: `You get an email with your reference once it’s done. We keep the request for ${REMOVAL_RETENTION} as a record.`,
   },
 ];
 ---
 
 <section class:list={['steps', className]} aria-labelledby="steps-title">
-  <MonoLabel as="h2" tone="ink" id="steps-title" class="steps__title">
+  <h2 id="steps-title" class="steps__title">
     {title}
-  </MonoLabel>
+  </h2>
   <ol class="steps__list">
     {STEPS.map((s, i) => (
-      <li class="steps__item">
-        <span class="steps__n">{String(i + 1).padStart(2, '0')}</span>
-        <div>
-          <h3 class="steps__h">{s.title}</h3>
+      <li class:list={['steps__item', { 'is-done': i < done, 'is-next': i === done }]}>
+        <span class="steps__mark" aria-hidden="true">
+          {i < done ? <Icon name="check-bold" size={12} /> : <span class="num">{i + 1}</span>}
+        </span>
+        <div class="steps__text">
+          <h3 class="steps__h">
+            {s.title}
+            {i < done && <span class="visually-hidden"> (done)</span>}
+          </h3>
           <p class="steps__p">{s.body}</p>
         </div>
       </li>
@@ -42,32 +56,64 @@ const STEPS = [
 </section>
 
 <style>
-  .steps :global(.steps__title) {
-    display: flex;
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--ink);
+  .steps__title {
+    margin-bottom: var(--space-4);
+    color: var(--ink);
+    font-size: var(--text-h4);
+    font-weight: var(--weight-strong);
   }
   .steps__item {
+    position: relative;
     display: grid;
-    grid-template-columns: 2.25rem minmax(0, 1fr);
+    grid-template-columns: 24px minmax(0, 1fr);
     gap: var(--space-3);
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--space-5);
   }
-  .steps__n {
-    padding-top: 2px;
+  .steps__item:last-child {
+    padding-bottom: 0;
+  }
+  /* The connecting line between marks. */
+  .steps__item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 11.5px;
+    top: 28px;
+    bottom: 4px;
+    width: 1px;
+    background: var(--line-strong);
+  }
+  .steps__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
     color: var(--ink-3);
-    font-family: var(--font-mono);
     font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+  }
+  .is-done .steps__mark {
+    background: var(--btn-bg);
+    box-shadow: none;
+    color: var(--btn-fg);
+  }
+  .is-next .steps__mark {
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+    color: var(--ink);
   }
   .steps__h {
-    font-size: var(--text-base);
+    padding-top: 2px;
+    color: var(--ink);
+    font-size: var(--text-ui);
     font-weight: var(--weight-semibold);
   }
   .steps__p {
     margin-top: 2px;
     color: var(--ink-2);
     font-size: var(--text-sm);
-    line-height: var(--leading-normal);
+    line-height: 1.5;
   }
 </style>

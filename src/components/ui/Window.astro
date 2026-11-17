@@ -1,0 +1,134 @@
+---
+/**
+ * Product frame for real UI: radius 12, --line-strong border, --shadow-md, a 36px top bar with
+ * three neutral dots (never traffic-light colours) and a mono URL pill. The body is --surface-2.
+ *
+ *   <Window url="youngla.com/products/…">  …capture, viewer, UI fragment…  </Window>
+ *
+ * `toolbar` slot: controls at the right of the bar (e.g. a Desktop/Mobile Segmented).
+ * `fade`: crop the body with a fade to the background at the bottom (hero windows).
+ * `padded`: inner padding for UI fragments (captures usually sit flush).
+ */
+interface Props {
+  /** Store domain/path shown in the mono pill. */
+  url?: string;
+  /** Plain label instead of a URL (app UI that is not a store page). */
+  title?: string;
+  padded?: boolean;
+  fade?: boolean;
+  /** Fixed body height, e.g. "520px" or "60vh"; content beyond it is clipped. */
+  height?: string;
+  class?: string;
+  bodyClass?: string;
+}
+const {
+  url,
+  title,
+  padded = false,
+  fade = false,
+  height,
+  class: className,
+  bodyClass,
+} = Astro.props;
+---
+
+<div class:list={['window', { 'window--fade': fade }, className]}>
+  <div class="window__bar">
+    <span class="window__dots" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    {(url || title) && (
+      <span class:list={['window__url', { 'window__url--title': !url }]}>{url ?? title}</span>
+    )}
+    <span class="window__tools">
+      <slot name="toolbar" />
+    </span>
+  </div>
+  <div
+    class:list={['window__body', { 'window__body--padded': padded }, bodyClass]}
+    style={height ? `height:${height}` : undefined}
+  >
+    <slot />
+  </div>
+</div>
+
+<style>
+  .window {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    overflow: clip;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+  }
+  .window__bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--space-3);
+    height: 36px;
+    padding: 0 var(--space-3);
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .window__dots {
+    display: inline-flex;
+    gap: 6px;
+  }
+  .window__dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--ink-4) 50%, transparent);
+  }
+  .window__url {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: min(420px, 52vw);
+    height: 22px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .window__url--title {
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+  }
+  .window__tools {
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+  .window__body {
+    position: relative;
+    overflow: hidden;
+    overflow: clip;
+    background: var(--surface-2);
+  }
+  .window__body--padded {
+    padding: var(--space-4);
+  }
+  @media (min-width: 1024px) {
+    .window__body--padded {
+      padding: var(--space-6);
+    }
+  }
+  .window--fade .window__body {
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 140px), transparent);
+  }
+</style>

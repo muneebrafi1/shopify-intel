@@ -3,7 +3,9 @@
  * envelope. Shared by the HTTP router and the in-process client so both behave identically.
  */
 import { z } from 'zod';
+import type { MediaStore } from '../../admin/actions.ts';
 import type { Db } from '../../db/types.ts';
+import { createNotifier, type Notifier, type WaitUntil } from '../../notify.ts';
 import {
   dataInfoCache,
   type ApiEnv,
@@ -24,15 +26,26 @@ export interface ApiDeps {
    * default because it costs CPU on the Workers free plan (10 ms per request).
    */
   validateOutput?: boolean;
+  /** Admin notifications. Defaults to a log-only notifier for env.ADMIN_NOTIFY_EMAIL. */
+  notifier?: Notifier;
+  /** Workers `waitUntil` (work after the response). Without it, background work is awaited. */
+  waitUntil?: WaitUntil | null;
+  /** R2 bucket (or a subset) for admin media deletion. */
+  mediaStore?: MediaStore | null;
 }
 
 export interface Runtime {
   deps: ApiDeps;
   dataInfo: (db: Db, now: number) => Promise<DataInfo>;
+  notifier: Notifier;
 }
 
 export function createRuntime(deps: ApiDeps): Runtime {
-  return { deps, dataInfo: dataInfoCache(60_000) };
+  return {
+    deps,
+    dataInfo: dataInfoCache(60_000),
+    notifier: deps.notifier ?? createNotifier({ to: deps.env?.ADMIN_NOTIFY_EMAIL ?? null }),
+  };
 }
 
 export interface Executed<T> {
@@ -59,6 +72,9 @@ export async function buildCtx(rt: Runtime, request: RequestInfo | null): Promis
     media: { baseUrl: env.MEDIA_BASE_URL ?? null },
     now,
     request,
+    notifier: rt.notifier,
+    waitUntil: deps.waitUntil ?? null,
+    mediaStore: deps.mediaStore ?? null,
   };
 }
 

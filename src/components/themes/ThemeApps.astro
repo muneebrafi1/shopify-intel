@@ -1,11 +1,13 @@
 ---
 /**
- * Apps most used by stores on a theme, ranked. A theme-page variant of the shared AppRow:
- * that row carries App Store rating and price columns, which this response doesn't include
- * (and an empty "No rating yet" would be wrong). Here the number is the share of the theme's
- * stores running the app, drawn as a hairline bar.
+ * Apps most used by stores on a theme, ranked (equal store counts share a rank: 1, 2, 2, 4).
+ * A theme-page variant of the shared AppRow: that row carries App Store rating and price
+ * columns, which this response doesn't include. Here the number is the share of the theme's
+ * stores running the app, drawn as a bar scaled to the full 100%. From 1280px a list of six or
+ * more runs in two columns, top to bottom (ranks 1–6 left, 7–12 right).
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
+import { competitionRanks } from '~/lib/rank';
 import { formatCount } from '~/lib/format';
 import type { AppRef } from '~/server/api/v1/types';
 
@@ -16,28 +18,41 @@ interface Props {
   class?: string;
 }
 const { apps, of, class: className } = Astro.props;
+const ranks = competitionRanks(apps.map((a) => a.stores));
+const split = apps.length >= 6;
+const rows = Math.ceil(apps.length / 2);
 ---
 
-<ol class:list={['tapps', className]}>
-  {apps.map((a, i) => (
-    <li class="tapps__row">
-      <a href={a.app.href} class="tapps__link">
-        <span class="tapps__rank">{String(i + 1).padStart(2, '0')}</span>
-        <AppIcon src={a.app.icon_url} name={a.app.short_name} size={28} />
-        <span class="tapps__main">
-          <span class="tapps__name">{a.app.short_name}</span>
-          {a.app.category && <span class="tapps__cat">{a.app.category.name}</span>}
-        </span>
-        <span class="tapps__usage" aria-label={`${a.stores} of ${of} stores`}>
-          <span class="tapps__track" aria-hidden="true">
-            <span class="tapps__bar" style={`--w:${Math.round(a.share * 100)}%`} />
+<ol class:list={['tapps', { 'tapps--cols': split }, className]} style={`--rows:${rows}`}>
+  {apps.map((a, i) => {
+    const pct = Math.round(a.share * 100);
+    return (
+      <li class:list={['tapps__row', { 'tapps__row--top': split && (i === 0 || i === rows) }]}>
+        <a href={a.app.href} class="tapps__link">
+          <span class="tapps__rank num">#{ranks[i]}</span>
+          <AppIcon src={a.app.icon_url} name={a.app.short_name} size={28} />
+          <span class="tapps__main">
+            <span class="tapps__name">{a.app.short_name}</span>
+            {a.app.category && <span class="tapps__cat">{a.app.category.name}</span>}
           </span>
-          <span class="tapps__n num">{formatCount(a.stores)}</span>
-          <span class="tapps__pct num">{Math.round(a.share * 100)}%</span>
-        </span>
-      </a>
-    </li>
-  ))}
+          <span class="tapps__usage">
+            <span class="visually-hidden">
+              {`${formatCount(a.stores)} of ${formatCount(of)} stores (${pct}%)`}
+            </span>
+            <span class="tapps__track" aria-hidden="true">
+              <span class="tapps__bar" style={`--w:${Math.max(pct, 2)}%`} />
+            </span>
+            <span class="tapps__n num" aria-hidden="true">
+              {formatCount(a.stores)}
+            </span>
+            <span class="tapps__pct num" aria-hidden="true">
+              {pct}%
+            </span>
+          </span>
+        </a>
+      </li>
+    );
+  })}
 </ol>
 
 <style>
@@ -49,19 +64,22 @@ const { apps, of, class: className } = Astro.props;
   }
   .tapps__link {
     display: grid;
-    grid-template-columns: 1.75rem 28px minmax(0, 1fr) auto;
+    grid-template-columns: 2rem 28px minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--space-3);
-    padding: 10px 0;
+    min-height: 52px;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-1);
+    border-radius: var(--radius-control);
     transition: background-color var(--dur-fast) var(--ease-out);
   }
   .tapps__link:hover {
-    background: color-mix(in srgb, var(--fill) 70%, transparent);
+    background: var(--surface-2);
   }
   .tapps__rank {
     color: var(--ink-3);
     font-family: var(--font-mono);
-    font-size: var(--text-2xs);
+    font-size: var(--text-xs);
+    text-align: right;
   }
   .tapps__main {
     display: flex;
@@ -69,6 +87,7 @@ const { apps, of, class: className } = Astro.props;
     min-width: 0;
   }
   .tapps__name {
+    color: var(--ink);
     font-weight: var(--weight-medium);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -83,39 +102,67 @@ const { apps, of, class: className } = Astro.props;
   }
   .tapps__usage {
     display: grid;
-    grid-template-columns: 72px 2.25rem 2.75rem;
+    grid-template-columns: 120px 2rem 2.75rem;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
   .tapps__track {
     position: relative;
-    height: 1px;
-    background: var(--line-strong);
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface-3);
   }
   .tapps__bar {
     position: absolute;
-    left: 0;
-    top: -1px;
+    inset: 0 auto 0 0;
     width: var(--w);
-    height: 3px;
+    border-radius: inherit;
+    background: var(--ink-2);
+  }
+  .tapps__link:hover .tapps__bar {
     background: var(--ink);
   }
   .tapps__n {
-    text-align: right;
+    color: var(--ink);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
+    text-align: right;
   }
   .tapps__pct {
-    text-align: right;
     color: var(--ink-3);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
+    text-align: right;
   }
-  @media (max-width: 479px) {
-    .tapps__usage {
-      grid-template-columns: 2rem 2.5rem;
+  @media (min-width: 1280px) {
+    .tapps--cols {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(var(--rows), auto);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-8);
+      border-top: 0;
     }
-    .tapps__track {
+    .tapps__row--top {
+      border-top: 1px solid var(--line);
+    }
+    .tapps--cols .tapps__usage {
+      grid-template-columns: 56px 2.75rem;
+    }
+    .tapps--cols .tapps__n {
+      display: none;
+    }
+  }
+  @media (max-width: 639px) {
+    .tapps__link {
+      grid-template-columns: 1.75rem 28px minmax(0, 1fr) auto;
+      gap: var(--space-2);
+    }
+    .tapps__usage {
+      grid-template-columns: 48px 2.5rem;
+      gap: var(--space-2);
+    }
+    .tapps__n {
       display: none;
     }
   }

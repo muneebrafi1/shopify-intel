@@ -1,45 +1,71 @@
 ---
 /**
- * Top of an index or static page. Asymmetric: the title block spans 8 of 12 columns, actions or
- * specs sit at the right. One very large title (optionally with a superscript count), a mono
- * eyebrow label, a short lede.
+ * Top of an index, detail or marketing page: eyebrow, title, description, count, actions.
+ *
+ *   <PageHeader eyebrow="Index" title="Themes" count={20}
+ *     description="Every theme we track, shown on the stores that run it.">
+ *     <Breadcrumbs slot="top" items={…} />
+ *     <Button slot="actions" …>Compare</Button>
+ *   </PageHeader>
+ *
+ * size: md → display-md (index + detail pages), lg → display-lg (marketing: Pro, About).
+ * align: start (default) or center (only the home hero and the pricing header are centred).
+ * `titleMuted` renders a two-tone title: "<title> <muted continuation>".
+ * Slots: top (breadcrumbs), meta (under the description), actions (right ≥1024), default (below).
+ * v1 props kept: `lede` (= description), `serif` (ignored: no serif in v2).
  */
-import Count from './Count.astro';
-import MonoLabel from './MonoLabel.astro';
-
 interface Props {
   title: string;
+  /** Muted continuation for a two-tone title. */
+  titleMuted?: string;
+  description?: string;
+  /** v1 name for `description`. */
   lede?: string;
-  /** Mono label above the title, e.g. "Index · 20 themes". */
+  /** Mono eyebrow above the title, e.g. "Index" or "Theme · Maestrooo". */
   eyebrow?: string;
-  /** Superscript count after the title. */
+  /** Total shown after the title in mono, e.g. 930. */
   count?: number | string;
-  /** Use the editorial serif for the title (teardowns, about, legal, theme names). */
-  serif?: boolean;
   size?: 'md' | 'lg';
+  align?: 'start' | 'center';
+  /** @deprecated v1 serif title; ignored. */
+  serif?: boolean;
   class?: string;
 }
-const { title, lede, eyebrow, count, serif = false, size = 'md', class: className } = Astro.props;
+const {
+  title,
+  titleMuted,
+  description,
+  lede,
+  eyebrow,
+  count,
+  size = 'md',
+  align = 'start',
+  class: className,
+} = Astro.props;
+const desc = description ?? lede;
+const shownCount = typeof count === 'number' ? count.toLocaleString('en-US') : count;
 ---
 
-<header class:list={['ph', `ph--${size}`, className]}>
+<header class:list={['ph', `ph--${size}`, `ph--${align}`, className]}>
   <slot name="top" />
-  <div class="ph__grid cols-12">
-    <div class="ph__text span-8">
-      {eyebrow && (
-        <MonoLabel as="p" class="ph__eyebrow">
-          {eyebrow}
-        </MonoLabel>
-      )}
-      <h1 class:list={['ph__title', { display: serif }]}>
+  <div class="ph__row">
+    <div class="ph__text">
+      {eyebrow && <p class="ph__eyebrow eyebrow">{eyebrow}</p>}
+      <h1 class:list={['ph__title', size === 'lg' ? 'display-lg' : 'display-md']}>
         {title}
-        {count !== undefined && <Count value={count} />}
+        {titleMuted && (
+          <>
+            {' '}
+            <span class="tone-muted">{titleMuted}</span>
+          </>
+        )}
+        {shownCount !== undefined && <span class="ph__count num">{shownCount}</span>}
       </h1>
-      {lede && <p class="ph__lede">{lede}</p>}
+      {desc && <p class="ph__desc lead">{desc}</p>}
       <slot name="meta" />
     </div>
     {Astro.slots.has('actions') && (
-      <div class="ph__actions start-9">
+      <div class="ph__actions">
         <slot name="actions" />
       </div>
     )}
@@ -54,57 +80,79 @@ const { title, lede, eyebrow, count, serif = false, size = 'md', class: classNam
   .ph--lg {
     padding-block: var(--space-12) var(--space-8);
   }
-  .ph :global(nav[aria-label='Breadcrumb']) {
-    margin-bottom: var(--space-6);
+  @media (min-width: 1024px) {
+    .ph {
+      padding-block: var(--space-12) var(--space-8);
+    }
+    .ph--lg {
+      padding-block: var(--space-20) var(--space-12);
+    }
   }
-  .ph__grid {
-    align-items: end;
+  .ph :global(nav[aria-label='Breadcrumb']) {
+    margin-bottom: var(--space-5);
+  }
+  .ph__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  @media (min-width: 1024px) {
+    .ph__row {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-10);
+    }
   }
   .ph__text {
     min-width: 0;
+    max-width: 760px;
   }
   .ph__eyebrow {
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
   }
-  .ph__title {
-    font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.5rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.035em;
-    line-height: 1;
+  .ph__count {
+    display: inline-block;
+    margin-left: 0.35em;
+    font-family: var(--font-mono);
+    font-size: max(0.4em, 13px);
+    font-weight: 450;
+    letter-spacing: 0;
+    color: var(--ink-3);
+    vertical-align: 0.4em;
   }
-  .ph--lg .ph__title {
-    font-size: clamp(2.75rem, 1.6rem + 4.2vw, 5rem);
-    letter-spacing: -0.04em;
+  .ph__desc {
+    margin-top: var(--space-3);
+    max-width: 600px;
   }
-  .ph__title.display {
-    font-weight: 400;
-    letter-spacing: -0.025em;
-    line-height: 1.02;
-  }
-  .ph__lede {
+  .ph--lg .ph__desc {
     margin-top: var(--space-4);
-    max-width: 560px;
-    color: var(--ink-2);
-    font-size: var(--text-lg);
-    line-height: var(--leading-normal);
   }
   .ph__actions {
     display: flex;
+    flex: none;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-2);
-    justify-content: flex-start;
   }
-  @media (min-width: 1024px) {
-    .ph__actions {
-      justify-content: flex-end;
-    }
+
+  .ph--center {
+    text-align: center;
   }
-  @media (max-width: 639px) {
-    .ph {
-      padding-block: var(--space-6) var(--space-5);
-    }
-    .ph__lede {
-      font-size: var(--text-md);
-    }
+  .ph--center .ph__row {
+    align-items: center;
+    flex-direction: column;
+  }
+  .ph--center .ph__text {
+    margin-inline: auto;
+  }
+  .ph--center .ph__desc {
+    margin-inline: auto;
+  }
+  .ph--center .ph__eyebrow {
+    justify-content: center;
+  }
+  .ph--center .ph__actions {
+    justify-content: center;
   }
 </style>

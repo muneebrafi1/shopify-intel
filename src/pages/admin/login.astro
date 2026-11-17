@@ -1,18 +1,22 @@
 ---
 /**
  * Admin sign-in. Three states, decided by env (see src/server/auth/config.ts):
- *   password → the form below (local/dev); Access → explanation (production);
- *   locked → "Admin is not configured" (503), never open by default.
+ *   password → the emergency (break-glass) password form. In production Cloudflare Access is the
+ *              normal sign-in and sits in front of this page; locally the password is the only
+ *              method. Access only → explanation; locked → "Admin is not configured" (503), never
+ *              open by default.
  * The middleware already ran the Origin check for the POST and set the auth state.
  */
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import Logo from '~/components/site/Logo.astro';
+import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
+import Card from '~/components/ui/Card.astro';
 import Field from '~/components/ui/Field.astro';
 import Input from '~/components/ui/Input.astro';
 import Notice from '~/components/ui/Notice.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import Icon from '~/components/ui/Icon.astro';
+import ThemeToggle from '~/components/ui/ThemeToggle.astro';
 import { adminAuthConfig, adminDb, adminEnv } from '~/server/admin/env';
 import { readForm } from '~/server/admin/forms';
 import { readFlash } from '~/server/admin/flash';
@@ -81,157 +85,199 @@ Astro.response.status = status;
 const flash = readFlash(url);
 const state =
   config.mode === 'locked' ? 'not-configured' : config.mode === 'access' ? 'access' : 'password';
+const accessToo = config.mode === 'password' && !!config.access;
+const hours = Math.round(SESSION_TTL_SECONDS / 3600);
 ---
 
 <AdminLayout title={config.mode === 'locked' ? 'Admin is not configured' : 'Sign in'} bare>
-  <section class="login" data-admin-state={state}>
-    <a href="/" class="login__brand" aria-label="Back to the public site">
-      <Logo size="sm" />
-      <span class="admin-brand__tag">Admin</span>
-    </a>
+  <div class="login" data-admin-state={state}>
+    <div class="login__top">
+      <a href="/" class="login__brand" aria-label="Back to the public site">
+        <Logo size="sm" />
+      </a>
+      <span class="abrand__tag">Admin</span>
+      <ThemeToggle class="login__theme" />
+    </div>
+
+    <Card padding="lg" class="login__card">
+      {state === 'password' && (
+        <>
+          <Badge tone="caution" icon="lock-simple" class="login__badge">
+            Break-glass access
+          </Badge>
+          <h1 class="login__title">Emergency sign-in</h1>
+          <p class="login__lede">
+            Normally you’re signed in through Cloudflare Access. Use the admin password only when
+            Access is unavailable.
+          </p>
+          {!error && flash && (
+            <Notice tone={flash.tone} class="login__notice">
+              {flash.text}
+            </Notice>
+          )}
+
+          <form method="post" class="login__form">
+            <input type="text" name="username" value="admin" autocomplete="username" hidden />
+            <Field label="Password" for="admin-password" error={error ?? undefined}>
+              <Input
+                id="admin-password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                maxlength={256}
+                autofocus
+                aria-invalid={error ? 'true' : undefined}
+                aria-describedby={error ? 'admin-password-error' : undefined}
+              />
+            </Field>
+            <Button type="submit" variant="primary" size="lg" full>
+              Sign in
+            </Button>
+            {accessToo && (
+              <Button href="/admin" variant="secondary" size="lg" full>
+                Try Cloudflare Access again
+              </Button>
+            )}
+          </form>
+          <p class="login__foot">
+            Sessions last {hours} hours. Every attempt is rate limited and recorded in the audit
+            log.
+          </p>
+        </>
+      )}
+
+      {state === 'access' && (
+        <>
+          <Badge tone="outline" icon="shield-check" class="login__badge">
+            Cloudflare Access
+          </Badge>
+          <h1 class="login__title">Sign in through Access</h1>
+          <p class="login__lede">
+            This admin is protected by Cloudflare Access. Your request did not carry a valid Access
+            sign-in, so it was refused here.
+          </p>
+          <ul class="login__steps">
+            <li>Open the admin on the production domain, where Access asks you to sign in.</li>
+            <li>
+              If you just signed in, your Access session may have expired. Reload to sign in again.
+            </li>
+          </ul>
+          <Button href="/admin" variant="primary" size="lg" full>
+            Open the admin
+          </Button>
+          <p class="login__foot">
+            The emergency password sign-in is off: it needs ADMIN_PASSWORD and ADMIN_SESSION_SECRET.
+          </p>
+        </>
+      )}
+
+      {state === 'not-configured' && (
+        <>
+          <Badge tone="critical" icon="lock-simple" class="login__badge">
+            Locked
+          </Badge>
+          <h1 class="login__title">Admin is not configured</h1>
+          <p class="login__lede">
+            No sign-in method is set up, so the admin stays locked. It is never open by default.
+          </p>
+          {config.mode === 'locked' && (
+            <Notice tone="caution" class="login__notice">
+              {config.reason}
+            </Notice>
+          )}
+          <dl class="login__env">
+            <div>
+              <dt>Production</dt>
+              <dd>
+                <code>CF_ACCESS_TEAM_DOMAIN</code> and <code>CF_ACCESS_AUD</code> as Wrangler
+                secrets, plus the password pair below as the break-glass backup
+              </dd>
+            </div>
+            <div>
+              <dt>Local</dt>
+              <dd>
+                <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code> in{' '}
+                <code>.dev.vars</code>, then restart the dev server
+              </dd>
+            </div>
+          </dl>
+        </>
+      )}
+    </Card>
 
     {state === 'password' && (
-      <>
-        <MonoLabel as="p" class="login__label">
-          Restricted area
-        </MonoLabel>
-        <h1 class="login__title display">Sign in to the admin</h1>
-        <p class="login__lede">
-          Stores, removals, scans and affiliate links. Sessions last 12 hours.
-        </p>
-
-        {error && (
-          <Notice tone="critical" class="login__notice">
-            {error}
-          </Notice>
-        )}
-        {!error && flash && (
-          <Notice tone={flash.tone} class="login__notice">
-            {flash.text}
-          </Notice>
-        )}
-
-        <form method="post" class="login__form" novalidate={false}>
-          <input type="text" name="username" value="admin" autocomplete="username" hidden />
-          <Field label="Password" for="admin-password">
-            <Input
-              id="admin-password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              maxlength={256}
-              autofocus
-              aria-invalid={error ? 'true' : undefined}
-            />
-          </Field>
-          <Button type="submit" variant="primary" size="lg" full>
-            Sign in
-          </Button>
-        </form>
-        <p class="login__foot">In production this page is replaced by Cloudflare Access.</p>
-      </>
+      <p class="login__below">
+        {accessToo
+          ? 'Cloudflare Access signs you in at the edge. This password form is the break-glass backup for when Access is down or switched off.'
+          : 'Cloudflare Access is not configured on this server, so the password is the only way in. In production Access signs you in and this form stays as the break-glass backup.'}
+      </p>
     )}
-
-    {state === 'access' && (
-      <>
-        <MonoLabel as="p" class="login__label">
-          Cloudflare Access
-        </MonoLabel>
-        <h1 class="login__title display">Sign in through Access</h1>
-        <p class="login__lede">
-          This admin is protected by Cloudflare Access. Your request did not carry a valid Access
-          sign-in, so it was refused here.
-        </p>
-        <ul class="login__steps">
-          <li>Open the admin on the production domain, where Access asks you to sign in.</li>
-          <li>
-            If you just signed in, your Access session may have expired. Reload to sign in again.
-          </li>
-        </ul>
-        <Button href="/admin" variant="primary" size="lg" full>
-          Open the admin
-        </Button>
-      </>
-    )}
-
-    {state === 'not-configured' && (
-      <>
-        <MonoLabel as="p" class="login__label" tone="accent">
-          Locked
-        </MonoLabel>
-        <h1 class="login__title display">Admin is not configured</h1>
-        <p class="login__lede">
-          No sign-in method is set up, so the admin stays locked. It is never open by default.
-        </p>
-        {config.mode === 'locked' && (
-          <Notice tone="caution" class="login__notice">
-            {config.reason}
-          </Notice>
-        )}
-        <dl class="login__env">
-          <div>
-            <dt>Production</dt>
-            <dd>
-              <code>CF_ACCESS_TEAM_DOMAIN</code> and <code>CF_ACCESS_AUD</code> as Wrangler secrets
-            </dd>
-          </div>
-          <div>
-            <dt>Local</dt>
-            <dd>
-              <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code> in{' '}
-              <code>.dev.vars</code>, then restart the dev server
-            </dd>
-          </div>
-        </dl>
-      </>
-    )}
-
     <a href="/" class="login__back">
       <Icon name="arrow-left" size={14} /> Back to the site
     </a>
-  </section>
+  </div>
 </AdminLayout>
 
 <style>
   .login {
-    width: 100%;
-    max-width: 380px;
-  }
-  .login__brand {
     display: flex;
-    width: fit-content;
+    flex-direction: column;
+    width: 100%;
+    max-width: 420px;
+  }
+  .login__top {
+    display: flex;
     align-items: center;
     gap: var(--space-2);
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-6);
   }
-  .login__label {
-    margin-bottom: var(--space-3);
+  .login__brand {
+    display: inline-flex;
+    border-radius: var(--radius-sm);
+  }
+  :global(.login__theme) {
+    margin-left: auto;
+  }
+  :global(.login__badge) {
+    align-self: flex-start;
+    justify-self: start;
+    margin-bottom: var(--space-4);
   }
   .login__title {
-    font-size: var(--text-4xl);
-    line-height: 1.05;
+    color: var(--ink);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.025em;
+    line-height: 1.2;
   }
   .login__lede {
-    margin-top: var(--space-3);
+    margin-top: var(--space-2);
     color: var(--ink-2);
-    font-size: var(--text-md);
+    font-size: var(--text-ui);
+    line-height: var(--leading-normal);
   }
   :global(.login__notice) {
-    margin-top: var(--space-6);
+    margin-top: var(--space-5);
   }
   .login__form {
     display: grid;
-    gap: var(--space-4);
-    margin-top: var(--space-8);
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+  .login__form :global(.field) {
+    margin-bottom: var(--space-1);
   }
   .login__foot {
-    margin-top: var(--space-4);
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
     color: var(--ink-3);
     font-size: var(--text-xs);
+    line-height: var(--leading-normal);
   }
   .login__steps {
-    margin: var(--space-5) 0 var(--space-6);
+    margin: var(--space-4) 0 var(--space-6);
     padding-left: 1.1em;
     list-style: disc;
     color: var(--ink-2);
@@ -241,24 +287,19 @@ const state =
     margin-top: var(--space-1-5);
   }
   .login__env {
-    margin-top: var(--space-6);
+    margin-top: var(--space-5);
     border-top: 1px solid var(--line);
     font-size: var(--text-sm);
   }
   .login__env > div {
     display: grid;
-    grid-template-columns: 92px minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
     gap: var(--space-3);
     padding: var(--space-3) 0;
     border-bottom: 1px solid var(--line);
   }
   .login__env dt {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
     color: var(--ink-3);
-    padding-top: 2px;
   }
   .login__env dd {
     color: var(--ink-2);
@@ -269,11 +310,19 @@ const state =
     color: var(--ink);
     overflow-wrap: anywhere;
   }
+  .login__below {
+    margin-top: var(--space-5);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+  }
   .login__back {
     display: inline-flex;
     align-items: center;
+    align-self: flex-start;
     gap: 6px;
-    margin-top: var(--space-10);
+    min-height: 40px;
+    margin-top: var(--space-2);
     color: var(--ink-3);
     font-size: var(--text-sm);
   }

@@ -127,6 +127,8 @@ export interface StoreFilters {
   curated?: boolean;
   captured?: boolean;
   fts?: string | null;
+  /** Exact (normalised) domains. */
+  domains?: readonly string[];
 }
 type FilterKey = keyof StoreFilters;
 
@@ -197,6 +199,10 @@ function storeWhere(f: StoreFilters, omit: readonly FilterKey[] = []) {
   }
   if (use('curated')) where.push(`s.is_curated = ${f.curated ? 1 : 0}`);
   if (use('captured')) where.push(`s.is_captured = ${f.captured ? 1 : 0}`);
+  if (use('domains')) {
+    where.push('s.domain IN (SELECT value FROM json_each(?))');
+    params.push(jsonIds(f.domains ?? []));
+  }
   if (use('fts')) {
     if (f.fts === null) where.push('0');
     else {
@@ -243,7 +249,8 @@ async function storeFacets(ctx: Ctx, f: StoreFilters): Promise<StoreFacets> {
       );
 
   const flags = storeWhere(f, ['curated', 'captured']);
-  const [themes, categories, currencies, countries, apps, flagRow] = await Promise.all([
+  const scoped = storeWhere(f, ['curated']);
+  const [themes, categories, currencies, countries, apps, flagRow, scopeRow] = await Promise.all([
     facet(
       'theme',
       (w) => `SELECT COALESCE(t.slug, lower(replace(s.current_theme_name, ' ', '-'))) AS value,
@@ -275,6 +282,10 @@ async function storeFacets(ctx: Ctx, f: StoreFilters): Promise<StoreFacets> {
       `SELECT SUM(s.is_curated) AS curated, SUM(s.is_captured) AS captured FROM stores s WHERE ${flags.sql}`,
       flags.params,
     ),
+    ctx.db.first<{ curated: number | null; all: number }>(
+      `SELECT SUM(s.is_curated) AS curated, COUNT(*) AS "all" FROM stores s WHERE ${scoped.sql}`,
+      scoped.params,
+    ),
   ]);
   return {
     themes: toFacets(themes),
@@ -284,6 +295,7 @@ async function storeFacets(ctx: Ctx, f: StoreFilters): Promise<StoreFacets> {
     apps: toFacets(apps),
     curated: flagRow?.curated ?? 0,
     captured: flagRow?.captured ?? 0,
+    scope: { curated: scopeRow?.curated ?? 0, all: scopeRow?.all ?? 0 },
   };
 }
 
@@ -309,13 +321,31 @@ export interface ListStoresParams {
   category?: string | undefined;
   currency?: string | undefined;
   country?: string | undefined;
+  /** Owner decision: lists default to the curated stores, with or without filters. */
+  scope?: 'curated' | 'all' | undefined;
   curated?: boolean | undefined;
   captured?: boolean | undefined;
   q?: string | undefined;
+  /** Only these stores (domains, normalised like the detail route). */
+  domains?: readonly string[] | undefined;
   sort: keyof typeof SORTS;
   cursor?: string | undefined;
   limit: number;
+  /** false: skip the facet queries (facets come back empty: no values, zero counts). */
+  facets?: boolean | undefined;
 }
+
+/** Facets left out on request (`facets: false`): the same shape, nothing counted. */
+const noStoreFacets = (): StoreFacets => ({
+  themes: [],
+  categories: [],
+  currencies: [],
+  countries: [],
+  apps: [],
+  curated: 0,
+  captured: 0,
+  scope: { curated: 0, all: 0 },
+});
 
 export async function listStores(ctx: Ctx, p: ListStoresParams) {
   const f: StoreFilters = {};
@@ -324,9 +354,12 @@ export async function listStores(ctx: Ctx, p: ListStoresParams) {
   if (p.category) f.category = p.category;
   if (p.currency) f.currency = p.currency;
   if (p.country) f.country = p.country;
+  // An explicit `curated` wins; otherwise the scope decides (curated by default).
   if (p.curated !== undefined) f.curated = p.curated;
+  else if ((p.scope ?? 'curated') === 'curated') f.curated = true;
   if (p.captured !== undefined) f.captured = p.captured;
   if (p.q?.trim()) f.fts = ftsPrefixQuery(p.q);
+  if (p.domains) f.domains = p.domains.map((d) => normalizeDomain(d) ?? d);
 
   const keys = SORTS[p.sort];
   const w = storeWhere(f);
@@ -343,7 +376,7 @@ export async function listStores(ctx: Ctx, p: ListStoresParams) {
       [...params, p.limit + 1],
     ),
     ctx.db.first<{ n: number }>(`SELECT COUNT(*) AS n FROM stores s WHERE ${w.sql}`, w.params),
-    storeFacets(ctx, f),
+    p.facets === false ? Promise.resolve(noStoreFacets()) : storeFacets(ctx, f),
   ]);
   const page = pageOf(rows, p.limit, keys);
   return {

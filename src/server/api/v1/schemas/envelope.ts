@@ -23,6 +23,8 @@ export const ErrorCodeEnum = z.enum([
   'payload_too_large',
   'rate_limited',
   'unauthorized',
+  'forbidden',
+  'conflict',
   'internal_error',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeEnum>;

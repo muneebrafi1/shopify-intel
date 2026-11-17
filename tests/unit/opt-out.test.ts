@@ -64,7 +64,8 @@ describe('opted-out stores disappear everywhere', () => {
   it('drops it from similar stores and comparisons', async () => {
     const other = await api.getStore({ domain: 'thursdayboots.com' });
     expect(other.data.similar.map((s) => s.store.domain)).not.toContain('youngla.com');
-    const cmp = await api.getComparison({ pair: 'loox-vs-attentive' });
+    // A curated pair whose apps both run on youngla.com (only curated pairs have a page).
+    const cmp = await api.getComparison({ pair: 'global-e-crossborder-vs-easylocation' });
     expect(cmp.data.shared_stores.items.map((s) => s.domain)).not.toContain('youngla.com');
   });
 });

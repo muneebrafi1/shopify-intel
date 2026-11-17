@@ -2,11 +2,13 @@
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import AuditList from '~/components/admin/AuditList.astro';
+import CaptureBlocked from '~/components/admin/CaptureBlocked.astro';
+import Panel from '~/components/admin/Panel.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
 import Button from '~/components/ui/Button.astro';
 import Checkbox from '~/components/ui/Checkbox.astro';
-import Count from '~/components/ui/Count.astro';
+import Badge from '~/components/ui/Badge.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Field from '~/components/ui/Field.astro';
 import Input from '~/components/ui/Input.astro';
@@ -68,9 +70,13 @@ const [categories, history, jobs, audit, removals] = store
 const now = new Date();
 const pageLabel = (type: string) => PAGE_TYPES.find((p) => p.slug === type)?.name ?? type;
 const optedOut = store?.status === 'opted_out';
+const blocked = !!store?.capture_blocked;
+// The approved request that set the block (scope store or screenshots), when it is still on file.
+const blockedBy = blocked
+  ? removals.find((r) => (r.status === 'approved' || r.status === 'done') && r.scope !== 'details')
+  : undefined;
 const spec = store
   ? [
-      { label: 'Domain', value: store.domain, mono: true },
       { label: 'Theme', value: store.theme_name ?? store.current_theme_name ?? '—' },
       { label: 'Version', value: store.current_theme_version ?? '—', mono: true },
       { label: 'Apps', value: String(store.app_count) },
@@ -86,6 +92,12 @@ const spec = store
       { label: 'Edited', value: timeAgo(store.updated_at, now) },
     ]
   : [];
+const STATE_STATUS: Record<string, string> = {
+  Captured: 'done',
+  'Layout preview': 'preview',
+  'Not captured': 'none',
+  'No image': 'none',
+};
 const captureState = (c: {
   screenshot_id: number | null;
   is_placeholder: number | null;
@@ -100,13 +112,38 @@ const captureState = (c: {
         : 'No image';
 ---
 
-<AdminLayout title={store ? (store.name ?? store.domain) : 'Store not found'} section="stores">
+<AdminLayout
+  title={store ? (store.name ?? store.domain) : 'Store not found'}
+  section="stores"
+  trail={[{ label: 'Stores', href: '/admin/stores' }, { label: store?.domain ?? (domain || '—') }]}
+>
+  {store && (
+    <Fragment slot="actions">
+      {store.status === 'active' && (
+        <Button
+          href={`/stores/${store.domain}`}
+          variant="ghost"
+          size="sm"
+          iconRight="arrow-up-right"
+        >
+          Public page
+        </Button>
+      )}
+      <Button
+        href={store.url ?? `https://${store.domain}`}
+        variant="secondary"
+        size="sm"
+        iconRight="arrow-up-right"
+        external
+        rel="noreferrer nofollow"
+      >
+        Visit store
+      </Button>
+    </Fragment>
+  )}
   {!store ? (
     <>
-      <AdminHeader
-        title="Store not found"
-        trail={[{ label: 'Stores', href: '/admin/stores' }, { label: domain || '—' }]}
-      />
+      <AdminHeader title="Store not found" />
       <EmptyState
         title="No store with that domain"
         body="It may have been typed wrong, or it was never scanned."
@@ -118,44 +155,14 @@ const captureState = (c: {
     </>
   ) : (
     <>
-      <AdminHeader
-        title={store.name ?? store.domain}
-        trail={[{ label: 'Stores', href: '/admin/stores' }, { label: store.domain }]}
-      >
-        <StoreMark slot="before-title" domain={store.domain} name={store.name} size={32} />
+      <AdminHeader title={store.name ?? store.domain}>
+        <StoreMark slot="mark" domain={store.domain} name={store.name} size={40} />
         <p slot="meta" class="meta">
-          <StatusPill status={store.status} />
-          {store.is_curated ? <span class="meta__tag">Curated</span> : null}
-          {store.status === 'active' && (
-            <a class="a-link" href={`/stores/${store.domain}`}>
-              Public page
-            </a>
-          )}
-          <a
-            class="a-link"
-            href={store.url ?? `https://${store.domain}`}
-            rel="noopener noreferrer nofollow"
-            target="_blank"
-          >
-            {store.domain} ↗
-          </a>
+          <span class="a-mono a-muted">{store.domain}</span>
+          <StatusPill status={store.status} size="md" />
+          {store.is_curated ? <Badge tone="outline">Curated</Badge> : null}
+          {blocked && <CaptureBlocked size="md" reference={blockedBy?.reference} />}
         </p>
-        {!optedOut && (
-          <div slot="actions" class="actions">
-            <form method="post">
-              <input type="hidden" name="intent" value="rescan" />
-              <Button type="submit" size="sm" icon="arrow-clockwise">
-                Queue rescan
-              </Button>
-            </form>
-            <form method="post">
-              <input type="hidden" name="intent" value="capture" />
-              <Button type="submit" size="sm" icon="desktop">
-                Queue capture
-              </Button>
-            </form>
-          </div>
-        )}
       </AdminHeader>
       <FlashNotice />
 
@@ -173,20 +180,77 @@ const captureState = (c: {
         </Notice>
       )}
 
-      <div class="a-split">
-        <div>
-          <section aria-labelledby="details">
-            <div class="a-block__head">
-              <div>
-                <h2 class="a-h2" id="details">
-                  Details
-                </h2>
-                <p class="a-block__desc">
-                  Editorial fields. Detection data comes from scans and is not edited here.
-                </p>
+      <div class="detail">
+        <Panel title="Store" flush as="aside" class="detail__facts">
+          <dl class="a-facts">
+            {spec.map((row) => (
+              <div class="a-facts__row">
+                <dt>{row.label}</dt>
+                <dd class:list={[{ 'a-mono': row.mono }]}>{row.value}</dd>
               </div>
+            ))}
+            <div class="a-facts__row">
+              <dt>Captures</dt>
+              <dd>
+                {blocked ? (
+                  <CaptureBlocked reference={blockedBy?.reference} />
+                ) : (
+                  <span class="a-muted">Allowed</span>
+                )}
+              </dd>
             </div>
-            <form method="post" class="a-form a-panel">
+          </dl>
+          {!optedOut && (
+            <div class="facts-actions">
+              <div class="facts-actions__row">
+                <form method="post">
+                  <input type="hidden" name="intent" value="rescan" />
+                  <Button type="submit" size="sm" variant="secondary" icon="arrow-clockwise" full>
+                    Queue rescan
+                  </Button>
+                </form>
+                <form method="post">
+                  <input type="hidden" name="intent" value="capture" />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    variant="secondary"
+                    icon="desktop"
+                    full
+                    disabled={blocked}
+                    aria-describedby={blocked ? 'capture-blocked-note' : undefined}
+                  >
+                    Queue capture
+                  </Button>
+                </form>
+              </div>
+              {blocked ? (
+                <p class="facts-actions__note" id="capture-blocked-note">
+                  {blockedBy ? (
+                    <>
+                      Captures are blocked by removal request{' '}
+                      <a class="a-link" href={`/admin/removals/${blockedBy.id}`}>
+                        {blockedBy.reference}
+                      </a>
+                      . Detection rescans still work.
+                    </>
+                  ) : (
+                    'Captures are blocked by an approved removal request. Detection rescans still work.'
+                  )}
+                </p>
+              ) : (
+                <p class="facts-actions__note">The crawler takes queued jobs on its next run.</p>
+              )}
+            </div>
+          )}
+        </Panel>
+
+        <div class="a-stack detail__main">
+          <Panel
+            title="Details"
+            description="Editorial fields. Detection data comes from scans and is not edited here."
+          >
+            <form method="post" class="a-form">
               <input type="hidden" name="intent" value="update" />
               <div class="a-form__row">
                 <Field
@@ -267,23 +331,16 @@ const captureState = (c: {
                 </Button>
               </div>
             </form>
-          </section>
+          </Panel>
 
-          <section class="a-block" aria-labelledby="captures">
-            <div class="a-block__head">
-              <div>
-                <h2 class="a-h2" id="captures">
-                  Pages and captures
-                  <Count value={history?.captures.length ?? 0} />
-                </h2>
-                <p class="a-block__desc">
-                  Layout previews are drawn from detected sections until a real capture replaces
-                  them.
-                </p>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <table class="table a-table">
+          <Panel
+            title="Pages and captures"
+            count={history?.captures.length ?? 0}
+            description="Layout previews are drawn from detected sections until a real capture replaces them."
+            flush
+          >
+            <div class="a-tablewrap">
+              <table class="table a-table a-table--stack">
                 <thead>
                   <tr>
                     <th scope="col">Page</th>
@@ -302,33 +359,34 @@ const captureState = (c: {
                   {history && history.captures.length === 0 ? (
                     <tr>
                       <td colspan="6" class="a-empty-cell">
-                        No pages planned yet. Queue a capture to add them.
+                        {blocked
+                          ? 'No pages planned, and captures of this store are blocked.'
+                          : 'No pages planned yet. Queue a capture to add them.'}
                       </td>
                     </tr>
                   ) : (
                     history?.captures.map((c) => (
                       <tr>
-                        <td class="a-strong">{pageLabel(c.page_type)}</td>
-                        <td class="a-muted">
+                        <td class="is-primary a-strong">{pageLabel(c.page_type)}</td>
+                        <td class="is-meta a-muted">
                           {c.device ? c.device[0]!.toUpperCase() + c.device.slice(1) : '—'}
                         </td>
-                        <td>
+                        <td class="is-meta">
                           <StatusPill
-                            status={
-                              captureState(c) === 'Captured'
-                                ? 'done'
-                                : captureState(c) === 'Layout preview'
-                                  ? 'preview'
-                                  : 'none'
-                            }
+                            status={STATE_STATUS[captureState(c)] ?? 'none'}
                             label={captureState(c)}
+                            variant="dot"
                           />
                         </td>
-                        <td class="is-num">{c.sections}</td>
-                        <td class="is-num a-muted a-nowrap">
+                        <td class="is-meta is-num" data-label="Sections">
+                          {c.sections}
+                        </td>
+                        <td class="is-meta is-num a-muted a-nowrap">
                           {c.height ? `${c.height.toLocaleString('en-US')} px` : '—'}
                         </td>
-                        <td class="a-muted a-nowrap">
+                        <td
+                          class:list={['is-meta a-muted a-nowrap', { 'a-hide-sm': !c.captured_at }]}
+                        >
                           {c.captured_at ? shortDate(c.captured_at) : '—'}
                         </td>
                       </tr>
@@ -337,21 +395,15 @@ const captureState = (c: {
                 </tbody>
               </table>
             </div>
-          </section>
+          </Panel>
 
-          <section class="a-block" aria-labelledby="themes">
-            <div class="a-block__head">
-              <div>
-                <h2 class="a-h2" id="themes">
-                  Theme history
-                </h2>
-                <p class="a-block__desc">
-                  Each row is one theme and version span. Switches close the old row.
-                </p>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <table class="table a-table">
+          <Panel
+            title="Theme history"
+            description="Each row is one theme and version span. Switches close the old row."
+            flush
+          >
+            <div class="a-tablewrap">
+              <table class="table a-table a-table--stack">
                 <thead>
                   <tr>
                     <th scope="col">Theme</th>
@@ -371,7 +423,7 @@ const captureState = (c: {
                   ) : (
                     history?.themes.map((t) => (
                       <tr>
-                        <td>
+                        <td class="is-primary">
                           <span class="a-strong">{t.theme_name ?? t.raw_name ?? 'Unknown'}</span>
                           {t.preset_name || t.is_custom === 1 ? (
                             <span class="a-sub">
@@ -379,16 +431,20 @@ const captureState = (c: {
                             </span>
                           ) : null}
                         </td>
-                        <td class="a-mono">{t.version ?? '—'}</td>
-                        <td class="a-nowrap a-muted">{shortDate(t.first_seen)}</td>
-                        <td class="a-nowrap a-muted">{shortDate(t.last_seen)}</td>
-                        <td>
+                        <td class="is-meta a-mono">{t.version ?? '—'}</td>
+                        <td class="is-meta a-nowrap a-muted" data-label="From">
+                          {shortDate(t.first_seen)}
+                        </td>
+                        <td class="is-meta a-nowrap a-muted" data-label="to">
+                          {shortDate(t.last_seen)}
+                        </td>
+                        <td class="is-meta">
                           {t.replaced_at ? (
                             <span class="a-muted a-nowrap">
                               Replaced {shortDate(t.replaced_at)}
                             </span>
                           ) : (
-                            <StatusPill status="active" label="Current" />
+                            <StatusPill status="active" label="Current" variant="dot" />
                           )}
                         </td>
                       </tr>
@@ -397,22 +453,16 @@ const captureState = (c: {
                 </tbody>
               </table>
             </div>
-          </section>
+          </Panel>
 
-          <section class="a-block" aria-labelledby="apps">
-            <div class="a-block__head">
-              <div>
-                <h2 class="a-h2" id="apps">
-                  App history
-                  <Count value={history?.apps.length ?? 0} />
-                </h2>
-                <p class="a-block__desc">
-                  Unmatched detections have no app profile yet and show their detection slug.
-                </p>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <table class="table a-table">
+          <Panel
+            title="App history"
+            count={history?.apps.length ?? 0}
+            description="Unmatched detections have no app profile yet and show their detection slug."
+            flush
+          >
+            <div class="a-tablewrap">
+              <table class="table a-table a-table--stack">
                 <thead>
                   <tr>
                     <th scope="col">App</th>
@@ -431,7 +481,7 @@ const captureState = (c: {
                   ) : (
                     history?.apps.map((a) => (
                       <tr>
-                        <td>
+                        <td class="is-primary">
                           {a.resolved ? (
                             <a
                               class="a-row-link"
@@ -444,13 +494,17 @@ const captureState = (c: {
                           )}
                           {!a.resolved && <span class="a-sub">No profile yet</span>}
                         </td>
-                        <td class="a-nowrap a-muted">{shortDate(a.first_seen)}</td>
-                        <td class="a-nowrap a-muted">{shortDate(a.last_seen)}</td>
-                        <td>
+                        <td class="is-meta a-nowrap a-muted" data-label="From">
+                          {shortDate(a.first_seen)}
+                        </td>
+                        <td class="is-meta a-nowrap a-muted" data-label="to">
+                          {shortDate(a.last_seen)}
+                        </td>
+                        <td class="is-meta">
                           {a.removed_at ? (
                             <span class="a-muted a-nowrap">Removed {shortDate(a.removed_at)}</span>
                           ) : (
-                            <StatusPill status="active" label="Current" />
+                            <StatusPill status="active" label="Current" variant="dot" />
                           )}
                         </td>
                       </tr>
@@ -459,17 +513,12 @@ const captureState = (c: {
                 </tbody>
               </table>
             </div>
-          </section>
+          </Panel>
 
           {history && history.scans.length > 0 && (
-            <section class="a-block" aria-labelledby="scans">
-              <div class="a-block__head">
-                <h2 class="a-h2" id="scans">
-                  Recent scans
-                </h2>
-              </div>
-              <div class="table-wrap">
-                <table class="table a-table">
+            <Panel title="Recent scans" flush>
+              <div class="a-tablewrap">
+                <table class="table a-table a-table--stack">
                   <thead>
                     <tr>
                       <th scope="col">Ran</th>
@@ -483,42 +532,32 @@ const captureState = (c: {
                   <tbody>
                     {history.scans.map((s) => (
                       <tr>
-                        <td class="a-nowrap">{shortDate(s.ran_at)}</td>
-                        <td class="a-mono">{s.source}</td>
-                        <td class="a-mono">{s.rules_version ?? '—'}</td>
-                        <td class="is-num">{s.http_status ?? '—'}</td>
+                        <td class="is-primary a-nowrap">{shortDate(s.ran_at)}</td>
+                        <td class="is-meta a-mono">{s.source}</td>
+                        <td class="is-meta a-mono" data-label="Rules">
+                          {s.rules_version ?? '—'}
+                        </td>
+                        <td class="is-meta is-num" data-label="HTTP">
+                          {s.http_status ?? '—'}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </section>
+            </Panel>
           )}
         </div>
 
-        <aside class="rail" aria-label="Store facts">
-          <dl class="a-spec">
-            {spec.map((row) => (
-              <div class="a-spec__row">
-                <dt>{row.label}</dt>
-                <dd class:list={[{ 'a-mono': row.mono }]}>{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-
-          <section class="a-block" aria-labelledby="jobs">
-            <div class="a-block__head">
-              <h2 class="a-h2" id="jobs">
-                Jobs
-              </h2>
-              <a class="a-link" href="/admin/scans">
-                Queue
-              </a>
-            </div>
+        <aside class="a-side detail__side" aria-label="Jobs and activity">
+          <Panel title="Jobs" flush>
+            <a slot="actions" class="a-link" href="/admin/scans">
+              Queue
+            </a>
             {jobs.length === 0 ? (
-              <p class="rail__empty">No scan or capture jobs yet.</p>
+              <p class="a-quiet">No scan or capture jobs yet.</p>
             ) : (
-              <ul class="rail__list">
+              <ul class="a-list">
                 {jobs.map((j) => (
                   <li>
                     <span>
@@ -532,16 +571,11 @@ const captureState = (c: {
                 ))}
               </ul>
             )}
-          </section>
+          </Panel>
 
           {removals.length > 0 && (
-            <section class="a-block" aria-labelledby="removals">
-              <div class="a-block__head">
-                <h2 class="a-h2" id="removals">
-                  Removal requests
-                </h2>
-              </div>
-              <ul class="rail__list">
+            <Panel title="Removal requests" flush>
+              <ul class="a-list">
                 {removals.map((r) => (
                   <li>
                     <span>
@@ -554,17 +588,12 @@ const captureState = (c: {
                   </li>
                 ))}
               </ul>
-            </section>
+            </Panel>
           )}
 
-          <section class="a-block" aria-labelledby="activity">
-            <div class="a-block__head">
-              <h2 class="a-h2" id="activity">
-                Activity
-              </h2>
-            </div>
+          <Panel title="Activity" flush>
             <AuditList rows={audit} hideTarget empty="No admin changes to this store yet." />
-          </section>
+          </Panel>
         </aside>
       </div>
     </>
@@ -576,50 +605,56 @@ const captureState = (c: {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2) var(--space-4);
-    margin-top: var(--space-3);
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-2);
     font-size: var(--text-sm);
   }
-  .meta__tag {
-    padding: 0 6px;
-    border-radius: var(--radius-xs);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
-    color: var(--ink-2);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    line-height: 20px;
-    text-transform: uppercase;
-  }
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
   :global(.state-notice) {
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-5);
   }
   :global(.country) {
     max-width: 96px;
     text-transform: uppercase;
   }
-  .rail__list {
+  /* Phones and tablets: facts + actions first, then the main column, then jobs and activity.
+     Wide: main column on the left; facts above jobs/activity on the right. */
+  .detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+  }
+  @media (min-width: 1180px) {
+    .detail {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      grid-template-rows: auto 1fr;
+    }
+    .detail__main {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+    :global(.detail__facts) {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .detail__side {
+      grid-column: 2;
+      grid-row: 2;
+    }
+  }
+  .facts-actions {
+    padding: var(--space-3) var(--space-4) var(--space-4);
     border-top: 1px solid var(--line);
   }
-  .rail__list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: 10px 0;
-    border-bottom: 1px solid var(--line);
-    font-size: var(--text-sm);
+  .facts-actions__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
   }
-  .rail__empty {
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+  .facts-actions__note {
+    margin-top: var(--space-2);
     color: var(--ink-3);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
   }
 </style>

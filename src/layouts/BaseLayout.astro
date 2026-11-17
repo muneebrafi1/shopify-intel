@@ -1,7 +1,12 @@
 ---
 /**
- * The one HTML shell for every public page: head/SEO, header, main, footer.
+ * The one HTML shell for every public page: head/SEO, theme, header, main, footer.
  * Pages pass a plain title (no brand); the brand is appended from SITE_NAME.
+ *
+ * Theme: a tiny inline script in <head> resolves localStorage['theme'] ('light' | 'dark' |
+ * 'system', default system → prefers-color-scheme) and sets <html data-theme data-theme-pref
+ * class="js"> before first paint, so there is no flash. Without JS the CSS media query applies.
+ * `client/theme.ts` keeps it in sync afterwards (controls, system changes, other tabs).
  */
 import '~/styles/base.css';
 import fontUrl from '@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url';
@@ -30,6 +35,8 @@ interface Props {
   navCounts?: Record<string, number>;
   /** Footer data line (source + as-of). */
   dataNote?: string;
+  /** Gallery pages (stores, themes, sections): align header/footer with the 1440 container. */
+  wide?: boolean;
 }
 
 const {
@@ -41,6 +48,7 @@ const {
   jsonLd,
   chrome = 'full',
   bodyClass,
+  wide = false,
 } = Astro.props;
 
 // Live chrome data (nav superscript counts, footer data line) from the same API the pages use.
@@ -74,13 +82,38 @@ const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <script is:inline>
+      // Theme before first paint (see the comment at the top of BaseLayout.astro).
+      (function () {
+        var d = document.documentElement;
+        var pref = 'system';
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored === 'light' || stored === 'dark' || stored === 'system') pref = stored;
+        } catch (e) {}
+        var dark =
+          pref === 'dark' ||
+          (pref === 'system' &&
+            !!window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        d.setAttribute('data-theme', dark ? 'dark' : 'light');
+        d.setAttribute('data-theme-pref', pref);
+        d.className += ' js';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', dark ? '#0a0a0b' : '#ffffff');
+        // If the motion module never runs, stop hiding .reveal content.
+        setTimeout(function () {
+          if (!d.getAttribute('data-motion')) d.className += ' reveal-off';
+        }, 3000);
+      })();
+    </script>
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex, follow" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
-    <meta name="theme-color" content="#fcfbf9" />
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={title ?? SITE_NAME} />
     <meta property="og:description" content={description} />
@@ -115,15 +148,20 @@ const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
       Skip to content
     </a>
     {SHOW_CAPTURE_PREVIEW_NOTICE && chrome === 'full' && <PreviewNotice />}
-    {chrome !== 'none' && <Header minimal={chrome === 'minimal'} counts={navCounts} />}
+    {chrome !== 'none' && <Header minimal={chrome === 'minimal'} counts={navCounts} wide={wide} />}
     <main id="main" tabindex="-1">
       <slot />
     </main>
-    {chrome === 'full' && <Footer dataNote={dataNote} />}
+    {chrome === 'full' && <Footer dataNote={dataNote} wide={wide} />}
     <slot name="end" />
     <CommandPalette />
   </body>
 </html>
+
+<script>
+  import '~/components/ui/client/theme';
+  import '~/components/ui/client/motion';
+</script>
 
 <style>
   main {

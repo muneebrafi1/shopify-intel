@@ -1,17 +1,22 @@
 ---
 /**
  * Review one removal request. Approving is irreversible, so it needs an explicit, server-checked
- * confirmation (a required checkbox), not only a client-side dialog.
+ * confirmation (a required checkbox), not only a client-side dialog. Approving a whole-store or
+ * screenshots request also blocks every future capture of the store (capture_blocks).
  */
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
-import FlashNotice from '~/components/admin/FlashNotice.astro';
-import StatusPill from '~/components/admin/StatusPill.astro';
 import AuditList from '~/components/admin/AuditList.astro';
+import CaptureBlocked from '~/components/admin/CaptureBlocked.astro';
+import FlashNotice from '~/components/admin/FlashNotice.astro';
+import Panel from '~/components/admin/Panel.astro';
+import StatusPill from '~/components/admin/StatusPill.astro';
+import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
 import Checkbox from '~/components/ui/Checkbox.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Field from '~/components/ui/Field.astro';
+import Icon from '~/components/ui/Icon.astro';
 import Input from '~/components/ui/Input.astro';
 import Notice from '~/components/ui/Notice.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
@@ -69,7 +74,14 @@ const SCOPE: Record<string, string> = {
   screenshots: 'Remove screenshots only',
   details: 'Correct or remove details',
 };
+const SCOPE_SHORT: Record<string, string> = {
+  store: 'Whole store',
+  screenshots: 'Screenshots',
+  details: 'Details',
+};
 const pending = req?.status === 'pending';
+const blocksCaptures = req?.scope === 'store' || req?.scope === 'screenshots';
+const blocked = !!req?.capture_blocked || !!media?.captureBlocked;
 const plural = (n: number, one: string, many = `${one}s`) =>
   `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
 
@@ -84,7 +96,12 @@ if (req && media) {
     );
     effects.push('Tombstone the domain so the crawler never adds it again.');
   }
-  if (req.scope === 'store' || req.scope === 'screenshots') {
+  if (blocksCaptures) {
+    effects.push(
+      req.scope === 'store'
+        ? `Block every future capture of ${domain}.`
+        : `Block every future capture of ${domain}. Detection rescans still run.`,
+    );
     effects.push(
       media.r2Objects > 0
         ? `Delete ${plural(media.r2Objects, 'stored image')} from media storage.`
@@ -94,6 +111,8 @@ if (req && media) {
       effects.push(
         `Retire ${plural(media.screenshots, 'screenshot')} and ${plural(media.sections, 'section')}.`,
       );
+    const capturesQueued = req.scope === 'screenshots' ? media.queuedJobs : 0;
+    if (capturesQueued > 0) effects.push('Cancel any queued capture jobs.');
   }
   if (req.scope === 'store' && media.teardownsPublished > 0)
     effects.push(`Unpublish ${plural(media.teardownsPublished, 'teardown')}.`);
@@ -109,15 +128,30 @@ const approveLabel =
     : req?.scope === 'screenshots'
       ? 'Approve and delete screenshots'
       : 'Approve and remove store';
+const STATUS_LABEL: Record<string, string> = { approved: 'Approved · media pending' };
+const mailto = req
+  ? `mailto:${req.email}?subject=${encodeURIComponent(`Your removal request ${req.reference}`)}`
+  : '';
 ---
 
-<AdminLayout title={req ? `Removal ${req.reference}` : 'Request not found'} section="removals">
+<AdminLayout
+  title={req ? `Removal ${req.reference}` : 'Request not found'}
+  section="removals"
+  trail={[
+    { label: 'Removals', href: '/admin/removals' },
+    { label: req ? req.reference : 'Not found' },
+  ]}
+>
+  {req && (
+    <Fragment slot="actions">
+      <Button href={mailto} variant="secondary" size="sm" iconRight="arrow-up-right">
+        Email requester
+      </Button>
+    </Fragment>
+  )}
   {!req ? (
     <>
-      <AdminHeader
-        title="Request not found"
-        trail={[{ label: 'Removals', href: '/admin/removals' }, { label: 'Not found' }]}
-      />
+      <AdminHeader title="Request not found" />
       <EmptyState title="No removal request with that id" body="It may have been typed wrong.">
         <Button href="/admin/removals" variant="primary" size="sm">
           Back to the queue
@@ -126,15 +160,11 @@ const approveLabel =
     </>
   ) : (
     <>
-      <AdminHeader
-        title={req.domain}
-        trail={[{ label: 'Removals', href: '/admin/removals' }, { label: req.reference }]}
-      >
+      <AdminHeader title={req.domain}>
         <p slot="meta" class="meta">
-          <StatusPill
-            status={req.status}
-            label={req.status === 'approved' ? 'Approved · media pending' : undefined}
-          />
+          <StatusPill status={req.status} label={STATUS_LABEL[req.status]} size="md" />
+          {blocked && <CaptureBlocked size="md" reference={req.reference} />}
+          <Badge tone="outline">{SCOPE_SHORT[req.scope] ?? req.scope}</Badge>
           <span class="a-mono a-muted">{req.reference}</span>
           <span class="a-muted" title={fullTime(req.created_at)}>
             Received {timeAgo(req.created_at, now)}
@@ -144,19 +174,14 @@ const approveLabel =
       <FlashNotice />
 
       <div class="a-split">
-        <div>
-          <section aria-labelledby="request">
-            <div class="a-block__head">
-              <h2 class="a-h2" id="request">
-                Request
-              </h2>
-            </div>
-            <dl class="a-spec">
-              <div class="a-spec__row">
+        <div class="a-stack">
+          <Panel title="Request" flush>
+            <dl class="a-facts">
+              <div class="a-facts__row">
                 <dt>Asks to</dt>
                 <dd class="a-strong">{SCOPE[req.scope] ?? req.scope}</dd>
               </div>
-              <div class="a-spec__row">
+              <div class="a-facts__row">
                 <dt>Store</dt>
                 <dd>
                   {store ? (
@@ -170,56 +195,45 @@ const approveLabel =
                   )}
                 </dd>
               </div>
-              <div class="a-spec__row">
+              <div class="a-facts__row">
                 <dt>From</dt>
                 <dd>
                   {req.name && <span>{req.name} · </span>}
-                  <a
-                    class="a-link"
-                    href={`mailto:${req.email}?subject=${encodeURIComponent(`Your removal request ${req.reference}`)}`}
-                  >
+                  <a class="a-link" href={mailto}>
                     {req.email}
                   </a>
                 </dd>
               </div>
-              <div class="a-spec__row">
+              <div class="a-facts__row">
                 <dt>Received</dt>
                 <dd>{fullTime(req.created_at)}</dd>
               </div>
               {req.handled_at && (
-                <div class="a-spec__row">
+                <div class="a-facts__row">
                   <dt>Handled</dt>
                   <dd>{fullTime(req.handled_at)}</dd>
                 </div>
               )}
               {req.admin_note && (
-                <div class="a-spec__row">
+                <div class="a-facts__row">
                   <dt>Admin note</dt>
-                  <dd class="pre">{req.admin_note}</dd>
+                  <dd class="a-pre">{req.admin_note}</dd>
                 </div>
               )}
             </dl>
             <figure class="reason">
-              <figcaption class="a-mono a-muted">Their reason</figcaption>
-              <blockquote class="pre">{req.reason}</blockquote>
+              <figcaption>Their reason</figcaption>
+              <blockquote class="a-pre">{req.reason}</blockquote>
             </figure>
-          </section>
+          </Panel>
 
           {pending && (
-            <section class="a-block decide" aria-labelledby="decide">
-              <div class="a-block__head">
-                <div>
-                  <h2 class="a-h2" id="decide">
-                    Decide
-                  </h2>
-                  <p class="a-block__desc">
-                    Reply to the requester by email after deciding. They are not notified
-                    automatically.
-                  </p>
-                </div>
-              </div>
-
-              <form method="post" class="a-form a-panel approve">
+            <Panel
+              title="Approve"
+              description="Reply to the requester by email after deciding. They are not notified automatically."
+              id="decide"
+            >
+              <form method="post" class="a-form approve">
                 <input type="hidden" name="intent" value="approve" />
                 <p class="decide__title">Approving will:</p>
                 <ol class="effects">
@@ -227,6 +241,13 @@ const approveLabel =
                     <li>{e}</li>
                   ))}
                 </ol>
+                {blocksCaptures && (
+                  <Notice tone="caution" title="Future captures stay blocked" icon="lock-simple">
+                    {req.scope === 'store' ? 'A whole-store' : 'A screenshots'} removal stops the
+                    crawler from capturing {domain} again, for good. The block outlives this request
+                    record (purged after two years) and cannot be lifted from the admin.
+                  </Notice>
+                )}
                 <Field
                   label="Note"
                   for="approve-note"
@@ -252,13 +273,17 @@ const approveLabel =
                   }
                 />
                 <div class="a-form__actions">
-                  <Button type="submit" variant="primary" size="sm">
+                  <Button type="submit" variant="primary" size="md">
                     {approveLabel}
                   </Button>
                 </div>
               </form>
+            </Panel>
+          )}
 
-              <form method="post" class="a-form reject">
+          {pending && (
+            <Panel title="Reject">
+              <form method="post" class="a-form">
                 <input type="hidden" name="intent" value="reject" />
                 <Field
                   label="Reject with a note"
@@ -277,107 +302,110 @@ const approveLabel =
                   />
                 </Field>
                 <div class="a-form__actions">
-                  <Button type="submit" variant="secondary" size="sm">
+                  <Button type="submit" variant="secondary" size="md">
                     Reject request
                   </Button>
                 </div>
               </form>
-            </section>
+            </Panel>
           )}
 
           {req.status === 'approved' && (
-            <section class="a-block" aria-labelledby="media">
-              <Notice tone="caution" title="Media cleanup is not finished">
-                The store is hidden and tombstoned, but deleting its stored images failed or could
-                not run. Retry once media storage is available.
-              </Notice>
+            <Panel title="Media cleanup is not finished" tone="caution">
+              <p class="retry__text">
+                The request is approved{blocksCaptures ? ' and captures are blocked' : ''}, but
+                deleting the stored images failed or could not run. Retry once media storage is
+                available.
+              </p>
               <form method="post" class="retry">
                 <input type="hidden" name="intent" value="retry" />
                 <Button type="submit" variant="primary" size="sm" icon="arrow-clockwise">
                   Retry media cleanup
                 </Button>
               </form>
-            </section>
+            </Panel>
           )}
         </div>
 
-        <aside aria-label="Store and history">
-          {store ? (
-            <section aria-labelledby="snapshot">
-              <div class="a-block__head">
-                <h2 class="a-h2" id="snapshot">
-                  In the library
-                </h2>
-              </div>
-              <div class="snapshot">
-                <StoreMark domain={store.domain} name={store.name} size={32} />
-                <div>
-                  <a class="a-row-link" href={`/admin/stores/${store.domain}`}>
-                    {store.name ?? store.domain}
-                  </a>
-                  {store.name && <span class="a-sub">{store.domain}</span>}
+        <aside class="a-side" aria-label="Store and history">
+          <Panel title={store ? 'In the library' : 'Not in the library'} flush>
+            {store ? (
+              <>
+                <div class="snapshot">
+                  <StoreMark domain={store.domain} name={store.name} size={32} />
+                  <span>
+                    <a class="a-row-link" href={`/admin/stores/${store.domain}`}>
+                      {store.name ?? store.domain}
+                    </a>
+                    {store.name && <span class="a-sub">{store.domain}</span>}
+                  </span>
+                  <StatusPill status={store.status} />
                 </div>
-                <StatusPill status={store.status} />
-              </div>
-              <dl class="a-spec">
-                <div class="a-spec__row">
-                  <dt>Theme</dt>
-                  <dd>{store.theme_name ?? store.current_theme_name ?? '—'}</dd>
-                </div>
-                <div class="a-spec__row">
-                  <dt>Apps</dt>
-                  <dd>{store.app_count}</dd>
-                </div>
-                <div class="a-spec__row">
-                  <dt>Screenshots</dt>
-                  <dd>
-                    {media ? `${media.screenshots} current · ${media.r2Objects} stored` : '—'}
-                  </dd>
-                </div>
-                <div class="a-spec__row">
-                  <dt>Last seen</dt>
-                  <dd>{shortDate(store.last_seen)}</dd>
-                </div>
-              </dl>
-            </section>
-          ) : (
-            <p class="not-in-library">
-              <strong>{domain}</strong> is not in the library. Approving a whole-store request still
-              tombstones it, so it is never added later.
-            </p>
-          )}
+                <dl class="a-facts">
+                  <div class="a-facts__row">
+                    <dt>Theme</dt>
+                    <dd>{store.theme_name ?? store.current_theme_name ?? '—'}</dd>
+                  </div>
+                  <div class="a-facts__row">
+                    <dt>Apps</dt>
+                    <dd>{store.app_count}</dd>
+                  </div>
+                  <div class="a-facts__row">
+                    <dt>Screenshots</dt>
+                    <dd>
+                      {media ? `${media.screenshots} current · ${media.r2Objects} stored` : '—'}
+                    </dd>
+                  </div>
+                  <div class="a-facts__row">
+                    <dt>Captures</dt>
+                    <dd>{blocked ? <CaptureBlocked reference={req.reference} /> : 'Allowed'}</dd>
+                  </div>
+                  <div class="a-facts__row">
+                    <dt>Last seen</dt>
+                    <dd>{shortDate(store.last_seen)}</dd>
+                  </div>
+                </dl>
+              </>
+            ) : (
+              <p class="not-in-library">
+                <Icon name="info" size={16} />
+                <span>
+                  <strong>{domain}</strong> is not in the library.{' '}
+                  {req.scope === 'store'
+                    ? 'Approving still tombstones it and blocks its captures, so it is never added later.'
+                    : req.scope === 'screenshots'
+                      ? 'Approving still blocks its captures, so it is never captured if it is added later.'
+                      : 'There are no details to correct.'}
+                </span>
+              </p>
+            )}
+          </Panel>
 
           {related.length > 1 && (
-            <section class="a-block" aria-labelledby="related">
-              <div class="a-block__head">
-                <h2 class="a-h2" id="related">
-                  Other requests for this domain
-                </h2>
-              </div>
-              <ul class="related">
+            <Panel title="Other requests for this domain" flush>
+              <ul class="a-list">
                 {related
                   .filter((r) => r.id !== req.id)
                   .map((r) => (
                     <li>
-                      <a class="a-row-link a-mono" href={`/admin/removals/${r.id}`}>
-                        {r.reference}
-                      </a>
-                      <span class="a-muted">{timeAgo(r.created_at, now)}</span>
-                      <StatusPill status={r.status} variant="dot" />
+                      <span>
+                        <a class="a-row-link a-mono" href={`/admin/removals/${r.id}`}>
+                          {r.reference}
+                        </a>
+                        <span class="a-sub">
+                          {SCOPE_SHORT[r.scope] ?? r.scope} · {timeAgo(r.created_at, now)}
+                        </span>
+                      </span>
+                      <StatusPill status={r.status} />
                     </li>
                   ))}
               </ul>
-            </section>
+            </Panel>
           )}
 
-          <section class="a-block" aria-labelledby="history">
-            <div class="a-block__head">
-              <h2 class="a-h2" id="history">
-                History
-              </h2>
-            </div>
+          <Panel title="History" flush>
             <AuditList rows={audit} hideTarget empty="No decisions yet." />
-          </section>
+          </Panel>
         </aside>
       </div>
     </>
@@ -389,52 +417,51 @@ const approveLabel =
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2) var(--space-4);
+    gap: var(--space-2) var(--space-3);
     margin-top: var(--space-3);
     font-size: var(--text-sm);
   }
-  .pre {
-    white-space: pre-wrap;
-  }
   .reason {
-    margin-top: var(--space-6);
+    padding: var(--space-4);
+    border-top: 1px solid var(--line);
   }
   .reason figcaption {
     margin-bottom: var(--space-2);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
   }
   .reason blockquote {
-    padding: var(--space-4) var(--space-5);
-    border-left: 2px solid var(--ink);
-    background: var(--surface);
+    padding: var(--space-1) 0 var(--space-1) var(--space-4);
+    border-left: 2px solid var(--line-strong);
     color: var(--ink);
-    font-size: var(--text-md);
+    font-size: var(--text-body);
     line-height: var(--leading-relaxed);
     overflow-wrap: anywhere;
   }
   .decide__title {
+    color: var(--ink);
     font-weight: var(--weight-semibold);
   }
   .effects {
     margin-top: calc(var(--space-2) * -1);
-    padding-left: 1.9em;
+    padding-left: 1.6em;
     list-style: decimal;
     color: var(--ink-2);
     font-size: var(--text-sm);
   }
+  .effects li {
+    padding-left: var(--space-1);
+  }
   .effects li + li {
-    margin-top: var(--space-1);
+    margin-top: var(--space-1-5);
   }
   .effects li::marker {
-    font-family: var(--font-mono);
     color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
   }
-  .reject {
-    margin-top: var(--space-6);
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--line);
+  .retry__text {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
   }
   .retry {
     margin-top: var(--space-3);
@@ -444,27 +471,22 @@ const approveLabel =
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--space-3);
-    padding-bottom: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line);
   }
   .not-in-library {
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-4);
     color: var(--ink-2);
     font-size: var(--text-sm);
   }
-  .related li {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: 8px 0;
-    border-bottom: 1px solid var(--line);
-    font-size: var(--text-sm);
+  .not-in-library :global(.icon) {
+    margin-top: 2px;
+    color: var(--ink-3);
   }
-  .related li :global(.pill) {
-    margin-left: auto;
-  }
-  .related {
-    border-top: 1px solid var(--line);
+  .not-in-library strong {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
   }
 </style>

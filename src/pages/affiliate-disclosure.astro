@@ -4,7 +4,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import AffiliateCta from '~/components/domain/AffiliateCta.astro';
 import DocShell from '~/components/static/DocShell.astro';
 import AsideCard from '~/components/static/AsideCard.astro';
-import { CONTACT, SITE_NAME } from '~/config/site';
+import { CONTACT, LEGAL_ENTITY, SITE_NAME } from '~/config/site';
 import { LEGAL_UPDATED } from '~/components/static/content';
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
@@ -48,7 +48,7 @@ const toc = [
     <p>
       Today, {SITE_NAME} earns money in one way: affiliate commissions. When you follow one of our
       links to an app or a theme and then pay for it, the developer may pay us a share. The price
-      you pay is the same.
+      you pay is the same. Commissions are paid to {LEGAL_ENTITY}, which runs {SITE_NAME}.
     </p>
     <p>
       Later we will add <a href="/pro">Pro</a>, a paid plan for designers and agencies. We don’t
@@ -61,9 +61,10 @@ const toc = [
       developer’s site. Each one carries the label right under it, and the link is marked{' '}
       <code>rel="sponsored"</code> for search engines. Links without a partnership say so too.
     </p>
-    <figure class="label-plate">
-      <div class="label-plate__row" inert aria-hidden="true">
-        <div class="label-plate__cell">
+    <figure class="label-demo">
+      <div class="label-demo__row" inert aria-hidden="true">
+        <div class="label-demo__cell">
+          <p class="label-demo__kind">Affiliate link</p>
           <AffiliateCta
             href="/affiliate-disclosure"
             label="View on App Store"
@@ -71,7 +72,8 @@ const toc = [
             size="md"
           />
         </div>
-        <div class="label-plate__cell">
+        <div class="label-demo__cell">
+          <p class="label-demo__kind">Ordinary link</p>
           <AffiliateCta
             href="/affiliate-disclosure"
             label="View on App Store"
@@ -81,10 +83,8 @@ const toc = [
         </div>
       </div>
       <figcaption>
-        <span>
-          Left: an affiliate link. Right: an ordinary link. Both as they appear on app and theme
-          pages.
-        </span>
+        Both buttons as they appear on app and theme pages. The line under each one says which kind
+        it is.
       </figcaption>
     </figure>
 
@@ -141,40 +141,39 @@ const toc = [
 </BaseLayout>
 
 <style>
-  .label-plate {
+  .label-demo {
     margin-block: var(--space-6) var(--space-2);
   }
-  .label-plate__row {
+  .label-demo__row {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+    gap: 1px;
+    overflow: hidden;
+    padding: 1px;
+    border-radius: var(--radius-card);
+    background: var(--line);
   }
-  .label-plate__cell {
-    padding: var(--space-6) 0;
+  .label-demo__cell {
+    padding: var(--space-5);
+    background: var(--surface-2);
   }
-  .label-plate :global(.btn) {
+  .label-demo__kind {
+    margin-bottom: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+  }
+  .label-demo :global(.btn) {
     text-decoration: none;
   }
-  .label-plate__cell + .label-plate__cell {
-    border-top: 1px solid var(--line);
-  }
-  .label-plate figcaption {
+  .label-demo figcaption {
     margin-top: var(--space-3);
     color: var(--ink-3);
     font-size: var(--text-sm);
   }
   @media (min-width: 640px) {
-    .label-plate__row {
+    .label-demo__row {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .label-plate__cell {
-      padding: var(--space-6) var(--space-6) var(--space-6) 0;
-    }
-    .label-plate__cell + .label-plate__cell {
-      border-top: 0;
-      border-left: 1px solid var(--line);
-      padding-left: var(--space-6);
     }
   }
 </style>

@@ -8,6 +8,7 @@ import {
   getSectionDetail,
   listSectionTypes,
   listSections,
+  listSectionsByApps,
 } from '../../../repo/sections.ts';
 import { getTeardown, listTeardowns } from '../../../repo/teardowns.ts';
 import { findTheme } from '../../../repo/themes.ts';
@@ -29,6 +30,8 @@ import {
   GetScreenshotInput,
   GetSectionInput,
   ListSectionTypesOutput,
+  ListSectionsByAppsInput,
+  ListSectionsByAppsOutput,
   ListSectionsInput,
   ListSectionsOutput,
   SectionDetailSchema,
@@ -52,6 +55,20 @@ export const listSectionsEndpoint = defineEndpoint({
       pagination: r.pagination,
     };
   },
+});
+
+export const listSectionsByAppsEndpoint = defineEndpoint({
+  id: 'listSectionsByApps',
+  method: 'GET',
+  path: '/sections-by-app',
+  summary: 'Sections of several apps',
+  description:
+    'The first per_app sections of each app and its total, for up to 50 apps in one call: per app, the same items, order and total as listSections with app=<slug> and the same filters and sort. Apps come back in request order; unknown slugs are left out. For grids that show a few sections per app (one database query for the whole list).',
+  tags: ['Sections'],
+  cache: 'public',
+  input: ListSectionsByAppsInput,
+  output: ListSectionsByAppsOutput,
+  handler: async (input, ctx) => ({ data: await listSectionsByApps(ctx, input) }),
 });
 
 export const listSectionTypesEndpoint = defineEndpoint({
@@ -129,7 +146,7 @@ export const getComparisonEndpoint = defineEndpoint({
   path: '/compare/{pair}',
   summary: 'Compare two apps or two themes',
   description:
-    'Any valid pair renders on demand. When the pair is not in canonical (alphabetical) order, data.is_canonical is false and meta.canonical holds the path to 301 to.',
+    'Curated popular pairs only (the ones listComparisons returns); any other pair is a 404 with details[0].message = "not_curated", so the site has no thin long-tail pages. When the pair is not in canonical (alphabetical) order, data.is_canonical is false and meta.canonical holds the path to 301 to.',
   tags: ['Compare'],
   cache: 'public',
   input: GetComparisonInput,

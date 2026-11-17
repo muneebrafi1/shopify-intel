@@ -1,73 +1,379 @@
 ---
 /**
- * Home: the product shown, not told. A statement with a live spec line, the dark wall of
- * curated store captures, then the catalogue in six blocks, each composed differently.
- * All data comes from the in-process API (same as /api/v1).
+ * Home: the product is the hero visual. Centred hero (newest teardown pill, the headline, two
+ * actions, a live counter) → the store viewer in a product window → curated store strip →
+ * "How it works" dark band → feature bento of real UI → latest captures → Pro band.
+ *
+ * Every number and capture comes from the in-process API (the same one behind /api/v1). The page
+ * stays inside D1's 50-queries-per-request budget (`npm run budget:queries`): one teardown detail
+ * (with its store) feeds the window, the steps and the teardown card, and one sections query
+ * (items only, no facets) feeds the strip and the gallery.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import HomeHero from '~/components/home/HomeHero.astro';
+import ProductWindow, {
+  type WindowPage,
+  type WindowShot,
+} from '~/components/home/ProductWindow.astro';
+import StoreStrip, { type StripStore } from '~/components/home/StoreStrip.astro';
+import HowItWorks from '~/components/home/HowItWorks.astro';
+import type { HowData, CompareSide } from '~/components/home/HowVisual.astro';
+import FeatureBento, {
+  type BentoApp,
+  type BentoCompare,
+  type BentoSection,
+  type BentoTeardown,
+  type BentoTheme,
+} from '~/components/home/FeatureBento.astro';
 import Wall, { type WallTile } from '~/components/home/Wall.astro';
-import SectionsToc from '~/components/home/SectionsToc.astro';
-import TeardownFeature from '~/components/home/TeardownFeature.astro';
-import CompareIndex, {
-  type AltEntry,
-  type ComparePair,
-} from '~/components/home/CompareIndex.astro';
-import Builders from '~/components/home/Builders.astro';
+import ProBand from '~/components/home/ProBand.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import IndexList from '~/components/ui/IndexList.astro';
-import IndexRow from '~/components/ui/IndexRow.astro';
-import Stat from '~/components/ui/Stat.astro';
-import StatList from '~/components/ui/StatList.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
-import AppTable from '~/components/domain/AppTable.astro';
-import AppRow from '~/components/domain/AppRow.astro';
-import { api } from '~/server/api';
-import type { SectionCard, TeardownNote } from '~/server/api/v1/types';
+import type { CropRegion } from '~/components/home/CaptureCrop.astro';
+import { api, orNotFound } from '~/server/api';
+import type {
+  AppListItem,
+  ScreenshotDetail,
+  StoreDetail,
+  TeardownDetail,
+} from '~/server/api/v1/types';
 import { SITE_NAME } from '~/config/site';
-import { formatCount, formatDate, formatPercent } from '~/lib/format';
+import { formatCount, formatDate } from '~/lib/format';
+import { pageTypeName } from '~/lib/taxonomy';
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
-// The wall reads one header section per captured page: each carries its full screenshot and
-// store, so five small queries give every curated store's home/product/collection pages.
-const wallQuery = (page_type: 'home' | 'product' | 'collection', device: 'desktop' | 'mobile') =>
-  api.listSections({ type: 'header', page_type, device, limit: 24 });
-
 const [
   { data: meta, meta: env },
-  { data: index },
+  { data: teardownList },
   themes,
   apps,
-  { data: sectionTypes },
-  { data: teardowns },
   { data: comparisons },
-  { data: alternatives },
-  ...wall
+  { data: homeShots },
 ] = await Promise.all([
   api.getMeta({}),
-  api.index({}),
-  api.listThemes({ limit: 8 }),
-  api.listApps({ limit: 8 }),
-  api.listSectionTypes({}),
   api.listTeardowns({}),
-  api.listComparisons({ limit: 200 }),
-  api.listAlternatives({}),
-  wallQuery('home', 'desktop'),
-  wallQuery('product', 'desktop'),
-  wallQuery('collection', 'desktop'),
-  wallQuery('home', 'mobile'),
-  wallQuery('product', 'mobile'),
+  api.listThemes({ limit: 5 }),
+  api.listApps({ limit: 24 }),
+  api.listComparisons({ kind: 'app', limit: 200 }),
+  // One header section per captured home page, in catalogue order: each carries its full
+  // screenshot and store, so this one query gives the strip and the gallery (desktop + phone).
+  // Items only: the facet counts are not shown here.
+  api.listSections({ type: 'header', page_type: 'home', limit: 40, facets: false }),
 ]);
 
 const c = meta.counts;
-const asOf = formatDate(meta.data_as_of);
-const scanSource = env.sources[meta.source.id]?.label ?? meta.source.label;
-const appStore = env.sources['shopify-app-store'];
+const asOf = formatDate(meta.source.as_of ?? meta.data_as_of);
+const scanShort = `${env.sources[meta.source.id] ? 'StorePeek scan' : meta.source.label} of ${formatCount(c.stores_scanned)} stores`;
+const appStoreLabel = env.sources['shopify-app-store']?.label ?? 'Shopify App Store listing';
 
-// ---- Wall: interleave page types so a column never repeats one store's page type.
-const toTile = (s: SectionCard): WallTile => ({
+// ---- Newest teardown: the hero pill, and (with its store) the window, the steps and its card.
+const lead =
+  [...teardownList.items].sort((a, b) =>
+    (b.published_at ?? '').localeCompare(a.published_at ?? ''),
+  )[0] ?? null;
+let teardown: TeardownDetail | null = null;
+if (lead) {
+  try {
+    teardown = (await api.getTeardown({ slug: lead.slug })).data;
+  } catch {
+    teardown = null;
+  }
+}
+let detail: StoreDetail | null = teardown?.store ?? null;
+if (!detail?.pages.some((p) => p.screenshots.desktop)) {
+  const domain = homeShots.items[0]?.store.domain;
+  detail = domain ? ((await orNotFound(api.getStore({ domain })))?.data ?? null) : null;
+}
+
+const announcement = lead
+  ? {
+      href: lead.href,
+      text: `Teardown: ${lead.store.display_name}${lead.theme ? ` on ${lead.theme.name}` : ''}`,
+    }
+  : null;
+
+// ---- Product window: the store viewer for the lead store, product page first.
+const toShot = (
+  shot: ScreenshotDetail,
+  storeHref: string,
+  page: string,
+  prefix: string,
+): WindowShot => ({
+  src: shot.image.src,
+  width: shot.width,
+  height: shot.height,
+  device: shot.device,
+  isPlaceholder: shot.is_placeholder,
+  sections: [...shot.sections]
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((s) => ({
+      id: `${prefix}${s.id}`,
+      type: s.type.slug,
+      name: s.type.name,
+      y: s.rect.y,
+      height: s.rect.h,
+      x: s.rect.x,
+      w: s.rect.w,
+      app: s.app ? { name: s.app.short_name, slug: s.app.slug, iconUrl: s.app.icon_url } : null,
+      href: `${storeHref}?page=${page}&device=${shot.device}#section-${s.id}`,
+    })),
+});
+
+const store = detail?.store ?? null;
+const windowPages: WindowPage[] =
+  detail && store
+    ? detail.pages
+        .filter((p) => p.screenshots.desktop)
+        .map((p) => ({
+          slug: p.page_type.slug,
+          name: p.page_type.name,
+          href: `${store.href}?page=${p.page_type.slug}&device=desktop`,
+          desktop: toShot(p.screenshots.desktop!, store.href, p.page_type.slug, 'pw-'),
+        }))
+    : [];
+const initialPage = windowPages.some((p) => p.slug === 'product')
+  ? 'product'
+  : (windowPages[0]?.slug ?? 'home');
+const mobileShot = detail?.pages.find((p) => p.page_type.slug === initialPage)?.screenshots.mobile;
+const windowMobile =
+  mobileShot && store ? toShot(mobileShot, store.href, initialPage, 'pwm-') : null;
+
+// ---- How it works: another page of the same store, the one whose first screen has the most
+// app-rendered sections (then the most sections), so "Tag" shows apps on it.
+const VIEW = 900;
+const stepPage = detail
+  ? detail.pages
+      .filter((p) => p.screenshots.desktop && p.page_type.slug !== initialPage)
+      .map((p) => {
+        const s = p.screenshots.desktop!;
+        const top = s.sections.filter((x) => x.rect.y < VIEW - 80);
+        return { p, s, apps: top.filter((x) => x.app).length, n: top.length };
+      })
+      .sort((a, b) => b.apps - a.apps || b.n - a.n)[0]
+  : undefined;
+
+let pair: HowData['pair'] = null;
+if (detail && store) {
+  const own = new Set(detail.apps.groups.flatMap((g) => g.apps.map((a) => a.slug)));
+  const best = [...detail.similar]
+    .map((sim) => ({ sim, overlap: sim.store.top_apps.filter((a) => own.has(a.slug)).length }))
+    .sort((x, y) => y.overlap - x.overlap || y.sim.shared_apps - x.sim.shared_apps)[0];
+  if (best && best.overlap > 0) {
+    const theirs = new Set(best.sim.store.top_apps.map((a) => a.slug));
+    const allOwn = detail.apps.groups.flatMap((g) => g.apps);
+    const ownShown = [
+      ...allOwn.filter((a) => theirs.has(a.slug)),
+      ...allOwn.filter((a) => !theirs.has(a.slug)),
+    ].slice(0, 5);
+    const side = (
+      s: { domain: string; display_name: string; href: string },
+      theme: string,
+      appCount: number,
+      list: { slug: string; short_name: string; icon_url: string | null }[],
+      other: Set<string>,
+    ): CompareSide => ({
+      name: s.display_name,
+      domain: s.domain,
+      href: s.href,
+      theme,
+      appCount,
+      apps: list.map((a) => ({
+        name: a.short_name,
+        iconUrl: a.icon_url,
+        shared: other.has(a.slug),
+      })),
+    });
+    pair = {
+      a: side(store, store.theme.label, store.app_count, ownShown, theirs),
+      b: side(
+        best.sim.store,
+        best.sim.store.theme.label,
+        best.sim.store.app_count,
+        best.sim.store.top_apps.slice(0, 5),
+        own,
+      ),
+      shared: best.sim.shared_apps,
+    };
+  }
+}
+
+const how: HowData | null =
+  stepPage && store
+    ? {
+        store: { name: store.display_name, domain: store.domain, theme: store.theme.label },
+        page: stepPage.p.page_type.name,
+        isPlaceholder: stepPage.s.is_placeholder,
+        desktop: {
+          src: stepPage.s.image.src,
+          width: stepPage.s.width,
+          height: stepPage.s.height,
+          regions: [...stepPage.s.sections]
+            .sort((a, b) => a.order_index - b.order_index)
+            .map((s) => ({
+              key: s.id,
+              y: s.rect.y,
+              h: s.rect.h,
+              x: s.rect.x,
+              w: s.rect.w,
+              label: s.app ? `${s.type.name} · ${s.app.short_name}` : s.type.name,
+              active: !!s.app,
+            })),
+        },
+        mobile: stepPage.p.screenshots.mobile
+          ? {
+              src: stepPage.p.screenshots.mobile.image.src,
+              width: stepPage.p.screenshots.mobile.width,
+              height: stepPage.p.screenshots.mobile.height,
+            }
+          : null,
+        view: VIEW,
+        pair,
+      }
+    : null;
+
+// ---- Bento: apps ranking (ranks from usage.rank: ties share a rank), top themes, a curated pair.
+const bentoApps: BentoApp[] = apps.data.items.slice(0, 6).map((a) => ({
+  rank: a.usage.rank,
+  name: a.short_name,
+  href: a.href,
+  iconUrl: a.icon_url,
+  category: a.category?.name ?? null,
+  stores: a.usage.stores,
+  share: a.usage.share,
+}));
+const bentoThemes: BentoTheme[] = themes.data.items.map((t) => ({
+  rank: t.usage.rank,
+  name: t.name,
+  vendor: t.vendor,
+  href: t.href,
+  price: t.price.label,
+  stores: t.usage.stores,
+  share: t.usage.share,
+}));
+
+const appBySlug = new Map(apps.data.items.map((a) => [a.slug, a]));
+const pairPick = comparisons.items
+  .filter((p) => p.kind === 'app' && appBySlug.has(p.a.slug) && appBySlug.has(p.b.slug))
+  .map((p) => ({
+    p,
+    score: Math.min(appBySlug.get(p.a.slug)!.usage.stores, appBySlug.get(p.b.slug)!.usage.stores),
+  }))
+  .sort((x, y) => y.score - x.score)[0]?.p;
+const money = (cents: number) => {
+  const d = cents / 100;
+  return `$${Number.isInteger(d) ? d : d.toFixed(2)}`;
+};
+const paidFrom = (a: AppListItem) =>
+  a.pricing.from_cents ? `${money(a.pricing.from_cents)}/mo` : a.pricing.free_plan ? 'Free' : '—';
+const compare: BentoCompare | null = pairPick
+  ? (() => {
+      const a = appBySlug.get(pairPick.a.slug)!;
+      const b = appBySlug.get(pairPick.b.slug)!;
+      const row = (label: string, f: (x: AppListItem) => string) => ({ label, a: f(a), b: f(b) });
+      return {
+        href: pairPick.href,
+        a: { name: a.short_name, iconUrl: a.icon_url },
+        b: { name: b.short_name, iconUrl: b.icon_url },
+        rows: [
+          row('Stores', (x) => formatCount(x.usage.stores)),
+          row('Share', (x) => `${(x.usage.share * 100).toFixed(1)}%`),
+          row('Rating', (x) => (x.rating != null ? x.rating.toFixed(1) : '—')),
+          row('Reviews', (x) => (x.reviews != null ? formatCount(x.reviews) : '—')),
+          row('Paid from', paidFrom),
+        ],
+        shared: pairPick.shared_stores ?? null,
+      };
+    })()
+  : null;
+
+// ---- Bento: tagged section crops from the lead store: two rendered by apps, two rich layouts.
+const RICH = ['hero', 'product-gallery', 'featured-collection', 'image-with-text', 'product-grid'];
+const pageSections = (detail?.pages ?? []).flatMap((p) =>
+  p.screenshots.desktop
+    ? p.screenshots.desktop.sections.map((s) => ({ s, page: p.page_type.name }))
+    : [],
+);
+const THIN = new Set(['announcement-bar', 'header', 'breadcrumbs', 'footer', 'filters']);
+const withApp = pageSections.filter(({ s }) => s.app && !THIN.has(s.type.slug));
+const rich = RICH.flatMap((slug) =>
+  pageSections.filter(({ s }) => s.type.slug === slug).slice(0, 1),
+);
+const seenTypes = new Set<string>();
+const bentoSections: BentoSection[] = [...withApp.slice(0, 2), ...rich, ...withApp.slice(2)]
+  .filter(({ s }) => (seenTypes.has(s.type.slug) ? false : (seenTypes.add(s.type.slug), true)))
+  .slice(0, 4)
+  .map(({ s, page }) => ({
+    href: s.href,
+    src: s.crop.src,
+    width: s.crop.width,
+    height: s.crop.height,
+    device: 'desktop',
+    type: s.type.name,
+    app: s.app?.short_name ?? null,
+    page: page.toLowerCase(),
+  }));
+
+// ---- Bento: the teardown's notes on the capture that holds most of them.
+const benteardown: BentoTeardown | null = (() => {
+  if (!teardown || !detail) return null;
+  const shots = detail.pages.flatMap((p) =>
+    [p.screenshots.desktop, p.screenshots.mobile].filter((s): s is ScreenshotDetail => !!s),
+  );
+  const byShot = new Map<number, number>();
+  for (const n of teardown.notes) {
+    if (n.screenshot_id != null && n.section)
+      byShot.set(n.screenshot_id, (byShot.get(n.screenshot_id) ?? 0) + 1);
+  }
+  const coverId = teardown.teardown.cover?.id;
+  const shotId = [...byShot.entries()].sort(
+    (a, b) => b[1] - a[1] || Number(b[0] === coverId) - Number(a[0] === coverId),
+  )[0]?.[0];
+  const shot = shots.find((s) => s.id === shotId && s.device === 'desktop');
+  if (!shot) return null;
+  const notesHere = teardown.notes.filter((n) => n.screenshot_id === shot.id && n.section);
+  const view = 1300;
+  const starts = notesHere.map((n) => Math.max(0, n.section!.rect.y - 120));
+  const inView = (from: number, n: (typeof notesHere)[number]) =>
+    n.section!.rect.y >= from && n.section!.rect.y < from + view - 100;
+  const from =
+    starts.sort(
+      (a, b) =>
+        notesHere.filter((n) => inView(b, n)).length - notesHere.filter((n) => inView(a, n)).length,
+    )[0] ?? 0;
+  const noteBySection = new Map(notesHere.map((n) => [n.section!.id, n]));
+  const regions: CropRegion[] = shot.sections.map((s) => {
+    const note = noteBySection.get(s.id);
+    return {
+      key: s.id,
+      y: s.rect.y,
+      h: s.rect.h,
+      x: s.rect.x,
+      w: s.rect.w,
+      n: note?.n,
+      active: !!note,
+    };
+  });
+  return {
+    href: teardown.teardown.href,
+    title: teardown.teardown.title,
+    dek: teardown.teardown.dek,
+    store: teardown.teardown.store.display_name,
+    page: shot.page_type.name.toLowerCase(),
+    isSample: teardown.teardown.is_sample,
+    notes: teardown.notes.map((n) => ({
+      n: n.n,
+      title: n.title,
+      meta: `${pageTypeName(n.page_type)} · ${n.device} · ${n.section_type.name}`,
+      inView: n.screenshot_id === shot.id && !!n.section && inView(from, n),
+    })),
+    crop: { src: shot.image.src, width: shot.width, height: shot.height, from, view },
+    regions,
+  };
+})();
+
+// ---- Strip + gallery: every curated store's home page, desktop and phone.
+const homeItems = homeShots.items.filter((s) => s.store.is_curated);
+const toTile = (s: (typeof homeItems)[number]): WallTile => ({
   domain: s.store.domain,
   name: s.store.display_name,
   href: `${s.store.href}?page=${s.page_type}&device=${s.device}`,
@@ -78,140 +384,29 @@ const toTile = (s: SectionCard): WallTile => ({
   height: s.screenshot.height,
   isPlaceholder: s.screenshot.image.is_placeholder,
 });
-const [homeD, productD, collectionD, homeM, productM] = wall.map((r) => r.data.items.map(toTile));
-const pick = (lists: WallTile[][], shift = 0) => {
-  const stores = lists[0]!.length;
-  return Array.from({ length: stores }, (_, i) => {
-    const list = lists[(i + shift) % lists.length]!;
-    return list[i] ?? lists[0]![i]!;
-  }).filter(Boolean);
-};
-const wallDesktop = homeD!.length ? pick([homeD!, productD!, collectionD!]) : [];
-// Mobile tiles start ten stores in, so phones and desktops on screen come from different stores.
-const wallMobile = homeM!.length
-  ? [...pick([homeM!, productM!], 1)].map((_, i, all) => all[(i + 10) % all.length]!)
-  : [];
+const wallDesktop = homeItems.filter((s) => s.device === 'desktop').map(toTile);
+const wallMobile = homeItems.filter((s) => s.device === 'mobile').map(toTile);
+const allPlaceholders = [...wallDesktop, ...wallMobile].every((t) => t.isPlaceholder);
 
-// ---- Themes: top 8 by usage.
-const themeItems = themes.data.items;
-const themesTotal = themes.meta.pagination?.total ?? c.themes;
-
-// ---- Apps: top 8 by usage, and the headline share.
-const appItems = apps.data.items;
-const topApp = appItems[0];
-const appsTotal = apps.meta.pagination?.total ?? c.apps;
-
-// ---- Compare & alternatives: rank pairs by how widely both sides are used.
-const appUse = new Map(alternatives.apps.map((a) => [a.app.slug, a]));
-const themeUse = new Map(alternatives.themes.map((t) => [t.theme.slug, t]));
-const usageOf = (kind: 'app' | 'theme', slug: string) =>
-  (kind === 'app' ? appUse.get(slug)?.stores : themeUse.get(slug)?.stores) ?? 0;
-const nameOf = (kind: 'app' | 'theme', slug: string, fallback: string) =>
-  (kind === 'app' ? appUse.get(slug)?.app.short_name : themeUse.get(slug)?.theme.name) ?? fallback;
-const ranked = comparisons.items
-  .map((p) => ({ p, score: Math.min(usageOf(p.kind, p.a.slug), usageOf(p.kind, p.b.slug)) }))
-  .sort((x, y) => y.score - x.score);
-const topPairs = [
-  ...ranked.filter((r) => r.p.kind === 'app').slice(0, 4),
-  ...ranked.filter((r) => r.p.kind === 'theme').slice(0, 2),
-];
-const pairs: ComparePair[] = topPairs.map(({ p }) => {
-  const sa = usageOf(p.kind, p.a.slug);
-  const sb = usageOf(p.kind, p.b.slug);
-  const category = p.kind === 'app' ? appUse.get(p.a.slug)?.app.category?.name : 'Themes';
-  return {
-    href: p.href,
-    kind: p.kind,
-    a: { name: nameOf(p.kind, p.a.slug, p.a.name), icon: p.a.icon_url },
-    b: { name: nameOf(p.kind, p.b.slug, p.b.name), icon: p.b.icon_url },
-    note: `${category ?? 'Apps'} · ${sa} / ${sb} stores`,
-  };
-});
-const altEntries: AltEntry[] = [
-  ...[...alternatives.apps]
-    .filter((a) => a.alternatives > 1)
-    .sort((x, y) => y.stores - x.stores)
-    .slice(0, 5)
-    .map((a) => ({
-      href: a.href,
-      name: a.app.short_name,
-      icon: a.app.icon_url,
-      kind: 'app' as const,
-      alternatives: a.alternatives,
-      stores: a.stores,
-    })),
-  ...[...alternatives.themes]
-    .filter((t) => t.alternatives > 1)
-    .sort((x, y) => y.stores - x.stores)
-    .slice(0, 2)
-    .map((t) => ({
-      href: t.href,
-      name: t.theme.name,
-      icon: null,
-      kind: 'theme' as const,
-      alternatives: t.alternatives,
-      stores: t.stores,
-    })),
-];
-
-// ---- Teardowns: the lead one with its notes.
-const lead = teardowns.items[0] ?? null;
-let leadNotes: TeardownNote[] = [];
-if (lead) {
-  try {
-    leadNotes = (await api.getTeardown({ slug: lead.slug })).data.notes;
-  } catch {
-    leadNotes = [];
-  }
-}
-
-// ---- Builders: a real response excerpt for the second most-used app (compact JSON).
-const sample = appItems[1] ?? appItems[0];
-const j = (v: unknown) => JSON.stringify(v);
-const excerpt = sample
-  ? [
-      '{',
-      '  "data": {',
-      '    "app": {',
-      `      "slug": ${j(sample.slug)},`,
-      `      "short_name": ${j(sample.short_name)},`,
-      sample.category
-        ? `      "category": { "slug": ${j(sample.category.slug)}, "name": ${j(sample.category.name)} },`
-        : null,
-      `      "rating": ${j(sample.rating)}, "reviews": ${j(sample.reviews)},`,
-      '      "usage": {',
-      `        "stores": ${sample.usage.stores}, "share": ${sample.usage.share}, "denominator": ${sample.usage.denominator},`,
-      `        "source": ${j(sample.usage.source)}, "as_of": ${j(sample.usage.as_of)}`,
-      '      },',
-      '      …',
-      '    },',
-      '    "seen_on": { … }, "co_installed": [ … ], "alternatives": [ … ]',
-      '  },',
-      `  "meta": { "data_as_of": ${j(meta.data_as_of)}, "sources": { … } }`,
-      '}',
-    ]
-      .filter((l) => l !== null)
-      .join('\n')
-  : '';
-
-const spec = [
-  `${formatCount(c.stores_scanned)} stores scanned`,
-  `${c.stores_curated} curated`,
-  `${c.themes} themes`,
-  `${c.apps} apps`,
-  `Data ${asOf}`,
-];
-const entries = [
-  { href: '/stores', label: 'Stores', count: c.stores_scanned, note: 'Theme and apps for each' },
-  { href: '/themes', label: 'Themes', count: c.themes, note: 'On the stores that run them' },
-  { href: '/apps', label: 'Apps', count: c.apps, note: 'Where each one shows up' },
-  {
-    href: '/sections',
-    label: 'Sections',
-    count: c.sections,
-    note: `${c.section_types} types, sliced`,
-  },
-];
+const stripSeen = new Set<string>();
+const stripAll = homeItems
+  .filter((s) => (stripSeen.has(s.store.domain) ? false : (stripSeen.add(s.store.domain), true)))
+  .map((s) => ({
+    named: !!s.store.name,
+    store: {
+      domain: s.store.domain,
+      name: s.store.display_name,
+      href: s.store.href,
+      theme: s.theme?.name ?? null,
+    } satisfies StripStore,
+  }));
+// Stores with an editorial name first (they read better in a strip), catalogue order otherwise.
+const strip: StripStore[] = [
+  ...stripAll.filter((s) => s.named),
+  ...stripAll.filter((s) => !s.named),
+]
+  .slice(0, 10)
+  .map((s) => s.store);
 
 const siteUrl = new URL('/', Astro.site ?? Astro.url).href.replace(/\/$/, '');
 const jsonLd = [
@@ -232,287 +427,171 @@ const jsonLd = [
     logo: `${siteUrl}/favicon.svg`,
   },
 ];
+// The layout's chrome numbers, from the meta call above (saves the layout a query).
+const navCounts = {
+  '/stores': c.stores_scanned,
+  '/themes': c.themes,
+  '/apps': c.apps,
+  '/sections': c.sections,
+  '/teardowns': c.teardowns,
+};
+const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_curated} curated · data as of ${formatDate(meta.data_as_of)}`;
 ---
 
 <BaseLayout
   description={`See which theme and apps ${formatCount(c.stores_scanned)} Shopify stores run, and what ${c.stores_curated} of them look like page by page: home, collection, product and cart, on desktop and mobile.`}
   jsonLd={jsonLd}
+  navCounts={navCounts}
+  dataNote={dataNote}
 >
-  <HomeHero
-    spec={spec}
-    entries={entries}
-    lede={`We read the theme and apps of ${formatCount(c.stores_scanned)} public storefronts, then map ${c.stores_curated} of them page by page, so you can see where each app actually shows up.`}
-  />
+  <div class="home">
+    <div class="home__spot bg-spotlight" aria-hidden="true"></div>
+    <div class="container guides home__inner">
+      <HomeHero
+        announcement={announcement}
+        lead={`See which theme and apps ${formatCount(c.stores_scanned)} Shopify stores run, and how ${c.stores_curated} of them are built, section by section, on desktop and mobile.`}
+        counter={[
+          { value: c.stores_scanned, label: 'stores scanned' },
+          { value: c.sections, label: 'sections tagged' },
+        ]}
+        asOf={asOf}
+      />
 
-  <Wall desktop={wallDesktop} mobile={wallMobile} storeCount={c.stores_curated} />
-
-  <!-- The archive in four numbers -->
-  <section class="container page-block stats cols-12" aria-labelledby="stats-label">
-    <div class="stats__intro span-4">
-      <MonoLabel as="h2" id="stats-label" tone="ink">
-        The archive · {asOf}
-      </MonoLabel>
-      <p class="stats__text">
-        One scan of public storefronts. We publish what it found and where every number comes from.
-      </p>
-    </div>
-    <div class="stats__strip span-8 marks">
-      <StatList columns={4}>
-        <Stat
-          display
-          value={c.stores_scanned}
-          label="Stores scanned"
-          source="StorePeek scan"
-          asOf={asOf}
-        />
-        <Stat
-          display
-          value={c.theme_names_detected}
-          label="Theme names seen"
-          source={`${c.themes} profiled so far`}
-        />
-        <Stat
-          display
-          value={c.apps}
-          label="Apps profiled"
-          source={`${c.apps_full} with full listings`}
-        />
-        <Stat
-          display
-          value={c.sections}
-          label="Sections mapped"
-          source={`${c.stores_with_capture_plan} stores × ${Math.round(c.screenshots / Math.max(1, c.stores_with_capture_plan))} pages`}
-        />
-      </StatList>
-    </div>
-  </section>
-
-  <!-- 01 Themes: a full-width index; hover a row for its capture -->
-  <section class="container page-block home-block" aria-labelledby="home-themes">
-    <SectionHeader
-      id="home-themes"
-      label="01 — Themes"
-      title="The most-used themes"
-      count={themesTotal}
-      href="/themes"
-      description={`Counted across ${formatCount(c.stores_scanned)} scanned stores, most-used first.`}
-    />
-    <IndexList
-      columns="64px minmax(0,2.2fr) minmax(0,1.4fr) minmax(0,0.8fr) minmax(0,0.9fr) 128px"
-      head={['N°', 'Theme', 'Vendor', 'Price', 'Share', 'Stores']}
-      label="Top themes"
-    >
-      {themeItems.map((t, i) => {
-        const shot = t.previews[0];
-        return (
-          <IndexRow
-            n={i + 1}
-            href={t.href}
-            title={t.name}
-            subtitle={[t.vendor, t.price.label].filter(Boolean).join(' · ')}
-            cells={[
-              { value: t.vendor ?? '—', muted: true },
-              { value: t.price.label ?? '—', mono: true },
-              { value: formatPercent(t.usage.share * 100), mono: true, muted: true },
-              {
-                value: `(${t.usage.stores} ${t.usage.stores === 1 ? 'store' : 'stores'})`,
-                serif: true,
-                mobile: true,
-              },
-            ]}
-            preview={
-              shot
-                ? {
-                    src: shot.image.src,
-                    width: shot.image.width,
-                    height: shot.image.height,
-                    device: shot.device,
-                  }
-                : null
-            }
+      {store && windowPages.length > 0 && (
+        <div class="home__window">
+          <div class="home__grid bg-grid" aria-hidden="true"></div>
+          <ProductWindow
+            store={{
+              domain: store.domain,
+              name: store.display_name,
+              href: store.href,
+              themeLabel: store.theme.label,
+              themeHref: store.theme.theme?.href ?? null,
+              appCount: store.app_count,
+              apps: store.top_apps.map((a) => ({ name: a.short_name, iconUrl: a.icon_url })),
+              teardown: detail?.teardown ?? null,
+              lastSeen: formatDate(detail?.detection.last_seen ?? meta.data_as_of),
+            }}
+            pages={windowPages}
+            initial={initialPage}
+            mobile={windowMobile}
           />
-        );
-      })}
-    </IndexList>
-    <SourceNote class="block-source" source={scanSource} asOf={asOf} />
-  </section>
-
-  <!-- 02 Apps: one big number, then the ranked table -->
-  <section class="container page-block home-block" aria-labelledby="home-apps">
-    <SectionHeader
-      id="home-apps"
-      label="02 — Apps"
-      title="Most-installed apps"
-      count={appsTotal}
-      href="/apps"
-      description="Share of scanned stores running each app, with App Store ratings and prices."
-    />
-    <div class="apps cols-12">
-      {topApp && (
-        <div class="apps__lead span-4">
-          <p class="apps__figure display num">{formatPercent(topApp.usage.share * 100)}</p>
-          <p class="apps__caption">
-            of scanned stores run <a href={topApp.href}>{topApp.short_name}</a>, the most-installed
-            app in the scan.
-          </p>
-          <MonoLabel as="p" class="apps__src">
-            {formatCount(topApp.usage.stores)} of {formatCount(topApp.usage.denominator)} stores ·{' '}
-            {asOf}
-          </MonoLabel>
         </div>
       )}
-      <div class="apps__table span-8">
-        <AppTable usageLabel="Stores">
-          {appItems.map((a, i) => (
-            <AppRow
-              slug={a.slug}
-              name={a.short_name}
-              href={a.href}
-              iconUrl={a.icon_url}
-              developer={a.developer}
-              category={a.category?.name}
-              rating={a.rating}
-              reviews={a.reviews}
-              priceLabel={a.pricing.label}
-              storesCount={a.usage.stores}
-              sharePct={a.usage.share * 100}
-              rank={i + 1}
-              builtForShopify={a.built_for_shopify}
-              ratingSource={
-                appStore ? `${appStore.label}, checked ${formatDate(appStore.as_of)}` : undefined
-              }
-            />
-          ))}
-        </AppTable>
-        <SourceNote
-          class="block-source"
-          source={`${scanSource}; ratings and prices from the ${appStore?.label ?? 'Shopify App Store listing'}`}
-          asOf={asOf}
+
+      {strip.length > 0 && (
+        <div class="home__strip">
+          <StoreStrip stores={strip} total={c.stores_curated} />
+        </div>
+      )}
+
+      {how && (
+        <div class="home__block reveal">
+          <HowItWorks
+            data={how}
+            counts={{ sections: c.sections, types: c.section_types, stores: c.stores_curated }}
+          />
+        </div>
+      )}
+
+      <section class="home__block" aria-labelledby="home-features">
+        <SectionHeader
+          id="home-features"
+          size="lg"
+          eyebrow="What’s inside"
+          title="Real data, not screenshots of it."
+          titleMuted="Every number has a source and a date."
         />
+        <FeatureBento
+          apps={bentoApps}
+          appsTotal={apps.meta.pagination?.total ?? c.apps}
+          themes={bentoThemes}
+          themesTotal={themes.meta.pagination?.total ?? c.themes}
+          sections={bentoSections}
+          sectionCounts={{ sections: c.sections, types: c.section_types }}
+          compare={compare}
+          comparisonsTotal={c.comparisons}
+          teardown={benteardown}
+          source={{ scan: scanShort, appStore: appStoreLabel, asOf }}
+        />
+      </section>
+
+      {wallDesktop.length + wallMobile.length > 0 && (
+        <section class="home__block reveal" aria-labelledby="home-captures">
+          <SectionHeader
+            id="home-captures"
+            size="lg"
+            eyebrow="Latest captures"
+            title={`${c.stores_curated} stores, as their customers see them.`}
+            titleMuted="Home pages on desktop and phone."
+            description={
+              allPlaceholders
+                ? 'Layout previews drawn from each page’s detected sections until the first capture run.'
+                : undefined
+            }
+            href="/stores"
+            linkLabel="Browse all stores"
+          />
+          <Wall desktop={wallDesktop} mobile={wallMobile} />
+        </section>
+      )}
+
+      <div class="home__block home__block--last reveal">
+        <ProBand />
       </div>
     </div>
-  </section>
-
-  <!-- 03 Sections: a table of contents -->
-  <section class="container page-block home-block" aria-labelledby="home-sections">
-    <SectionHeader
-      id="home-sections"
-      label="03 — Sections"
-      title="Every page, sliced into sections"
-      count={c.sections}
-      href="/sections"
-      description={`${c.section_types} section types across home, collection, product and cart pages. Counts are sections on curated stores.`}
-    />
-    <SectionsToc groups={sectionTypes.groups} items={sectionTypes.items} />
-  </section>
-
-  <!-- 04 Teardowns: an editorial pair -->
-  {lead && (
-    <section class="container page-block home-block" aria-labelledby="home-teardowns">
-      <SectionHeader
-        id="home-teardowns"
-        label="04 — Teardowns"
-        title="Store teardowns"
-        count={teardowns.items.length}
-        href="/teardowns"
-        description="One store, read section by section: which app draws which part of the page."
-      />
-      <TeardownFeature teardown={lead} notes={leadNotes} more={teardowns.items.slice(1, 4)} />
-    </section>
-  )}
-
-  <!-- 05 Compare & alternatives: two short indexes -->
-  <section class="container page-block home-block" aria-labelledby="home-compare">
-    <SectionHeader
-      id="home-compare"
-      label={lead ? '05 — Compare' : '04 — Compare'}
-      title="Alternatives and comparisons"
-      count={comparisons.items.length}
-      href="/compare"
-      description="Two apps or two themes on the same stores, with the facts side by side and no winners picked."
-    />
-    <CompareIndex
-      pairs={pairs}
-      alternatives={altEntries}
-      comparisonsTotal={comparisons.items.length}
-    />
-  </section>
-
-  <!-- 06 For builders -->
-  <section class="container page-block home-block builders" aria-labelledby="home-builders">
-    <Builders
-      label={lead ? '06 — For builders' : '05 — For builders'}
-      path={sample ? `/api/v1/apps/${sample.slug}` : '/api/v1/apps'}
-      excerpt={excerpt}
-      endpoints={index.endpoints.length}
-    />
-  </section>
+  </div>
 </BaseLayout>
 
 <style>
-  .stats {
-    align-items: end;
-    row-gap: var(--space-8);
-  }
-  .stats__text {
-    margin-top: var(--space-3);
-    max-width: 34ch;
-    color: var(--ink-2);
-    font-size: var(--text-md);
-  }
-  .stats__strip {
-    padding: var(--space-6) 0;
-  }
-  @media (min-width: 1024px) {
-    .stats__strip {
-      grid-column: 5 / -1;
-      padding: var(--space-6) var(--space-2);
+  /* Big section heads: the muted half of a two-tone title gets its own line on wide screens. */
+  @media (min-width: 768px) {
+    .home :global(.sh--lg .sh__title .tone-muted) {
+      display: block;
     }
   }
-
+  .home {
+    position: relative;
+    overflow-x: clip;
+    isolation: isolate;
+  }
+  .home__spot {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: -1;
+    height: 880px;
+    pointer-events: none;
+  }
+  .home__window {
+    position: relative;
+    margin-top: var(--space-12);
+  }
+  .home__grid {
+    position: absolute;
+    inset: -72px calc(var(--page-gutter) * -1) 30%;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .home__strip {
+    margin-top: var(--space-12);
+  }
+  .home__block {
+    padding-top: var(--section-y);
+  }
+  .home__block--last {
+    padding-bottom: var(--section-y);
+  }
+  /* The last block already ends with a full section of space, so the footer sits directly
+     under it and the guide lines run into the footer's top border instead of stopping short. */
+  :global(main:has(.home) + .footer) {
+    margin-top: 0;
+  }
   @media (min-width: 1024px) {
-    .page-block.home-block {
-      margin-top: var(--space-24);
+    .home__window {
+      margin-top: var(--space-16);
     }
-  }
-
-  .block-source {
-    margin-top: var(--space-4);
-  }
-
-  .apps {
-    align-items: start;
-    row-gap: var(--space-8);
-  }
-  .apps__figure {
-    font-size: clamp(4rem, 2.6rem + 5vw, 7.5rem);
-    line-height: 0.9;
-    letter-spacing: -0.04em;
-  }
-  .apps__caption {
-    margin-top: var(--space-4);
-    max-width: 30ch;
-    font-size: var(--text-lg);
-    line-height: var(--leading-snug);
-    color: var(--ink-2);
-  }
-  .apps__caption a {
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
-  }
-  .apps__src {
-    margin-top: var(--space-4);
-  }
-  @media (min-width: 1024px) {
-    .apps__lead {
-      position: sticky;
-      top: calc(var(--header-h) + var(--space-8));
+    .home__strip {
+      margin-top: var(--space-16);
     }
-  }
-
-  .builders {
-    margin-bottom: var(--space-16);
   }
 </style>

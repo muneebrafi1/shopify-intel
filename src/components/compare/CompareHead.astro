@@ -1,21 +1,30 @@
 ---
 /**
- * The compare header: a diptych. Both names set very large on either side of a hairline axis
- * with a small mono "vs"; identical structure on both sides so neither reads as the favourite.
- * App names in the UI sans, theme names in the editorial serif (as on theme pages).
+ * The compare header: the pair's title and a one-line factual summary, then both products as
+ * two equal panels facing each other across a "vs" seam (mark, name, maker, rating, price,
+ * usage, actions). Identical structure on both sides so neither reads as the favourite.
+ *
+ * Also renders the compact bar that slides in under the site header once the panels scroll
+ * away (JS only): at ≥768 the pair, the in-page sections and both listings; below that the two
+ * sides as left/right columns, so every side-by-side block further down keeps its labels.
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import Rating from '~/components/ui/Rating.astro';
+import Button from '~/components/ui/Button.astro';
+import Icon from '~/components/ui/Icon.astro';
+import AffiliateCta from '~/components/domain/AffiliateCta.astro';
+import PairMark from './PairMark.astro';
 import { formatCount, formatDate } from '~/lib/format';
 import type { ComparisonDetail, ResponseMeta } from '~/server/api/v1/types';
-import { sides, summary } from './compare';
+import { sharePct, sides, summary } from './compare';
 
 interface Props {
   cmp: ComparisonDetail;
   meta: ResponseMeta;
+  /** In-page sections for the compact bar: [id, label]. */
+  sections: Array<[string, string]>;
 }
-const { cmp, meta } = Astro.props;
+const { cmp, meta, sections } = Astro.props;
 const [a, b] = sides(cmp);
 const isApp = cmp.kind === 'app';
 const category =
@@ -31,7 +40,11 @@ const details = (side: 'a' | 'b') => {
       reviews: app.reviews,
       ratingSource: `Shopify App Store${app.checked_on ? `, checked ${formatDate(app.checked_on)}` : ''}`,
       price: app.pricing.label ?? 'Pricing not listed',
-      line: app.category?.name ?? null,
+      line: [app.developer && `by ${app.developer}`, app.category?.name]
+        .filter(Boolean)
+        .join(' · '),
+      bfs: app.built_for_shopify,
+      cta: app.cta,
     };
   }
   const t = cmp.themes![side].theme;
@@ -40,255 +53,568 @@ const details = (side: 'a' | 'b') => {
     reviews: null,
     ratingSource: '',
     price: t.price.label ?? 'Price not listed',
-    line: t.marketplace,
+    line: [t.vendor && `by ${t.vendor}`, t.marketplace].filter(Boolean).join(' · '),
+    bfs: null,
+    cta: t.cta,
   };
 };
 const items = [a, b].map((s) => ({ ...s, d: details(s.side) }));
+const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Boolean).join(' · ');
 ---
 
 <header class:list={['ch', `ch--${cmp.kind}`]}>
-  <div class="ch__bar">
-    <MonoLabel as="p" tone="ink">
-      Comparison · {isApp ? 'Apps' : 'Themes'}
-      {category && ` · ${category.name}`}
-    </MonoLabel>
-    <MonoLabel as="p" bullet={false} class="ch__asof">
+  <div class="ch__intro">
+    <div class="ch__titles">
+      <p class="eyebrow">{eyebrow}</p>
+      <h1 class="ch__title display-md">
+        {a.name} <span class="tone-muted">vs</span> {b.name}
+      </h1>
+      <p class="ch__lede">{summary(cmp)}</p>
+    </div>
+    <p class="ch__asof">
+      <Icon name="clock" size={14} />
       Data as of {formatDate(meta.data_as_of)}
-    </MonoLabel>
+    </p>
   </div>
 
-  <div class="ch__diptych">
-    <h1 class="ch__title">
-      <span class="ch__name ch__name--a">{a.name}</span>
-      <span class="ch__vs" aria-label="versus">
-        <span aria-hidden="true">vs</span>
-      </span>
-      <span class="ch__name ch__name--b">{b.name}</span>
-    </h1>
-
-    {items.map((s) => (
-      <div class:list={['ch__side', `ch__side--${s.side}`]}>
-        <p class="ch__maker">
-          {s.kind === 'app' && <AppIcon src={s.iconUrl} name={s.name} size={24} />}
-          <span class="ch__maker-text">
-            {s.maker ? (
-              s.makerHref ? (
-                <a href={s.makerHref}>by {s.maker}</a>
-              ) : (
-                <>by {s.maker}</>
-              )
-            ) : (
-              'Maker not listed'
-            )}
+  <div class="ch__pair" data-ch-pair>
+    {items.map((s, i) => (
+      <>
+        {i === 1 && (
+          <span class="ch__vs" aria-hidden="true">
+            vs
           </span>
-        </p>
-        <p class="ch__facts">
-          {s.kind === 'app' && (
-            <Rating rating={s.d.rating} reviews={s.d.reviews} source={s.d.ratingSource} size="sm" />
-          )}
-          <span class="ch__price">{s.d.price}</span>
-        </p>
-        <p class="ch__usage mono">
-          Seen on <strong>{formatCount(s.stores)}</strong> of {formatCount(s.denominator)} stores
-        </p>
-        <p class="ch__links">
-          <a href={s.href}>{s.kind === 'app' ? 'App profile' : 'Theme page'}</a>
-          <a href={s.alternativesHref}>Alternatives</a>
-        </p>
-      </div>
+        )}
+        <section
+          class:list={['ch__card', `ch__card--${s.side}`]}
+          aria-labelledby={`side-${s.side}`}
+        >
+          <div class="ch__id">
+            <AppIcon src={s.iconUrl} name={s.name} size={52} class="ch__icon" />
+            <div class="ch__id-text">
+              <h2 class="ch__name" id={`side-${s.side}`}>
+                {s.name}
+              </h2>
+              <p class="ch__maker">
+                {s.d.line || (s.kind === 'app' ? 'Developer not listed' : 'Vendor not listed')}
+              </p>
+            </div>
+          </div>
+
+          <dl class="ch__facts">
+            {s.kind === 'app' && (
+              <div class="ch__fact">
+                <dt>Rating</dt>
+                <dd>
+                  <Rating
+                    rating={s.d.rating}
+                    reviews={s.d.reviews}
+                    source={s.d.ratingSource}
+                    size="sm"
+                  />
+                </dd>
+              </div>
+            )}
+            <div class="ch__fact">
+              <dt>Price</dt>
+              <dd>{s.d.price}</dd>
+            </div>
+            <div class="ch__fact ch__fact--usage">
+              <dt>Seen on</dt>
+              <dd>
+                <span class="ch__usage num">
+                  <strong>{formatCount(s.stores)}</strong> of {formatCount(s.denominator)} stores
+                  <span class="ch__share">{sharePct(s.share)}</span>
+                </span>
+                <span
+                  class="ch__meter"
+                  style={`--w:${Math.max(1, Math.round(s.share * 1000) / 10)}%`}
+                  aria-hidden="true"
+                />
+              </dd>
+            </div>
+          </dl>
+
+          <div class:list={['ch__actions', { 'ch__actions--solo': !s.d.cta }]}>
+            {s.d.cta && (
+              <AffiliateCta
+                href={s.d.cta.href}
+                label={s.kind === 'app' ? 'App Store' : (s.d.cta.label ?? 'Get the theme')}
+                isAffiliate={s.d.cta.is_affiliate}
+                size="md"
+                class="ch__cta"
+              />
+            )}
+            <Button href={s.href} variant="secondary" size="md" class="ch__profile">
+              {s.kind === 'app' ? 'App profile' : 'Theme page'}
+            </Button>
+          </div>
+          <a class="ch__alts" href={s.alternativesHref}>
+            Alternatives to {s.name}
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </section>
+      </>
     ))}
   </div>
 
-  <p class="ch__lede">{summary(cmp)}</p>
+  <nav class="ch__toc" aria-label="On this page">
+    {sections.map(([id, label]) => (
+      <a href={`#${id}`}>{label}</a>
+    ))}
+  </nav>
 </header>
+
+<div class="cbar" data-cbar>
+  <div class="container cbar__inner">
+    <a href="#top" class="cbar__pair" tabindex="-1">
+      <PairMark a={a} b={b} size={24} />
+      <span class="cbar__title">
+        {a.name} <span class="tone-muted">vs</span> {b.name}
+      </span>
+    </a>
+    <div class="cbar__sides" aria-hidden="true">
+      {items.map((s) => (
+        <span class="cbar__side">
+          <AppIcon src={s.iconUrl} name={s.name} size={20} />
+          <span class="cbar__side-name">{s.name}</span>
+        </span>
+      ))}
+    </div>
+    <nav class="cbar__nav" aria-label="Sections">
+      {sections.map(([id, label]) => (
+        <a href={`#${id}`} data-cbar-link={id} tabindex="-1">
+          {label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</div>
+
+<script>
+  // Compact bar: show it once both panels have scrolled under the header; mark the section in
+  // view. Pure enhancement: without JS the page simply has no compact bar.
+  const bar = document.querySelector<HTMLElement>('[data-cbar]');
+  const pair = document.querySelector<HTMLElement>('[data-ch-pair]');
+  if (bar && pair && 'IntersectionObserver' in window) {
+    const headerH = () =>
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
+    const setShown = (shown: boolean) => {
+      bar.classList.toggle('is-shown', shown);
+      bar.querySelectorAll<HTMLElement>('a').forEach((el) => {
+        el.tabIndex = shown ? 0 : -1;
+      });
+    };
+    new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+        setShown(!entry.isIntersecting && entry.boundingClientRect.top < headerH());
+      },
+      { rootMargin: `-${headerH()}px 0px 0px 0px` },
+    ).observe(pair);
+
+    const links = new Map<string, HTMLElement>();
+    bar.querySelectorAll<HTMLElement>('[data-cbar-link]').forEach((el) => {
+      links.set(el.dataset.cbarLink!, el);
+    });
+    const targets = [...links.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el);
+    const spy = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          links.forEach((el, id) => {
+            if (id === e.target.id) el.setAttribute('aria-current', 'true');
+            else el.removeAttribute('aria-current');
+          });
+        }
+      },
+      { rootMargin: '-30% 0px -65% 0px' },
+    );
+    targets.forEach((t) => spy.observe(t));
+  }
+</script>
 
 <style>
   .ch {
     padding-top: var(--space-6);
   }
-  .ch__bar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: var(--space-2) var(--space-6);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--ink);
-  }
-  .ch__asof {
-    color: var(--ink-3);
-  }
-
-  /* Two equal halves around a hairline axis. Title and side details share the columns, so
-     each name sits directly above its own facts at every width. */
-  .ch__diptych {
-    --axis: 28px;
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--axis) minmax(0, 1fr);
-    column-gap: var(--space-3);
-    padding-top: var(--space-8);
-  }
-  .ch__diptych::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 1px;
-    background: var(--line);
-  }
-  .ch__title {
-    display: grid;
-    grid-column: 1 / -1;
-    grid-template-columns: subgrid;
-    align-items: end;
-  }
-  .ch__name {
-    min-width: 0;
-    font-size: clamp(1.875rem, 0.9rem + 5.2vw, 6rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.045em;
-    line-height: 0.95;
-    overflow-wrap: anywhere;
-    hyphens: auto;
-  }
-  .ch--theme .ch__name {
-    font-family: var(--font-serif);
-    font-weight: 400;
-    letter-spacing: -0.03em;
-    line-height: 0.98;
-  }
-  .ch__name--b {
-    grid-column: 3;
-  }
-  .ch__vs {
-    position: relative;
-    z-index: 1;
-    align-self: center;
-    justify-self: center;
-    padding: 6px 0;
-    background: var(--bg);
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    font-weight: 450;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    line-height: 1;
-  }
-
-  .ch__side {
+  .ch__intro {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    min-width: 0;
-    padding-top: var(--space-5);
+    gap: var(--space-4);
   }
-  .ch__side--a {
-    grid-column: 1;
+  .ch__titles .eyebrow {
+    margin-bottom: var(--space-3);
   }
-  .ch__side--b {
-    grid-column: 3;
+  .ch__title {
+    overflow-wrap: anywhere;
   }
-  .ch__maker {
-    display: flex;
+  .ch__lede {
+    max-width: 680px;
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-lead);
+    line-height: 1.55;
+  }
+  .ch__asof {
+    display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    order: -1;
-    margin-bottom: var(--space-1);
+    gap: 6px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+
+  /* Two equal panels across a "vs" seam. */
+  .ch__pair {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+  .ch__vs {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: 34px;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 0 0 1px var(--line-strong);
     color: var(--ink-3);
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    line-height: 1;
+    transform: translateX(-50%);
+  }
+  .ch__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+  }
+  .ch__id {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
     min-width: 0;
   }
-  .ch__maker-text {
+  .ch__id :global(.ch__icon) {
+    --s: 40px !important;
+  }
+  .ch__id-text {
+    min-width: 0;
+  }
+  .ch__name {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .ch__maker {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.4;
+  }
+  .ch__facts {
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .ch__fact {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .ch__fact dt {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .ch__fact dd {
+    min-width: 0;
+    color: var(--ink);
+  }
+  .ch__usage {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 6px;
+    color: var(--ink-2);
+  }
+  .ch__usage strong {
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+  }
+  .ch__share {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .ch__meter {
+    display: block;
+    height: 6px;
+    margin-top: 6px;
+    border-radius: var(--radius-pill);
+    background:
+      linear-gradient(to right, var(--ink-2) 0 var(--w), transparent var(--w)), var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .ch__actions {
+    display: none;
+  }
+  .ch__alts {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    margin-top: auto;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .ch__alts:hover {
+    color: var(--ink);
+  }
+  .ch__alts :global(.icon) {
+    flex: none;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .ch__alts:hover :global(.icon) {
+    transform: translateX(2px);
+  }
+
+  /* In-page sections */
+  .ch__toc {
+    display: flex;
+    gap: var(--space-1);
+    margin-top: var(--space-6);
+    margin-inline: calc(var(--page-gutter) * -1);
+    padding: 0 var(--page-gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+    box-shadow: inset 0 -1px 0 var(--line);
+  }
+  .ch__toc::-webkit-scrollbar {
+    display: none;
+  }
+  .ch__toc a {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    height: 44px;
+    padding: 0 var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .ch__toc a:first-child {
+    padding-left: 0;
+  }
+  .ch__toc a:hover {
+    color: var(--ink);
+  }
+
+  /* Compact bar */
+  .cbar {
+    position: fixed;
+    z-index: var(--z-sticky);
+    top: var(--header-h);
+    left: 0;
+    right: 0;
+    background: var(--header-bg, var(--bg));
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 1px 0 var(--line);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out),
+      visibility 0s linear var(--dur-base);
+  }
+  .cbar:global(.is-shown) {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .cbar__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    height: 48px;
+  }
+  .cbar__pair {
+    display: none;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .cbar__title {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .ch__maker a {
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
+  .cbar__sides {
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    min-width: 0;
   }
-  .ch__facts {
+  .cbar__side {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 4px var(--space-3);
+    gap: var(--space-2);
+    min-width: 0;
     font-size: var(--text-sm);
-    color: var(--ink);
+    font-weight: var(--weight-semibold);
   }
-  .ch__price {
-    color: var(--ink-2);
+  .cbar__side-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .ch__usage {
-    color: var(--ink-3);
-    font-size: var(--text-xs);
-  }
-  .ch__usage strong {
-    color: var(--ink);
-    font-weight: var(--weight-medium);
-  }
-  .ch__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px var(--space-4);
-    margin-top: var(--space-1);
-    font-size: var(--text-sm);
-  }
-  .ch__links a {
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.25em;
-    transition: text-decoration-color var(--dur-fast) var(--ease-out);
-  }
-  .ch__links a:hover {
-    text-decoration-color: currentColor;
-  }
-  .ch__links a::after {
-    content: ' →';
+  .cbar__nav {
+    display: none;
   }
 
-  .ch__lede {
-    max-width: 720px;
-    margin-top: var(--space-8);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
-    color: var(--ink-2);
-    font-size: var(--text-md);
-    line-height: var(--leading-normal);
-  }
-
-  /* The maker line moves above the name on wide screens: it's grid-ordered by DOM, so keep it
-     in the side block but lift the whole block's label visually with a top rule. */
-  @media (min-width: 768px) {
-    .ch__diptych {
-      --axis: 48px;
-      column-gap: var(--space-6);
-      padding-top: var(--space-12);
+  @media (min-width: 640px) {
+    .ch__pair {
+      gap: var(--space-4);
     }
-    .ch__side {
-      padding-top: var(--space-6);
+    .ch__card {
+      padding: var(--space-6);
+      gap: var(--space-5);
+    }
+    .ch__id {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    .ch__id :global(.ch__icon) {
+      --s: 52px !important;
+    }
+    .ch__name {
+      font-size: var(--text-h3);
+    }
+    .ch__maker {
+      font-size: var(--text-sm);
     }
     .ch__facts {
-      font-size: var(--text-base);
+      grid-template-columns: auto auto;
+      justify-content: start;
+      gap: var(--space-4) var(--space-8);
     }
-    .ch__lede {
-      font-size: var(--text-lg);
-      margin-top: var(--space-10);
+    .ch__fact--usage {
+      grid-column: 1 / -1;
+    }
+    .ch__vs {
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    /* [listing] [profile] on one row when they fit (the profile wraps under the listing in
+       narrow panels, e.g. 768px), the listing's affiliate label under both. */
+    .ch__actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .ch__actions :global(.ch__cta) {
+      display: contents;
+    }
+    .ch__actions :global(.ch__cta .cta__note) {
+      order: 3;
+      flex-basis: 100%;
+      max-width: none;
+    }
+    .ch__actions :global(.ch__profile) {
+      order: 2;
     }
   }
-  @media (max-width: 479px) {
-    .ch__maker :global(.app-icon) {
+  @media (min-width: 768px) {
+    .cbar__pair {
+      display: inline-flex;
+    }
+    .cbar__sides {
       display: none;
     }
+    .cbar__nav {
+      display: flex;
+      gap: var(--space-1);
+      margin-left: auto;
+    }
+    .cbar__nav a {
+      display: inline-flex;
+      align-items: center;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: var(--radius-pill);
+      color: var(--ink-3);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      transition:
+        color var(--dur-fast) var(--ease-out),
+        background-color var(--dur-fast) var(--ease-out);
+    }
+    .cbar__nav a:hover {
+      color: var(--ink);
+      background: var(--surface-2);
+    }
+    .cbar__nav a[aria-current] {
+      color: var(--ink);
+      background: var(--surface-2);
+    }
+  }
+  @media (min-width: 1024px) {
+    .ch__intro {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-10);
+    }
+    .ch__asof {
+      flex: none;
+      padding-bottom: 6px;
+    }
+    .ch__pair {
+      gap: var(--space-6);
+      margin-top: var(--space-10);
+    }
+    .ch__toc {
+      margin-inline: 0;
+      padding: 0;
+    }
+    .ch__card {
+      padding: var(--space-8);
+    }
     .ch__facts {
-      flex-direction: column;
-      align-items: flex-start;
+      grid-template-columns: auto auto minmax(0, 1fr);
+    }
+    .ch__fact--usage {
+      grid-column: auto;
     }
   }
 </style>

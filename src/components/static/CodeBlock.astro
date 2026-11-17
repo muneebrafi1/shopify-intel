@@ -59,22 +59,30 @@ const { code, label, variant = 'block', prompt = false, class: className } = Ast
 </script>
 
 <style>
+  /* A hairline card in both themes: label bar on top (block), mono body, copy button. */
   .code {
     min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-well);
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
   }
   .code__label {
-    margin-bottom: var(--space-2);
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 var(--space-4);
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
     color: var(--ink-3);
     font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: var(--text-xs);
   }
   .code__body {
+    position: relative;
     display: flex;
     align-items: flex-start;
-    border-radius: var(--radius-md);
-    background: var(--fill);
   }
   .code__pre {
     flex: 1;
@@ -87,9 +95,10 @@ const { code, label, variant = 'block', prompt = false, class: className } = Ast
     font-size: var(--text-sm);
     line-height: 1.65;
     tab-size: 2;
+    scrollbar-width: thin;
   }
   .code__pre:focus-visible {
-    border-radius: var(--radius-md);
+    outline-offset: -2px;
   }
   .code__pre code {
     font: inherit;
@@ -99,9 +108,14 @@ const { code, label, variant = 'block', prompt = false, class: className } = Ast
     color: var(--ink-3);
     user-select: none;
   }
+  /* One-line command under an endpoint row: a quiet well, no card chrome. */
+  .code--line {
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    box-shadow: none;
+  }
   .code--line .code__body {
     align-items: center;
-    border-radius: var(--radius-sm);
   }
   .code--line .code__pre {
     padding-block: var(--space-2);
@@ -117,20 +131,28 @@ const { code, label, variant = 'block', prompt = false, class: className } = Ast
     width: 30px;
     height: 30px;
     margin: 8px 8px 0 0;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     color: var(--ink-3);
     transition:
       background-color var(--dur-fast) var(--ease-out),
       color var(--dur-fast) var(--ease-out);
   }
   .code__copy:hover {
-    background: var(--fill-hover);
+    background: var(--surface-3);
     color: var(--ink);
   }
   .code--line .code__copy {
     width: 28px;
     height: 28px;
     margin: 0 4px 0 0;
+  }
+  @media (pointer: coarse) {
+    .code__copy,
+    .code--line .code__copy {
+      width: 40px;
+      height: 40px;
+      margin-top: 0;
+    }
   }
   .code__copy :global(.code__icon--done) {
     display: none;

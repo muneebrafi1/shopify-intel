@@ -46,7 +46,12 @@ const MESSAGES: Record<string, string> = {
     'The store is hidden, but its images could not be deleted: the MEDIA storage binding is missing. Retry once it is configured.',
   media_failed: 'The store is hidden, but deleting its images failed. Retry from the request page.',
   store_not_active: 'The store is hidden or opted out, so its teardown cannot be published.',
+  capture_blocked:
+    'Captures of this store are blocked by an approved removal request. Detection rescans still work.',
 };
+
+/** The message for a flash key, or null for an unknown key (also used by the admin API). */
+export const flashText = (key: string): string | null => MESSAGES[key] ?? null;
 
 export interface Flash {
   tone: 'positive' | 'critical' | 'info';

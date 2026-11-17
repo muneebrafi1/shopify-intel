@@ -1,8 +1,11 @@
 ---
 /**
- * A board in a list: a mosaic of its first three items in one warm well, then the name and a
- * mono meta line. Example boards say so in the meta line.
+ * A board in a grid: a card whose media well is a mosaic of its first three captures (one big,
+ * two stacked), then the name and a meta line. Example boards say so with a badge.
  */
+import Badge from '~/components/ui/Badge.astro';
+import Card from '~/components/ui/Card.astro';
+
 interface Thumb {
   src: string;
   width: number;
@@ -13,24 +16,36 @@ interface Props {
   name: string;
   count: number;
   thumbs: Thumb[];
+  description?: string;
   example?: boolean;
   class?: string;
 }
-const { href, name, count, thumbs, example = false, class: className } = Astro.props;
+const { href, name, count, thumbs, description, example = false, class: className } = Astro.props;
 const [a, b, c] = thumbs;
+/** Very wide crops (headers, bars) are shown whole instead of cropped to fill the cell. */
+const fit = (t: Thumb) => (t.width / t.height > 3 ? 'board__img--wide' : undefined);
 ---
 
-<article class:list={['board', className]}>
-  <a class="board__well" href={href} aria-label={`${name}${example ? ' (example board)' : ''}`}>
+<Card interactive padding="none" as="article" class:list={['board', className]}>
+  <div slot="media" class="board__well">
     <span class="board__main">
       {a && (
-        <img src={a.src} width={a.width} height={a.height} alt="" loading="lazy" decoding="async" />
+        <img
+          class={fit(a)}
+          src={a.src}
+          width={a.width}
+          height={a.height}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
       )}
     </span>
     <span class="board__side">
       <span>
         {b && (
           <img
+            class={fit(b)}
             src={b.src}
             width={b.width}
             height={b.height}
@@ -43,6 +58,7 @@ const [a, b, c] = thumbs;
       <span>
         {c && (
           <img
+            class={fit(c)}
             src={c.src}
             width={c.width}
             height={c.height}
@@ -53,39 +69,36 @@ const [a, b, c] = thumbs;
         )}
       </span>
     </span>
-  </a>
-  <div class="board__caption">
-    <h3 class="board__name">
-      <a href={href}>{name}</a>
-    </h3>
-    <p class="board__meta">
-      {example && <span class="board__example">Example</span>}
-      <span class="num">
-        {count} {count === 1 ? 'item' : 'items'}
-      </span>
+  </div>
+  <div class="board__body">
+    <div class="board__row">
+      <h3 class="board__name">
+        <a class="stretched-link" href={href}>
+          {name}
+          {example && <span class="visually-hidden"> (example board)</span>}
+        </a>
+      </h3>
+      {example && (
+        <Badge tone="outline" size="sm">
+          Example
+        </Badge>
+      )}
+    </div>
+    {description && <p class="board__desc">{description}</p>}
+    <p class="board__meta num">
+      {count}
+      {count === 1 ? ' item' : ' items'}
     </p>
   </div>
-</article>
+</Card>
 
 <style>
-  .board {
-    min-width: 0;
-  }
   .board__well {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     gap: 6px;
-    aspect-ratio: 4 / 3;
-    padding: 6px;
-    border-radius: var(--radius-lg);
-    background: var(--tile);
-    transition: background-color var(--dur-base) var(--ease-out);
-  }
-  .board__well:hover {
-    background: var(--tile-hover);
-  }
-  .board__well:focus-visible {
-    border-radius: var(--radius-lg);
+    aspect-ratio: 16 / 10;
+    padding: 10px;
   }
   .board__main,
   .board__side > span {
@@ -95,8 +108,8 @@ const [a, b, c] = thumbs;
     justify-content: center;
     min-height: 0;
     overflow: hidden;
-    border-radius: 9px;
-    background: color-mix(in srgb, var(--surface) 55%, var(--tile));
+    border-radius: 6px;
+    background: var(--surface-3);
   }
   .board__side {
     display: grid;
@@ -105,31 +118,52 @@ const [a, b, c] = thumbs;
     min-height: 0;
   }
   .board__well img {
-    max-width: 86%;
-    max-height: 86%;
-    width: auto;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    background: var(--capture-bg);
+  }
+  .board__well img.board__img--wide {
+    width: calc(100% - 12px);
     height: auto;
-    border-radius: 3px;
+    max-height: 100%;
+    object-fit: contain;
     box-shadow: var(--shadow-shot);
   }
-  .board__caption {
-    margin-top: var(--space-3);
+  .board__body {
+    padding: var(--space-4);
+  }
+  .board__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
   }
   .board__name {
-    font-size: var(--text-base);
-    font-weight: var(--weight-medium);
+    min-width: 0;
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .board__name a {
+    color: var(--ink);
+  }
+  .board__name a:focus-visible {
+    outline: none;
+  }
+  :global(.board:has(.stretched-link:focus-visible)) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .board__desc {
+    margin-top: var(--space-1);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: 1.45;
   }
   .board__meta {
-    display: flex;
-    gap: var(--space-2);
-    margin-top: 2px;
+    margin-top: var(--space-2);
     color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .board__example {
-    color: var(--accent-text);
+    font-size: var(--text-xs);
   }
 </style>

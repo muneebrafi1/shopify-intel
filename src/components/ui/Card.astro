@@ -1,0 +1,183 @@
+---
+/**
+ * The v2 surface: --surface, 1px --line, radius 12, --shadow-xs (+ the lit top edge in dark).
+ *
+ *   <Card>…</Card>                                     static
+ *   <Card href="/themes/dawn">…</Card>                 the whole card is one link (interactive)
+ *   <Card interactive>                                 several links inside: put
+ *     <h3><a class="stretched-link" href="…">Dawn</a></h3>   .stretched-link on the main one
+ *   </Card>
+ *   <Card padding="none"><Fragment slot="media">…</Fragment> …body… </Card>
+ *
+ * `media` slot: a --surface-2 well on top with an inset hairline (screenshots, UI fragments).
+ * `footer` slot: a bottom row on a hairline (meta, actions).
+ * Interactive cards lift on hover: border → --line-strong, --shadow-md, translateY(-2px), and
+ * an <img> in the media well scales 1.015. `spotlight` adds the cursor highlight (home only).
+ */
+type Padding = 'none' | 'sm' | 'md' | 'lg';
+interface Props {
+  href?: string;
+  interactive?: boolean;
+  padding?: Padding;
+  /** Element when not a link. */
+  as?: 'div' | 'article' | 'section' | 'li' | 'aside';
+  /** Cursor-following highlight (home feature cards). */
+  spotlight?: boolean;
+  /** Media well aspect ratio, e.g. "16 / 10". Omit to size the well by its content. */
+  mediaRatio?: string;
+  /** Dashed border, no shadow (placeholders, "add" tiles, empty states). */
+  dashed?: boolean;
+  /** Accent ring: the recommended plan (and nothing else). */
+  accent?: boolean;
+  class?: string;
+  style?: string;
+  id?: string;
+  [key: `data-${string}`]: string | undefined;
+}
+const {
+  href,
+  interactive = false,
+  padding = 'md',
+  as = 'div',
+  spotlight = false,
+  mediaRatio,
+  dashed = false,
+  accent = false,
+  class: className,
+  ...rest
+} = Astro.props;
+const Tag = href ? 'a' : as;
+const hasMedia = Astro.slots.has('media');
+---
+
+<Tag
+  href={href}
+  class:list={[
+    'card',
+    `card--pad-${padding}`,
+    {
+      'card--interactive': !!href || interactive,
+      'card--dashed': dashed,
+      'card--accent': accent,
+      'card--has-media': hasMedia,
+      spotlight,
+    },
+    className,
+  ]}
+  {...rest}
+>
+  {hasMedia && (
+    <div class="card__media" style={mediaRatio ? `aspect-ratio:${mediaRatio}` : undefined}>
+      <slot name="media" />
+    </div>
+  )}
+  <div class="card__body">
+    <slot />
+  </div>
+  {Astro.slots.has('footer') && (
+    <div class="card__footer">
+      <slot name="footer" />
+    </div>
+  )}
+</Tag>
+
+<style>
+  .card {
+    --card-pad: var(--space-5);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+    color: var(--ink);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .card--pad-none {
+    --card-pad: 0px;
+  }
+  .card--pad-sm {
+    --card-pad: var(--space-4);
+  }
+  .card--pad-lg {
+    --card-pad: var(--space-6);
+  }
+  @media (min-width: 1024px) {
+    .card--pad-lg {
+      --card-pad: var(--space-8);
+    }
+  }
+  .card--dashed {
+    background: transparent;
+    box-shadow: none;
+    border: 1px dashed var(--line-strong);
+  }
+  .card--accent,
+  .card--accent.card--interactive:hover {
+    box-shadow:
+      inset 0 0 0 1.5px var(--accent),
+      var(--shadow-md),
+      var(--highlight);
+  }
+  .card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    padding: var(--card-pad);
+  }
+  .card__media {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    background: var(--surface-2);
+    box-shadow: inset 0 -1px 0 var(--line);
+  }
+  .card__media :global(img) {
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .card__footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--card-pad);
+    border-top: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .card--pad-none .card__footer {
+    padding-inline: var(--space-4);
+  }
+
+  .card--interactive {
+    cursor: pointer;
+  }
+  .card--interactive:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+    transform: translateY(-2px);
+  }
+  .card--interactive:hover .card__media :global(img) {
+    transform: scale(1.015);
+  }
+  .card--interactive:active {
+    transform: translateY(-1px);
+  }
+  a.card:focus-visible {
+    outline-offset: 3px;
+  }
+  /* Inner links stay above a .stretched-link overlay. */
+  .card--interactive :global(a:not(.stretched-link)),
+  .card--interactive :global(button) {
+    position: relative;
+    z-index: 2;
+  }
+</style>

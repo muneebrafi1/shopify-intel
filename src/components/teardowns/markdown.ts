@@ -139,7 +139,8 @@ export function renderMarkdown(src: string, opts: { headingPrefix?: boolean } = 
           item += ` ${lines[i]!.trim()}`;
           i++;
         }
-        items.push(`<li>${inline(item)}</li>`);
+        // Ordered items wrap their text so a styled counter + text stay two grid cells.
+        items.push(ordered ? `<li><span>${inline(item)}</span></li>` : `<li>${inline(item)}</li>`);
       }
       out.push(ordered ? `<ol class="md-ol">${items.join('')}</ol>` : `<ul>${items.join('')}</ul>`);
       continue;

@@ -1,23 +1,29 @@
 ---
 /**
- * /sections — the sections library. Every captured page is sliced into typed sections; this is
- * the Mobbin-style way to browse them: a book-like contents rail of the 31 types, URL-state
- * filters (page type, device, theme, app), a crop grid with cursor pagination and a lightbox.
+ * /sections — the sections library ("Mobbin for Shopify"): every captured page sliced into
+ * typed sections. Page header with the Desktop/Mobile switch, the browse bar (search, type
+ * pills, page/theme/app filters, sort, grid/list), a "browse by type" overview on the plain
+ * first page, then the crop grid with cursor pagination and a lightbox.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Count from '~/components/ui/Count.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
-import LibraryBook from '~/components/sections/LibraryBook.astro';
-import SpecList from '~/components/sections/SpecList.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import Segmented from '~/components/ui/Segmented.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import LibraryBrowse from '~/components/sections/LibraryBrowse.astro';
+import TypeOverview from '~/components/sections/TypeOverview.astro';
 import {
   PAGE_SIZE,
   activeFilterCount,
+  apiSort,
   buildFilterGroups,
-  buildRail,
+  buildSort,
   cropSource,
+  deviceItems,
   filterQuery,
+  fmt,
   libraryHref,
   readFilters,
+  resolveSearch,
 } from '~/components/sections/library';
 import { SECTION_GROUPS, SECTION_TYPES } from '~/lib/taxonomy';
 import { api, isApiError } from '~/server/api';
@@ -25,18 +31,33 @@ import { api, isApiError } from '~/server/api';
 const url = Astro.url;
 const filters = readFilters(url);
 const cursor = url.searchParams.get('cursor') || undefined;
+const q = (url.searchParams.get('q') ?? '').trim().slice(0, 100);
+
+// The search box resolves to a filter (type, theme, app or store) and redirects there.
+if (q) {
+  const target = await resolveSearch(q, null, filters);
+  if (target) return Astro.redirect(target, 302);
+}
+
+const filtered = activeFilterCount(filters);
+const showOverview = !cursor && filtered === 0 && !q;
 
 let list;
+let types;
 try {
-  list = await api.listSections({
-    page_type: filters.page,
-    device: filters.device,
-    theme: filters.theme,
-    app: filters.app,
-    sort: 'mixed',
-    cursor,
-    limit: PAGE_SIZE,
-  });
+  [list, types] = await Promise.all([
+    api.listSections({
+      page_type: filters.page,
+      device: filters.device,
+      theme: filters.theme,
+      app: filters.app,
+      store: filters.store,
+      sort: apiSort(filters),
+      cursor,
+      limit: PAGE_SIZE,
+    }),
+    showOverview ? api.listSectionTypes({}) : Promise.resolve(null),
+  ]);
 } catch (err) {
   // A stale or hand-edited cursor: start the same filters from the top.
   if (isApiError(err) && err.status === 400) return Astro.redirect(libraryHref(null, filters), 302);
@@ -54,15 +75,11 @@ const nextCursor = meta.pagination?.next_cursor;
 const nextHref = nextCursor
   ? `/sections${filterQuery(filters, { cursor: nextCursor, p: String(page + 1) })}`
   : null;
-const rail = buildRail(data.facets.types, null, filters);
 const groups = buildFilterGroups(data.facets, null, filters);
 const source = cropSource(meta, data.items);
-const fmt = (n: number) => n.toLocaleString('en-US');
-const filtered = activeFilterCount(filters);
-
 const typeCount = counts.section_types || SECTION_TYPES.length;
-const statement = `Every page, sliced. Browse ${typeCount} kinds of section across real Shopify stores.`;
-const description = `${fmt(counts.sections)} page sections — headers, heroes, buy boxes, reviews, carts and more — sliced from ${counts.stores_with_capture_plan} Shopify stores on desktop and mobile. Filter by page type, device, theme and app.`;
+
+const description = `${fmt(counts.sections)} page sections (headers, heroes, buy boxes, reviews, carts and more) sliced from ${counts.stores_with_capture_plan} Shopify stores on desktop and mobile. Filter by type, page, device, theme and app.`;
 
 const jsonLd = {
   '@type': 'CollectionPage',
@@ -86,107 +103,107 @@ const jsonLd = {
   title={page > 1 ? `Sections — page ${page}` : 'Sections library: every Shopify page, sliced'}
   description={description}
   canonical="/sections"
-  noindex={!!cursor || filtered > 1}
+  noindex={!!cursor || filtered > 1 || !!q || !!filters.store || !!filters.sort}
   jsonLd={jsonLd}
+  wide
 >
-  <header class="lib container">
-    <div class="lib__top cols-12">
-      <div class="lib__name span-7">
-        <MonoLabel as="p" class="lib__eyebrow">
-          Library · {typeCount} types in {SECTION_GROUPS.length} groups
-        </MonoLabel>
-        <h1 class="lib__title">
-          Sections
-          <Count value={counts.sections} label="sections" />
-        </h1>
-      </div>
-      <p class="lib__statement start-8">{statement}</p>
-    </div>
-    <SpecList
-      class="lib__spec"
-      inline
-      items={[
-        { label: 'Sections', value: fmt(counts.sections) },
-        { label: 'Pages sliced', value: fmt(counts.screenshots) },
-        { label: 'Stores', value: fmt(counts.stores_with_capture_plan), href: '/stores' },
-        { label: 'Viewports', value: '1440 · 390 px' },
-      ]}
-      source={source}
-    />
-  </header>
+  <div class="container--wide sx">
+    <PageHeader
+      class="sx__header"
+      title="Sections"
+      count={counts.sections}
+      description={`Every page of ${counts.stores_with_capture_plan} stores, sliced into ${typeCount} kinds of section. Headers, heroes, buy boxes, reviews and footers, on desktop and mobile.`}
+    >
+      <SourceNote
+        slot="meta"
+        class="sx__source"
+        source={`${source.label} of ${fmt(counts.screenshots)} pages`}
+        asOf={source.asOf}
+      />
+      <Segmented
+        slot="actions"
+        label="Device"
+        items={deviceItems(data.facets.devices, null, filters)}
+      />
+    </PageHeader>
 
-  <div class="container lib__body">
-    <LibraryBook
-      rail={rail}
+    <LibraryBrowse
+      class="sx__browse"
       groups={groups}
+      sort={buildSort(null, filters)}
       items={data.items}
       total={total}
-      meta={['type', 'page', 'theme']}
+      tag="type"
       page={page}
       pageSize={PAGE_SIZE}
       nextHref={nextHref}
       firstHref={libraryHref(null, filters)}
       clearHref={libraryHref(null, { view: filters.view })}
+      device={filters.device}
       view={{
         current: filters.view ?? 'grid',
         gridHref: libraryHref(null, { ...filters, view: undefined }),
         indexHref: libraryHref(null, { ...filters, view: 'index' }),
       }}
-    />
+      search={{
+        value: q,
+        hidden: {
+          page: filters.page,
+          device: filters.device,
+          theme: filters.theme,
+          app: filters.app,
+          store: filters.store,
+          sort: filters.sort,
+          view: filters.view,
+        },
+      }}
+      unmatched={q || null}
+    >
+      {showOverview && types && (
+        <Fragment slot="lead">
+          <TypeOverview types={types.data.items} groupCount={SECTION_GROUPS.length} />
+          <h2 id="all-sections" class="sx__feed">
+            All sections
+            <span class="sx__feed-note">Mixed across stores, richest sections first</span>
+          </h2>
+        </Fragment>
+      )}
+    </LibraryBrowse>
   </div>
 </BaseLayout>
 
 <style>
-  .lib {
-    padding-top: var(--space-8);
+  .sx {
+    padding-bottom: var(--section-y-app);
   }
-  .lib__top {
-    align-items: end;
+  .sx :global(.sx__source) {
+    margin-top: var(--space-3);
   }
-  .lib :global(.lib__eyebrow) {
-    margin-bottom: var(--space-5);
-  }
-  .lib__title {
-    font-size: clamp(4rem, 1.2rem + 9vw, 9.5rem);
+  .sx__feed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-10) 0 var(--space-4);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+    font-size: var(--text-h3);
     font-weight: var(--weight-semibold);
-    letter-spacing: -0.055em;
-    line-height: 0.88;
-    margin-left: -0.04em;
-  }
-  .lib__title :global(.count-sup) {
-    margin-left: 0.1em;
-    font-size: max(0.16em, 12px);
-    letter-spacing: 0.02em;
-    transform: translateY(0.4em);
-    color: var(--ink-2);
-  }
-  .lib__statement {
-    max-width: 24ch;
-    font-family: var(--font-serif);
-    font-size: clamp(1.625rem, 1.2rem + 1.2vw, 2.25rem);
-    font-weight: 400;
     letter-spacing: -0.015em;
-    line-height: 1.12;
-    color: var(--ink);
+    scroll-margin-top: calc(var(--header-h) + 72px);
   }
-  .lib :global(.lib__spec) {
-    margin-top: var(--space-8);
+  .sx__feed-note {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-regular);
+    letter-spacing: 0;
   }
-  .lib__body {
-    margin-top: var(--space-10);
+  .sx :global(.sx__browse) {
+    margin-top: 0;
   }
   @media (min-width: 1024px) {
-    .lib {
-      padding-top: var(--space-12);
-    }
-    .lib__statement {
-      padding-bottom: 0.35rem;
-    }
-    .lib :global(.lib__spec) {
-      margin-top: var(--space-10);
-    }
-    .lib__body {
-      margin-top: var(--space-12);
+    .sx :global(.sx__browse) {
+      margin-top: var(--space-4);
     }
   }
 </style>

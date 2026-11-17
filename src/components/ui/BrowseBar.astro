@@ -1,0 +1,757 @@
+---
+/**
+ * Browse bar for index pages (Base44 pattern): search, filter pills, result count, sort menu
+ * and an optional grid/list toggle. Sticky under the header; once stuck it gets a full-bleed
+ * background and hairline. Everything is URL state (links + a GET form), so it works without
+ * JavaScript, can be shared, and is crawlable with rel="nofollow".
+ *
+ *   <BrowseBar
+ *     search={{ value: q, placeholder: 'Search themes', hidden: { sort } }}
+ *     pills="category"                      ← this group renders as inline scrollable pills
+ *     groups={groups} total={total} noun="themes"
+ *     sort={sortOptions} view={{ current: 'grid', gridHref, indexHref }} clearHref="/themes" />
+ *
+ * ≥1024: one row. <1024: search on top, then the pill row (scrolls sideways), then
+ * [Filters] · count · view. Groups other than `pills` are dropdowns ≥1024 and live in the
+ * "Filters" bottom sheet below that (every group, plus sort, is in the sheet).
+ *
+ * Markup contract kept from v1 FilterBar (pages + e2e use it): .fbar, .fbar__total,
+ * .fbar__active (removable chips that link to the group's "All" option), #filter-sheet,
+ * a "Filters" button, [data-fpill] dropdowns. One BrowseBar per page.
+ */
+import Icon from './Icon.astro';
+import Chip from './Chip.astro';
+import Segmented from './Segmented.astro';
+
+export interface FilterOption {
+  label: string;
+  href: string;
+  selected?: boolean;
+  count?: number | null;
+}
+export interface FilterGroup {
+  key: string;
+  label: string;
+  options: FilterOption[];
+}
+export interface SortOption {
+  label: string;
+  href: string;
+  selected?: boolean;
+}
+export interface BrowseSearch {
+  /** Form action (defaults to the current path). */
+  action?: string;
+  /** Query parameter name (default "q"). */
+  name?: string;
+  value?: string;
+  placeholder?: string;
+  /** Other params to keep when searching (e.g. the current sort). */
+  hidden?: Record<string, string | null | undefined>;
+}
+
+interface Props {
+  groups: FilterGroup[];
+  /** Number of results for the current filters. */
+  total: number;
+  noun: string;
+  sort?: SortOption[];
+  /** Grid ↔ list toggle hrefs. Omit to hide the toggle. */
+  view?: { current: 'grid' | 'index'; gridHref: string; indexHref: string };
+  /** Link that clears every filter. */
+  clearHref?: string;
+  search?: BrowseSearch;
+  /** Key of the group shown as inline pills (selected = ink fill). */
+  pills?: string;
+  /** Stick under the header (default true). */
+  sticky?: boolean;
+  class?: string;
+}
+const {
+  groups,
+  total,
+  noun,
+  sort,
+  view,
+  clearHref,
+  search,
+  pills,
+  sticky = true,
+  class: className,
+} = Astro.props;
+const isAll = (o: FilterOption) => /^(all|any)\b/i.test(o.label);
+const active = groups.flatMap((g) =>
+  g.options.filter((o) => o.selected && !isAll(o)).map((o) => ({ group: g, option: o })),
+);
+// Removing an active filter = following the group's "All" option if present.
+const allHref = (g: FilterGroup) => g.options.find(isAll)?.href ?? clearHref ?? '?';
+const pillGroup = pills ? groups.find((g) => g.key === pills) : undefined;
+const dropdowns = groups.filter((g) => g !== pillGroup);
+// Active chips for the pill group are redundant (the pill itself shows it).
+const activeChips = active.filter((a) => a.group !== pillGroup);
+const sheetId = 'filter-sheet';
+const currentSort = sort?.find((s) => s.selected) ?? sort?.[0];
+const action = search?.action ?? Astro.url.pathname;
+const hidden = Object.entries(search?.hidden ?? {}).filter(
+  (e): e is [string, string] => typeof e[1] === 'string' && e[1] !== '',
+);
+---
+
+<div
+  class:list={['fbar', { 'fbar--sticky': sticky, 'fbar--search': !!search }, className]}
+  data-filterbar
+>
+  <div class="fbar__row">
+    {search && (
+      <form class="fbar__search" role="search" action={action} method="get">
+        <Icon name="magnifying-glass" size={16} class="fbar__search-icon" />
+        <input
+          type="search"
+          name={search.name ?? 'q'}
+          value={search.value ?? ''}
+          placeholder={search.placeholder ?? `Search ${noun}`}
+          aria-label={search.placeholder ?? `Search ${noun}`}
+          autocomplete="off"
+          enterkeyhint="search"
+        />
+        {hidden.map(([k, v]) => (
+          <input type="hidden" name={k} value={v} />
+        ))}
+      </form>
+    )}
+
+    {pillGroup && (
+      <div class="fbar__pills" role="group" aria-label={pillGroup.label}>
+        {pillGroup.options.map((o) => (
+          <Chip href={o.href} selected={o.selected} count={o.count ?? undefined}>
+            {o.label}
+          </Chip>
+        ))}
+      </div>
+    )}
+
+    <div class="fbar__groups">
+      {groups.length > 0 && (
+        <button type="button" class="fbar__mobile" data-dialog-open={sheetId}>
+          <Icon name="sliders-horizontal" size={16} />
+          Filters
+          {/* The pill group's selection is visible inline, so only count the dropdown filters. */}
+          {activeChips.length > 0 && <span class="fbar__badge num">{activeChips.length}</span>}
+        </button>
+      )}
+      {dropdowns.map((g) => {
+        const selected = g.options.find((o) => o.selected && !isAll(o));
+        return (
+          <details class:list={['fpill', { 'fpill--on': !!selected }]} data-fpill>
+            <summary>
+              <span class="fpill__label">{g.label}</span>
+              {selected && <span class="fpill__value">{selected.label}</span>}
+              <Icon name="caret-down" size={12} class="fpill__caret" />
+            </summary>
+            <div class="fpill__menu" role="list">
+              {g.options.map((o) => (
+                <a
+                  href={o.href}
+                  role="listitem"
+                  rel="nofollow"
+                  aria-current={o.selected ? 'true' : undefined}
+                >
+                  <span>{o.label}</span>
+                  {typeof o.count === 'number' && (
+                    <span class="fpill__count num">{o.count.toLocaleString('en-US')}</span>
+                  )}
+                </a>
+              ))}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+
+    <div class="fbar__right">
+      <p class="fbar__total" aria-live="polite">
+        <span class="num">{total.toLocaleString('en-US')}</span>&nbsp;{noun}
+      </p>
+      {sort && sort.length > 1 && (
+        <details class="fpill fpill--sort" data-fpill>
+          <summary aria-label={`Sort: ${currentSort?.label ?? ''}`}>
+            <span class="fpill__label">Sort</span>
+            <span class="fpill__value">{currentSort?.label}</span>
+            <Icon name="caret-up-down" size={12} class="fpill__caret" />
+          </summary>
+          <div class="fpill__menu fpill__menu--end" role="list">
+            {sort.map((s) => (
+              <a
+                href={s.href}
+                role="listitem"
+                rel="nofollow"
+                aria-current={s.selected ? 'true' : undefined}
+              >
+                <span>{s.label}</span>
+                {s.selected && <Icon name="check" size={14} />}
+              </a>
+            ))}
+          </div>
+        </details>
+      )}
+      {view && (
+        <Segmented
+          label="View"
+          size="sm"
+          items={[
+            {
+              label: 'Grid',
+              value: 'grid',
+              icon: 'squares-four',
+              iconOnly: true,
+              href: view.gridHref,
+              selected: view.current === 'grid',
+            },
+            {
+              label: 'List',
+              value: 'index',
+              icon: 'rows',
+              iconOnly: true,
+              href: view.indexHref,
+              selected: view.current === 'index',
+            },
+          ]}
+        />
+      )}
+    </div>
+  </div>
+
+  {activeChips.length > 0 && (
+    <div class="fbar__active">
+      {activeChips.map(({ group, option }) => (
+        <Chip href={allHref(group)} size="sm" selected removable>
+          {group.label}: {option.label}
+        </Chip>
+      ))}
+      {clearHref && activeChips.length > 1 && (
+        <a class="fbar__clear" href={clearHref} rel="nofollow">
+          Clear all
+        </a>
+      )}
+    </div>
+  )}
+
+  <dialog id={sheetId} class="fsheet" aria-label="Filters">
+    <div class="fsheet__head">
+      <p class="fsheet__title">Filters</p>
+      <button type="button" class="fsheet__close" data-dialog-close aria-label="Close filters">
+        <Icon name="x" size={18} />
+      </button>
+    </div>
+    <div class="fsheet__body">
+      {groups.map((g) => (
+        <section class="fsheet__group">
+          <h3 class="eyebrow">{g.label}</h3>
+          <div class="fsheet__chips">
+            {g.options.map((o) => (
+              <Chip href={o.href} size="sm" selected={o.selected} count={o.count ?? undefined}>
+                {o.label}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      ))}
+      {sort && sort.length > 1 && (
+        <section class="fsheet__group">
+          <h3 class="eyebrow">Sort</h3>
+          <div class="fsheet__chips">
+            {sort.map((s) => (
+              <Chip href={s.href} size="sm" selected={s.selected}>
+                {s.label}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+    <div class="fsheet__foot">
+      {clearHref && (
+        <a class="fsheet__clear" href={clearHref} rel="nofollow">
+          Clear all
+        </a>
+      )}
+      <button type="button" class="fsheet__show" data-dialog-close>
+        Show {total.toLocaleString('en-US')} {noun}
+      </button>
+    </div>
+  </dialog>
+</div>
+
+<script>
+  // Only one dropdown open at a time; close on outside click and Escape.
+  const pills = () => Array.from(document.querySelectorAll<HTMLDetailsElement>('[data-fpill]'));
+  document.addEventListener(
+    'toggle',
+    (event) => {
+      const el = event.target as HTMLElement;
+      if (!(el instanceof HTMLDetailsElement) || !el.matches('[data-fpill]') || !el.open) return;
+      pills().forEach((p) => p !== el && (p.open = false));
+    },
+    true,
+  );
+  document.addEventListener('click', (event) => {
+    if (!(event.target as HTMLElement).closest('[data-fpill]'))
+      pills().forEach((p) => (p.open = false));
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const open = pills().find((p) => p.open);
+    if (open) {
+      open.open = false;
+      open.querySelector('summary')?.focus();
+    }
+  });
+  // Dialog open/close for the mobile sheet (same convention as <Dialog>).
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const opener = target.closest<HTMLElement>('.fbar [data-dialog-open]');
+    if (opener) {
+      (
+        document.getElementById(opener.dataset.dialogOpen ?? '') as HTMLDialogElement | null
+      )?.showModal();
+      return;
+    }
+    if (target.closest('.fsheet [data-dialog-close]')) target.closest('dialog')?.close();
+    if (target instanceof HTMLDialogElement && target.classList.contains('fsheet')) target.close();
+  });
+
+  // Stuck state: a 1px sentinel above the bar leaves the viewport under the header.
+  document.querySelectorAll<HTMLElement>('.fbar--sticky').forEach((bar) => {
+    if (!('IntersectionObserver' in window)) return;
+    const sentinel = document.createElement('div');
+    sentinel.setAttribute('aria-hidden', 'true');
+    sentinel.style.cssText = 'height:1px;margin-bottom:-1px;pointer-events:none';
+    bar.parentNode?.insertBefore(sentinel, bar);
+    const header = parseFloat(getComputedStyle(bar).top) || 0;
+    new IntersectionObserver(
+      ([entry]) => {
+        if (entry) bar.toggleAttribute('data-stuck', !entry.isIntersecting);
+      },
+      { rootMargin: `-${Math.round(header) + 1}px 0px 0px 0px` },
+    ).observe(sentinel);
+  });
+</script>
+
+<style>
+  .fbar {
+    padding-block: var(--space-3);
+  }
+  /* Sticky only where it is one row (≥1024). Below that the bar is three rows (search, pills,
+     filters) and would cover a quarter of a phone screen, so it scrolls away with the page. */
+  .fbar--sticky {
+    position: relative;
+    z-index: var(--z-sticky);
+    background: var(--bg);
+  }
+  @media (min-width: 1024px) {
+    .fbar--sticky {
+      position: sticky;
+      top: var(--header-h);
+    }
+  }
+  /* Full-bleed background + hairline once stuck. Drawn as box-shadows on a pseudo-element the
+     size of the bar (shadows never cause overflow) and clipped to the bar's height, so the
+     dropdown menus are not clipped. */
+  .fbar--sticky::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow:
+      0 0 0 100vmax var(--bg),
+      0 1px 0 100vmax var(--line);
+    clip-path: inset(0 -100vmax -1px);
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+  .fbar--sticky[data-stuck]::before {
+    opacity: 1;
+  }
+  .fbar__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  /* Search */
+  .fbar__search {
+    position: relative;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .fbar__search :global(.fbar__search-icon) {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .fbar__search input[type='search'] {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px 0 36px;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-xs);
+    color: var(--ink);
+    font-size: var(--text-ui);
+    transition: box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .fbar__search input::placeholder {
+    color: var(--ink-3);
+  }
+  .fbar__search input:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1px var(--accent),
+      0 0 0 3px var(--accent-wash);
+  }
+  .fbar__search input::-webkit-search-cancel-button {
+    filter: grayscale(1);
+  }
+
+  /* Inline pills: one scrolling row (with an edge fade) */
+  .fbar__pills {
+    display: flex;
+    flex: 1 1 100%;
+    gap: var(--space-2);
+    min-width: 0;
+    /* Room for the focus ring (2px offset + 2px ring), which the scroller would otherwise clip. */
+    margin: -4px;
+    padding: 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  }
+  .fbar__pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fbar__groups {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .fbar__right {
+    display: flex;
+    flex: 1 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+  .fbar__total {
+    margin-right: auto;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+  }
+  .fbar__total .num {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .fbar__mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .fbar__badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-size: var(--text-2xs);
+  }
+
+  /* Dropdown pills (filters ≥1024 and the sort menu) */
+  .fpill {
+    position: relative;
+    display: none;
+  }
+  .fpill summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px 0 12px;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .fpill summary::-webkit-details-marker {
+    display: none;
+  }
+  .fpill summary:hover,
+  .fpill[open] summary {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+  .fpill :global(.fpill__caret) {
+    color: var(--ink-3);
+  }
+  .fpill--on summary {
+    box-shadow: inset 0 0 0 1px var(--ink-3);
+    color: var(--ink);
+  }
+  .fpill__value {
+    color: var(--ink);
+  }
+  .fpill--on .fpill__label::after {
+    content: ':';
+  }
+  .fpill__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: var(--z-overlay);
+    min-width: 220px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 4px;
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+  }
+  .fpill[open] .fpill__menu {
+    animation: fpill-in var(--dur-base) var(--ease-out);
+  }
+  @keyframes fpill-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+  .fpill__menu--end {
+    left: auto;
+    right: 0;
+  }
+  .fpill__menu a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 32px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--ink-2);
+  }
+  .fpill__menu a:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .fpill__menu a[aria-current='true'] {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .fpill__count {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .fpill--sort {
+    display: inline-block;
+  }
+  .fpill--sort summary {
+    box-shadow: none;
+    background: transparent;
+    padding: 0 8px;
+  }
+  .fpill--sort .fpill__label {
+    color: var(--ink-3);
+  }
+
+  .fbar__active {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .fbar__clear {
+    margin-left: var(--space-1);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  @media (max-width: 1023px) {
+    /* Pills and search scroll/stretch on their own rows; count + view share the last row. */
+    .fbar__groups {
+      order: 3;
+    }
+    .fbar__right {
+      order: 4;
+    }
+    .fpill--sort {
+      display: none;
+    }
+    .fbar__total {
+      margin-left: var(--space-1);
+    }
+  }
+  @media (min-width: 1024px) {
+    .fbar__row {
+      flex-wrap: nowrap;
+    }
+    /* A long pill row scrolls; it must never squeeze the search field down to an icon. */
+    .fbar__search {
+      flex: 0 0 clamp(200px, 20vw, 280px);
+    }
+    .fbar__pills {
+      flex: 0 1 auto;
+    }
+    .fbar__groups {
+      flex: none;
+      flex-wrap: nowrap;
+    }
+    .fbar__mobile {
+      display: none;
+    }
+    .fpill {
+      display: inline-block;
+    }
+    .fbar__right {
+      flex: 1 0 auto;
+      gap: var(--space-3);
+    }
+    .fbar__total {
+      margin-left: auto;
+      margin-right: 0;
+    }
+  }
+
+  /* Mobile bottom sheet */
+  .fsheet {
+    width: 100%;
+    max-width: 640px;
+    max-height: 86dvh;
+    margin: auto auto 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-lg);
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .fsheet[open] {
+    display: flex;
+    animation: sheet-in var(--dur-slow) var(--ease-out);
+  }
+  .fsheet::backdrop {
+    background: var(--overlay);
+  }
+  :global(html:has(dialog.fsheet[open])) {
+    overflow: hidden;
+  }
+  @keyframes sheet-in {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+  }
+  .fsheet__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .fsheet__title {
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+  }
+  .fsheet__close {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-control);
+    color: var(--ink-2);
+  }
+  .fsheet__close:hover {
+    background: var(--surface-2);
+  }
+  .fsheet__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-5);
+  }
+  .fsheet__group + .fsheet__group {
+    margin-top: var(--space-6);
+  }
+  .fsheet__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .fsheet__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+  }
+  .fsheet__clear {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .fsheet__show {
+    flex: 1;
+    max-width: 260px;
+    height: 44px;
+    margin-left: auto;
+    border-radius: var(--radius-control);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-weight: var(--weight-medium);
+  }
+</style>

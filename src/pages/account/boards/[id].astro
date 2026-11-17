@@ -7,9 +7,8 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import Button from '~/components/ui/Button.astro';
-import Count from '~/components/ui/Count.astro';
+import Badge from '~/components/ui/Badge.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import SectionCard from '~/components/domain/SectionCard.astro';
 import AccountShell from '~/components/static/AccountShell.astro';
 import { EXAMPLE_BOARDS, isBoardId } from '~/components/static/content';
@@ -37,9 +36,8 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       />
       <div class="bd__row">
         <div class="bd__text">
-          <h1 class="bd__title">
-            {title}
-            <Count value={items.length} label="items" />
+          <h1 class="h2 bd__title">
+            {title} <span class="bd__count num">{items.length}</span>
           </h1>
           {example ? (
             <p class="bd__desc">{example.description}</p>
@@ -47,9 +45,12 @@ Astro.response.headers.set('Cache-Control', 'no-store');
             <p class="bd__desc">Boards you create will live here.</p>
           )}
           {example && (
-            <MonoLabel as="p" tone="accent" class="bd__flag">
-              Example board · from the sections library · not saved
-            </MonoLabel>
+            <p class="bd__flag">
+              <Badge tone="outline" size="sm">
+                Example board
+              </Badge>
+              <span>From the sections library. Not saved.</span>
+            </p>
           )}
         </div>
         <div class="bd__actions">
@@ -64,7 +65,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
     </header>
 
     {items.length > 0 ? (
-      <div class="grid grid--sections">
+      <div class="grid grid--sections bd__grid">
         {items.map((s, i) => (
           <SectionCard
             href={s.href}
@@ -82,6 +83,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       <EmptyState
         title="Nothing on this board yet"
         body="Use Save on any store, page or section to add it here. Saving opens with accounts."
+        icon="bookmark-simple"
       >
         <Button href="/sections" variant="primary" size="sm">
           Browse sections
@@ -96,7 +98,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 
 <style>
   .bd__head {
-    padding-block: var(--space-6) var(--space-8);
+    padding-block: var(--space-8) var(--space-6);
   }
   .bd__row {
     display: flex;
@@ -109,27 +111,31 @@ Astro.response.headers.set('Cache-Control', 'no-store');
   .bd__text {
     min-width: 0;
   }
-  .bd__title {
-    font-size: var(--text-3xl);
-    letter-spacing: var(--tracking-tight);
-    line-height: var(--leading-tight);
+  .bd__count {
+    margin-left: 0.25em;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 450;
+    letter-spacing: 0;
+    vertical-align: 0.35em;
   }
   .bd__desc {
-    margin-top: var(--space-2);
+    margin-top: var(--space-1);
     color: var(--ink-2);
-    font-size: var(--text-md);
+    font-size: var(--text-body);
   }
-  .bd__text :global(.bd__flag) {
+  .bd__flag {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
     margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
   }
   .bd__actions {
     display: flex;
     gap: var(--space-2);
-  }
-  @media (min-width: 1024px) {
-    .bd__head {
-      padding-top: var(--space-10);
-    }
   }
 </style>

@@ -1,10 +1,10 @@
 ---
 /**
- * One theme's price and the versions we see in the wild, as spec rows, with the labelled
- * outbound CTA. Mirrors PlanList so the two halves of the diptych line up.
+ * One theme's price, where it is sold, presets and the versions we see on live stores, as rows
+ * in a card, with the labelled outbound CTA. Mirrors PlanList so the two sides line up.
  */
 import AffiliateCta from '~/components/domain/AffiliateCta.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
 import { pluralStores } from './compare';
 import type { ThemeDetail } from '~/server/api/v1/types';
 
@@ -17,43 +17,48 @@ const versions = detail.versions
   .slice()
   .sort((x, y) => (y.version ?? '').localeCompare(x.version ?? '', 'en', { numeric: true }));
 const MAX = 6;
+const most = Math.max(1, ...versions.map((v) => v.stores));
 ---
 
 <div class="tspec">
   <p class="tspec__who">
-    <span class="tspec__name display">{t.name}</span>
-    <MonoLabel bullet={false} class="tspec__vendor">
-      {t.vendor ?? 'Vendor not listed'}
-    </MonoLabel>
+    <AppIcon src={null} name={t.name} size={28} />
+    <span class="tspec__name">{t.name}</span>
+    <span class="tspec__vendor">{t.vendor ?? 'Vendor not listed'}</span>
   </p>
-  <dl class="tspec__rows">
-    <div class="tspec__row">
-      <dt>Price</dt>
-      <dd class="tspec__price">{t.price.label ?? 'Not listed'}</dd>
-    </div>
-    <div class="tspec__row">
-      <dt>Sold on</dt>
-      <dd>{t.marketplace ?? '—'}</dd>
-    </div>
-    {detail.presets.length > 0 && (
-      <div class="tspec__row">
-        <dt>Presets</dt>
-        <dd>{detail.presets.map((p) => p.name).join(', ')}</dd>
+  <div class="tspec__card">
+    <dl class="tspec__rows">
+      <div class="tspec__row tspec__row--price">
+        <dt>Price</dt>
+        <dd class="num">{t.price.label ?? 'Not listed'}</dd>
       </div>
-    )}
-  </dl>
-  <MonoLabel as="p" class="tspec__label">
-    Versions seen · {versions.length}
-  </MonoLabel>
-  <ol class="tspec__versions">
-    {versions.slice(0, MAX).map((v) => (
-      <li>
-        <span class="mono">{v.version ?? 'Version not exposed'}</span>
-        <span class="num">{pluralStores(v.stores)}</span>
-      </li>
-    ))}
-    {versions.length > MAX && <li class="tspec__more">+{versions.length - MAX} more</li>}
-  </ol>
+      <div class="tspec__row">
+        <dt>Sold on</dt>
+        <dd>{t.marketplace ?? '—'}</dd>
+      </div>
+      {detail.presets.length > 0 && (
+        <div class="tspec__row">
+          <dt>Presets</dt>
+          <dd>{detail.presets.map((p) => p.name).join(', ')}</dd>
+        </div>
+      )}
+    </dl>
+    <p class="tspec__label">Versions seen on live stores · {versions.length}</p>
+    <ol class="tspec__versions">
+      {versions.slice(0, MAX).map((v) => (
+        <li>
+          <span class="mono">{v.version ?? 'Not exposed'}</span>
+          <span
+            class="tspec__bar"
+            style={`--w:${Math.round((v.stores / most) * 100)}%`}
+            aria-hidden="true"
+          />
+          <span class="num">{pluralStores(v.stores)}</span>
+        </li>
+      ))}
+      {versions.length > MAX && <li class="tspec__more">+{versions.length - MAX} more</li>}
+    </ol>
+  </div>
   {t.cta && (
     <AffiliateCta
       href={t.cta.href}
@@ -73,25 +78,38 @@ const MAX = 6;
   }
   .tspec__who {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
+    align-items: center;
     gap: var(--space-3);
-    padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--ink);
+    margin-bottom: var(--space-4);
   }
   .tspec__name {
     min-width: 0;
-    font-size: var(--text-3xl);
-    line-height: 1;
     overflow: hidden;
+    font-size: var(--text-h3);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.015em;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .tspec :global(.tspec__vendor) {
+  .tspec__vendor {
     flex: none;
+    margin-left: auto;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
   }
-  .tspec__row,
-  .tspec__versions li {
+  .tspec__card {
+    padding: var(--space-2) var(--space-5) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+  }
+  .tspec__row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -106,21 +124,45 @@ const MAX = 6;
   .tspec__row dd {
     text-align: right;
   }
-  .tspec__price {
-    font-family: var(--font-serif);
+  .tspec__row--price dd {
     font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.02em;
   }
-  .tspec :global(.tspec__label) {
-    margin-top: var(--space-6);
-    margin-bottom: var(--space-1);
+  .tspec__label {
+    margin-top: var(--space-5);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+  }
+  .tspec__versions li {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .tspec__versions li + li {
+    border-top: 1px solid var(--line);
+  }
+  .tspec__bar {
+    height: 6px;
+    border-radius: var(--radius-pill);
+    background:
+      linear-gradient(to right, var(--ink-2) 0 var(--w), transparent var(--w)), var(--surface-2);
   }
   .tspec__versions li span:last-child {
     color: var(--ink-3);
+    text-align: right;
   }
   .tspec__more {
+    display: block !important;
     color: var(--ink-3);
   }
   .tspec :global(.tspec__cta) {
-    margin-top: var(--space-6);
+    margin-top: var(--space-5);
   }
 </style>

@@ -1,30 +1,37 @@
 ---
 /**
- * /themes/<slug>: a theme's specimen sheet. The name set large in the serif with its spec rows,
- * then the plates (the theme on real stores, page by page, desktop and mobile) on a dark stage,
- * then what those stores are made of: sections, the stores themselves, versions, apps, and
- * similar themes to compare.
+ * /themes/<slug>: a theme as an app view. Breadcrumb → identity row (name, vendor, price,
+ * latest version seen, usage rank; Compare, Save and the Theme Store CTA) → "Seen on" (the theme
+ * on a real store, page by page, with pinned section tags) beside a sticky facts card → every
+ * detected store running it → apps most used with it → versions → sections from those stores →
+ * similar themes and side-by-side comparisons.
  *
- * URL state: ?page=&device= (plates), ?cursor=&p= (stores list paging). Unknown slugs are 404s.
+ * URL state: ?page=&device= (Seen on), ?cursor=&p= (stores list paging). Unknown slugs are 404s.
+ * Ranks are the API's usage ranks (equal usage shares a rank, shown as "#3").
+ * D1 budget: getTheme + listStores + getScreenshot + getMeta ≈ 33 queries (limit 50).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
-import IndexList from '~/components/ui/IndexList.astro';
-import IndexRow from '~/components/ui/IndexRow.astro';
+import FactsCard from '~/components/ui/FactsCard.astro';
+import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
-import Count from '~/components/ui/Count.astro';
+import Chip from '~/components/ui/Chip.astro';
+import ChipRow from '~/components/ui/ChipRow.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
 import AffiliateCta from '~/components/domain/AffiliateCta.astro';
+import SaveButton from '~/components/domain/SaveButton.astro';
 import ThemeCard from '~/components/domain/ThemeCard.astro';
 import SectionCard from '~/components/domain/SectionCard.astro';
-import SpecRows, { type SpecRow } from '~/components/themes/SpecRows.astro';
-import ThemePlates from '~/components/themes/ThemePlates.astro';
+import type { FullPageSection } from '~/components/media/FullPage.astro';
+import SeenOn from '~/components/themes/SeenOn.astro';
+import ThemeStores from '~/components/themes/ThemeStores.astro';
 import VersionList from '~/components/themes/VersionList.astro';
 import ThemeApps from '~/components/themes/ThemeApps.astro';
 import CompareList from '~/components/themes/CompareList.astro';
-import { detailHref, latestVersion, readPlateState, specimenNo } from '~/components/themes/params';
+import { detailHref, latestVersion, rankLabel, readPlateState } from '~/components/themes/params';
 import { api, isApiError, orNotFound } from '~/server/api';
 import type { StoreListItem } from '~/server/api/v1/types';
 import { CORE_PAGE_TYPES, PAGE_TYPES, type PageType } from '~/lib/taxonomy';
@@ -44,90 +51,94 @@ const { data: detail, meta } = detailRes;
 const theme = detail.theme;
 if (theme.slug !== Astro.params.slug) return Astro.redirect(theme.href, 301);
 
-// Stores using the theme (with currency and capture state) and the catalogue order for N°.
+// Every detected store running the theme (the API defaults to the curated stores only).
 let storesRes;
 try {
-  storesRes = await api.listStores({ theme: slug, limit: STORES_PAGE, cursor });
+  storesRes = await api.listStores({ theme: slug, scope: 'all', limit: STORES_PAGE, cursor });
 } catch (err) {
   if (isApiError(err) && err.status === 400) return Astro.redirect(`${theme.href}#stores`, 302);
   throw err;
 }
-const order = await api.listThemes({ sort: 'usage', limit: 100 });
-const position = order.data.items.findIndex((t) => t.slug === slug);
-const n = position >= 0 ? position + 1 : (theme.usage.rank ?? 0);
-
 const stores: StoreListItem[] = storesRes.data.items;
 const storesTotal = storesRes.meta.pagination?.total ?? detail.stores.total;
 const nextCursor = storesRes.meta.pagination?.next_cursor ?? null;
 
-// Plates: page types that have captures, in taxonomy order.
+// ---- Seen on: page types with captures, the current view and its lead capture's sections ----
 const curated = detail.curated_stores;
 const pageSet = new Set(curated.flatMap((c) => c.pages.map((p) => p.page_type)));
 const pages: PageType[] = PAGE_TYPES.map((p) => p.slug).filter((p) => pageSet.has(p));
 const plate = readPlateState(sp, pages.length ? pages : CORE_PAGE_TYPES);
-const appCounts = new Map(stores.map((s) => [s.domain, s.app_count]));
 const keep = { cursor: cursor ?? null, p: listPage };
+const leadShot = curated
+  .map((c) => c.pages.find((p) => p.page_type === plate.page)?.[plate.device])
+  .find(Boolean);
 
-// ---- Facts -------------------------------------------------------------------------------
+const [shotRes, metaRes] = await Promise.all([
+  leadShot ? api.getScreenshot({ id: leadShot.id }).catch(() => null) : null,
+  api.getMeta({}),
+]);
+const leadSections: FullPageSection[] = (shotRes?.data.sections ?? []).map((s) => ({
+  id: s.id,
+  type: s.type.slug,
+  name: s.type.name,
+  y: s.rect.y,
+  height: s.rect.h,
+  x: s.rect.x,
+  w: s.rect.w,
+  app: s.app ? { name: s.app.short_name, slug: s.app.slug, iconUrl: s.app.icon_url } : null,
+  href: s.href,
+}));
+// Detected app counts for the curated stores in the caption (they lead the stores list).
+const appCounts = new Map(stores.map((s) => [s.domain, s.app_count]));
+
+// ---- Identity + facts ----------------------------------------------------------------------
 const usage = theme.usage;
 const source = meta.sources[usage.source];
 const asOf = formatDate(usage.as_of);
-const sourceShort = `${(source?.label ?? 'Scan').replace(/ of .*$/, '')} · ${asOf}`;
+const sourceLabel = (source?.label ?? 'Our scan').replace(/ of .*$/, '');
 const priceText = theme.price.is_free ? 'Free' : (theme.price.label ?? 'Price not listed');
 const latest = latestVersion(detail.versions.map((v) => v.version));
 const latestStores = detail.versions.find((v) => v.version === latest)?.stores ?? 0;
 const sharePct = formatPercent(usage.share * 100);
+const themeCount = metaRes.data.counts.themes;
+const rank = usage.stores > 0 ? usage.rank : null;
 
-const specs: SpecRow[] = [
+// Price and vendor lead the facts card; the rows with notes follow in its slot.
+const facts = [
+  { label: 'Price', value: priceText },
   theme.vendor_info
     ? { label: 'Vendor', value: theme.vendor_info.name, href: theme.vendor_info.href }
-    : { label: 'Vendor', value: 'Unknown', muted: true },
-  { label: 'Price', value: priceText, mono: !theme.price.is_free && !!theme.price.label },
-  ...(theme.marketplace ? [{ label: 'Marketplace', value: theme.marketplace }] : []),
+    : { label: 'Vendor', value: 'Unknown' },
+];
+const moreFacts = [
   ...(theme.theme_store_id
-    ? [{ label: 'Theme Store ID', value: String(theme.theme_store_id), mono: true }]
+    ? [{ label: 'Theme Store ID', value: String(theme.theme_store_id) }]
     : []),
-  latest
-    ? {
-        label: 'Latest version seen',
-        value: latest,
-        mono: true,
-        note: `on ${latestStores} ${latestStores === 1 ? 'store' : 'stores'}`,
-      }
-    : { label: 'Latest version seen', value: 'Not recorded', muted: true },
-  {
-    label: 'Stores in scan',
-    value: `${formatCount(usage.stores)} of ${formatCount(usage.denominator)} · ${sharePct}`,
-    note: sourceShort,
-  },
-  detail.presets.length
-    ? { label: 'Presets', value: detail.presets.map((p) => p.name).join(', ') }
-    : {
-        label: 'Presets',
-        value: 'Not detected yet',
-        muted: true,
-        note: 'Lands with the capture pipeline',
-      },
+  ...(theme.marketplace ? [{ label: 'Listed on', value: theme.marketplace }] : []),
+  ...(detail.presets.length
+    ? [{ label: 'Presets', value: detail.presets.map((p) => p.name).join(', ') }]
+    : []),
 ];
 
-// The name is the page's one very large thing; it is sized to fit its longest word on one line.
-const nameChars = Math.max(6, ...theme.name.split(/\s+/).map((w) => w.length));
+const cta =
+  theme.cta ??
+  (detail.official_url
+    ? { href: detail.official_url, label: 'View in Theme Store', is_affiliate: false }
+    : null);
+const similar = detail.similar.slice(0, 3);
+const comparisons = detail.comparisons;
+const compareHref =
+  similar.length > 0 || comparisons.length > 0 ? '#compare' : `/alternatives/${slug}`;
 
-const dek = (() => {
-  const what = theme.price.is_free
-    ? 'A free theme'
-    : theme.price.label
-      ? `A ${theme.price.label} theme`
-      : 'A theme';
-  const by = theme.vendor_info ? ` by ${theme.vendor_info.name}` : '';
-  const where =
-    usage.stores > 0
-      ? `, running on ${formatCount(usage.stores)} of the ${formatCount(usage.denominator)} stores in our scan.`
-      : `, not yet seen on the ${formatCount(usage.denominator)} stores in our scan.`;
-  return { what, by, where };
-})();
+const lead =
+  usage.stores > 0
+    ? `Running on ${formatCount(usage.stores)} of the ${formatCount(usage.denominator)} Shopify stores in our scan, shown here on a real storefront, page by page.`
+    : `Not yet seen on the ${formatCount(usage.denominator)} Shopify stores in our scan.`;
+// Section types by how often they appear; the rest are one click away in the library.
+const TYPE_CHIPS = 10;
+const typeChips = [...detail.sections.by_type].sort((a, b) => b.count - a.count);
 
-// ---- Lower blocks ------------------------------------------------------------------------
+// ---- Lower blocks --------------------------------------------------------------------------
 const sections = detail.sections;
 // Lead with the sections that carry a theme's look; chrome (header, footer) goes last.
 const SAMPLE_ORDER = [
@@ -147,17 +158,15 @@ const SAMPLE_ORDER = [
   'newsletter',
   'upsell',
 ];
-const rankOf = (t: string) => {
+const orderOf = (t: string) => {
   const i = SAMPLE_ORDER.indexOf(t);
   return i === -1 ? SAMPLE_ORDER.length + (t === 'header' || t === 'footer' ? 10 : 0) : i;
 };
 const sectionSamples = [...sections.items]
-  .sort((a, b) => rankOf(a.type.slug) - rankOf(b.type.slug))
+  .sort((a, b) => orderOf(a.type.slug) - orderOf(b.type.slug))
   .slice(0, 8);
 const pageName = (p: string) => PAGE_TYPES.find((x) => x.slug === p)?.name ?? p;
 const sectionsHref = `/sections?theme=${encodeURIComponent(slug)}`;
-const similar = detail.similar.slice(0, 3);
-const comparisons = detail.comparisons;
 const similarReason = (r: string[]) =>
   r
     .map(
@@ -219,86 +228,233 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   noindex={listPage > 1}
   {jsonLd}
 >
-  <div class="container">
-    <Breadcrumbs
-      items={[
-        { label: 'Home', href: '/' },
-        { label: 'Themes', href: '/themes' },
-        { label: theme.name },
-      ]}
-      class="th-crumbs"
-    />
-
-    <header class="th-head cols-12">
-      <div class="th-head__id span-8">
-        <MonoLabel as="p" tone="ink">{`${specimenNo(n)} — Theme`}</MonoLabel>
-        <div>
-          <h1 class="th-name" style={`--chars:${nameChars}`}>
-            {theme.name}
-          </h1>
-          <p class="th-dek">
-            {dek.what}
-            {theme.vendor_info ? (
-              <>
-                {' '}
-                by <a href={theme.vendor_info.href}>{theme.vendor_info.name}</a>
-              </>
-            ) : (
-              dek.by
-            )}
-            {dek.where}
-          </p>
-        </div>
+  <div class="container th">
+    <PageHeader title={theme.name} class="th-id">
+      <Breadcrumbs
+        slot="top"
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Themes', href: '/themes' },
+          { label: theme.name },
+        ]}
+      />
+      <div slot="meta" class="th-chips">
+        {theme.vendor_info ? (
+          <span class="th-chips__by">
+            by <a href={theme.vendor_info.href}>{theme.vendor_info.name}</a>
+          </span>
+        ) : (
+          <span class="th-chips__by">Vendor unknown</span>
+        )}
+        <Badge tone={theme.price.is_free ? 'positive' : 'neutral'}>{priceText}</Badge>
+        {latest && (
+          <Badge tone="outline" mono title="Latest version seen on stores in our scan">
+            v{latest}
+          </Badge>
+        )}
+        {rank && (
+          <Badge tone="outline" title="Rank by stores using it; equal usage shares a rank">
+            {rankLabel(rank)} most used
+          </Badge>
+        )}
       </div>
-      <aside class="th-head__spec start-9" aria-label={`${theme.name} specifications`}>
-        <SpecRows rows={specs} />
-        {theme.cta && (
+      <p slot="meta" class="th-lead lead">
+        {lead}
+      </p>
+      <div slot="actions" class="th-actions">
+        <Button href={compareHref} variant="secondary" icon="scales" class="th-act">
+          Compare
+        </Button>
+        <SaveButton itemType="theme" itemId={slug} size="md" class="th-act" />
+        {cta && (
           <AffiliateCta
-            href={theme.cta.href}
-            label={theme.cta.label}
-            isAffiliate={theme.cta.is_affiliate}
+            href={cta.href}
+            label={cta.label}
+            isAffiliate={cta.is_affiliate}
             size="md"
-            full
             class="th-cta"
           />
         )}
+      </div>
+    </PageHeader>
+
+    <div class="th-layout">
+      <SeenOn
+        slug={slug}
+        name={theme.name}
+        curated={curated}
+        state={plate}
+        pages={pages}
+        sections={leadSections}
+        appCounts={appCounts}
+        keep={keep}
+        class="th-main"
+      />
+
+      <aside class="th-side" aria-label={`${theme.name} facts`}>
+        <FactsCard
+          title="Theme facts"
+          items={facts}
+          source={sourceLabel}
+          asOf={asOf}
+          sourceHref={source?.url ?? '/methodology'}
+          sticky
+        >
+          <div class="facts__row">
+            <dt>Stores using it</dt>
+            <dd class="th-fact">
+              <span class="num">
+                {formatCount(usage.stores)} of {formatCount(usage.denominator)}
+              </span>
+              <span class="th-fact__note num">{sharePct} of the scan</span>
+            </dd>
+          </div>
+          {rank && (
+            <div class="facts__row">
+              <dt>Rank by usage</dt>
+              <dd class="num" title="Equal usage shares a rank">
+                {rankLabel(rank)} of {themeCount} themes
+              </dd>
+            </div>
+          )}
+          <div class="facts__row">
+            <dt>Latest version seen</dt>
+            <dd class="th-fact">
+              {latest ? (
+                <>
+                  <span class="mono">{latest}</span>
+                  <span class="th-fact__note">
+                    on {latestStores} {latestStores === 1 ? 'store' : 'stores'} · {asOf}
+                  </span>
+                </>
+              ) : (
+                <span class="th-fact__muted">Not recorded</span>
+              )}
+            </dd>
+          </div>
+          {moreFacts.map((f) => (
+            <div class="facts__row">
+              <dt>{f.label}</dt>
+              <dd class:list={[{ mono: f.label === 'Theme Store ID' }]}>{f.value}</dd>
+            </div>
+          ))}
+          <p slot="footer" class="th-side__bias">
+            Stores were found through Theme Store example lists, so counts show reach in our scan,
+            not market share.
+          </p>
+        </FactsCard>
       </aside>
-    </header>
-  </div>
 
-  <ThemePlates
-    slug={slug}
-    name={theme.name}
-    curated={curated}
-    state={plate}
-    pages={pages}
-    appCounts={appCounts}
-    keep={keep}
-  />
-
-  <div class="container">
-    {sections.total > 0 && (
-      <section class="page-block" aria-labelledby="th-sections">
+      <section class="th-main th-block" id="stores" aria-labelledby="th-stores-title">
         <SectionHeader
-          id="th-sections"
-          label={`${sections.by_type.length} section types`}
+          id="th-stores-title"
+          title={`Stores using ${theme.name}`}
+          count={storesTotal}
+          description="Every active store in our scan where we detected this theme. Stores without a capture still have a page with their theme and apps."
+        />
+        {stores.length === 0 ? (
+          <EmptyState
+            title={`No store in our scan runs ${theme.name} right now`}
+            body="A theme drops out of this list when we stop detecting it on a store's storefront."
+            size="sm"
+            level={3}
+            class="th-empty"
+          >
+            <Button href="/themes" size="sm" variant="secondary">
+              Browse all themes
+            </Button>
+          </EmptyState>
+        ) : (
+          <ThemeStores stores={stores} label={`Stores using ${theme.name}`} class="th-table" />
+        )}
+        <div class="th-pager">
+          <p class="th-pager__status">
+            {stores.length > 0 && (
+              <span class="num">
+                {storesTotal > stores.length
+                  ? `${formatCount(storesFrom)}–${formatCount(storesTo)} of `
+                  : ''}
+                {formatCount(storesTotal)} {storesTotal === 1 ? 'store' : 'stores'} ·{' '}
+              </span>
+            )}
+            Detected in the {sourceLabel} · {asOf}.{' '}
+            <a href={source?.url ?? '/methodology'}>How we detect</a>
+          </p>
+          {(listPage > 1 || nextCursor) && (
+            <div class="th-pager__buttons">
+              {listPage > 1 && (
+                <Button
+                  href={detailHref(slug, plate, { hash: 'stores' })}
+                  size="sm"
+                  icon="caret-left"
+                >
+                  First page
+                </Button>
+              )}
+              {nextCursor && (
+                <Button
+                  href={detailHref(slug, plate, {
+                    cursor: nextCursor,
+                    p: listPage + 1,
+                    hash: 'stores',
+                  })}
+                  size="sm"
+                  iconRight="caret-right"
+                  rel="next"
+                >
+                  Next {Math.min(STORES_PAGE, storesTotal - storesTo)}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {detail.top_apps.length > 0 && (
+        <section class="th-main th-block" aria-labelledby="th-apps-title">
+          <SectionHeader
+            id="th-apps-title"
+            title={`Apps most used with ${theme.name}`}
+            count={detail.top_apps.length}
+            description={`Share of the ${formatCount(usage.stores)} ${theme.name} ${usage.stores === 1 ? 'store' : 'stores'} in our scan running each app.`}
+          />
+          <ThemeApps apps={detail.top_apps} of={usage.stores} />
+          <p class="th-note">Detected on storefronts · {asOf}.</p>
+        </section>
+      )}
+
+      <section class="th-main th-block" aria-labelledby="th-versions-title">
+        <SectionHeader
+          id="th-versions-title"
+          title="Versions in the wild"
+          count={detail.versions.filter((v) => v.version).length}
+          description="A version is recorded when the storefront exposes it; the rest count under “Not recorded”."
+        />
+        <VersionList versions={detail.versions} />
+        <p class="th-note">Detected on storefronts · {asOf}.</p>
+      </section>
+    </div>
+
+    {sections.total > 0 && (
+      <section class="th-wide" aria-labelledby="th-sections-title">
+        <SectionHeader
+          id="th-sections-title"
           title={`Sections from stores on ${theme.name}`}
           count={sections.total}
-          description="Each page is sliced into tagged sections. Start from a type, or browse them all in the library."
+          description={`Each captured page is sliced into tagged sections: ${sections.by_type.length} types so far. Start from a type, or open them all in the library.`}
           href={sectionsHref}
           linkLabel="Open in the library"
-          rule
         />
-        <ul class="th-types" aria-label="Section types">
-          {sections.by_type.map((t) => (
-            <li>
-              <a href={`${t.type.href}?theme=${encodeURIComponent(slug)}`}>
-                {t.type.name}
-                <Count value={t.count} label={t.count === 1 ? 'section' : 'sections'} />
-              </a>
-            </li>
+        <ChipRow label="Section types" class="th-types">
+          {typeChips.slice(0, TYPE_CHIPS).map((t) => (
+            <Chip href={`${t.type.href}?theme=${encodeURIComponent(slug)}`} count={t.count}>
+              {t.type.name}
+            </Chip>
           ))}
-        </ul>
+          {typeChips.length > TYPE_CHIPS && (
+            <Chip href={sectionsHref}>{`+${typeChips.length - TYPE_CHIPS} more types`}</Chip>
+          )}
+        </ChipRow>
         <div class="grid grid--sections th-sections">
           {sectionSamples.map((s) => (
             <SectionCard
@@ -307,7 +463,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
               device={s.device}
               typeName={s.type.name}
               storeLabel={s.store.display_name}
-              meta={`${s.type.name} · ${pageName(s.page_type)} · ${s.device}`}
+              meta={`${s.type.name} · ${pageName(s.page_type)} · ${s.device === 'mobile' ? 'Mobile' : 'Desktop'}`}
               app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
             />
           ))}
@@ -315,154 +471,17 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       </section>
     )}
 
-    <section class="page-block th-stores" id="stores" aria-labelledby="th-stores-title">
-      <SectionHeader
-        id="th-stores-title"
-        label="Detected in the scan"
-        title={`Stores using ${theme.name}`}
-        count={storesTotal}
-        description="Every active store where we detected this theme. Stores without a capture still have a page with their theme and apps."
-        rule
-      />
-      {stores.length === 0 ? (
-        <p class="th-empty">No active store in our scan runs {theme.name} right now.</p>
-      ) : (
-        <IndexList
-          columns="56px minmax(0,2.4fr) 112px 96px minmax(0,1fr) 140px"
-          head={['N°', 'Store', 'Version', 'Currency', 'Capture', 'Apps']}
-          label={`Stores using ${theme.name}`}
-          class="th-index"
-        >
-          {stores.map((s, i) => (
-            <IndexRow
-              n={storesFrom + i}
-              href={s.href}
-              title={s.display_name}
-              subtitle={
-                [s.name ? s.domain : null, s.theme.version, s.currency]
-                  .filter(Boolean)
-                  .join(' · ') || undefined
-              }
-              preview={
-                s.preview
-                  ? {
-                      src: s.preview.image.src,
-                      width: s.preview.image.width,
-                      height: s.preview.image.height,
-                      device: 'desktop',
-                    }
-                  : null
-              }
-              cells={[
-                { value: s.theme.version ?? '—', mono: true, muted: !s.theme.version },
-                { value: s.currency ?? '—', mono: true, muted: !s.currency },
-                {
-                  value: s.is_captured
-                    ? 'Captured'
-                    : s.is_curated
-                      ? 'Layout preview'
-                      : 'Not captured',
-                  muted: !s.is_captured,
-                },
-                {
-                  value: `(${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'})`,
-                  serif: true,
-                  mobile: true,
-                },
-              ]}
-            />
-          ))}
-        </IndexList>
-      )}
-      <div class="th-pager">
-        <p class="th-pager__status">
-          {stores.length > 0 && (
-            <span class="num">
-              {storesTotal > stores.length
-                ? `${formatCount(storesFrom)}–${formatCount(storesTo)} of `
-                : ''}
-              {formatCount(storesTotal)} {storesTotal === 1 ? 'store' : 'stores'} ·{' '}
-            </span>
-          )}
-          Detected in the {sourceShort}. <a href={source?.url ?? '/methodology'}>How we detect</a>
-        </p>
-        {(listPage > 1 || nextCursor) && (
-          <div class="th-pager__buttons">
-            {listPage > 1 && (
-              <Button
-                href={detailHref(slug, plate, { hash: 'stores' })}
-                size="sm"
-                icon="caret-left"
-              >
-                First page
-              </Button>
-            )}
-            {nextCursor && (
-              <Button
-                href={detailHref(slug, plate, {
-                  cursor: nextCursor,
-                  p: listPage + 1,
-                  hash: 'stores',
-                })}
-                size="sm"
-                iconRight="caret-right"
-                rel="next"
-              >
-                Next {Math.min(STORES_PAGE, storesTotal - storesTo)}
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    </section>
-
-    <div class="page-block th-pair cols-12">
-      {detail.top_apps.length > 0 && (
-        <section class="th-apps span-7" aria-labelledby="th-apps-title">
-          <SectionHeader
-            id="th-apps-title"
-            label="Installed alongside"
-            title={`Apps most used with ${theme.name}`}
-            count={detail.top_apps.length}
-            rule
-          />
-          <ThemeApps apps={detail.top_apps} of={usage.stores} />
-          <p class="th-note">
-            Share of the {formatCount(usage.stores)} {theme.name} stores in our scan running each
-            app · {asOf}.
-          </p>
-        </section>
-      )}
-      <section class="th-versions start-9" aria-labelledby="th-versions-title">
-        <SectionHeader
-          id="th-versions-title"
-          label="Versions seen"
-          title="Versions in the wild"
-          count={detail.versions.filter((v) => v.version).length}
-          level={2}
-          rule
-        />
-        <VersionList versions={detail.versions} />
-        <p class="th-note">
-          A version is recorded when the storefront exposes it. Others count under “Not recorded” ·{' '}
-          {asOf}.
-        </p>
-      </section>
-    </div>
-
     {(similar.length > 0 || comparisons.length > 0) && (
-      <section class="page-block th-similar" aria-labelledby="th-similar-title">
+      <section class="th-wide th-compare" id="compare" aria-labelledby="th-compare-title">
         <SectionHeader
-          id="th-similar-title"
-          label="Next to it on the shelf"
-          title={`Similar to ${theme.name}`}
-          count={similar.length}
+          id="th-compare-title"
+          title={`Compare ${theme.name} with similar themes`}
+          description="Picked for the same vendor, a similar price, or apps their stores share."
           href={`/alternatives/${slug}`}
           linkLabel={`All ${theme.name} alternatives`}
-          rule
         />
         {similar.length > 0 && (
-          <div class="grid grid--themes">
+          <div class="grid grid--themes th-similar">
             {similar.map((s) => (
               <div class="th-similar__item">
                 <ThemeCard
@@ -470,8 +489,10 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
                   name={s.theme.name}
                   href={s.theme.href}
                   vendor={s.theme.vendor ?? 'Unknown vendor'}
-                  priceLabel={s.theme.price.label ?? '—'}
+                  priceLabel={s.theme.price.is_free ? 'Free' : (s.theme.price.label ?? '—')}
                   storesCount={s.theme.usage.stores}
+                  share={s.theme.usage.share}
+                  rank={s.theme.usage.rank}
                   shots={s.theme.previews.map((p) => ({
                     src: p.image.src,
                     width: p.image.width,
@@ -480,18 +501,14 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
                     alt: `${s.theme.name} theme on a live store, home page`,
                   }))}
                 />
-                {s.reasons.length > 0 && (
-                  <p class="th-similar__why mlabel mlabel--bullet">{similarReason(s.reasons)}</p>
-                )}
+                {s.reasons.length > 0 && <p class="th-similar__why">{similarReason(s.reasons)}</p>}
               </div>
             ))}
           </div>
         )}
         {comparisons.length > 0 && (
-          <div class="th-compare">
-            <MonoLabel as="h3" class="th-compare__label">
-              Compare side by side
-            </MonoLabel>
+          <div class="th-pairs">
+            <h3 class="th-pairs__title">Side by side</h3>
             <CompareList slug={slug} items={comparisons} />
           </div>
         )}
@@ -504,114 +521,118 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         asOf={source?.label.includes(asOf) ? undefined : asOf}
         href={source?.url ?? '/methodology'}
       />
-      <p class="th-source__bias">
-        Stores were found through Shopify Theme Store example lists, so counts show reach in our
-        scan of {formatCount(usage.denominator)} stores, not market share.
-      </p>
     </footer>
   </div>
 </BaseLayout>
 
 <style>
-  :global(.th-crumbs) {
-    padding-top: var(--space-6);
-  }
-  .th-head {
-    padding-block: var(--space-8) var(--space-12);
-  }
-  .th-head__id {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: var(--space-8);
-    min-width: 0;
-  }
-  .th-head__id :global(.mlabel) {
-    padding-top: 9px;
-  }
-  .th-name {
-    font-family: var(--font-serif);
-    /* ≈0.5em per letter in Newsreader at this tracking: never wider than the column. */
-    font-size: min(12rem, calc((100vw - 2 * var(--page-gutter)) / (var(--chars) * 0.5)));
-    font-weight: 400;
-    font-optical-sizing: auto;
-    letter-spacing: -0.045em;
-    line-height: 0.88;
-    margin-left: -0.04em;
-    text-wrap: balance;
-  }
-  @media (min-width: 1024px) {
-    .th-name {
-      font-size: min(
-        12rem,
-        calc((min(100vw, var(--page-max)) - 2 * var(--page-gutter)) * 0.64 / (var(--chars) * 0.5))
-      );
-    }
-  }
-  .th-dek {
-    margin-top: var(--space-6);
-    max-width: 30ch;
-    color: var(--ink-2);
-    font-family: var(--font-serif);
-    font-size: clamp(1.25rem, 1rem + 0.9vw, 1.75rem);
-    letter-spacing: -0.01em;
-    line-height: 1.2;
-  }
-  .th-dek a {
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.15em;
-  }
-  .th-dek a:hover {
-    text-decoration-color: currentColor;
-  }
-  .th-head__spec {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-    min-width: 0;
-  }
-  @media (max-width: 1023px) {
-    .th-head {
-      padding-block: var(--space-6) var(--space-10);
-    }
-    .th-head__spec {
-      margin-top: var(--space-4);
-    }
-  }
-
-  @media (max-width: 639px) {
-    .th-sections > :global(:nth-child(n + 5)) {
-      display: none;
-    }
-  }
-  .th-types {
+  /* ---- Identity row ---- */
+  .th-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-5);
-    margin-bottom: var(--space-8);
-    font-size: var(--text-md);
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
   }
-  .th-types a {
+  .th-lead {
+    margin-top: var(--space-4);
+    max-width: 600px;
+  }
+  .th-chips__by {
+    margin-right: var(--space-1);
     color: var(--ink-2);
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    text-underline-offset: 0.2em;
-    transition:
-      color var(--dur-fast) var(--ease-out),
-      text-decoration-color var(--dur-fast) var(--ease-out);
+    font-size: var(--text-ui);
   }
-  .th-types a:hover {
+  .th-chips__by a {
     color: var(--ink);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
     text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .th-chips__by a:hover {
+    text-decoration-color: currentColor;
+  }
+  .th-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+  /* The CTA's button joins the action row; its disclosure note sits under the whole row. */
+  .th-actions :global(.th-cta) {
+    display: contents;
+  }
+  .th-actions :global(.th-cta .cta__note) {
+    flex-basis: 100%;
+    max-width: none;
+    text-align: right;
+  }
+  /* Below 1280 the actions sit under the identity (primary first), so the text keeps its
+     width; below 640 the primary spans the row and Compare/Save split the next one. */
+  @media (max-width: 1279px) {
+    .th-actions {
+      justify-content: flex-start;
+      width: 100%;
+    }
+    .th-actions :global(.th-cta .btn) {
+      order: -1;
+    }
+    .th-actions :global(.th-cta .cta__note) {
+      text-align: left;
+    }
+  }
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .th :global(.th-id .ph__row) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-5);
+    }
+  }
+  @media (max-width: 639px) {
+    .th-actions :global(.th-cta .btn) {
+      flex-basis: 100%;
+    }
+    .th-actions :global(.th-act) {
+      flex: 1 1 0;
+    }
   }
 
-  .th-empty {
-    padding: var(--space-8) 0;
+  /* ---- Main column + sticky facts ---- */
+  .th-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-12);
+  }
+  @media (min-width: 1024px) {
+    .th-layout {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      column-gap: var(--space-12);
+      row-gap: var(--space-16);
+    }
+    .th-layout > :global(.th-main) {
+      grid-column: 1;
+    }
+    .th-side {
+      grid-column: 2;
+      grid-row: 1 / span 4;
+    }
+  }
+  .th-fact {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .th-fact__note {
     color: var(--ink-3);
-    border-top: 1px solid var(--ink);
+    font-size: var(--text-xs);
+  }
+  .th-fact__muted {
+    color: var(--ink-3);
+  }
+  .th-side__bias {
+    margin-top: var(--space-1);
   }
   .th-pager {
     display: flex;
@@ -619,11 +640,16 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    padding-block: var(--space-4) var(--space-5);
+    padding-top: var(--space-4);
   }
-  .th-pager__status {
+  .th-pager__status,
+  .th-note {
     color: var(--ink-3);
     font-size: var(--text-xs);
+    line-height: 1.45;
+  }
+  .th-note {
+    margin-top: var(--space-3);
   }
   .th-pager__status a {
     color: var(--ink-2);
@@ -636,54 +662,76 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     gap: var(--space-2);
   }
 
-  .th-pair {
-    row-gap: var(--space-12);
+  /* ---- Full-width related blocks ---- */
+  .th-wide {
+    margin-top: var(--space-16);
+    padding-top: var(--section-y-app);
+    border-top: 1px solid var(--line);
   }
-  .th-note {
-    margin-top: var(--space-3);
-    color: var(--ink-3);
-    font-size: var(--text-xs);
-    line-height: 1.45;
+  .th-sections {
+    margin-top: var(--space-6);
   }
-  .th-note a {
-    color: var(--ink-2);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
-  }
-  @media (min-width: 1024px) {
-    .th-versions {
-      position: sticky;
-      top: calc(var(--header-h) + var(--space-6));
-      align-self: start;
+  @media (pointer: coarse) {
+    .th-wide :global(.th-types .chip) {
+      height: 40px;
     }
   }
-
+  /* 390: four sections two-up, and similar themes as a sideways row (one card and a peek). */
+  @media (max-width: 639px) {
+    .th-sections {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4) var(--space-3);
+    }
+    .th-sections > :global(:nth-child(n + 5)) {
+      display: none;
+    }
+    .th-similar {
+      display: flex;
+      gap: var(--space-3);
+      margin-inline: calc(var(--page-gutter) * -1);
+      padding: 2px var(--page-gutter) var(--space-2);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--page-gutter);
+      scrollbar-width: none;
+    }
+    .th-similar::-webkit-scrollbar {
+      display: none;
+    }
+    .th-similar__item {
+      flex: 0 0 80%;
+      scroll-snap-align: start;
+    }
+  }
   .th-similar__item {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
+  }
+  .th-similar__item :global(.theme-card) {
+    flex: 1;
   }
   .th-similar__why {
     margin-top: var(--space-2);
+    padding-left: var(--space-1);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
   }
-  .th-compare {
-    margin-top: var(--space-12);
+  .th-pairs {
+    margin-top: var(--space-10);
   }
-  :global(.th-compare__label) {
+  .th-pairs__title {
     margin-bottom: var(--space-3);
+    color: var(--ink);
+    font-size: var(--text-h4);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
   }
 
   .th-source {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
     margin-top: var(--space-16);
-    padding-top: var(--space-4);
+    padding-block: var(--space-4);
     border-top: 1px solid var(--line);
-  }
-  .th-source__bias {
-    max-width: 640px;
-    color: var(--ink-3);
-    font-size: var(--text-xs);
-    line-height: 1.45;
   }
 </style>

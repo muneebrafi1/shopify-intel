@@ -2,6 +2,7 @@
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
+import Panel from '~/components/admin/Panel.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
 import Button from '~/components/ui/Button.astro';
 import Field from '~/components/ui/Field.astro';
@@ -48,26 +49,25 @@ const editing = editId !== null ? rows.find((t) => t.id === editId) : undefined;
 const visible = rows.filter((t) => t.status === 'active').length;
 ---
 
-<AdminLayout title="Themes" section="themes">
+<AdminLayout title="Themes" section="themes" trail={[{ label: 'Themes' }]}>
+  <Fragment slot="actions">
+    <Button href="/themes" variant="secondary" size="sm" iconRight="arrow-up-right">
+      Public index
+    </Button>
+  </Fragment>
   <AdminHeader
     title="Themes"
     count={rows.length}
     countLabel="themes"
-    trail={[{ label: 'Themes' }]}
     description={`${visible} visible on the site. Hiding a theme removes its public page and its counts; detections are kept.`}
   />
   <FlashNotice />
 
   {editing && (
-    <section class="edit a-panel" id="edit" aria-labelledby="edit-title">
-      <div class="a-block__head">
-        <h2 class="a-h2" id="edit-title">
-          Edit {editing.name}
-        </h2>
-        <a class="a-link" href={back}>
-          Close
-        </a>
-      </div>
+    <Panel title={`Edit ${editing.name}`} id="edit" class="edit">
+      <a slot="actions" class="a-link" href={back}>
+        Close
+      </a>
       <form method="post" class="a-form">
         <input type="hidden" name="id" value={editing.id} />
         <input type="hidden" name="intent" value="update" />
@@ -101,7 +101,7 @@ const visible = rows.filter((t) => t.status === 'active').length;
           </Button>
         </div>
       </form>
-    </section>
+    </Panel>
   )}
 
   <form
@@ -132,106 +132,102 @@ const visible = rows.filter((t) => t.status === 'active').length;
     )}
   </form>
 
-  <div class="table-wrap">
-    <table class="table a-table">
-      <thead>
-        <tr>
-          <th scope="col">Theme</th>
-          <th scope="col">Vendor</th>
-          <th scope="col">Price</th>
-          <th scope="col" class="a-hide-sm">
-            Marketplace
-          </th>
-          <th scope="col" class="is-num">
-            Stores
-          </th>
-          <th scope="col">Status</th>
-          <th scope="col" class="is-actions">
-            <span class="visually-hidden">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 ? (
+  <Panel flush>
+    <div class="a-tablewrap">
+      <table class="table a-table a-table--stack">
+        <thead>
           <tr>
-            <td colspan="7" class="a-empty-cell">
-              No themes match “{q}”.
-            </td>
+            <th scope="col">Theme</th>
+            <th scope="col">Vendor</th>
+            <th scope="col">Price</th>
+            <th scope="col">Marketplace</th>
+            <th scope="col" class="is-num">
+              Stores
+            </th>
+            <th scope="col">Status</th>
+            <th scope="col" class="is-actions">
+              <span class="visually-hidden">Actions</span>
+            </th>
           </tr>
-        ) : (
-          rows.map((t) => (
-            <tr class:list={{ 'is-editing': t.id === editId }}>
-              <td>
-                <a class="a-row-link" href={hrefWith('/admin/themes', { q, edit: t.id }) + '#edit'}>
-                  {t.name}
-                </a>
-                <span class="a-sub a-mono">{t.slug}</span>
-              </td>
-              <td class="a-muted">{t.vendor ?? '—'}</td>
-              <td class="a-nowrap">{t.price_label ?? <span class="a-muted">—</span>}</td>
-              <td class="a-muted a-hide-sm">{t.marketplace ?? '—'}</td>
-              <td class="is-num">
-                {t.store_count ?? 0}
-                {t.curated_store_count ? (
-                  <span class="a-sub a-nowrap">{t.curated_store_count} curated</span>
-                ) : null}
-              </td>
-              <td>
-                <StatusPill status={t.status} variant="dot" />
-              </td>
-              <td class="is-actions">
-                <Button
-                  href={hrefWith('/admin/themes', { q, edit: t.id }) + '#edit'}
-                  size="sm"
-                  variant="ghost"
-                  icon="pencil-simple"
-                  label={`Edit ${t.name}`}
-                />
-                {t.status !== 'retired' && (
-                  <form
-                    method="post"
-                    data-confirm={
-                      t.status === 'active' ? `Hide ${t.name} from the public site?` : undefined
-                    }
-                  >
-                    <input type="hidden" name="id" value={t.id} />
-                    <input type="hidden" name="intent" value="status" />
-                    <input
-                      type="hidden"
-                      name="status"
-                      value={t.status === 'active' ? 'hidden' : 'active'}
-                    />
-                    <Button type="submit" size="sm" variant="secondary">
-                      {t.status === 'active' ? 'Hide' : 'Unhide'}
-                    </Button>
-                  </form>
-                )}
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colspan="7" class="a-empty-cell">
+                No themes match “{q}”.
               </td>
             </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
-  <p class="a-result a-mono a-muted foot">
-    Store counts from the summary tables, rebuilt at ingest and after admin changes.
-  </p>
+          ) : (
+            rows.map((t) => (
+              <tr class:list={{ 'is-editing': t.id === editId }}>
+                <td class="is-primary">
+                  <a
+                    class="a-row-link"
+                    href={hrefWith('/admin/themes', { q, edit: t.id }) + '#edit'}
+                  >
+                    {t.name}
+                  </a>
+                  <span class="a-sub a-mono">{t.slug}</span>
+                </td>
+                <td class="is-meta a-muted">{t.vendor ?? '—'}</td>
+                <td class="is-meta a-nowrap">{t.price_label ?? <span class="a-muted">—</span>}</td>
+                <td class="a-muted a-hide-sm">{t.marketplace ?? '—'}</td>
+                <td class="is-meta is-num" data-label="Stores">
+                  {t.store_count ?? 0}
+                  {t.curated_store_count ? (
+                    <span class="a-sub a-nowrap">{t.curated_store_count} curated</span>
+                  ) : null}
+                </td>
+                <td class="is-meta">
+                  <StatusPill status={t.status} variant="dot" />
+                </td>
+                <td class="is-actions">
+                  <Button
+                    href={hrefWith('/admin/themes', { q, edit: t.id }) + '#edit'}
+                    size="sm"
+                    variant="ghost"
+                    icon="pencil-simple"
+                    label={`Edit ${t.name}`}
+                  />
+                  {t.status !== 'retired' && (
+                    <form
+                      method="post"
+                      data-confirm={
+                        t.status === 'active' ? `Hide ${t.name} from the public site?` : undefined
+                      }
+                    >
+                      <input type="hidden" name="id" value={t.id} />
+                      <input type="hidden" name="intent" value="status" />
+                      <input
+                        type="hidden"
+                        name="status"
+                        value={t.status === 'active' ? 'hidden' : 'active'}
+                      />
+                      <Button type="submit" size="sm" variant="secondary">
+                        {t.status === 'active' ? 'Hide' : 'Unhide'}
+                      </Button>
+                    </form>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+    <p slot="footer">
+      Store counts come from the summary tables, rebuilt at ingest and after admin changes.
+    </p>
+  </Panel>
 </AdminLayout>
 
 <style>
-  .edit {
-    margin-bottom: var(--space-8);
+  :global(.edit) {
+    margin-bottom: var(--space-6);
   }
   @media (min-width: 900px) {
     .three {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-  }
-  .foot {
-    margin-top: var(--space-4);
-    border-top: 0;
-    font-size: var(--text-2xs);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
   }
 </style>

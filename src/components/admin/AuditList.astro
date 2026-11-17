@@ -1,8 +1,8 @@
 ---
-/** Recent admin activity: what changed, by whom, when (reads `admin_audit`). */
+/** Recent admin activity: what changed, by whom, when (reads `admin_audit`). A quiet timeline. */
 import type { AuditRow } from '~/server/admin/queries';
 import { AUDIT_LABELS } from '~/server/admin/audit';
-import { fullTime, timeAgo } from '~/server/admin/format';
+import { fullTime, shortDate, timeAgo } from '~/server/admin/format';
 
 interface Props {
   rows: AuditRow[];
@@ -21,14 +21,24 @@ const FIELD_LABELS: Record<string, string> = {
   program_id: 'program',
 };
 const show = (v: unknown) => (v === null || v === undefined || v === '' ? '—' : String(v));
+const plural = (n: number, one: string) =>
+  `${n.toLocaleString('en-US')} ${n === 1 ? one : `${one}s`}`;
 
-function summary(row: AuditRow): string {
-  if (!row.detail_json) return '';
-  let detail: Record<string, unknown>;
+function parse(row: AuditRow): Record<string, unknown> | null {
+  if (!row.detail_json) return null;
   try {
-    detail = JSON.parse(row.detail_json) as Record<string, unknown>;
+    return JSON.parse(row.detail_json) as Record<string, unknown>;
   } catch {
-    return '';
+    return null;
+  }
+}
+
+function summary(row: AuditRow, detail: Record<string, unknown> | null): string {
+  if (!detail) return '';
+  if (row.action === 'removal.purge') {
+    const n = Number(detail.purged ?? 0);
+    const cutoff = typeof detail.cutoff === 'string' ? shortDate(detail.cutoff) : null;
+    return `${plural(n, 'record')}${cutoff ? ` closed before ${cutoff}` : ''}`;
   }
   const parts: string[] = [];
   for (const [key, value] of Object.entries(detail)) {
@@ -44,6 +54,7 @@ function summary(row: AuditRow): string {
 
 function target(row: AuditRow): { text: string; href?: string } | null {
   const id = row.target_id;
+  if (row.action === 'removal.purge') return { text: 'Removals', href: '/admin/removals' };
   if (!id) return null;
   switch (row.target_type) {
     case 'store':
@@ -67,6 +78,14 @@ function target(row: AuditRow): { text: string; href?: string } | null {
       return { text: id };
   }
 }
+
+type Kind = 'warn' | 'remove' | 'block' | 'default';
+function kind(row: AuditRow, detail: Record<string, unknown> | null): Kind {
+  if (row.action.endsWith('_failed')) return 'warn';
+  if (detail?.capture_blocked === true) return 'block';
+  if (row.action.startsWith('removal.')) return 'remove';
+  return 'default';
+}
 ---
 
 {rows.length === 0 ? (
@@ -74,13 +93,13 @@ function target(row: AuditRow): { text: string; href?: string } | null {
 ) : (
   <ol class="audit">
     {rows.map((row) => {
+      const detail = parse(row);
       const t = hideTarget ? null : target(row);
-      const s = summary(row);
+      const s = summary(row, detail);
+      const k = kind(row, detail);
       return (
-        <li class:list={['audit__row', { 'audit__row--warn': row.action.endsWith('_failed') }]}>
-          <time class="audit__time" datetime={row.created_at} title={fullTime(row.created_at)}>
-            {timeAgo(row.created_at, now)}
-          </time>
+        <li class:list={['audit__row', `audit__row--${k}`]}>
+          <span class="audit__dot" aria-hidden="true" />
           <div class="audit__body">
             <p class="audit__what">
               <span class="audit__action">{AUDIT_LABELS[row.action] ?? row.action}</span>
@@ -94,8 +113,12 @@ function target(row: AuditRow): { text: string; href?: string } | null {
             <p class="audit__meta">
               {row.actor}
               {s && <> · {s}</>}
+              {k === 'block' && <span class="audit__flag"> · captures blocked</span>}
             </p>
           </div>
+          <time class="audit__time" datetime={row.created_at} title={fullTime(row.created_at)}>
+            {timeAgo(row.created_at, now)}
+          </time>
         </li>
       );
     })}
@@ -104,28 +127,52 @@ function target(row: AuditRow): { text: string; href?: string } | null {
 
 <style>
   .audit {
-    border-top: 1px solid var(--line);
+    position: relative;
+    padding: var(--space-2) 0;
   }
   .audit__row {
+    position: relative;
     display: grid;
-    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-columns: 7px minmax(0, 1fr) auto;
     gap: var(--space-3);
-    padding: 10px 0;
-    border-bottom: 1px solid var(--line);
+    align-items: start;
+    padding: var(--space-2) var(--space-4);
   }
-  .audit__time {
-    padding-top: 2px;
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.02em;
-    white-space: nowrap;
+  /* The timeline rail between dots. */
+  .audit__row:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--space-4) + 3px);
+    top: calc(var(--space-2) + 15px);
+    bottom: calc(var(--space-2) * -1 + 7px);
+    width: 1px;
+    background: var(--line);
+  }
+  .audit__dot {
+    width: 7px;
+    height: 7px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1.5px var(--ink-4);
+  }
+  .audit__row--remove .audit__dot {
+    box-shadow: inset 0 0 0 1.5px var(--ink-2);
+  }
+  .audit__row--block .audit__dot {
+    background: var(--critical);
+    box-shadow: none;
+  }
+  .audit__row--warn .audit__dot {
+    background: var(--critical);
+    box-shadow: none;
   }
   .audit__what {
     display: flex;
     flex-wrap: wrap;
     gap: 0 6px;
     font-size: var(--text-sm);
+    line-height: 1.45;
   }
   .audit__action {
     color: var(--ink);
@@ -143,6 +190,7 @@ function target(row: AuditRow): { text: string; href?: string } | null {
   }
   .audit__what a:hover {
     color: var(--ink);
+    text-decoration-color: currentColor;
   }
   .audit__meta {
     margin-top: 1px;
@@ -150,13 +198,21 @@ function target(row: AuditRow): { text: string; href?: string } | null {
     font-size: var(--text-xs);
     overflow-wrap: anywhere;
   }
+  .audit__flag {
+    color: var(--critical);
+  }
   .audit__row--warn .audit__action {
     color: var(--critical);
   }
+  .audit__time {
+    padding-top: 1px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
   .audit-empty {
-    padding: var(--space-6) 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+    padding: var(--space-5) var(--space-4);
     color: var(--ink-3);
     font-size: var(--text-sm);
   }

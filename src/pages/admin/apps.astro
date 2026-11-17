@@ -2,8 +2,10 @@
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
+import Panel from '~/components/admin/Panel.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
+import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
 import Field from '~/components/ui/Field.astro';
 import Icon from '~/components/ui/Icon.astro';
@@ -63,26 +65,25 @@ const editing =
 const filtered = !!(q || category || status);
 ---
 
-<AdminLayout title="Apps" section="apps">
+<AdminLayout title="Apps" section="apps" trail={[{ label: 'Apps' }]}>
+  <Fragment slot="actions">
+    <Button href="/apps" variant="secondary" size="sm" iconRight="arrow-up-right">
+      Public index
+    </Button>
+  </Fragment>
   <AdminHeader
     title="Apps"
     count={total}
     countLabel="apps"
-    trail={[{ label: 'Apps' }]}
     description="Full profiles carry App Store facts; basic ones are detected apps with a light record. Hidden apps leave the site but keep their detections."
   />
   <FlashNotice />
 
   {editing && (
-    <section class="edit a-panel" id="edit" aria-labelledby="edit-title">
-      <div class="a-block__head">
-        <h2 class="a-h2" id="edit-title">
-          Edit {editing.name}
-        </h2>
-        <a class="a-link" href={back}>
-          Close
-        </a>
-      </div>
+    <Panel title={`Edit ${editing.name}`} id="edit" class="edit">
+      <a slot="actions" class="a-link" href={back}>
+        Close
+      </a>
       <form method="post" class="a-form">
         <input type="hidden" name="id" value={editing.id} />
         <input type="hidden" name="intent" value="update" />
@@ -118,7 +119,7 @@ const filtered = !!(q || category || status);
           </Button>
         </div>
       </form>
-    </section>
+    </Panel>
   )}
 
   <form method="get" action="/admin/apps" class="a-filters" role="search" aria-label="Filter apps">
@@ -136,35 +137,37 @@ const filtered = !!(q || category || status);
         autocomplete="off"
       />
     </div>
-    <label class="a-filters__field">
-      <span class="visually-hidden">Category</span>
-      <Input as="select" name="category" data-autosubmit class={category ? 'is-set' : undefined}>
-        <option value="">Category</option>
-        <option value="none" selected={category === 'none'}>
-          No category
-        </option>
-        {categories.map((c) => (
-          <option value={c.value} selected={c.value === category}>
-            {c.label}
+    <div class="a-filters__pills">
+      <label class="a-filters__field">
+        <span class="visually-hidden">Category</span>
+        <Input as="select" name="category" data-autosubmit class={category ? 'is-set' : undefined}>
+          <option value="">Category</option>
+          <option value="none" selected={category === 'none'}>
+            No category
           </option>
-        ))}
-      </Input>
-    </label>
-    <label class="a-filters__field">
-      <span class="visually-hidden">Status</span>
-      <Input as="select" name="status" data-autosubmit class={status ? 'is-set' : undefined}>
-        <option value="">Status</option>
-        <option value="active" selected={status === 'active'}>
-          Active
-        </option>
-        <option value="hidden" selected={status === 'hidden'}>
-          Hidden
-        </option>
-        <option value="delisted" selected={status === 'delisted'}>
-          Delisted
-        </option>
-      </Input>
-    </label>
+          {categories.map((c) => (
+            <option value={c.value} selected={c.value === category}>
+              {c.label}
+            </option>
+          ))}
+        </Input>
+      </label>
+      <label class="a-filters__field">
+        <span class="visually-hidden">Status</span>
+        <Input as="select" name="status" data-autosubmit class={status ? 'is-set' : undefined}>
+          <option value="">Status</option>
+          <option value="active" selected={status === 'active'}>
+            Active
+          </option>
+          <option value="hidden" selected={status === 'hidden'}>
+            Hidden
+          </option>
+          <option value="delisted" selected={status === 'delisted'}>
+            Delisted
+          </option>
+        </Input>
+      </label>
+    </div>
     <div class="a-filters__actions">
       <Button type="submit" size="sm" variant="primary" class="a-filters__apply">
         Apply
@@ -177,92 +180,106 @@ const filtered = !!(q || category || status);
     </div>
   </form>
 
-  <div class="table-wrap">
-    <table class="table a-table">
-      <thead>
-        <tr>
-          <th scope="col">App</th>
-          <th scope="col">Category</th>
-          <th scope="col">Profile</th>
-          <th scope="col" class="is-num">
-            Stores
-          </th>
-          <th scope="col">Status</th>
-          <th scope="col" class="is-actions">
-            <span class="visually-hidden">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 ? (
+  <Panel flush>
+    <div class="a-tablewrap">
+      <table class="table a-table a-table--stack">
+        <thead>
           <tr>
-            <td colspan="6" class="a-empty-cell">
-              No apps match these filters.{' '}
-              <a class="a-link" href="/admin/apps">
-                Clear filters
-              </a>
-            </td>
+            <th scope="col">App</th>
+            <th scope="col">Category</th>
+            <th scope="col">Profile</th>
+            <th scope="col" class="is-num">
+              Stores
+            </th>
+            <th scope="col">Status</th>
+            <th scope="col" class="is-actions">
+              <span class="visually-hidden">Actions</span>
+            </th>
           </tr>
-        ) : (
-          rows.map((a) => (
-            <tr class:list={{ 'is-editing': a.id === editId }}>
-              <td class="app">
-                <span class="a-cell-main">
-                  <AppIcon src={a.icon_url} name={a.name} size={28} />
-                  <span>
-                    <a
-                      class="a-row-link"
-                      href={hrefWith('/admin/apps', { ...base, edit: a.id }) + '#edit'}
-                    >
-                      {a.name}
-                    </a>
-                    <span class="a-sub">
-                      <span class="a-mono">{a.slug}</span>
-                      {a.developer && <> · {a.developer}</>}
-                    </span>
-                  </span>
-                </span>
-              </td>
-              <td class:list={{ 'a-muted': !a.category_name }}>{a.category_name ?? 'None'}</td>
-              <td class="a-muted">{a.profile === 'full' ? 'Full' : 'Basic'}</td>
-              <td class="is-num">{a.store_count ?? 0}</td>
-              <td>
-                <StatusPill status={a.status} variant="dot" />
-              </td>
-              <td class="is-actions">
-                <Button
-                  href={hrefWith('/admin/apps', { ...base, edit: a.id }) + '#edit'}
-                  size="sm"
-                  variant="ghost"
-                  icon="pencil-simple"
-                  label={`Edit ${a.name}`}
-                />
-                {a.status !== 'delisted' && (
-                  <form
-                    method="post"
-                    data-confirm={
-                      a.status === 'active' ? `Hide ${a.name} from the public site?` : undefined
-                    }
-                  >
-                    <input type="hidden" name="id" value={a.id} />
-                    <input type="hidden" name="intent" value="status" />
-                    <input
-                      type="hidden"
-                      name="status"
-                      value={a.status === 'active' ? 'hidden' : 'active'}
-                    />
-                    <Button type="submit" size="sm" variant="secondary">
-                      {a.status === 'active' ? 'Hide' : 'Unhide'}
-                    </Button>
-                  </form>
-                )}
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colspan="6" class="a-empty-cell">
+                No apps match these filters.{' '}
+                <a class="a-link" href="/admin/apps">
+                  Clear filters
+                </a>
               </td>
             </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
+          ) : (
+            rows.map((a) => (
+              <tr class:list={{ 'is-editing': a.id === editId }}>
+                <td class="is-primary app">
+                  <span class="a-cell-main">
+                    <AppIcon src={a.icon_url} name={a.name} size={28} />
+                    <span>
+                      <a
+                        class="a-row-link"
+                        href={hrefWith('/admin/apps', { ...base, edit: a.id }) + '#edit'}
+                      >
+                        {a.name}
+                      </a>
+                      <span class="a-sub a-truncate">
+                        <span class="a-mono">{a.slug}</span>
+                        {a.developer && <> · {a.developer}</>}
+                      </span>
+                    </span>
+                  </span>
+                </td>
+                <td class:list={['is-meta', { 'a-muted': !a.category_name }]}>
+                  {a.category_name ?? 'No category'}
+                </td>
+                <td class="is-meta">
+                  {a.profile === 'full' ? (
+                    <Badge size="sm">Full</Badge>
+                  ) : (
+                    <Badge size="sm" tone="outline">
+                      Basic
+                    </Badge>
+                  )}
+                </td>
+                <td class="is-meta is-num" data-label="Stores">
+                  {a.store_count ?? 0}
+                </td>
+                <td class="is-meta">
+                  <StatusPill status={a.status} variant="dot" />
+                </td>
+                <td class="is-actions">
+                  <Button
+                    href={hrefWith('/admin/apps', { ...base, edit: a.id }) + '#edit'}
+                    size="sm"
+                    variant="ghost"
+                    icon="pencil-simple"
+                    label={`Edit ${a.name}`}
+                  />
+                  {a.status !== 'delisted' && (
+                    <form
+                      method="post"
+                      data-confirm={
+                        a.status === 'active' ? `Hide ${a.name} from the public site?` : undefined
+                      }
+                    >
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="intent" value="status" />
+                      <input
+                        type="hidden"
+                        name="status"
+                        value={a.status === 'active' ? 'hidden' : 'active'}
+                      />
+                      <Button type="submit" size="sm" variant="secondary">
+                        {a.status === 'active' ? 'Hide' : 'Unhide'}
+                      </Button>
+                    </form>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </Panel>
   <Pagination
     page={current}
     pageSize={PAGE_SIZE}
@@ -273,10 +290,11 @@ const filtered = !!(q || category || status);
 </AdminLayout>
 
 <style>
-  .edit {
-    margin-bottom: var(--space-8);
+  :global(.edit) {
+    margin-bottom: var(--space-6);
   }
   .app {
-    min-width: 260px;
+    min-width: 280px;
+    max-width: 420px;
   }
 </style>

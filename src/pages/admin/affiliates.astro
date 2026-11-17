@@ -6,10 +6,11 @@
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
+import Panel from '~/components/admin/Panel.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
 import Button from '~/components/ui/Button.astro';
 import Checkbox from '~/components/ui/Checkbox.astro';
-import Count from '~/components/ui/Count.astro';
+import Badge from '~/components/ui/Badge.astro';
 import Field from '~/components/ui/Field.astro';
 import Input from '~/components/ui/Input.astro';
 import { adminDb } from '~/server/admin/env';
@@ -89,42 +90,37 @@ const targetHref = (l: (typeof links)[number]) =>
       : null;
 ---
 
-<AdminLayout title="Affiliates" section="affiliates">
+<AdminLayout title="Affiliates" section="affiliates" trail={[{ label: 'Affiliates' }]}>
+  <Fragment slot="actions">
+    <Button href="/admin/affiliates?new=1#edit" variant="primary" size="sm" icon="plus">
+      Add link
+    </Button>
+  </Fragment>
   <AdminHeader
     title="Affiliates"
-    trail={[{ label: 'Affiliates' }]}
     description={`${activeLinks} active links, ${clicks30.toLocaleString('en-US')} clicks in the last 30 days. The site only shows /go/<id>; clicks are counted per day with no visitor data.`}
-  >
-    <Fragment slot="actions">
-      <Button href="/admin/affiliates?new=1#edit" variant="primary" size="sm" icon="plus">
-        Add link
-      </Button>
-    </Fragment>
-  </AdminHeader>
+  />
   <FlashNotice />
 
   {(editing || creating) && options && (
-    <section class="edit a-panel" id="edit" aria-labelledby="edit-title">
-      <div class="a-block__head">
-        <div>
-          <h2 class="a-h2" id="edit-title">
-            {editing ? `Edit link for ${editing.target_name}` : 'Add an affiliate link'}
-          </h2>
-          <p class="a-block__desc">
-            {editing ? (
-              <>
-                Served at <span class="a-mono">/go/{editing.id}</span>. Changing the URL takes
-                effect on the next click.
-              </>
-            ) : (
-              'The link appears on the target’s page with an affiliate label next to the button.'
-            )}
-          </p>
-        </div>
-        <a class="a-link" href="/admin/affiliates">
-          Close
-        </a>
-      </div>
+    <Panel
+      title={editing ? `Edit link for ${editing.target_name}` : 'Add an affiliate link'}
+      id="edit"
+      class="edit"
+    >
+      <a slot="actions" class="a-link" href="/admin/affiliates">
+        Close
+      </a>
+      <p class="edit__desc">
+        {editing ? (
+          <>
+            Served at <span class="a-mono">/go/{editing.id}</span>. Changing the URL takes effect on
+            the next click.
+          </>
+        ) : (
+          'The link appears on the target’s page with an affiliate label next to the button.'
+        )}
+      </p>
       <form method="post" class="a-form">
         <input type="hidden" name="intent" value={editing ? 'update' : 'create'} />
         {editing && <input type="hidden" name="id" value={editing.id} />}
@@ -212,18 +208,12 @@ const targetHref = (l: (typeof links)[number]) =>
           </Button>
         </div>
       </form>
-    </section>
+    </Panel>
   )}
 
-  <section aria-labelledby="links">
-    <div class="a-block__head">
-      <h2 class="a-h2" id="links">
-        Links
-        <Count value={links.length} />
-      </h2>
-    </div>
-    <div class="table-wrap">
-      <table class="table a-table">
+  <Panel title="Links" count={links.length} flush>
+    <div class="a-tablewrap">
+      <table class="table a-table a-table--stack">
         <thead>
           <tr>
             <th scope="col">Target</th>
@@ -253,25 +243,25 @@ const targetHref = (l: (typeof links)[number]) =>
               const href = targetHref(l);
               return (
                 <tr class:list={{ 'is-editing': l.id === editId }}>
-                  <td class="target">
-                    <div class="target__grid">
-                      <span class="type">{TYPE[l.target_type]}</span>
-                      <span>
-                        {href ? (
-                          <a class="a-row-link" href={href}>
-                            {l.target_name}
-                          </a>
-                        ) : (
-                          <span class="a-strong">{l.target_name}</span>
-                        )}
-                        {!l.target_id && l.target_type !== 'vendor' && (
-                          <span class="a-sub">No profile yet</span>
-                        )}
-                      </span>
-                    </div>
+                  <td class="is-primary target">
+                    <span class="target__row">
+                      {href ? (
+                        <a class="a-row-link" href={href}>
+                          {l.target_name}
+                        </a>
+                      ) : (
+                        <span class="a-strong">{l.target_name}</span>
+                      )}
+                      <Badge size="sm" tone="outline">
+                        {TYPE[l.target_type]}
+                      </Badge>
+                    </span>
+                    {!l.target_id && l.target_type !== 'vendor' && (
+                      <span class="a-sub">No profile yet</span>
+                    )}
                   </td>
-                  <td class="a-muted">{l.program_name ?? '—'}</td>
-                  <td class="url">
+                  <td class="is-meta a-muted">{l.program_name ?? 'No program'}</td>
+                  <td class="url a-hide-sm">
                     <span class="a-mono a-truncate" title={l.url}>
                       {l.url.replace(/^https:\/\//, '')}
                     </span>
@@ -279,9 +269,13 @@ const targetHref = (l: (typeof links)[number]) =>
                       /go/{l.id} · edited {timeAgo(l.updated_at, now)}
                     </span>
                   </td>
-                  <td class="is-num">{l.clicks_30d.toLocaleString('en-US')}</td>
-                  <td class="is-num a-muted">{l.clicks_total.toLocaleString('en-US')}</td>
-                  <td>
+                  <td class="is-meta is-num" data-label="30-day clicks">
+                    {l.clicks_30d.toLocaleString('en-US')}
+                  </td>
+                  <td class="is-meta is-num a-muted" data-label="All time">
+                    {l.clicks_total.toLocaleString('en-US')}
+                  </td>
+                  <td class="is-meta">
                     <StatusPill
                       status={l.active ? 'active' : 'off'}
                       label={l.active ? 'Active' : 'Off'}
@@ -304,20 +298,18 @@ const targetHref = (l: (typeof links)[number]) =>
         </tbody>
       </table>
     </div>
-  </section>
+  </Panel>
 
-  <section class="a-block" aria-labelledby="programs">
-    <div class="a-block__head">
-      <div>
-        <h2 class="a-h2" id="programs">
-          Programs
-          <Count value={programs.length} />
-        </h2>
-        <p class="a-block__desc">Application status per partner program. Approved first.</p>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table class="table a-table">
+  <Panel
+    title="Programs"
+    count={programs.length}
+    description="Application status per partner program. Approved first."
+    flush
+    class="programs"
+    id="programs"
+  >
+    <div class="a-tablewrap">
+      <table class="table a-table a-table--stack">
         <thead>
           <tr>
             <th scope="col">Program</th>
@@ -334,14 +326,16 @@ const targetHref = (l: (typeof links)[number]) =>
         <tbody>
           {programs.map((p) => (
             <tr>
-              <td class="a-strong">{p.name}</td>
-              <td class="a-muted">{p.network ?? '—'}</td>
-              <td class="is-num">
+              <td class="is-primary a-strong">{p.name}</td>
+              <td class="is-meta a-muted">{p.network ?? 'No network'}</td>
+              <td class="is-meta is-num" data-label="Links">
                 {p.active_links}
                 {p.links !== p.active_links && <span class="a-muted"> / {p.links}</span>}
               </td>
-              <td class="is-num">{p.clicks.toLocaleString('en-US')}</td>
-              <td>
+              <td class="is-meta is-num" data-label="Clicks">
+                {p.clicks.toLocaleString('en-US')}
+              </td>
+              <td class="status-cell">
                 <form method="post" class="a-inline-form">
                   <input type="hidden" name="intent" value="program" />
                   <input type="hidden" name="id" value={p.id} />
@@ -371,31 +365,33 @@ const targetHref = (l: (typeof links)[number]) =>
         </tbody>
       </table>
     </div>
-  </section>
+  </Panel>
 </AdminLayout>
 
 <style>
-  .edit {
-    margin-bottom: var(--space-10);
+  :global(.edit) {
+    margin-bottom: var(--space-6);
+  }
+  .edit__desc {
+    margin-bottom: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  :global(.programs) {
+    margin-top: var(--space-6);
   }
   :global(.mono-input) {
     font-family: var(--font-mono);
     font-size: var(--text-sm) !important;
   }
   .target {
-    min-width: 240px;
+    min-width: 220px;
   }
-  .target__grid {
-    display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
-    align-items: baseline;
-  }
-  .type {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+  .target__row {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
   }
   .url {
     max-width: 320px;
@@ -406,6 +402,12 @@ const targetHref = (l: (typeof links)[number]) =>
   }
   :global(select.program-status.is-approved) {
     color: var(--positive);
-    font-weight: var(--weight-medium);
+  }
+  @media (max-width: 639px) {
+    .status-cell {
+      flex-basis: 100%;
+      order: 3 !important;
+      margin-top: var(--space-1-5);
+    }
   }
 </style>

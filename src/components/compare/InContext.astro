@@ -1,0 +1,105 @@
+---
+/**
+ * One section shown in place on its page capture, inside a browser window: the page is
+ * scrolled so the section sits near the top, outlined in accent with its tag pinned on it
+ * (the store viewer's look). Uses container query units so the crop scales with the window.
+ */
+import Window from '~/components/ui/Window.astro';
+import type { SectionCard } from '~/server/api/v1/types';
+
+interface Props {
+  section: SectionCard;
+  /** Pinned tag text, e.g. "Newsletter signup · Klaviyo". */
+  label: string;
+  alt: string;
+  eager?: boolean;
+  class?: string;
+}
+const { section: s, label, alt, eager = false, class: className } = Astro.props;
+const shot = s.screenshot;
+const RATIO = 0.625; // window body is 16:10
+const ry = s.rect.y / shot.width;
+const rh = s.rect.h / shot.width;
+const pageH = shot.height / shot.width;
+// Scroll so the section starts ~12% down the window, without running past the page end.
+const off = Math.max(0, Math.min(ry - 0.12 * RATIO, pageH - RATIO));
+const top = ry - off;
+// A section at the very top of the page has no room for the tag above its outline.
+const tagInside = top < 0.03;
+const PATH: Record<string, string> = {
+  home: '',
+  collection: '/collections/all',
+  product: '/products/…',
+  cart: '/cart',
+};
+---
+
+<Window url={`${s.store.domain}${PATH[s.page_type] ?? ''}`} class:list={['ictx', className]}>
+  <a href={s.href} class="ictx__body" data-theme="light">
+    <img
+      src={shot.image.src}
+      alt={alt}
+      width={shot.width}
+      height={shot.height}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      style={`top:calc(${(-off).toFixed(4)} * 100cqw)`}
+    />
+    <span
+      class="ictx__region"
+      style={`top:calc(${top.toFixed(4)} * 100cqw);height:calc(${rh.toFixed(4)} * 100cqw)`}
+    >
+      <span class:list={['ictx__tag', { 'ictx__tag--inside': tagInside }]}>{label}</span>
+    </span>
+  </a>
+</Window>
+
+<style>
+  .ictx__body {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    container-type: inline-size;
+    background: var(--capture-bg);
+  }
+  .ictx__body img {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: auto;
+    max-width: none;
+  }
+  .ictx__region {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    border: 1.5px solid var(--accent);
+    border-radius: 3px;
+    box-shadow: 0 0 0 9999px rgb(255 255 255 / 0.35);
+    pointer-events: none;
+  }
+  .ictx__tag {
+    position: absolute;
+    left: 8px;
+    top: -11px;
+    display: inline-flex;
+    align-items: center;
+    max-width: calc(100% - 16px);
+    height: 20px;
+    padding: 0 8px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--accent-btn);
+    color: var(--accent-fg);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  }
+  .ictx__tag--inside {
+    top: 6px;
+  }
+</style>

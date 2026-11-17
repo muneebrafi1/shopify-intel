@@ -7,8 +7,9 @@
  *
  * Tests and scripts build their own client with `createApiClient({ db })` (node:sqlite adapter).
  */
-import { env } from 'cloudflare:workers';
+import { env, waitUntil as cfWaitUntil } from 'cloudflare:workers';
 import { d1Db } from '../db/d1.ts';
+import { createNotifier } from '../notify.ts';
 import { createApiClient, type ApiClient } from './v1/client.ts';
 import type { ApiDeps } from './v1/execute.ts';
 import { createApiHandler, type RouterOptions } from './v1/router.ts';
@@ -16,7 +17,16 @@ import { createApiHandler, type RouterOptions } from './v1/router.ts';
 export function workerDeps(): ApiDeps {
   return {
     db: d1Db(env.DB),
-    env: { IP_HASH_SALT: env.IP_HASH_SALT, MEDIA_BASE_URL: env.MEDIA_BASE_URL },
+    env: {
+      IP_HASH_SALT: env.IP_HASH_SALT,
+      MEDIA_BASE_URL: env.MEDIA_BASE_URL,
+      ADMIN_NOTIFY_EMAIL: env.ADMIN_NOTIFY_EMAIL,
+    },
+    // No mail transport yet (owner: placeholder): new removal requests are logged without
+    // personal data. Plug a provider here; see src/server/notify.ts.
+    notifier: createNotifier({ to: env.ADMIN_NOTIFY_EMAIL, transport: null }),
+    waitUntil: (promise) => cfWaitUntil(promise),
+    mediaStore: env.MEDIA ?? null,
     // Schema-check responses in dev so shape drift is caught before production.
     validateOutput: import.meta.env.DEV,
   };

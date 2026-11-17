@@ -1,18 +1,17 @@
 ---
 /**
- * /sections/<type>/<id> — one section in focus: the crop large on a calm stage, a spec sheet
- * (store, theme, page type, device, position, app, capture state), "Open in full page", Save,
- * prev/next within the type (← → keys). Below: the rest of the page as a numbered strip, and
- * more sections like it. Unknown ids 404; an id under another type 301s to its real URL.
+ * /sections/<type>/<id> — one section in focus: identity row with prev/next in the type (← →),
+ * the crop large in a product window beside a facts card, then the section in the context of
+ * its full page (pinned tags, this one outlined) with the page's other sections, and similar
+ * sections on other stores. Unknown ids 404; an id under another type 301s to its real URL.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import SectionCard from '~/components/domain/SectionCard.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import PageStrip from '~/components/sections/PageStrip.astro';
+import CropCard from '~/components/sections/CropCard.astro';
+import PageContext from '~/components/sections/PageContext.astro';
 import SectionFocus from '~/components/sections/SectionFocus.astro';
-import { cardMeta, cropSource, pagePhrase } from '~/components/sections/library';
-import { pageTypeName } from '~/lib/taxonomy';
+import { cropSource, fmt, pageLabel, pagePhrase } from '~/components/sections/library';
 import { api, orNotFound } from '~/server/api';
 
 const { type, id } = Astro.params;
@@ -24,6 +23,12 @@ const { data: detail, meta } = res;
 const s = detail.section;
 if (s.type.slug !== type) return Astro.redirect(s.href, 301);
 
+// The store's list entry carries the theme version, storefront URL and scan dates.
+const stores = await api
+  .listStores({ q: s.store.domain, scope: 'all', limit: 5 })
+  .catch(() => null);
+const store = stores?.data.items.find((x) => x.domain === s.store.domain) ?? null;
+
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
 const shot = detail.screenshot;
@@ -31,6 +36,7 @@ const ordered = [...shot.sections].sort((a, b) => a.order_index - b.order_index)
 const index = ordered.findIndex((x) => x.id === s.id);
 const source = cropSource(meta, [s]);
 const phrase = pagePhrase(s.page_type, s.device);
+const fullPageHref = `${s.store.href}?page=${s.page_type}&device=${s.device}#section-${s.id}`;
 // Whole rows on the 4-column grid.
 const more =
   detail.more_like_this.length >= 4
@@ -76,70 +82,55 @@ const jsonLd = [
 ];
 ---
 
-<BaseLayout title={title} description={description} canonical={s.href} jsonLd={jsonLd}>
-  <div class="container detail">
+<BaseLayout title={title} description={description} canonical={s.href} jsonLd={jsonLd} wide>
+  <div class="container--wide dx">
     <Breadcrumbs
-      class="detail__crumbs"
+      class="dx__crumbs"
       items={[
         { label: 'Sections', href: '/sections' },
         { label: s.type.name, href: s.type.href },
-        { label: `${s.store.display_name} · ${pageTypeName(s.page_type)}, ${s.device}` },
+        { label: s.store.display_name },
       ]}
     />
-    <SectionFocus detail={detail} source={source} />
+    <SectionFocus detail={detail} source={source} store={store} />
 
-    <section class="page-block" aria-labelledby="on-this-page">
+    <section class="dx__block" aria-labelledby="on-the-page">
       <SectionHeader
-        id="on-this-page"
-        label={`${pageTypeName(s.page_type)} page · ${s.device}`}
-        title="Other sections on this page"
-        count={ordered.length}
-        rule
+        id="on-the-page"
+        title="On the page"
+        description={`Where it sits on ${s.store.display_name}'s ${pageLabel(s.page_type).toLowerCase()}, among the sections around it.`}
+        href={fullPageHref}
+        linkLabel="Open in the store viewer"
       />
-      <PageStrip
-        sections={shot.sections}
+      <PageContext
+        shot={shot}
         currentId={s.id}
-        device={s.device}
         storeLabel={s.store.display_name}
+        fullPageHref={fullPageHref}
       />
     </section>
 
     {more.length > 0 && (
-      <section class="page-block" aria-labelledby="more-like-this">
+      <section class="dx__block" aria-labelledby="more-like-this">
         <SectionHeader
           id="more-like-this"
-          label={s.type.name}
-          title="More like this"
-          count={more.length}
-          description="On other stores: the same app, theme or device first."
-          rule
+          title={`Similar ${s.type.name.toLowerCase()} sections`}
+          description="On other stores. Same app, theme or device first."
+          href={s.type.href}
+          linkLabel={`All ${fmt(detail.in_type.total)}`}
         />
-        <div class="grid grid--sections">
+        <div class="dx__more">
           {more.map((m) => (
-            <SectionCard
-              href={m.href}
-              crop={m.crop}
-              device={m.device}
-              typeName={m.type.name}
-              storeLabel={m.store.display_name}
-              meta={cardMeta(m, ['page', 'device', 'theme'])}
-              app={m.app ? { name: m.app.short_name, iconUrl: m.app.icon_url } : null}
-            />
+            <CropCard section={m} tag="page" />
           ))}
         </div>
-        <p class="detail__all">
-          <a href={s.type.href}>
-            All {detail.in_type.total} {s.type.name.toLowerCase()} sections{' '}
-            <span aria-hidden="true">→</span>
-          </a>
-        </p>
       </section>
     )}
   </div>
 </BaseLayout>
 
 <script>
-  // ← → step through the sections of this type (the links in the spec sheet).
+  // ← → step through the sections of this type (the prev/next links in the identity row).
   document.addEventListener('keydown', (event) => {
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
       return;
@@ -159,30 +150,42 @@ const jsonLd = [
 </script>
 
 <style>
-  .detail__all {
-    margin-top: var(--space-8);
-    padding-top: var(--space-4);
+  .dx {
+    padding-top: var(--space-6);
+    padding-bottom: var(--section-y-app);
+  }
+  .dx :global(.dx__crumbs) {
+    margin-bottom: var(--space-5);
+  }
+  .dx__block {
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
     border-top: 1px solid var(--line);
   }
-  .detail__all a {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.25em;
+  .dx__more {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
   }
-  .detail__all a:hover {
-    text-decoration-color: currentColor;
-  }
-  .detail {
-    padding-top: var(--space-6);
-  }
-  .detail :global(.detail__crumbs) {
-    margin-bottom: var(--space-6);
+  @media (min-width: 560px) {
+    .dx__more {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
   @media (min-width: 1024px) {
-    .detail :global(.detail__crumbs) {
-      margin-bottom: var(--space-8);
+    .dx {
+      padding-top: var(--space-8);
+    }
+    .dx :global(.dx__crumbs) {
+      margin-bottom: var(--space-6);
+    }
+    .dx__block {
+      margin-top: var(--space-16);
+      padding-top: var(--space-10);
+    }
+    .dx__more {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-5);
     }
   }
 </style>

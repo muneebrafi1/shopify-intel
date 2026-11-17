@@ -1,7 +1,9 @@
 ---
 /**
- * One catalogue row inside <IndexList>: N° · title (+ subtitle) · cells. On small screens only
- * the number, title and cells marked `mobile` are shown.
+ * One row inside <IndexList>: rank · title (+ subtitle) · cells. On small screens only the rank,
+ * title and cells marked `mobile` are shown.
+ * `numbering`: 'specimen' prints "N°001" (v1; stores/themes e2e still assert it) — new pages
+ * should pass 'rank' ("1") or 'none'.
  */
 import { thumbCropHeight, thumbUrl } from '~/lib/media';
 import type { Device } from '~/lib/taxonomy';
@@ -24,9 +26,19 @@ interface Props {
   subtitle?: string;
   cells?: IndexCell[];
   preview?: { src: string; width: number; height: number; device?: Device } | null;
+  numbering?: 'specimen' | 'rank' | 'none';
   class?: string;
 }
-const { n, href, title, subtitle, cells = [], preview, class: className } = Astro.props;
+const {
+  n,
+  href,
+  title,
+  subtitle,
+  cells = [],
+  preview,
+  numbering = 'specimen',
+  class: className,
+} = Astro.props;
 const device = preview?.device ?? 'desktop';
 const previewSrc = preview
   ? thumbUrl(preview.src, {
@@ -34,7 +46,12 @@ const previewSrc = preview
       width: 600,
     })
   : undefined;
-const num = `N°${String(n).padStart(3, '0')}`;
+const num =
+  numbering === 'specimen'
+    ? `N°${String(n).padStart(3, '0')}`
+    : numbering === 'rank'
+      ? String(n)
+      : '';
 ---
 
 <li
@@ -76,19 +93,19 @@ const num = `N°${String(n).padStart(3, '0')}`;
     grid-template-columns: 52px minmax(0, 1fr) auto;
     align-items: baseline;
     gap: var(--space-3);
-    padding: 14px 0;
-    transition:
-      background-color var(--dur-fast) var(--ease-out),
-      padding var(--dur-base) var(--ease-out);
+    padding: 12px var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    border-radius: var(--radius-control);
+    transition: background-color var(--dur-fast) var(--ease-out);
   }
   .irow__link:hover {
-    background: color-mix(in srgb, var(--fill) 70%, transparent);
+    background: var(--surface-2);
   }
   .irow__n {
     font-family: var(--font-mono);
-    font-size: var(--text-2xs);
+    font-size: var(--text-xs);
     color: var(--ink-3);
-    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
   }
   .irow__title {
     display: flex;
@@ -96,10 +113,10 @@ const num = `N°${String(n).padStart(3, '0')}`;
     min-width: 0;
   }
   .irow__name {
-    font-size: var(--text-lg);
+    font-size: var(--text-body);
     font-weight: var(--weight-medium);
-    letter-spacing: var(--tracking-snug);
-    line-height: 1.25;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -114,8 +131,8 @@ const num = `N°${String(n).padStart(3, '0')}`;
   .irow__cell {
     display: none;
     min-width: 0;
-    color: var(--ink);
-    font-size: var(--text-base);
+    color: var(--ink-2);
+    font-size: var(--text-ui);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -130,10 +147,7 @@ const num = `N°${String(n).padStart(3, '0')}`;
     letter-spacing: 0.02em;
   }
   .irow__cell--serif {
-    font-family: var(--font-serif);
-    font-size: var(--text-md);
-    font-style: italic;
-    color: var(--ink-2);
+    color: var(--ink-3);
   }
   .irow__cell--muted {
     color: var(--ink-3);
@@ -142,10 +156,9 @@ const num = `N°${String(n).padStart(3, '0')}`;
     .irow__link {
       grid-template-columns: var(--index-cols);
       gap: var(--space-4);
-      padding: 16px 0;
-    }
-    .irow__link:hover {
-      padding-left: var(--space-2);
+      align-items: center;
+      min-height: 52px;
+      padding-block: 8px;
     }
     .irow__cell {
       display: block;

@@ -1,13 +1,14 @@
 ---
 /**
- * A teardown's notes on the store's plates. One plate at a time (?plate=<page>-<device>):
- * the notes for it as a numbered legend beside the capture, each note tied to its section on
- * the capture. Note numbers are the section numbers of the <FullPage> rail on the store page
- * (sections sorted top to bottom), so "02 Header" means the same section in both places.
- * Annotated sections keep their tag and outline visible on the capture.
+ * A teardown's notes on the store's captures (the Twenty pattern: real product crops with
+ * labels pinned on them). One capture at a time (?plate=<page>-<device>, kept from v1 for
+ * shared links): the notes for it as a numbered legend beside the capture in a product window,
+ * each note tied to its section. Note numbers are the section numbers of the <FullPage> rail
+ * on the store page (sections sorted top to bottom), so "02 Header" means the same section in
+ * both places. Annotated sections stay outlined in accent with their tag.
  */
 import Tabs from '~/components/ui/Tabs.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Window from '~/components/ui/Window.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
 import Icon from '~/components/ui/Icon.astro';
 import FullPage, { type FullPageSection } from '~/components/media/FullPage.astro';
@@ -66,7 +67,7 @@ for (const note of [...notes].sort((a, b) => a.n - b.n)) {
   if (!entry) {
     entry = {
       key,
-      label: `${shot.page_type.name} · ${note.device === 'desktop' ? 'desktop' : 'mobile'}`,
+      label: `${shot.page_type.name} · ${note.device === 'desktop' ? 'Desktop' : 'Mobile'}`,
       shot,
       notes: [],
     };
@@ -93,10 +94,16 @@ const annotatedIds = legend
 const css = annotatedIds
   .map(
     (id) =>
-      `.tdplates [data-region="${id}"]{box-shadow:inset 0 0 0 1.5px var(--accent)}` +
-      `.tdplates [data-region="${id}"] .fp__tag{opacity:1;transform:none;background:var(--accent)}`,
+      `.tdplates.tdplates [data-region="${id}"]::before{border:1.5px solid var(--accent)}` +
+      `.tdplates.tdplates [data-region="${id}"] .fp__tag{opacity:1;transform:none;background:var(--accent-btn);color:var(--accent-fg)}` +
+      `.tdplates.tdplates [data-region="${id}"] .fp__tag :is(.fp__tag-n,.fp__tag-app){color:color-mix(in srgb,var(--accent-fg) 72%,transparent)}`,
   )
   .join('');
+const PATHS: Record<string, string> = {
+  collection: '/collections/…',
+  product: '/products/…',
+  cart: '/cart',
+};
 const storePlateHref = current
   ? `${basePath}${current.shot.page_type.slug === 'home' ? '' : `?page=${current.shot.page_type.slug}`}${
       current.shot.device === 'mobile'
@@ -111,7 +118,7 @@ const storePlateHref = current
     {css && <Fragment set:html={`<style>${css}</style>`} />}
     {plates.length > 1 && (
       <Tabs
-        label="Plates with notes"
+        label="Captures with notes"
         class="tdplates__tabs"
         items={plates.map((x) => ({
           label: x.label,
@@ -124,20 +131,25 @@ const storePlateHref = current
 
     <div class="tdplates__grid">
       <div class="tdplates__legend">
-        <MonoLabel as="p">{`${current.label} · ${legend.length} ${legend.length === 1 ? 'note' : 'notes'}`}</MonoLabel>
+        <p class="tdplates__head">
+          {current.label}
+          <span class="num">
+            {legend.length} {legend.length === 1 ? 'note' : 'notes'}
+          </span>
+        </p>
         <ol class="tdnotes">
           {legend.map(({ note, num }) => (
             <li class="tdnote">
               <a
-                class="tdnote__num display num"
+                class="tdnote__num num"
                 href={note.section ? `#section-${note.section.id}` : undefined}
                 data-note-target={note.section ? String(note.section.id) : undefined}
-                aria-label={num ? `Section ${pad(num)} on the plate` : undefined}
+                aria-label={num ? `Section ${pad(num)} on the capture` : undefined}
               >
                 {num ? pad(num) : '—'}
               </a>
               <div class="tdnote__text">
-                <p class="tdnote__where mono">
+                <p class="tdnote__where">
                   {note.section_type.name}
                   {note.section?.app && (
                     <span class="tdnote__app">
@@ -157,9 +169,9 @@ const storePlateHref = current
           ))}
         </ol>
         <p class="tdplates__hint">
-          Numbers are the section numbers on the{' '}
+          Numbers match the sections on the{' '}
           <a href={storePlateHref}>
-            store’s {current.label} plate
+            store page’s {current.label.toLowerCase()} capture
             <Icon name="arrow-right" size={12} />
           </a>
         </p>
@@ -170,7 +182,8 @@ const storePlateHref = current
               .map((x) => (
                 <li>
                   <a href={hrefFor(x.key)}>
-                    <span class="mono">{x.notes.length}</span> more on {x.label}
+                    <span class="num">{x.notes.length}</span>{' '}
+                    {x.notes.length === 1 ? 'note' : 'notes'} on {x.label}
                     <Icon name="arrow-right" size={12} />
                   </a>
                 </li>
@@ -179,16 +192,22 @@ const storePlateHref = current
         )}
       </div>
 
-      <FullPage
-        src={current.shot.image.src}
-        width={current.shot.width}
-        height={current.shot.height}
-        device={current.shot.device}
-        alt={`${current.shot.store.display_name}, ${current.label} plate${current.shot.is_placeholder ? ' (layout preview, not a screenshot)' : ''}`}
-        sections={sections}
-        rail={false}
-        class="tdplates__viewer"
-      />
+      <Window
+        url={`${current.shot.store.domain}${PATHS[current.shot.page_type.slug] ?? ''}`}
+        class:list={['tdplates__window', `tdplates__window--${current.shot.device}`]}
+      >
+        <FullPage
+          src={current.shot.image.src}
+          width={current.shot.width}
+          height={current.shot.height}
+          device={current.shot.device}
+          alt={`${current.shot.store.display_name}, ${current.label.toLowerCase()} capture${current.shot.is_placeholder ? ' (layout preview, not a screenshot)' : ''}`}
+          sections={sections}
+          rail={false}
+          bare
+          class="tdplates__viewer"
+        />
+      </Window>
     </div>
   </div>
 )}
@@ -216,11 +235,11 @@ const storePlateHref = current
   .tdplates__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-8);
+    gap: var(--space-6);
   }
   @media (min-width: 1024px) {
     .tdplates__grid {
-      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
       gap: var(--space-10);
       align-items: start;
     }
@@ -232,27 +251,47 @@ const storePlateHref = current
       scrollbar-width: thin;
     }
   }
-  .tdnotes {
-    margin-top: var(--space-4);
-    border-top: 1px solid var(--ink);
+  .tdplates__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .tdplates__head .num {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 400;
   }
   .tdnote {
     display: grid;
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 36px minmax(0, 1fr);
     gap: var(--space-3);
     padding-block: var(--space-5);
     border-bottom: 1px solid var(--line);
   }
+  /* The number reads like the pinned tag on the capture. */
   .tdnote__num {
-    color: var(--accent-text);
-    font-size: 2.25rem;
-    line-height: 0.9;
-    letter-spacing: -0.02em;
+    display: inline-grid;
+    place-items: center;
+    align-self: start;
+    width: 32px;
+    height: 22px;
+    margin-top: 1px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-btn);
+    color: var(--accent-fg);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    transition: background-color var(--dur-fast) var(--ease-out);
   }
   a.tdnote__num:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.12em;
+    background: var(--accent-btn-hover);
   }
   .tdnote__where {
     display: flex;
@@ -260,32 +299,31 @@ const storePlateHref = current
     align-items: center;
     gap: 4px 10px;
     color: var(--ink-3);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    font-size: var(--text-xs);
+    line-height: 22px;
   }
   .tdnote__app {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     color: var(--ink-2);
-    text-transform: none;
-    letter-spacing: 0;
   }
   .tdnote__title {
-    margin-top: 6px;
-    font-size: var(--text-lg);
+    margin-top: var(--space-1);
+    color: var(--ink);
+    font-size: var(--text-body);
     font-weight: var(--weight-semibold);
-    letter-spacing: var(--tracking-snug);
-    line-height: 1.25;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
   }
   .tdnote__body {
-    margin-top: var(--space-2);
+    margin-top: var(--space-1-5);
     color: var(--ink-2);
-    font-size: var(--text-base);
-    line-height: var(--leading-relaxed);
+    font-size: var(--text-sm);
+    line-height: 1.6;
   }
   .tdnote__body :global(a) {
+    color: var(--ink);
     text-decoration: underline;
     text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
@@ -294,7 +332,7 @@ const storePlateHref = current
     margin-top: var(--space-4);
     color: var(--ink-3);
     font-size: var(--text-xs);
-    line-height: var(--leading-normal);
+    line-height: 1.5;
   }
   .tdplates__hint a,
   .tdplates__others a {
@@ -306,12 +344,34 @@ const storePlateHref = current
     text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
   }
+  .tdplates__hint a:hover,
+  .tdplates__others a:hover {
+    color: var(--ink);
+    text-decoration-color: currentColor;
+  }
   .tdplates__others {
     display: grid;
-    gap: 6px;
+    gap: var(--space-1);
     margin-top: var(--space-4);
-    padding-top: var(--space-4);
+    padding-top: var(--space-3);
     border-top: 1px solid var(--line);
     font-size: var(--text-sm);
+  }
+  .tdplates__others a {
+    min-height: 32px;
+  }
+  .tdplates :global(.tdplates__viewer .fp__stage) {
+    padding: var(--space-3);
+  }
+  .tdplates :global(.tdplates__window--mobile .fp__stage) {
+    padding: var(--space-5) var(--space-4);
+  }
+  @media (min-width: 1024px) {
+    .tdplates :global(.tdplates__viewer .fp__stage) {
+      padding: var(--space-6);
+    }
+    .tdplates :global(.tdplates__window--mobile .fp__stage) {
+      padding: var(--space-8) var(--space-6);
+    }
   }
 </style>

@@ -2,6 +2,7 @@
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
+import Panel from '~/components/admin/Panel.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
 import Button from '~/components/ui/Button.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
@@ -30,112 +31,132 @@ const published = rows.filter((r) => r.published_at).length;
 const now = new Date();
 ---
 
-<AdminLayout title="Teardowns" section="teardowns">
+<AdminLayout title="Teardowns" section="teardowns" trail={[{ label: 'Teardowns' }]}>
+  <Fragment slot="actions">
+    <Button href="/teardowns" variant="secondary" size="sm" iconRight="arrow-up-right">
+      Public index
+    </Button>
+  </Fragment>
   <AdminHeader
     title="Teardowns"
     count={rows.length}
     countLabel="teardowns"
-    trail={[{ label: 'Teardowns' }]}
-    description={`${published} published, ${rows.length - published} ${rows.length - published === 1 ? 'draft' : 'drafts'}. Teardowns are written in data/curation/teardowns and seeded; publishing here only changes visibility.`}
+    description={`${published} published, ${rows.length - published} ${rows.length - published === 1 ? 'draft' : 'drafts'}. Publishing here only changes visibility; the text lives in data/curation/teardowns and is seeded.`}
   />
   <FlashNotice />
 
-  <div class="table-wrap">
-    <table class="table a-table">
-      <thead>
-        <tr>
-          <th scope="col">Teardown</th>
-          <th scope="col">Store</th>
-          <th scope="col" class="is-num">
-            Notes
-          </th>
-          <th scope="col">Status</th>
-          <th scope="col">Edited</th>
-          <th scope="col" class="is-actions">
-            <span class="visually-hidden">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 ? (
+  <Panel flush>
+    <div class="a-tablewrap">
+      <table class="table a-table a-table--stack a-actions-below">
+        <thead>
           <tr>
-            <td colspan="6" class="a-empty-cell">
-              No teardowns yet. Add one under data/curation/teardowns and reseed.
-            </td>
+            <th scope="col">Teardown</th>
+            <th scope="col">Store</th>
+            <th scope="col" class="is-num">
+              Notes
+            </th>
+            <th scope="col">Status</th>
+            <th scope="col">Edited</th>
+            <th scope="col" class="is-actions">
+              <span class="visually-hidden">Actions</span>
+            </th>
           </tr>
-        ) : (
-          rows.map((t) => (
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
             <tr>
-              <td class="title">
-                <span class="a-strong">{t.title}</span>
-                <span class="a-sub a-mono">
-                  /teardowns/{t.slug}
-                  {t.is_sample ? ' · format sample' : ''}
-                </span>
-              </td>
-              <td>
-                <span class="a-cell-main">
-                  <StoreMark domain={t.domain} name={t.store_name} size={20} />
-                  <a class="a-row-link" href={`/admin/stores/${t.domain}`}>
-                    {t.store_name ?? t.domain}
-                  </a>
-                </span>
-              </td>
-              <td class="is-num">{t.notes}</td>
-              <td>
-                {t.published_at ? (
-                  <StatusPill status="published" label={`Published ${shortDate(t.published_at)}`} />
-                ) : (
-                  <StatusPill status="draft" label="Draft" />
-                )}
-                {t.store_status !== 'active' && (
-                  <span class="a-sub">Store is {t.store_status.replace('_', ' ')}</span>
-                )}
-              </td>
-              <td class="a-nowrap a-muted" title={fullTime(t.updated_at)}>
-                {timeAgo(t.updated_at, now)}
-              </td>
-              <td class="is-actions">
-                {t.published_at && (
-                  <Button
-                    href={`/teardowns/${t.slug}`}
-                    size="sm"
-                    variant="ghost"
-                    iconRight="arrow-up-right"
-                  >
-                    View
-                  </Button>
-                )}
-                <form
-                  method="post"
-                  data-confirm={
-                    t.published_at
-                      ? `Unpublish “${t.title}”? Its public page will return 404.`
-                      : undefined
-                  }
-                >
-                  <input type="hidden" name="id" value={t.id} />
-                  <input
-                    type="hidden"
-                    name="intent"
-                    value={t.published_at ? 'unpublish' : 'publish'}
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant={t.published_at ? 'secondary' : 'primary'}
-                    disabled={!t.published_at && t.store_status !== 'active'}
-                  >
-                    {t.published_at ? 'Unpublish' : 'Publish'}
-                  </Button>
-                </form>
+              <td colspan="6" class="a-empty-cell">
+                No teardowns yet. Add one under data/curation/teardowns and reseed.
               </td>
             </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
+          ) : (
+            rows.map((t) => (
+              <tr>
+                <td class="is-primary title">
+                  <span class="a-strong">{t.title}</span>
+                  <span class="a-sub a-mono">
+                    /teardowns/{t.slug}
+                    {t.is_sample ? ' · format sample' : ''}
+                  </span>
+                </td>
+                <td class="is-meta">
+                  <span class="a-cell-main">
+                    <StoreMark domain={t.domain} name={t.store_name} size={20} class="a-hide-sm" />
+                    <a class="a-row-link" href={`/admin/stores/${t.domain}`}>
+                      {t.store_name ?? t.domain}
+                    </a>
+                  </span>
+                </td>
+                <td class="is-meta is-num" data-label="Notes">
+                  {t.notes}
+                </td>
+                <td class="is-meta">
+                  <span class="a-badges">
+                    {t.published_at ? (
+                      <StatusPill
+                        status="published"
+                        label={`Published ${shortDate(t.published_at)}`}
+                      />
+                    ) : (
+                      <StatusPill status="draft" label="Draft" />
+                    )}
+                    {t.store_status !== 'active' && (
+                      <StatusPill
+                        status={t.store_status}
+                        label={`Store ${t.store_status.replace('_', ' ')}`}
+                      />
+                    )}
+                  </span>
+                </td>
+                <td class="is-meta a-nowrap a-muted" title={fullTime(t.updated_at)}>
+                  {timeAgo(t.updated_at, now)}
+                </td>
+                <td class="is-actions">
+                  {t.published_at && (
+                    <Button
+                      href={`/teardowns/${t.slug}`}
+                      size="sm"
+                      variant="ghost"
+                      iconRight="arrow-up-right"
+                    >
+                      View
+                    </Button>
+                  )}
+                  <form
+                    method="post"
+                    data-confirm={
+                      t.published_at
+                        ? `Unpublish “${t.title}”? Its public page will return 404.`
+                        : undefined
+                    }
+                  >
+                    <input type="hidden" name="id" value={t.id} />
+                    <input
+                      type="hidden"
+                      name="intent"
+                      value={t.published_at ? 'unpublish' : 'publish'}
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      variant={t.published_at ? 'secondary' : 'primary'}
+                      disabled={!t.published_at && t.store_status !== 'active'}
+                    >
+                      {t.published_at ? 'Unpublish' : 'Publish'}
+                    </Button>
+                  </form>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+    <p slot="footer">
+      A teardown can only be published while its store is active. Removing a store unpublishes its
+      teardowns.
+    </p>
+  </Panel>
 </AdminLayout>
 
 <style>

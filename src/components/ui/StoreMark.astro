@@ -1,47 +1,57 @@
 ---
 /**
- * A store's mark in lists, until we capture real favicons: a tiny page in the store's own
- * palette (header band, image block, a line of text). It matches the tone of that store's
- * captures, so a caption and its screenshot read as one specimen. Decorative only.
+ * A store's avatar until we capture real favicons: a rounded square in the store's own tone
+ * (the same palette as its captures) with its initial. 32px by default. Decorative; the name is
+ * always shown beside it.
  */
 import { toneFor } from '~/lib/tone';
 
 interface Props {
   domain: string;
-  /** Kept for API compatibility (the mark is decorative; the name is always shown beside it). */
+  /** Used for the initial (falls back to the domain). */
   name?: string | null;
   size?: number;
   class?: string;
 }
-const { domain, size = 28, class: className } = Astro.props;
+const { domain, name, size = 32, class: className } = Astro.props;
 const t = toneFor(domain);
+const initial = (name || domain)
+  .replace(/^www\./, '')
+  .trim()
+  .charAt(0)
+  .toUpperCase();
+const radius = Math.max(4, Math.round(size * 0.25));
 ---
 
-<svg
+<span
   class:list={['store-mark', className]}
-  viewBox="0 0 20 20"
-  width={size}
-  height={size}
+  style={`--s:${size}px;--r:${radius}px;--mark-bg:${t.mark};--mark-fg:${t.markInk}`}
   aria-hidden="true"
-  focusable="false"
 >
-  <rect
-    x="0.5"
-    y="0.5"
-    width="19"
-    height="19"
-    rx="5"
-    fill={t.paper}
-    stroke="rgb(25 24 22 / 0.14)"
-  ></rect>
-  <rect x="3.5" y="3.5" width="13" height="2.5" rx="1" fill={t.announce}></rect>
-  <rect x="3.5" y="7.25" width="13" height="5.75" rx="1.25" fill={t.tone}></rect>
-  <rect x="3.5" y="14.5" width="8" height="1.6" rx="0.8" fill={t.ink} opacity="0.55"></rect>
-</svg>
+  {initial}
+</span>
 
 <style>
   .store-mark {
-    display: inline-block;
+    position: relative;
+    display: inline-grid;
+    place-items: center;
     flex: none;
+    width: var(--s);
+    height: var(--s);
+    border-radius: var(--r);
+    background: var(--mark-bg);
+    color: var(--mark-fg);
+    font-size: calc(var(--s) * 0.44);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .store-mark::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--shot-ring);
   }
 </style>

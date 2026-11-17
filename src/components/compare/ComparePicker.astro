@@ -1,16 +1,25 @@
 ---
 /**
- * "Compare any two": two selects that GET /compare?a=&b=; the index page redirects to the
- * canonical /compare/<a>-vs-<b>. Works without JS. With JS, choosing one side greys out the
- * other kind (apps vs themes) in the second select.
+ * "Find a comparison": one product control with two fields and a Compare button. It GETs
+ * /compare?a=&b=; the index page redirects curated pairs to /compare/<a>-vs-<b> and explains
+ * plainly when a pair has no comparison page.
+ *
+ * Without JS each field is a native <select> (works everywhere). With JS each select is
+ * replaced by a searchable combobox (ARIA 1.2 pattern) that stays in sync with it: type to
+ * filter, arrows + Enter to pick. Once one side is chosen, the other lists the curated
+ * partners first ("Compared with Klaviyo") and only offers the same kind (apps or themes).
  */
 import Button from '~/components/ui/Button.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Icon from '~/components/ui/Icon.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
 
 export interface PickerOption {
   value: string;
   label: string;
   kind: 'app' | 'theme';
+  icon?: string | null;
+  /** Category (apps) or vendor (themes). */
+  meta?: string | null;
 }
 export interface PickerGroup {
   label: string;
@@ -19,15 +28,19 @@ export interface PickerGroup {
 
 interface Props {
   groups: PickerGroup[];
+  /** Curated pairs: slug → slugs it has a comparison page with. */
+  pairs: Record<string, string[]>;
   a?: string | null;
   b?: string | null;
   error?: string | null;
   class?: string;
 }
-const { groups, a, b, error, class: className } = Astro.props;
+const { groups, pairs, a, b, error, class: className } = Astro.props;
+const all = groups.flatMap((g) => g.options);
+const find = (v?: string | null) => (v ? (all.find((o) => o.value === v) ?? null) : null);
 const sides = [
-  { name: 'a', label: 'First app or theme', value: a },
-  { name: 'b', label: 'Second app or theme', value: b },
+  { name: 'a', label: 'Compare', placeholder: 'Search apps and themes', value: find(a) },
+  { name: 'b', label: 'With', placeholder: 'Pick the other one', value: find(b) },
 ] as const;
 ---
 
@@ -35,56 +48,132 @@ const sides = [
   class:list={['picker', className]}
   action="/compare"
   method="get"
+  role="search"
+  aria-label="Find a comparison"
   data-picker
-  aria-describedby={error ? 'picker-error' : undefined}
+  data-pairs={JSON.stringify(pairs)}
 >
-  <MonoLabel as="p" tone="ink" class="picker__label">
-    Compare any two
-  </MonoLabel>
-  {sides.map((s, i) => (
-    <>
-      {i === 1 && (
-        <span class="picker__vs" aria-hidden="true">
-          vs
-        </span>
-      )}
-      <label class="visually-hidden" for={`picker-${s.name}`}>
-        {s.label}
-      </label>
-      <select id={`picker-${s.name}`} name={s.name} class="picker__select" required>
-        <option value="" selected={!s.value}>
-          {i === 0 ? 'Choose an app or theme' : 'Compare with…'}
-        </option>
-        {groups.map((g) => (
-          <optgroup label={g.label}>
-            {g.options.map((o) => (
-              <option value={o.value} data-kind={o.kind} selected={o.value === s.value}>
-                {o.label}
+  <div class="picker__bar">
+    {sides.map((s, i) => (
+      <>
+        {i === 1 && (
+          <span class="picker__vs" aria-hidden="true">
+            vs
+          </span>
+        )}
+        <div class:list={['picker__field', `picker__field--${s.name}`]} data-picker-field>
+          <label class="picker__label" for={`picker-${s.name}`}>
+            {s.label}
+          </label>
+          <div class="picker__control">
+            <span class:list={['picker__lead', { 'has-mark': !!s.value }]} data-picker-lead>
+              <span class="picker__lead-search">
+                <Icon name="magnifying-glass" size={16} />
+              </span>
+              {s.value && (
+                <AppIcon
+                  src={s.value.icon ?? null}
+                  name={s.value.label}
+                  size={22}
+                  class="picker__lead-mark"
+                />
+              )}
+            </span>
+            <select
+              id={`picker-${s.name}`}
+              name={s.name}
+              class="picker__select"
+              required
+              data-placeholder={s.placeholder}
+            >
+              <option value="" selected={!s.value}>
+                {i === 0 ? 'Choose an app or theme' : 'Compare with…'}
               </option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
-    </>
-  ))}
-  <Button type="submit" variant="primary" iconRight="arrow-right" class="picker__go">
-    Compare
-  </Button>
+              {groups.map((g) => (
+                <optgroup label={g.label}>
+                  {g.options.map((o) => (
+                    <option
+                      value={o.value}
+                      data-kind={o.kind}
+                      data-icon={o.icon ?? undefined}
+                      data-meta={o.meta ?? undefined}
+                      selected={o.value === s.value?.value}
+                    >
+                      {o.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <span class="picker__caret" aria-hidden="true">
+              <Icon name="caret-up-down" size={14} />
+            </span>
+          </div>
+        </div>
+      </>
+    ))}
+    <div class="picker__go">
+      <Button type="submit" variant="primary" size="lg" arrow class="picker__submit">
+        Compare
+      </Button>
+    </div>
+  </div>
   {error ? (
-    <p class="picker__error" id="picker-error" role="alert">
-      {error}
+    <p class="picker__msg picker__msg--error" id="picker-error" role="alert">
+      <Icon name="warning" size={16} />
+      <span>{error}</span>
     </p>
   ) : (
-    <p class="picker__hint">Two apps or two themes. Any pair works, not only the popular ones.</p>
+    <p class="picker__msg">
+      Two apps or two themes. Only popular pairs have a comparison page; the list shows which.
+    </p>
   )}
 </form>
 
 <script>
-  document.querySelectorAll<HTMLElement>('[data-picker]').forEach((form) => {
-    const selects: HTMLSelectElement[] = Array.from(form.querySelectorAll('select'));
-    const first = selects[0];
-    const second = selects[1];
-    if (!first || !second) return;
+  interface Opt {
+    value: string;
+    label: string;
+    kind: string;
+    icon: string;
+    meta: string;
+    group: string;
+    el: HTMLOptionElement;
+  }
+  const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  function mark(o: Pick<Opt, 'label' | 'icon'>, size = 22) {
+    const box = document.createElement('span');
+    box.className = 'picker__mark';
+    box.style.setProperty('--s', `${size}px`);
+    const initial = document.createElement('span');
+    initial.textContent = o.label.trim().charAt(0).toUpperCase();
+    box.appendChild(initial);
+    if (o.icon) {
+      const img = document.createElement('img');
+      img.src = o.icon;
+      img.alt = '';
+      img.width = size;
+      img.height = size;
+      img.loading = 'lazy';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => img.remove());
+      box.appendChild(img);
+    }
+    return box;
+  }
+
+  document.querySelectorAll<HTMLFormElement>('form[data-picker]').forEach((form, formIndex) => {
+    let pairs: Record<string, string[]> = {};
+    try {
+      pairs = JSON.parse(form.dataset.pairs ?? '{}');
+    } catch {
+      /* no partner hints */
+    }
+    const fields = Array.from(form.querySelectorAll<HTMLElement>('[data-picker-field]'));
+    const selects = fields.map((f) => f.querySelector('select')!);
+    if (selects.length !== 2) return;
+
     const kindOf = (sel: HTMLSelectElement) => sel.selectedOptions[0]?.dataset.kind ?? '';
     const limit = (from: HTMLSelectElement, to: HTMLSelectElement) => {
       const kind = kindOf(from);
@@ -94,90 +183,535 @@ const sides = [
       });
     };
     const sync = () => {
-      limit(first, second);
-      limit(second, first);
+      limit(selects[0]!, selects[1]!);
+      limit(selects[1]!, selects[0]!);
     };
-    first.addEventListener('change', sync);
-    second.addEventListener('change', sync);
+    selects.forEach((s) => s.addEventListener('change', sync));
     sync();
+
+    const inputs: HTMLInputElement[] = [];
+    fields.forEach((field, i) => {
+      const select = selects[i]!;
+      const other = selects[1 - i]!;
+      const lead = field.querySelector<HTMLElement>('[data-picker-lead]')!;
+      const label = field.querySelector<HTMLLabelElement>('label')!;
+      const opts: Opt[] = Array.from(select.options)
+        .filter((o) => o.value)
+        .map((o) => ({
+          value: o.value,
+          label: o.textContent?.trim() ?? o.value,
+          kind: o.dataset.kind ?? '',
+          icon: o.dataset.icon ?? '',
+          meta: o.dataset.meta ?? '',
+          group: (o.parentElement as HTMLOptGroupElement | null)?.label ?? '',
+          el: o,
+        }));
+      const byValue = new Map(opts.map((o) => [o.value, o]));
+      const id = `picker-${formIndex}-${i}`;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = `${select.id}-search`;
+      input.className = 'picker__input';
+      input.setAttribute('role', 'combobox');
+      input.setAttribute('aria-autocomplete', 'list');
+      input.setAttribute('aria-expanded', 'false');
+      input.setAttribute('aria-controls', `${id}-list`);
+      input.autocomplete = 'off';
+      input.spellcheck = false;
+      input.placeholder = select.dataset.placeholder ?? '';
+      const list = document.createElement('ul');
+      list.id = `${id}-list`;
+      list.className = 'picker__list';
+      list.setAttribute('role', 'listbox');
+      list.setAttribute('aria-label', label.textContent?.trim() ?? 'Options');
+      list.hidden = true;
+
+      select.parentNode!.insertBefore(input, select.nextSibling);
+      field.appendChild(list);
+      select.tabIndex = -1;
+      select.setAttribute('aria-hidden', 'true');
+      select.classList.add('is-replaced');
+      label.htmlFor = input.id;
+      inputs.push(input);
+
+      let shown: Opt[] = [];
+      let active = -1;
+      const current = () => byValue.get(select.value) ?? null;
+      const paintLead = () => {
+        const c = current();
+        lead.querySelectorAll(':scope > :not(.picker__lead-search)').forEach((n) => n.remove());
+        if (c) lead.appendChild(mark(c));
+        lead.classList.toggle('has-mark', !!c);
+      };
+      const reset = () => {
+        input.value = current()?.label ?? '';
+        paintLead();
+      };
+
+      const setActive = (n: number) => {
+        const items = list.querySelectorAll<HTMLElement>('[role="option"]');
+        items.forEach((el, k) => el.classList.toggle('is-active', k === n));
+        active = n;
+        const el = items[n];
+        if (el) {
+          input.setAttribute('aria-activedescendant', el.id);
+          el.scrollIntoView({ block: 'nearest' });
+        } else input.removeAttribute('aria-activedescendant');
+      };
+
+      const render = (query: string) => {
+        const q = norm(query.trim());
+        const otherOpt = other.value ? other.selectedOptions[0] : null;
+        const partners = new Set(otherOpt ? (pairs[otherOpt.value] ?? []) : []);
+        const match = (o: Opt) =>
+          !o.el.disabled && (!q || norm(o.label).includes(q) || norm(o.meta).includes(q));
+        const groups: Array<{ label: string; items: Opt[] }> = [];
+        if (otherOpt) {
+          const name = otherOpt.textContent?.trim() ?? '';
+          const ok = opts.filter(match);
+          const with_ = ok.filter((o) => partners.has(o.value));
+          const rest = ok.filter((o) => !partners.has(o.value));
+          if (with_.length) groups.push({ label: `Compared with ${name}`, items: with_ });
+          if (rest.length)
+            groups.push({
+              label: with_.length
+                ? 'No comparison page with it'
+                : `No comparison page with ${name}`,
+              items: rest,
+            });
+        } else {
+          for (const o of opts.filter(match)) {
+            const g = groups.at(-1);
+            if (g && g.label === o.group) g.items.push(o);
+            else groups.push({ label: o.group, items: [o] });
+          }
+        }
+        list.replaceChildren();
+        shown = [];
+        let n = 0;
+        for (const g of groups) {
+          const head = document.createElement('li');
+          head.className = 'picker__group';
+          head.setAttribute('role', 'presentation');
+          head.textContent = g.label;
+          list.appendChild(head);
+          for (const o of g.items) {
+            const li = document.createElement('li');
+            li.id = `${id}-o${n++}`;
+            li.className = 'picker__opt';
+            li.setAttribute('role', 'option');
+            li.setAttribute('aria-selected', String(o.value === select.value));
+            li.dataset.value = o.value;
+            li.appendChild(mark(o, 24));
+            const text = document.createElement('span');
+            text.className = 'picker__opt-text';
+            const name = document.createElement('span');
+            name.className = 'picker__opt-name';
+            name.textContent = o.label;
+            text.appendChild(name);
+            if (o.meta) {
+              const meta = document.createElement('span');
+              meta.className = 'picker__opt-meta';
+              meta.textContent = o.meta;
+              text.appendChild(meta);
+            }
+            li.appendChild(text);
+            list.appendChild(li);
+            shown.push(o);
+          }
+        }
+        if (!shown.length) {
+          const empty = document.createElement('li');
+          empty.className = 'picker__empty';
+          empty.setAttribute('role', 'presentation');
+          empty.textContent = `Nothing matches “${query.trim()}”.`;
+          list.appendChild(empty);
+        }
+        const sel = shown.findIndex((o) => o.value === select.value);
+        setActive(q ? 0 : sel);
+      };
+
+      const open = (query = '') => {
+        render(query);
+        list.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+        field.classList.add('is-open');
+      };
+      const close = () => {
+        list.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
+        field.classList.remove('is-open');
+      };
+      const choose = (o: Opt) => {
+        select.value = o.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        reset();
+        close();
+        // Natural next step: pick the other side.
+        const next = inputs[1 - i];
+        if (next && !other.value) {
+          next.focus();
+        }
+      };
+
+      input.addEventListener('focus', () => {
+        input.select();
+        open('');
+      });
+      input.addEventListener('click', () => {
+        if (list.hidden) open('');
+      });
+      input.addEventListener('input', () => open(input.value));
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (list.hidden) open('');
+          const max = shown.length - 1;
+          if (max < 0) return;
+          const next =
+            e.key === 'ArrowDown'
+              ? active >= max
+                ? 0
+                : active + 1
+              : active <= 0
+                ? max
+                : active - 1;
+          setActive(next);
+        } else if (e.key === 'Enter') {
+          if (!list.hidden && shown[active]) {
+            e.preventDefault();
+            choose(shown[active]!);
+          }
+        } else if (e.key === 'Escape') {
+          if (!list.hidden) {
+            e.preventDefault();
+            close();
+            reset();
+          }
+        } else if (e.key === 'Tab') {
+          close();
+          reset();
+        }
+      });
+      list.addEventListener('mousedown', (e) => e.preventDefault());
+      list.addEventListener('click', (e) => {
+        const li = (e.target as HTMLElement).closest<HTMLElement>('[role="option"]');
+        const o = li ? byValue.get(li.dataset.value ?? '') : null;
+        if (o) choose(o);
+      });
+      input.addEventListener('blur', () => {
+        close();
+        if (!input.value.trim() && select.value) {
+          select.value = '';
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        reset();
+      });
+      select.addEventListener('change', reset);
+      reset();
+    });
+    form.classList.add('is-enhanced');
     form.dataset.ready = '';
   });
 </script>
 
 <style>
   .picker {
+    position: relative;
+    z-index: 5;
+  }
+  /* While a list is open it must sit above the sticky browse bar (but under the header). */
+  .picker:focus-within {
+    z-index: calc(var(--z-sticky) + 1);
+  }
+  .picker__bar {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-sm),
+      var(--highlight);
+  }
+  .picker__field {
+    position: relative;
+    min-width: 0;
+    padding: var(--space-3) var(--space-4) var(--space-2);
+    border-radius: var(--radius-card);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .picker__field:hover {
+    background: var(--surface-2);
+  }
+  .picker__field:focus-within,
+  .picker__field.is-open {
+    background: var(--surface-2);
+  }
+  .picker__field--b {
+    border-top: 1px solid var(--line);
+    border-radius: 0;
   }
   .picker__label {
-    margin-bottom: var(--space-2);
-  }
-  .picker__select {
-    width: 100%;
-    height: 44px;
-    padding: 0 36px 0 var(--space-3);
-    border: 0;
-    border-radius: var(--radius-sm);
-    background-color: var(--surface);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%236f6a63'%3E%3Cpath d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 14px;
-    box-shadow: inset 0 0 0 1px var(--line-strong);
-    color: var(--ink);
-    font-size: var(--text-md);
-    appearance: none;
-    cursor: pointer;
-    transition: box-shadow var(--dur-fast) var(--ease-out);
-  }
-  .picker__select:hover {
-    box-shadow: inset 0 0 0 1px var(--ink-4);
-  }
-  .picker__select:focus-visible {
-    outline: none;
-    box-shadow:
-      inset 0 0 0 1px var(--ink),
-      0 0 0 3px var(--accent-wash);
-  }
-  .picker__vs {
-    justify-self: start;
-    padding-left: var(--space-3);
+    display: block;
     color: var(--ink-3);
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-eyebrow);
     text-transform: uppercase;
+    cursor: pointer;
   }
-  .picker :global(.picker__go) {
-    margin-top: var(--space-2);
-    height: 44px;
+  .picker__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 40px;
   }
-  .picker__hint,
-  .picker__error {
-    font-size: var(--text-xs);
-    line-height: 1.45;
+  .picker__lead {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
     color: var(--ink-3);
   }
-  .picker__error {
+  .picker__lead-search {
+    display: inline-flex;
+  }
+  .picker__lead.has-mark .picker__lead-search {
+    display: none;
+  }
+  .picker__select,
+  .picker :global(.picker__input) {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+    padding: 0 28px 0 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-lead);
+    font-weight: var(--weight-medium);
+    letter-spacing: -0.01em;
+    box-shadow: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .picker :global(.picker__input::placeholder) {
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+  }
+  .picker__select:focus-visible,
+  .picker :global(.picker__input:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
+  .picker__field:has(:focus-visible) {
+    box-shadow: inset 0 0 0 1.5px var(--accent);
+  }
+  .picker__select.is-replaced {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .picker__caret {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    display: inline-flex;
+    color: var(--ink-3);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  /* On the seam between the two fields: a zero-height grid row on mobile, absolutely placed
+     between the two equal columns at ≥768. */
+  .picker__vs {
+    position: relative;
+    z-index: 2;
+    justify-self: end;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    margin: -13px var(--space-4) -13px 0;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--line-strong);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .picker__go {
+    padding: var(--space-2) var(--space-3) var(--space-3);
+  }
+  .picker :global(.picker__submit) {
+    width: 100%;
+  }
+
+  /* Listbox popover (JS only) */
+  .picker :global(.picker__list) {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 8px);
+    left: 0;
+    width: min(400px, calc(100vw - 2 * var(--page-gutter)));
+    max-height: min(380px, 60vh);
+    padding: 6px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-lg),
+      var(--highlight);
+  }
+  .picker :global(.picker__list[hidden]) {
+    display: none;
+  }
+  .picker :global(.picker__list .picker__group) {
+    padding: 10px 10px 4px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+  }
+  .picker :global(.picker__list .picker__opt) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 6px 10px;
+    border-radius: var(--radius-control);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .picker :global(.picker__list .picker__opt.is-active) {
+    background: var(--surface-2);
+  }
+  .picker :global(.picker__list .picker__opt[aria-selected='true']) {
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .picker :global(.picker__list .picker__opt-text) {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .picker :global(.picker__list .picker__opt-name) {
+    overflow: hidden;
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .picker :global(.picker__list .picker__opt-meta) {
+    overflow: hidden;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .picker :global(.picker__list .picker__empty) {
+    padding: var(--space-4) 10px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .picker :global(.picker__mark) {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: var(--s);
+    height: var(--s);
+    overflow: hidden;
+    border-radius: calc(var(--s) * 0.24);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-3);
+    font-size: calc(var(--s) * 0.42);
+    font-weight: var(--weight-semibold);
+  }
+  .picker :global(.picker__mark img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .picker__msg {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+  }
+  .picker__msg--error {
     color: var(--critical);
   }
-  @media (min-width: 640px) and (max-width: 1023px) {
-    .picker {
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
-      align-items: center;
-      column-gap: var(--space-3);
+  .picker__msg :global(.icon) {
+    flex: none;
+    margin-top: 1px;
+  }
+
+  @media (min-width: 768px) {
+    .picker__bar {
+      align-items: stretch;
+      padding: 6px;
     }
-    .picker__label,
-    .picker__hint,
-    .picker__error {
-      grid-column: 1 / -1;
+    .picker__field {
+      padding: 8px var(--space-5) 6px;
+    }
+    .picker__field--b {
+      border-top: 0;
+      border-radius: var(--radius-card);
+    }
+    .picker__field--b::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 1px;
+      background: var(--line);
+    }
+    .picker__bar {
+      --go: 148px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--go);
     }
     .picker__vs {
-      padding-left: 0;
+      position: absolute;
+      left: calc((100% - var(--go)) / 2);
+      top: 50%;
+      margin: 0;
+      transform: translate(-50%, -50%);
     }
-    .picker :global(.picker__go) {
-      margin-top: 0;
+    .picker__go {
+      display: flex;
+      align-items: center;
+      padding: 0 0 0 6px;
+    }
+    .picker :global(.picker__submit) {
+      height: 100%;
+      min-height: 52px;
     }
   }
 </style>

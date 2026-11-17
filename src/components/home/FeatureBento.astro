@@ -1,0 +1,838 @@
+---
+/**
+ * Feature bento (the Linear pattern): five cards, each holding a small piece of real product UI
+ * built from live API data, not an icon. Apps ranking, top themes table, a curated compare pair,
+ * tagged section crops and an annotated teardown capture. Cards carry the cursor spotlight (home
+ * only); rows inside are real links.
+ */
+import Card from '~/components/ui/Card.astro';
+import Button from '~/components/ui/Button.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import CaptureCrop, { type CropRegion } from './CaptureCrop.astro';
+import type { Device } from '~/lib/taxonomy';
+
+export interface BentoApp {
+  rank: number | null;
+  name: string;
+  href: string;
+  iconUrl: string | null;
+  category: string | null;
+  stores: number;
+  share: number;
+}
+export interface BentoTheme {
+  rank: number | null;
+  name: string;
+  vendor: string | null;
+  href: string;
+  price: string | null;
+  stores: number;
+  share: number;
+}
+export interface BentoSection {
+  href: string;
+  src: string;
+  width: number;
+  height: number;
+  device: Device;
+  type: string;
+  app: string | null;
+  page: string;
+}
+export interface BentoCompare {
+  href: string;
+  a: { name: string; iconUrl: string | null };
+  b: { name: string; iconUrl: string | null };
+  rows: { label: string; a: string; b: string }[];
+  shared: number | null;
+}
+export interface BentoTeardown {
+  href: string;
+  title: string;
+  dek: string | null;
+  store: string;
+  page: string;
+  isSample: boolean;
+  notes: { n: number; title: string; meta: string; inView: boolean }[];
+  crop: { src: string; width: number; height: number; from: number; view: number };
+  regions: CropRegion[];
+}
+interface Props {
+  apps: BentoApp[];
+  appsTotal: number;
+  themes: BentoTheme[];
+  themesTotal: number;
+  sections: BentoSection[];
+  sectionCounts: { sections: number; types: number };
+  compare: BentoCompare | null;
+  comparisonsTotal: number;
+  teardown: BentoTeardown | null;
+  source: { scan: string; appStore: string; asOf: string };
+}
+const {
+  apps,
+  appsTotal,
+  themes,
+  themesTotal,
+  sections,
+  sectionCounts,
+  compare,
+  comparisonsTotal,
+  teardown,
+  source,
+} = Astro.props;
+
+const pct = (share: number) => `${(share * 100).toFixed(1)}%`;
+const maxAppShare = Math.max(...apps.map((a) => a.share), 0.0001);
+const maxThemeShare = Math.max(...themes.map((t) => t.share), 0.0001);
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<div class="bento">
+  <!-- Apps: ranked rows -->
+  <Card as="article" padding="none" spotlight class="bento__card bento__card--apps reveal">
+    <div class="bento__text">
+      <h3 class="bento__title">
+        Apps, <span class="tone-muted">ranked by the stores that run them.</span>
+      </h3>
+      <a class="bento__more" href="/apps">
+        All {appsTotal} apps <span aria-hidden="true">→</span>
+      </a>
+    </div>
+    <div class="bento__ui">
+      <ol class="ranks" aria-label="Most-used apps">
+        {apps.map((a) => (
+          <li>
+            <a class="ranks__row" href={a.href}>
+              <span class="ranks__n num">{a.rank ?? '–'}</span>
+              <AppIcon src={a.iconUrl} name={a.name} size={28} />
+              <span class="ranks__name">
+                <span class="ranks__title">{a.name}</span>
+                {a.category && <span class="ranks__cat">{a.category}</span>}
+              </span>
+              <span class="ranks__bar" aria-hidden="true">
+                <span style={`width:${((a.share / maxAppShare) * 100).toFixed(1)}%`} />
+              </span>
+              <span class="ranks__val num">
+                {a.stores}
+                <span class="ranks__pct">{pct(a.share)}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+      <SourceNote class="bento__source" source={source.scan} asOf={source.asOf} href="" />
+    </div>
+  </Card>
+
+  <!-- Themes: table snippet -->
+  <Card
+    as="article"
+    padding="none"
+    spotlight
+    class="bento__card bento__card--themes reveal"
+    style="--reveal-delay: 80ms"
+  >
+    <div class="bento__text">
+      <h3 class="bento__title">
+        Themes, <span class="tone-muted">counted on live stores.</span>
+      </h3>
+      <a class="bento__more" href="/themes">
+        All {themesTotal} themes <span aria-hidden="true">→</span>
+      </a>
+    </div>
+    <div class="bento__ui">
+      <table class="tt">
+        <caption class="visually-hidden">Most-used themes</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="tt__rank">
+              #
+            </th>
+            <th scope="col">Theme</th>
+            <th scope="col" class="tt__num">
+              Stores
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {themes.map((t) => (
+            <tr>
+              <td class="tt__rank num">{t.rank ?? '–'}</td>
+              <td>
+                <a class="tt__name" href={t.href}>
+                  {t.name}
+                </a>
+                <span class="tt__vendor">{[t.vendor, t.price].filter(Boolean).join(' · ')}</span>
+              </td>
+              <td class="tt__num">
+                <span class="tt__stores num">{t.stores}</span>
+                <span class="tt__share" aria-hidden="true">
+                  <span style={`width:${((t.share / maxThemeShare) * 100).toFixed(1)}%`} />
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <SourceNote class="bento__source" source={source.scan} asOf={source.asOf} href="" />
+    </div>
+  </Card>
+
+  <!-- Compare: a curated pair -->
+  {compare && (
+    <Card as="article" padding="none" spotlight class="bento__card bento__card--compare reveal">
+      <div class="bento__text">
+        <h3 class="bento__title">
+          Compare, <span class="tone-muted">two apps on the same stores.</span>
+        </h3>
+        <a class="bento__more" href="/compare">
+          {comparisonsTotal} pairs <span aria-hidden="true">→</span>
+        </a>
+      </div>
+      <div class="bento__ui">
+        <a class="pair" href={compare.href}>
+          <span class="pair__side">
+            <AppIcon src={compare.a.iconUrl} name={compare.a.name} size={28} />
+            <span class="pair__name">{compare.a.name}</span>
+          </span>
+          <span class="pair__vs">vs</span>
+          <span class="pair__side pair__side--b">
+            <AppIcon src={compare.b.iconUrl} name={compare.b.name} size={28} />
+            <span class="pair__name">{compare.b.name}</span>
+          </span>
+        </a>
+        <dl class="facts">
+          {compare.rows.map((r) => (
+            <div class="facts__row">
+              <dt>{r.label}</dt>
+              <dd class="num">{r.a}</dd>
+              <dd class="num">{r.b}</dd>
+            </div>
+          ))}
+        </dl>
+        {compare.shared != null && compare.shared > 0 && (
+          <p class="pair__shared">
+            Both detected on <span class="num">{compare.shared}</span> stores
+          </p>
+        )}
+        <SourceNote
+          class="bento__source"
+          source={`${source.scan}; ${source.appStore}`}
+          asOf={source.asOf}
+          href=""
+        />
+      </div>
+    </Card>
+  )}
+
+  <!-- Sections: tagged crops -->
+  <Card
+    as="article"
+    padding="none"
+    spotlight
+    class="bento__card bento__card--sections reveal"
+    style="--reveal-delay: 80ms"
+  >
+    <div class="bento__text">
+      <h3 class="bento__title">
+        Sections,{' '}
+        <span class="tone-muted">
+          {sectionCounts.sections.toLocaleString('en-US')} tagged in {sectionCounts.types} types.
+        </span>
+      </h3>
+      <a class="bento__more" href="/sections">
+        Sections library <span aria-hidden="true">→</span>
+      </a>
+    </div>
+    <div class="bento__ui">
+      <ul class="crops">
+        {sections.map((s) => (
+          <li class="crops__item">
+            <a class="crops__link" href={s.href}>
+              <span class="crops__well">
+                <img
+                  src={s.src}
+                  alt={`${s.type}${s.app ? ` by ${s.app}` : ''}, ${s.page} page`}
+                  width={s.width}
+                  height={s.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </span>
+              <span class="crops__tag mono" data-theme="light">
+                {s.type}
+                {s.app && <span class="crops__app">· {s.app}</span>}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </Card>
+
+  <!-- Teardowns: an annotated capture -->
+  {teardown && (
+    <Card as="article" padding="none" spotlight class="bento__card bento__card--teardown reveal">
+      <div class="td">
+        <div class="td__text">
+          <p class="eyebrow">Teardown · {teardown.store}</p>
+          <h3 class="bento__title td__title">
+            <a href={teardown.href}>{teardown.title}</a>
+          </h3>
+          {teardown.dek && <p class="td__dek">{teardown.dek}</p>}
+          <div class="td__actions">
+            <Button variant="secondary" size="sm" href={teardown.href} arrow>
+              Read the teardown
+            </Button>
+            <a class="bento__more" href="/teardowns">
+              All teardowns <span aria-hidden="true">→</span>
+            </a>
+          </div>
+          {teardown.isSample && <p class="td__sample">Sample format, from our own scan.</p>}
+        </div>
+        <div class="td__capture">
+          <CaptureCrop
+            src={teardown.crop.src}
+            width={teardown.crop.width}
+            height={teardown.crop.height}
+            from={teardown.crop.from}
+            view={teardown.crop.view}
+            regions={teardown.regions}
+            mode="notes"
+            alt={`${teardown.store} ${teardown.page} page with the teardown’s notes marked on it`}
+          />
+        </div>
+        <ol class="td__notes" aria-label="Notes in this teardown">
+          {teardown.notes.map((n) => (
+            <li class:list={['td__note', { 'td__note--on': n.inView }]}>
+              <span class="td__n num">{pad(n.n)}</span>
+              <span class="td__note-text">
+                <span class="td__note-title">{n.title}</span>
+                <span class="td__note-meta">{n.meta}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </Card>
+  )}
+</div>
+
+<style>
+  .bento {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  @media (min-width: 1024px) {
+    .bento {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+    .bento :global(.bento__card--apps) {
+      grid-column: span 7;
+    }
+    .bento :global(.bento__card--themes) {
+      grid-column: span 5;
+    }
+    .bento :global(.bento__card--compare) {
+      grid-column: span 5;
+    }
+    .bento :global(.bento__card--sections) {
+      grid-column: span 7;
+    }
+    .bento :global(.bento__card--teardown) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .bento :global(.bento__card) {
+    overflow: hidden;
+  }
+  .bento__text {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-6) var(--space-6) var(--space-5);
+  }
+  .bento__title {
+    max-width: 30ch;
+    font-size: var(--text-h3);
+    font-weight: var(--weight-semibold);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .bento__more {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .bento__more:hover {
+    color: var(--ink);
+  }
+  .bento__more span {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .bento__more:hover span {
+    transform: translateX(2px);
+  }
+  /* The UI fragment: a panel that bleeds off the card's right and bottom edges. */
+  .bento__ui {
+    flex: 1;
+    min-width: 0;
+    margin-left: var(--space-6);
+    padding: var(--space-4) var(--space-6) var(--space-5) var(--space-4);
+    border-top-left-radius: var(--radius-well);
+    background: var(--bg-subtle);
+    box-shadow: inset 1px 1px 0 var(--line);
+  }
+  .bento :global(.bento__source) {
+    margin-top: var(--space-4);
+  }
+  @media (max-width: 639px) {
+    .bento__text {
+      flex-direction: column;
+      gap: var(--space-2);
+      padding: var(--space-5) var(--space-5) var(--space-4);
+    }
+    .bento__ui {
+      margin-left: var(--space-5);
+      padding-right: var(--space-4);
+    }
+  }
+
+  /* ---- Apps ranking ---- */
+  .ranks__row {
+    display: grid;
+    grid-template-columns: 22px 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 48px;
+    padding: 6px var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    border-radius: var(--radius-control);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .ranks__row:hover {
+    background: var(--surface-2);
+  }
+  .ranks li + li .ranks__row {
+    box-shadow: 0 -1px 0 var(--line);
+  }
+  .ranks li + li .ranks__row:hover {
+    box-shadow: none;
+  }
+  .ranks__n {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-align: right;
+  }
+  .ranks__name {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .ranks__title,
+  .ranks__cat {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ranks__title {
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+  }
+  .ranks__cat {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .ranks__bar {
+    display: none;
+  }
+  .ranks__val {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+  }
+  .ranks__pct {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: 450;
+  }
+  @media (min-width: 640px) {
+    .ranks__row {
+      grid-template-columns: 22px 28px minmax(0, 1fr) minmax(64px, 140px) 64px;
+    }
+    .ranks__bar {
+      display: block;
+      height: 6px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-3);
+      overflow: hidden;
+    }
+    .ranks__bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--ink-2);
+    }
+    .ranks__row:hover .ranks__bar span {
+      background: var(--accent);
+    }
+  }
+
+  /* ---- Themes table ---- */
+  .tt {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-ui);
+  }
+  .tt th {
+    height: 32px;
+    padding: 0 var(--space-2);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: 450;
+    letter-spacing: var(--tracking-eyebrow);
+    text-align: left;
+    text-transform: uppercase;
+  }
+  .tt td {
+    height: 52px;
+    padding: 0 var(--space-2);
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  .tt tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .tt tbody tr {
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .tt tbody tr:hover {
+    background: var(--surface-2);
+  }
+  .tt th:first-child,
+  .tt td:first-child {
+    padding-left: 0;
+  }
+  .tt__rank {
+    width: 28px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .tt__name {
+    display: block;
+    font-weight: var(--weight-medium);
+  }
+  .tt__name::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .tt tbody tr {
+    position: relative;
+  }
+  .tt__vendor {
+    display: block;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .tt__num {
+    width: 96px;
+    text-align: right;
+  }
+  .tt th.tt__num {
+    text-align: right;
+  }
+  .tt__stores {
+    display: block;
+    font-weight: var(--weight-medium);
+  }
+  .tt__share {
+    display: block;
+    width: 100%;
+    max-width: 72px;
+    height: 4px;
+    margin: 4px 0 0 auto;
+    border-radius: var(--radius-pill);
+    background: var(--surface-3);
+    overflow: hidden;
+  }
+  .tt__share span {
+    display: block;
+    height: 100%;
+    margin-left: auto;
+    border-radius: inherit;
+    background: var(--ink-3);
+  }
+
+  /* ---- Compare ---- */
+  .pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .pair__side {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .pair__side--b {
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+  .pair__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .pair:hover .pair__name {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-color: var(--line-strong);
+  }
+  .pair__vs {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    text-transform: uppercase;
+  }
+  .facts__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 38px;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .facts__row dt {
+    color: var(--ink-3);
+  }
+  .facts__row dd {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .facts__row dd:last-child {
+    text-align: right;
+  }
+  .facts__row dd:nth-of-type(1) {
+    text-align: center;
+  }
+  .pair__shared {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+
+  /* ---- Section crops ---- */
+  .crops {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  @media (max-width: 479px) {
+    .crops__item:nth-child(n + 3) {
+      display: none;
+    }
+  }
+  @media (min-width: 480px) {
+    .crops {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .crops__link {
+    position: relative;
+    display: block;
+    border-radius: var(--radius-well);
+  }
+  /* A section crop in a fixed 2:1 well; the slice sits in it like a cut-out, top-aligned
+     under the tag and never cropped. */
+  .crops__well {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 1;
+    overflow: hidden;
+    border-radius: var(--radius-well);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    transition: box-shadow var(--dur-base) var(--ease-out);
+  }
+  :global([data-theme='dark']) .crops__well {
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .crops__well img {
+    position: absolute;
+    inset: 34px 14px 14px;
+    width: auto;
+    height: auto;
+    max-width: calc(100% - 28px);
+    max-height: calc(100% - 48px);
+    margin: auto;
+    border-radius: 4px;
+    background: var(--capture-bg);
+    box-shadow: var(--shadow-shot);
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .crops__link:hover .crops__well {
+    box-shadow: inset 0 0 0 1.5px var(--accent);
+  }
+  .crops__link:hover img {
+    transform: scale(1.015);
+  }
+  .crops__tag {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    display: inline-flex;
+    gap: 4px;
+    max-width: calc(100% - 12px);
+    height: 18px;
+    align-items: center;
+    padding: 0 7px;
+    border-radius: var(--radius-pill);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  }
+  .crops__app {
+    color: var(--btn-fg-2);
+  }
+  .crops__link:hover .crops__tag {
+    background: var(--accent-btn);
+    color: var(--accent-fg);
+  }
+  .crops__link:hover .crops__app {
+    color: inherit;
+  }
+
+  /* ---- Teardown ---- */
+  .td {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    padding: var(--space-6);
+  }
+  .td__text .eyebrow {
+    margin-bottom: var(--space-3);
+  }
+  .td__title a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+    text-decoration-color: var(--line-strong);
+  }
+  .td__dek {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+  }
+  .td__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+  }
+  .td__sample {
+    margin-top: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .td__capture {
+    min-width: 0;
+    padding: var(--space-3);
+    border-radius: var(--radius-well);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  :global([data-theme='dark']) .td__capture {
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .td__notes {
+    display: flex;
+    flex-direction: column;
+  }
+  .td__note {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .td__note:first-child {
+    border-top: 1px solid var(--line);
+  }
+  .td__n {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.6;
+  }
+  .td__note--on .td__n {
+    color: var(--accent-text);
+  }
+  .td__note-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .td__note-title {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: 1.4;
+  }
+  .td__note-meta {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  @media (min-width: 768px) {
+    .td {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .td__text {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (min-width: 1024px) {
+    .td {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 5fr) minmax(0, 3fr);
+      gap: var(--space-8);
+      padding: var(--space-8);
+    }
+    .td__text {
+      grid-column: auto;
+    }
+  }
+</style>

@@ -1,29 +1,41 @@
 ---
 /**
- * "Where it shows up" — the app detail page's dark stage (its one dark moment). A lead plate,
- * the curated stores it was seen on, then the rest of the plates as a contact sheet with frame
- * numbers. Every plate links into the store viewer anchored at that section. Apps that add no
- * page section, or that no curated store runs, get an honest version of the same stage.
+ * "Seen on" — the app detail page's centrepiece: the sections an app renders, pinned on the
+ * real store pages they came from. A product window with a rail of every section on the
+ * current device (store + page) and a stage showing the selected one in place on its page,
+ * outlined and labelled. The rail is URL state (`?seen=<section id>#where`, works without JS);
+ * with JS it switches the stage in place. Every capture links into the store viewer anchored
+ * at the section.
+ *
+ * Apps with no attributed section get an honest version: the curated stores running them
+ * (no section to pin), or a dashed empty state when no curated store runs them.
  */
-import SectionCrop from '~/components/media/SectionCrop.astro';
-import SectionCard from '~/components/domain/SectionCard.astro';
-import Shot from '~/components/media/Shot.astro';
-import Count from '~/components/ui/Count.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import Segmented from '~/components/ui/Segmented.astro';
+import Window from '~/components/ui/Window.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Button from '~/components/ui/Button.astro';
+import Card from '~/components/ui/Card.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import Shot from '~/components/media/Shot.astro';
 import type { AppDetail } from '~/server/api/v1/types';
 import type { Device } from '~/lib/taxonomy';
-import { pageName, sectionViewerHref, specimen } from './helpers';
+import PinnedCapture from './PinnedCapture.astro';
+import { pageName, sectionViewerHref } from './helpers';
 
 interface Props {
   detail: AppDetail;
   device: Device;
+  /** Section id from `?seen=` (the selected rail item), if any. */
+  selected?: number | null;
   /** Hrefs for the device toggle (keep the rest of the URL, jump back to #where). */
   deviceHref: (d: Device) => string;
+  /** Href that selects a section in the rail (keeps the rest of the URL). */
+  seenHref: (id: number) => string;
   /** Total detected stores (for the empty variant). */
   storesTotal: number;
 }
-const { detail, device, deviceHref, storesTotal } = Astro.props;
+const { detail, device, selected, deviceHref, seenHref, storesTotal } = Astro.props;
 const app = detail.app;
 const name = app.short_name;
 const seen = detail.seen_on;
@@ -32,434 +44,467 @@ const byDevice = {
   desktop: all.filter((s) => s.device === 'desktop'),
   mobile: all.filter((s) => s.device === 'mobile'),
 };
-const shown = byDevice[device].length > 0 ? byDevice[device] : all;
-const activeDevice: Device = byDevice[device].length > 0 ? device : (shown[0]?.device ?? device);
-const lead = shown[0];
-const rest = shown.slice(1, 13);
-const frames = shown.length;
-const surfaces = detail.surfaces;
-const pageTypes = [...new Set(all.map((s) => pageName(s.page_type).toLowerCase()))];
+const activeDevice: Device = byDevice[device].length > 0 ? device : (all[0]?.device ?? device);
+const shown = byDevice[activeDevice].slice(0, 12);
+const active = shown.find((s) => s.id === selected) ?? shown[0];
 const storesWithSections = seen.stores.filter((s) => s.sections.length > 0);
-const variant = all.length > 0 ? 'plates' : seen.stores.length > 0 ? 'installed' : 'unseen';
-const surfaceList = surfaces.map((s) => s.name.toLowerCase()).join(' and ');
+const variant = all.length > 0 ? 'pinned' : seen.stores.length > 0 ? 'installed' : 'unseen';
+const surfaces = detail.surfaces;
+const surfaceList = surfaces.map((s) => s.name).join(' and ');
+const pages = [...new Set(all.map((s) => pageName(s.page_type).toLowerCase()))];
 const appSectionsHref = `/sections?app=${encodeURIComponent(app.slug)}`;
-const caption = (s: (typeof all)[number]) =>
-  [pageName(s.page_type), s.device === 'mobile' ? 'Mobile' : 'Desktop', s.theme?.name]
-    .filter(Boolean)
-    .join(' · ');
-const pad = (n: number) => String(n).padStart(2, '0');
+const mobile = activeDevice === 'mobile';
+// Stage frame: desktop pages in a 4:3 frame filling the stage; phones in a 9:16 frame.
+const ratio = mobile ? 9 / 16 : 4 / 3;
+const storeCount = storesWithSections.length;
+const altFor = (s: (typeof all)[number]) =>
+  `${name}: ${s.type.name.toLowerCase()} section on ${s.store.display_name}, ${pageName(s.page_type).toLowerCase()} page, ${s.device} (layout preview)`;
 ---
 
 <section class="seen" id="where" aria-labelledby="where-title">
-  <div class="container">
-    <div class="seen__head cols-12">
-      <div class="seen__intro span-8">
-        <MonoLabel as="p" tone="accent" class="seen__label">
-          Where it shows up
-        </MonoLabel>
-        {variant === 'plates' && (
-          <>
-            <h2 class="seen__title" id="where-title">
-              {name} on real store pages
-              <Count value={seen.section_total} label="sections" />
-            </h2>
-            <p class="seen__lede">
-              Seen as {surfaceList || 'a section'} on {storesWithSections.length} curated{' '}
-              {storesWithSections.length === 1 ? 'store' : 'stores'}, on {pageTypes.join(' and ')}{' '}
-              pages. Open a plate to see it in place on the full page.
-            </p>
-          </>
-        )}
-        {variant === 'installed' && (
-          <>
-            <h2 class="seen__title" id="where-title">
-              {name} adds no page section we slice
-            </h2>
-            <p class="seen__lede">
-              {surfaces.length > 0
-                ? `Apps like it usually render as ${surfaceList}, but on these stores we have not attributed one to ${name}.`
-                : `It works as a widget, a script or in the back office, so there is no slice to show.`}{' '}
-              It is installed on {seen.stores.length} curated{' '}
-              {seen.stores.length === 1 ? 'store' : 'stores'}:
-            </p>
-          </>
-        )}
-        {variant === 'unseen' && (
-          <>
-            <h2 class="seen__title" id="where-title">
-              Not on a curated store yet
-            </h2>
-            <p class="seen__lede">
-              We detect {name} on {storesTotal.toLocaleString('en-US')} scanned{' '}
-              {storesTotal === 1 ? 'store' : 'stores'}, but none of the stores we capture page by
-              page runs it, so there are no plates yet.
-              {surfaces.length > 0 && ` Apps in this category usually render as ${surfaceList}.`}
-            </p>
-          </>
-        )}
-      </div>
-      <div class="seen__side start-9">
-        {surfaces.length > 0 && (
-          <ul class="seen__surfaces" aria-label="Section types">
-            {surfaces.map((s) => (
-              <li>
-                <a href={s.href} class="seen__surface">
-                  <span class="mlabel mlabel--bullet">{s.group.name}</span>
-                  <span class="seen__surface-name">{s.name}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-        {variant === 'plates' && byDevice.desktop.length > 0 && byDevice.mobile.length > 0 && (
-          <Segmented
-            label="Device"
-            size="sm"
-            class="seen__devices"
-            items={[
-              {
-                label: 'Desktop',
-                value: 'desktop',
-                icon: 'desktop',
-                href: deviceHref('desktop'),
-                selected: activeDevice === 'desktop',
-                count: byDevice.desktop.length,
-              },
-              {
-                label: 'Mobile',
-                value: 'mobile',
-                icon: 'device-mobile',
-                href: deviceHref('mobile'),
-                selected: activeDevice === 'mobile',
-                count: byDevice.mobile.length,
-              },
-            ]}
-          />
-        )}
-      </div>
+  <div class="seen__head">
+    <div class="seen__intro">
+      {variant === 'pinned' && (
+        <>
+          <h2 class="seen__title" id="where-title">
+            Seen on {storeCount} curated {storeCount === 1 ? 'store' : 'stores'}
+          </h2>
+          <p class="seen__lede">
+            {name} renders as {surfaceList || 'its own section'} on {pages.join(' and ')} pages.
+            Each capture pins its section on the real page.
+          </p>
+        </>
+      )}
+      {variant === 'installed' && (
+        <>
+          <h2 class="seen__title" id="where-title">
+            On {seen.stores.length} curated {seen.stores.length === 1 ? 'store' : 'stores'}, no
+            section to pin
+          </h2>
+          <p class="seen__lede">
+            {surfaces.length > 0
+              ? `Apps like ${name} usually render as ${surfaceList.toLowerCase()}, but on these stores we have not attributed a section to it.`
+              : `${name} works as a widget, a script or in the back office, so it adds no section we slice.`}
+          </p>
+        </>
+      )}
+      {variant === 'unseen' && (
+        <h2 class="seen__title" id="where-title">
+          Seen on
+        </h2>
+      )}
     </div>
-
-    {variant === 'plates' && lead && (
-      <>
-        <div class="seen__stage cols-12">
-          <figure class="seen__lead span-8">
-            <div class="marks seen__lead-plate">
-              <span class="seen__frame">01/{pad(frames)}</span>
-              <SectionCrop
-                src={lead.crop.src}
-                width={lead.crop.width}
-                height={lead.crop.height}
-                device={lead.device}
-                alt={`${name}: ${lead.type.name.toLowerCase()} section on ${lead.store.display_name}, ${pageName(lead.page_type).toLowerCase()} page (${lead.device}, layout preview)`}
-                href={sectionViewerHref(lead)}
-                ratio={lead.device === 'mobile' ? '4 / 3' : '16 / 10'}
-                eager
-              />
-            </div>
-            <figcaption class="seen__cap">
-              <a href={sectionViewerHref(lead)} class="seen__cap-store">
-                {lead.store.display_name}
-              </a>
-              <span class="seen__cap-meta">
-                {lead.type.name} · {caption(lead)}
-              </span>
-            </figcaption>
-          </figure>
-          <div class="seen__stores start-9">
-            <p class="mlabel mlabel--bullet">Seen on</p>
-            <ol>
-              {storesWithSections.map((s, i) => {
-                const first = s.sections.find((x) => x.device === activeDevice) ?? s.sections[0];
-                return (
-                  <li>
-                    <a href={first ? sectionViewerHref(first) : s.store.href}>
-                      <span class="seen__n">{specimen(i + 1, 2)}</span>
-                      <span class="seen__store">{s.store.display_name}</span>
-                      <span class="seen__store-meta">
-                        {first?.theme?.name ?? ''}
-                        {first?.theme ? ' · ' : ''}
-                        {s.sections.length} {s.sections.length === 1 ? 'section' : 'sections'}
-                      </span>
-                    </a>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        </div>
-
-        {rest.length > 0 && (
-          <div class="grid grid--sections seen__sheet">
-            {rest.map((s, i) => (
-              <div class="seen__card">
-                <span class="seen__frame">
-                  {pad(i + 2)}/{pad(frames)}
-                </span>
-                <SectionCard
-                  href={sectionViewerHref(s)}
-                  crop={s.crop}
-                  device={s.device}
-                  typeName={s.type.name}
-                  storeLabel={s.store.display_name}
-                  meta={`${s.type.name} · ${caption(s)}`}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </>
+    {variant === 'pinned' && byDevice.desktop.length > 0 && byDevice.mobile.length > 0 && (
+      <Segmented
+        label="Device"
+        size="sm"
+        class="seen__devices"
+        items={[
+          {
+            label: 'Desktop',
+            value: 'desktop',
+            icon: 'desktop',
+            href: deviceHref('desktop'),
+            selected: activeDevice === 'desktop',
+            count: byDevice.desktop.length,
+          },
+          {
+            label: 'Mobile',
+            value: 'mobile',
+            icon: 'device-mobile',
+            href: deviceHref('mobile'),
+            selected: activeDevice === 'mobile',
+            count: byDevice.mobile.length,
+          },
+        ]}
+      />
     )}
+  </div>
 
-    {variant === 'installed' && (
-      <div class="grid grid--shots seen__shots">
-        {seen.stores.slice(0, 6).map((s) =>
-          s.preview ? (
-            <figure class="seen__shot">
+  {variant === 'pinned' && active && (
+    <Window url={active.store.domain} class="seen__window" bodyClass="seen__body">
+      <a
+        slot="toolbar"
+        class="seen__open"
+        href={sectionViewerHref(active)}
+        data-seen-open
+        aria-label={`Open ${active.store.display_name} in the store viewer`}
+      >
+        <span class="seen__open-label">Open page</span>
+        <Icon name="arrow-up-right" size={14} />
+      </a>
+      <div class:list={['seen__layout', { 'seen__layout--single': shown.length < 2 }]}>
+        {shown.length > 1 && (
+          <nav class="seen__rail" aria-label={`Sections ${name} renders`} data-seen-rail>
+            <p class="seen__rail-title">
+              Sections <span class="num">{shown.length}</span>
+            </p>
+            <ol class="seen__list">
+              {shown.map((s) => (
+                <li>
+                  <a
+                    class="seen__item"
+                    href={seenHref(s.id)}
+                    data-seen-item={String(s.id)}
+                    aria-current={s.id === active.id ? 'true' : undefined}
+                    rel="nofollow"
+                  >
+                    <StoreMark domain={s.store.domain} name={s.store.name} size={22} />
+                    <span class="seen__item-text">
+                      <span class="seen__item-store">{s.store.display_name}</span>
+                      <span class="seen__item-meta">
+                        {pageName(s.page_type)}
+                        {s.theme ? ` · ${s.theme.name}` : ''}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
+        <div class:list={['seen__stage', `seen__stage--${activeDevice}`]}>
+          {shown.map((s) => (
+            <figure
+              class="seen__panel"
+              data-seen-panel={String(s.id)}
+              data-domain={s.store.domain}
+              data-href={sectionViewerHref(s)}
+              hidden={s.id !== active.id}
+            >
+              <PinnedCapture
+                section={s}
+                label={s.type.name}
+                labelMuted={name}
+                alt={altFor(s)}
+                ratio={ratio}
+                href={sectionViewerHref(s)}
+                eager={s.id === active.id}
+                class="seen__pin"
+              />
+              <figcaption class="seen__cap">
+                <span>
+                  <strong>{s.store.display_name}</strong> · {pageName(s.page_type)} page
+                  {s.theme && (
+                    <>
+                      {' '}
+                      · <a href={s.theme.href}>{s.theme.name}</a> theme
+                    </>
+                  )}
+                </span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </Window>
+  )}
+
+  {variant === 'pinned' && (
+    <div class="seen__foot">
+      <p>
+        Layout previews drawn from each page’s detected sections until captures land. A section is
+        credited to {name} only when the store runs it.
+      </p>
+      <a href={appSectionsHref} class="seen__more">
+        All {seen.section_total} in the sections library
+        <Icon name="arrow-right" size={14} />
+      </a>
+    </div>
+  )}
+
+  {variant === 'installed' && (
+    <ul class="seen__stores">
+      {seen.stores.slice(0, 6).map((s, i) => (
+        <li>
+          {s.preview ? (
+            <Card href={s.store.href} padding="sm" class="seen__store">
               <Shot
+                slot="media"
                 src={s.preview.image.src}
                 width={s.preview.image.width}
                 height={s.preview.image.height}
                 device={s.preview.device}
-                alt={`${s.store.display_name} home page, ${s.preview.device} (layout preview)`}
-                href={s.store.href}
+                alt={`${s.store.display_name} ${pageName(s.preview.page_type).toLowerCase()} page, ${s.preview.device} (layout preview)`}
+                eager={i < 2}
+                flush
               />
-              <figcaption class="seen__cap">
-                <a href={s.store.href} class="seen__cap-store">
-                  {s.store.display_name}
-                </a>
-                <span class="seen__cap-meta">{pageName(s.preview.page_type)} · Layout preview</span>
-              </figcaption>
-            </figure>
+              <span class="seen__store-name">{s.store.display_name}</span>
+              <span class="seen__store-meta">{pageName(s.preview.page_type)} page</span>
+            </Card>
           ) : (
-            <a class="seen__shot-plain" href={s.store.href}>
-              {s.store.display_name}
-            </a>
-          ),
-        )}
-      </div>
-    )}
+            <Card href={s.store.href} padding="sm" class="seen__store">
+              <span class="seen__store-name">{s.store.display_name}</span>
+              <span class="seen__store-meta">Not captured yet</span>
+            </Card>
+          )}
+        </li>
+      ))}
+    </ul>
+  )}
 
+  {variant === 'installed' && (
     <div class="seen__foot">
-      <p>
-        Plates are layout previews drawn from each page’s detected sections until captures land.
-        Sections are credited to an app only when the store runs it.
-      </p>
-      {variant === 'plates' ? (
-        <a href={appSectionsHref} class="seen__more">
-          All {seen.section_total} in the sections library <span aria-hidden="true">→</span>
-        </a>
-      ) : (
-        <a href="#stores" class="seen__more">
-          Stores running {name} <span aria-hidden="true">↓</span>
-        </a>
-      )}
+      <p>Layout previews drawn from each page’s detected sections until captures land.</p>
+      <a href="#stores" class="seen__more">
+        All stores running {name}
+        <Icon name="arrow-right" size={14} />
+      </a>
     </div>
-  </div>
+  )}
+
+  {variant === 'unseen' && (
+    <EmptyState
+      title="Not on a curated store yet"
+      level={3}
+      icon="storefront"
+      body={`We detect ${name} on ${storesTotal.toLocaleString('en-US')} scanned ${storesTotal === 1 ? 'store' : 'stores'}, but none of the stores we capture page by page runs it, so there is no section to pin yet.${surfaces.length > 0 ? ` Apps in this category usually render as ${surfaceList.toLowerCase()}.` : ''}`}
+    >
+      <Button href="#stores" size="sm" iconRight="arrow-right">
+        Stores running {name}
+      </Button>
+    </EmptyState>
+  )}
 </section>
 
+<script>
+  // Progressive enhancement: switch the stage in place instead of reloading the page.
+  document.querySelectorAll<HTMLElement>('[data-seen-rail]').forEach((rail) => {
+    const root = rail.closest<HTMLElement>('.seen');
+    if (!root) return;
+    const panels = new Map<string, HTMLElement>();
+    root
+      .querySelectorAll<HTMLElement>('[data-seen-panel]')
+      .forEach((p) => panels.set(p.dataset.seenPanel!, p));
+    const url = root.querySelector<HTMLElement>('.window__url');
+    const open = root.querySelector<HTMLAnchorElement>('[data-seen-open]');
+    rail.addEventListener('click', (event) => {
+      const item = (event.target as HTMLElement).closest<HTMLAnchorElement>('[data-seen-item]');
+      if (!item || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      const panel = panels.get(item.dataset.seenItem!);
+      if (!panel) return;
+      event.preventDefault();
+      panels.forEach((p) => (p.hidden = p !== panel));
+      rail.querySelectorAll('[data-seen-item]').forEach((el) => {
+        if (el === item) el.setAttribute('aria-current', 'true');
+        else el.removeAttribute('aria-current');
+      });
+      if (url) url.textContent = panel.dataset.domain ?? '';
+      if (open && panel.dataset.href) {
+        open.href = panel.dataset.href;
+        open.setAttribute('aria-label', `Open ${panel.dataset.domain ?? ''} in the store viewer`);
+      }
+      history.replaceState(null, '', item.href);
+    });
+  });
+</script>
+
 <style>
-  /* The dark stage re-scopes the tokens, so shared components (SectionCard, Shot, Segmented)
-     render correctly on it without variants. */
-  .seen {
-    --bg: var(--inverse);
-    --ink: var(--ink-inverse);
-    --ink-2: color-mix(in srgb, var(--ink-inverse) 84%, var(--inverse));
-    --ink-3: var(--ink-inverse-2);
-    --ink-4: color-mix(in srgb, var(--ink-inverse-2) 60%, var(--inverse));
-    --line: var(--line-inverse);
-    --line-strong: color-mix(in srgb, var(--line-inverse) 70%, var(--ink-inverse-2));
-    --tile: var(--inverse-2);
-    --tile-hover: color-mix(in srgb, var(--inverse-2) 85%, var(--ink-inverse));
-    --fill: var(--inverse-2);
-    --surface: var(--line-inverse);
-    background: var(--inverse);
-    color: var(--ink);
-    padding-block: var(--space-12) var(--space-10);
+  .seen__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+    margin-bottom: var(--space-5);
   }
-  @media (min-width: 1024px) {
-    .seen {
-      padding-block: var(--space-16) var(--space-12);
-    }
-  }
-  .seen :global(.marks) {
-    --mark: color-mix(in srgb, var(--ink-inverse-2) 55%, var(--inverse));
-  }
-  .seen__label {
-    margin-bottom: var(--space-4);
+  .seen__intro {
+    min-width: 0;
+    max-width: 60ch;
   }
   .seen__title {
-    font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+    font-size: var(--text-h2);
     font-weight: var(--weight-semibold);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
   }
   .seen__lede {
-    max-width: 60ch;
-    margin-top: var(--space-4);
+    margin-top: var(--space-2);
     color: var(--ink-2);
-    font-size: var(--text-md);
-    line-height: var(--leading-normal);
+    font-size: var(--text-body);
+    line-height: var(--leading-relaxed);
   }
-  .seen__head {
-    align-items: end;
-  }
-  .seen__side {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    align-items: flex-start;
-  }
-  .seen__surfaces {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4) var(--space-8);
-  }
-  .seen__surface {
-    display: flex;
-    flex-direction: column;
+
+  /* Window toolbar: "Open page ↗" */
+  .seen__open {
+    display: inline-flex;
+    align-items: center;
     gap: 4px;
-  }
-  .seen__surface-name {
-    font-size: var(--text-lg);
+    height: 24px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    color: var(--ink-2);
+    font-size: var(--text-xs);
     font-weight: var(--weight-medium);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
-    transition: text-decoration-color var(--dur-fast) var(--ease-out);
-  }
-  .seen__surface:hover .seen__surface-name {
-    text-decoration-color: currentColor;
-  }
-  @media (min-width: 1024px) {
-    .seen__side {
-      align-items: flex-end;
-      text-align: right;
-    }
-    .seen__surfaces {
-      justify-content: flex-end;
-    }
-  }
-
-  .seen__stage {
-    margin-top: var(--space-10);
-    align-items: start;
-  }
-  .seen__lead {
-    min-width: 0;
-  }
-  .seen__lead-plate {
-    position: relative;
-  }
-  .seen__frame {
-    display: none;
-    position: absolute;
-    top: 12px;
-    left: 14px;
-    z-index: 1;
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.04em;
-    pointer-events: none;
-  }
-  .seen__cap {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 2px var(--space-3);
-    margin-top: var(--space-3);
-  }
-  .seen__cap-store {
-    font-size: var(--text-base);
-    font-weight: var(--weight-medium);
-  }
-  .seen__cap-store:hover {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-  .seen__cap-meta {
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .seen__stores ol {
-    margin-top: var(--space-3);
-    border-top: 1px solid var(--ink-3);
-  }
-  .seen__stores a {
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr);
-    grid-template-areas: 'n name' 'n meta';
-    column-gap: var(--space-3);
-    padding: 12px 0;
-    border-bottom: 1px solid var(--line);
-    transition: padding var(--dur-base) var(--ease-out);
-  }
-  .seen__stores a:hover {
-    padding-left: var(--space-2);
-  }
-  .seen__n {
-    grid-area: n;
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    padding-top: 3px;
-  }
-  .seen__store {
-    grid-area: name;
-    font-size: var(--text-md);
-    font-weight: var(--weight-medium);
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
   }
-  .seen__store-meta {
-    grid-area: meta;
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+  .seen__open:hover {
+    background: var(--surface-2);
+    color: var(--ink);
   }
-
-  @media (min-width: 1024px) {
-    .seen__frame {
-      display: block;
-    }
-  }
-  .seen__sheet {
-    margin-top: var(--space-12);
-  }
-  /* Small screens: a compact two-up contact sheet, first six frames. */
-  @media (max-width: 639px) {
-    .seen__sheet {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-5) var(--space-3);
-      margin-top: var(--space-8);
-    }
-    .seen__card:nth-child(n + 7) {
+  @media (max-width: 479px) {
+    .seen__open-label {
       display: none;
     }
   }
-  .seen__card {
-    position: relative;
-    min-width: 0;
-  }
-  .seen__shots {
-    margin-top: var(--space-10);
-  }
-  .seen__shot {
-    min-width: 0;
-  }
-  .seen__shot-plain {
+
+  .seen__layout {
     display: grid;
-    place-items: center;
-    aspect-ratio: 4 / 3;
-    border-radius: var(--radius-lg);
-    background: var(--tile);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 1024px) {
+    .seen__layout {
+      grid-template-columns: 216px minmax(0, 1fr);
+    }
+    .seen__layout--single {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* Rail: a sideways pill row on small screens, a list beside the stage ≥1024. */
+  .seen__rail {
+    min-width: 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .seen__rail-title {
+    display: none;
+  }
+  .seen__list {
+    display: flex;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .seen__list::-webkit-scrollbar {
+    display: none;
+  }
+  .seen__item {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
+    border-radius: var(--radius-control);
+    color: var(--ink-2);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .seen__item:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .seen__item[aria-current] {
+    background: var(--surface-2);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .seen__item-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .seen__item-store {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: 1.3;
+  }
+  .seen__item-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.3;
+  }
+  @media (min-width: 1024px) {
+    .seen__rail {
+      border-bottom: 0;
+      border-right: 1px solid var(--line);
+    }
+    .seen__rail-title {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--space-3) var(--space-4) var(--space-1);
+      color: var(--ink-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-2xs);
+      letter-spacing: var(--tracking-eyebrow);
+      text-transform: uppercase;
+    }
+    .seen__list {
+      flex-direction: column;
+      gap: 2px;
+      padding: var(--space-1) var(--space-2) var(--space-3);
+      overflow: visible;
+    }
+    .seen__item {
+      flex: initial;
+      min-height: 48px;
+    }
+  }
+
+  /* Stage: the capture in a padded --surface-2 area, bleeding off the bottom edge. */
+  .seen__stage {
+    min-width: 0;
+    padding: var(--space-4) var(--space-4) 0;
+  }
+  @media (min-width: 1024px) {
+    .seen__stage {
+      padding: var(--space-6) var(--space-6) 0;
+    }
+  }
+  .seen__panel[hidden] {
+    display: none;
+  }
+  .seen__stage :global(.seen__pin) {
+    border-radius: 8px 8px 0 0;
+    box-shadow: var(--shadow-shot);
+  }
+  .seen__stage--mobile :global(.seen__pin) {
+    width: min(100%, 300px);
+    margin-inline: auto;
+    border-radius: 22px 22px 0 0;
+  }
+  .seen__cap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-inline: calc(var(--space-4) * -1);
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  @media (min-width: 1024px) {
+    .seen__cap {
+      margin-inline: calc(var(--space-6) * -1);
+      padding-inline: var(--space-6);
+    }
+  }
+  .seen__cap strong {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .seen__cap a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .seen__cap a:hover {
+    text-decoration-color: currentColor;
   }
 
   .seen__foot {
@@ -467,26 +512,50 @@ const pad = (n: number) => String(n).padStart(2, '0');
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--space-3) var(--space-8);
-    margin-top: var(--space-12);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
+    gap: var(--space-2) var(--space-6);
+    margin-top: var(--space-4);
     color: var(--ink-3);
     font-size: var(--text-xs);
   }
   .seen__foot p {
-    max-width: 70ch;
+    max-width: 62ch;
   }
   .seen__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     color: var(--ink);
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.25em;
     white-space: nowrap;
   }
-  .seen__more:hover {
-    text-decoration-color: currentColor;
+  .seen__more :global(svg) {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .seen__more:hover :global(svg) {
+    transform: translateX(2px);
+  }
+
+  .seen__stores {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  @media (min-width: 768px) {
+    .seen__stores {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+  }
+  .seen__store-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+  }
+  .seen__store-meta {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
   }
 </style>

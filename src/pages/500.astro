@@ -1,0 +1,73 @@
+---
+/**
+ * Server error: shown when a page throws (e.g. the database is unreachable). No data calls of
+ * its own; BaseLayout already falls back when its nav counts can't load. Never shows the error.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Button from '~/components/ui/Button.astro';
+import { CONTACT } from '~/config/site';
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+// Retry the page that failed (same path and query), or the home page if we can't tell.
+const retry = Astro.url.pathname === '/500' ? '/' : `${Astro.url.pathname}${Astro.url.search}`;
+---
+
+<BaseLayout title="Something went wrong" description="This page didn’t load." noindex>
+  <div class="container">
+    <div class="err">
+      <p class="eyebrow">Error 500</p>
+      <h1 class="display-md err__title">This page didn’t load.</h1>
+      <p class="lead err__sub">
+        Something went wrong on our side, not yours. It’s usually brief: try again in a moment.
+      </p>
+      <div class="err__actions">
+        <Button href={retry} variant="primary" size="lg" icon="arrow-clockwise">
+          Try again
+        </Button>
+        <Button href="/" variant="secondary" size="lg">
+          Go to the home page
+        </Button>
+      </div>
+      <p class="err__note">
+        Still broken? Write to <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a> with the page
+        you were on.
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .err {
+    max-width: 560px;
+    padding-block: var(--space-12) var(--section-y);
+  }
+  .err__title {
+    margin-top: var(--space-3);
+  }
+  .err__sub {
+    margin-top: var(--space-4);
+  }
+  .err__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-8);
+  }
+  .err__note {
+    margin-top: var(--space-6);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .err__note a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  @media (min-width: 1024px) {
+    .err {
+      padding-top: var(--space-20);
+    }
+  }
+</style>

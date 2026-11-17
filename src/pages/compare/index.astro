@@ -1,30 +1,34 @@
 ---
 /**
- * /compare — the index of popular pairs (top apps per category, top and same-vendor themes),
- * set as a typographic catalogue grouped like a table of contents, plus "compare any two".
- * The picker submits GET /compare?a=&b=, which redirects to the canonical pair page.
+ * /compare — the curated popular pairs (top apps per category, top and same-vendor themes) as
+ * cards grouped by category, under one "find a comparison" control. Only curated pairs have a
+ * page (owner decision: no thin long-tail pages). The picker submits GET /compare?a=&b=:
+ * curated pairs redirect to their canonical page; any other pair gets a plain answer here
+ * ("no comparison page for these two") with links to both items.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import PageHeader from '~/components/ui/PageHeader.astro';
-import Chip from '~/components/ui/Chip.astro';
-import ChipRow from '~/components/ui/ChipRow.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import BrowseBar, { type FilterGroup } from '~/components/ui/BrowseBar.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
-import GroupedIndex, { type Group } from '~/components/compare/GroupedIndex.astro';
+import Icon from '~/components/ui/Icon.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Shot from '~/components/media/Shot.astro';
+import PairCard from '~/components/compare/PairCard.astro';
 import ComparePicker, { type PickerGroup } from '~/components/compare/ComparePicker.astro';
 import { api, isApiError } from '~/server/api';
-import type { AppListItem, ComparisonLink } from '~/server/api/v1/types';
+import type { AppListItem, ComparisonLink, ThemeListItem } from '~/server/api/v1/types';
 import { formatCount, formatDate } from '~/lib/format';
-import { pluralStores } from '~/components/compare/compare';
+import { appPairLine, themePairLine } from '~/components/compare/compare';
 
 const params = Astro.url.searchParams;
 
-// ---- "Compare any two" (GET handler) --------------------------------------------------------
+// ---- "Find a comparison" (GET handler) --------------------------------------------------------
 const qa = params.get('a')?.trim().toLowerCase() ?? '';
 const qb = params.get('b')?.trim().toLowerCase() ?? '';
 let pickError: string | null = null;
+let notCurated = false;
 if (params.has('a') || params.has('b')) {
   const valid = (s: string) => /^[a-z0-9][a-z0-9.-]*$/.test(s);
   if (!qa || !qb) pickError = 'Choose two apps or two themes to compare.';
@@ -37,20 +41,25 @@ if (params.has('a') || params.has('b')) {
       return Astro.redirect(data.href, 302);
     } catch (err) {
       if (!isApiError(err)) throw err;
-      pickError =
-        err.code === 'not_found'
-          ? 'We couldn’t find one of those. Pick from the lists.'
-          : err.code === 'bad_request' && /different/.test(err.message)
-            ? 'Those are the same app. Pick two different ones.'
-            : 'Compare two apps or two themes, not one of each.';
+      if (err.code === 'not_found' && err.details?.some((d) => d.message === 'not_curated'))
+        notCurated = true;
+      else
+        pickError =
+          err.code === 'not_found'
+            ? 'We couldn’t find one of those. Pick from the lists.'
+            : err.code === 'bad_request' && /different/.test(err.message)
+              ? 'Those are the same app. Pick two different ones.'
+              : 'Compare two apps or two themes, not one of each.';
     }
   }
-  Astro.response.status = 400;
+  // A pair without a page is "not found"; a malformed pick is a bad request.
+  Astro.response.status = notCurated ? 404 : 400;
 }
 
 // ---- Data -----------------------------------------------------------------------------------
 const kindParam = params.get('kind');
 const kind = kindParam === 'app' || kindParam === 'theme' ? kindParam : null;
+const groupParam = params.get('group');
 
 const [{ data: list, meta }, appsPage1, { data: themes }] = await Promise.all([
   api.listComparisons({ limit: 200 }),
@@ -68,97 +77,210 @@ const appBySlug = new Map(apps.map((a) => [a.slug, a]));
 const themeBySlug = new Map(themes.items.map((t) => [t.slug, t]));
 
 const all = list.items;
+
+// Curated partners per slug (for the picker and the "no page" answer).
+const pairs: Record<string, string[]> = {};
+for (const c of all) {
+  (pairs[c.a.slug] ??= []).push(c.b.slug);
+  (pairs[c.b.slug] ??= []).push(c.a.slug);
+}
+
+// ---- Groups: app pairs by category (busiest first), theme pairs by reason ---------------------
+interface PairGroup {
+  key: string;
+  kind: 'app' | 'theme';
+  label: string;
+  note: string;
+  href?: string;
+  linkLabel?: string;
+  weight: number;
+  links: ComparisonLink[];
+}
+const storesOf = (c: ComparisonLink, side: 'a' | 'b') =>
+  c.kind === 'app'
+    ? appBySlug.get(c[side].slug)?.usage.stores
+    : themeBySlug.get(c[side].slug)?.usage.stores;
+const groupMap = new Map<string, PairGroup>();
+for (const c of all) {
+  let key: string;
+  let make: () => PairGroup;
+  if (c.kind === 'app') {
+    const cat = appBySlug.get(c.a.slug)?.category ?? appBySlug.get(c.b.slug)?.category ?? null;
+    key = `apps-${cat?.slug ?? 'other'}`;
+    make = () => ({
+      key,
+      kind: 'app',
+      label: cat?.name ?? 'Other apps',
+      note: 'Most used in the category',
+      href: cat?.href,
+      linkLabel: cat ? `All ${cat.name} apps` : undefined,
+      weight: 0,
+      links: [],
+    });
+  } else {
+    const vendor = themeBySlug.get(c.a.slug)?.vendor_info ?? null;
+    const same = c.reason === 'same-vendor' && vendor;
+    key = same ? `themes-${vendor.slug}` : 'themes-most-used';
+    make = () =>
+      same
+        ? {
+            key,
+            kind: 'theme',
+            label: `${vendor.name} themes`,
+            note: 'Same vendor',
+            href: vendor.href,
+            linkLabel: `More from ${vendor.name}`,
+            weight: 0,
+            links: [],
+          }
+        : {
+            key,
+            kind: 'theme',
+            label: 'Most used themes',
+            note: 'Top themes by usage',
+            href: '/themes',
+            linkLabel: 'All themes',
+            weight: 0,
+            links: [],
+          };
+  }
+  const g = groupMap.get(key) ?? make();
+  g.weight = Math.max(g.weight, storesOf(c, 'a') ?? 0, storesOf(c, 'b') ?? 0);
+  g.links.push(c);
+  groupMap.set(key, g);
+}
+// Groups with a single pair share one "more" group (each card names its category or vendor),
+// so the page doesn't fill with near-empty rows.
+const eyebrowOf = new Map<string, string>();
+const merge = (groups: PairGroup[], into: Omit<PairGroup, 'links' | 'weight'>): PairGroup[] => {
+  const singles = groups.filter((g) => g.links.length === 1);
+  if (singles.length < 2) return groups;
+  for (const g of singles)
+    for (const c of g.links) eyebrowOf.set(c.slug, g.label.replace(/ themes$/, ''));
+  return [
+    ...groups.filter((g) => g.links.length > 1),
+    {
+      ...into,
+      weight: Math.max(...singles.map((g) => g.weight)),
+      links: singles.flatMap((g) => g.links),
+    },
+  ];
+};
+const appGroupsAll = merge(
+  [...groupMap.values()].filter((g) => g.kind === 'app').sort((x, y) => y.weight - x.weight),
+  {
+    key: 'apps-more',
+    kind: 'app',
+    label: 'More categories',
+    note: 'One popular pair each',
+    href: '/apps/categories',
+    linkLabel: 'All app categories',
+  },
+);
+const themeGroupsAll = merge(
+  [...groupMap.values()].filter((g) => g.kind === 'theme'),
+  {
+    key: 'themes-same-vendor',
+    kind: 'theme',
+    label: 'Same vendor',
+    note: 'Two themes from one maker',
+    href: '/themes',
+    linkLabel: 'All themes',
+  },
+);
+for (const g of [...appGroupsAll, ...themeGroupsAll]) groupMap.set(g.key, g);
+const groupSel = groupParam && groupMap.has(groupParam) ? groupParam : null;
+const inKind = (g: PairGroup) => !kind || g.kind === kind;
+const inGroup = (g: PairGroup) => !groupSel || g.key === groupSel;
+const appGroups = appGroupsAll.filter((g) => inKind(g) && inGroup(g));
+const themeGroups = themeGroupsAll.filter((g) => inKind(g) && inGroup(g));
+const shownCount = [...appGroups, ...themeGroups].reduce((n, g) => n + g.links.length, 0);
 const counts = {
   all: all.length,
   app: all.filter((c) => c.kind === 'app').length,
   theme: all.filter((c) => c.kind === 'theme').length,
 };
-const shown = kind ? all.filter((c) => c.kind === kind) : all;
 
-const storesOf = (c: ComparisonLink, side: 'a' | 'b') =>
-  c.kind === 'app'
-    ? appBySlug.get(c[side].slug)?.usage.stores
-    : themeBySlug.get(c[side].slug)?.usage.stores;
-const row = (c: ComparisonLink, subtitle: string) => {
-  const sa = storesOf(c, 'a');
-  const sb = storesOf(c, 'b');
+const cardFor = (c: ComparisonLink) => {
+  if (c.kind === 'app') {
+    const a = appBySlug.get(c.a.slug);
+    const b = appBySlug.get(c.b.slug);
+    return {
+      a: { name: a?.short_name ?? c.a.name, iconUrl: c.a.icon_url, stores: a?.usage.stores },
+      b: { name: b?.short_name ?? c.b.name, iconUrl: c.b.icon_url, stores: b?.usage.stores },
+      line: a && b ? appPairLine(a, b) : c.title,
+      preview: null,
+    };
+  }
+  const a = themeBySlug.get(c.a.slug);
+  const b = themeBySlug.get(c.b.slug);
+  const shot = (t?: ThemeListItem) => t?.previews[0] ?? null;
   return {
-    href: c.href,
-    title: c.title,
-    subtitle:
-      sa !== undefined && sb !== undefined
-        ? `On ${formatCount(sa)} and ${formatCount(sb)} stores`
-        : subtitle,
-    cells: [
-      {
-        value:
-          sa !== undefined && sb !== undefined ? `${formatCount(sa)} · ${formatCount(sb)}` : '—',
-        mono: true,
-        muted: true,
-      },
-      c.shared_stores
-        ? { value: `(${pluralStores(c.shared_stores)})`, serif: true, mobile: true }
-        : { value: '(none)', serif: true, muted: true, mobile: true },
-    ],
+    a: { name: a?.name ?? c.a.name, stores: a?.usage.stores },
+    b: { name: b?.name ?? c.b.name, stores: b?.usage.stores },
+    line: a && b ? themePairLine(a, b) : c.title,
+    preview: { a: shot(a), b: shot(b) },
   };
 };
 
-// App pairs grouped by category, busiest categories first.
-const appGroups = new Map<
-  string,
-  { label: string; href?: string; weight: number; links: ComparisonLink[] }
->();
-for (const c of shown.filter((x) => x.kind === 'app')) {
-  const cat = appBySlug.get(c.a.slug)?.category ?? appBySlug.get(c.b.slug)?.category ?? null;
-  const key = cat?.slug ?? 'other';
-  const g = appGroups.get(key) ?? {
-    label: cat?.name ?? 'Other apps',
-    href: cat?.href,
-    weight: 0,
-    links: [],
-  };
-  g.weight = Math.max(g.weight, storesOf(c, 'a') ?? 0, storesOf(c, 'b') ?? 0);
-  g.links.push(c);
-  appGroups.set(key, g);
-}
-const appSection: Group[] = [...appGroups.entries()]
-  .sort((x, y) => y[1].weight - x[1].weight)
-  .map(([key, g]) => ({
-    id: `apps-${key}`,
-    label: g.label,
-    href: g.href,
-    rows: g.links.map((c) => row(c, g.label)),
-  }));
+// ---- URLs (all state is in the URL) ---------------------------------------------------------
+const hrefWith = (next: { kind?: string | null; group?: string | null }) => {
+  const u = new URLSearchParams();
+  const k = next.kind === undefined ? kind : next.kind;
+  const g = next.group === undefined ? groupSel : next.group;
+  if (k) u.set('kind', k);
+  if (g) u.set('group', g);
+  const s = u.toString();
+  return s ? `/compare?${s}` : '/compare';
+};
+const groupsForBar: FilterGroup[] = [
+  {
+    key: 'kind',
+    label: 'Kind',
+    options: [
+      { label: 'All', href: hrefWith({ kind: null }), selected: !kind, count: counts.all },
+      {
+        label: 'Apps',
+        href: hrefWith({
+          kind: 'app',
+          group: groupSel?.startsWith('themes-') ? null : undefined,
+        }),
+        selected: kind === 'app',
+        count: counts.app,
+      },
+      {
+        label: 'Themes',
+        href: hrefWith({ kind: 'theme', group: groupSel?.startsWith('apps-') ? null : undefined }),
+        selected: kind === 'theme',
+        count: counts.theme,
+      },
+    ],
+  },
+  {
+    key: 'group',
+    label: 'Category',
+    options: [
+      { label: 'All categories', href: hrefWith({ group: null }), selected: !groupSel },
+      ...[...appGroupsAll, ...themeGroupsAll].filter(inKind).map((g) => ({
+        label: g.label,
+        href: hrefWith({ group: g.key }),
+        selected: g.key === groupSel,
+        count: g.links.length,
+      })),
+    ],
+  },
+];
 
-// Theme pairs: the most used, then same-vendor pairs grouped by vendor.
-const themeGroups = new Map<
-  string,
-  { label: string; note: string; href?: string; links: ComparisonLink[] }
->();
-for (const c of shown.filter((x) => x.kind === 'theme')) {
-  const vendor = themeBySlug.get(c.a.slug)?.vendor_info ?? null;
-  const key = c.reason === 'same-vendor' && vendor ? `vendor-${vendor.slug}` : 'most-used';
-  const g =
-    themeGroups.get(key) ??
-    (key === 'most-used'
-      ? { label: 'Most used themes', note: 'Top themes by usage', links: [] }
-      : { label: vendor!.name, note: 'Same vendor', href: vendor!.href, links: [] });
-  g.links.push(c);
-  themeGroups.set(key, g);
-}
-const themeSection: Group[] = [...themeGroups.entries()].map(([key, g]) => ({
-  id: `themes-${key}`,
-  label: g.label,
-  note: g.note,
-  href: g.href,
-  rows: g.links.map((c) => row(c, g.note === 'Same vendor' ? `Same vendor · ${g.label}` : g.label)),
-}));
-
-// Picker options: themes first (short list), then apps by category.
+// ---- Picker options: themes first (short list), then apps by category ------------------------
 const pickerGroups: PickerGroup[] = [
   {
     label: 'Themes',
-    options: themes.items.map((t) => ({ value: t.slug, label: t.name, kind: 'theme' as const })),
+    options: themes.items.map((t) => ({
+      value: t.slug,
+      label: t.name,
+      kind: 'theme' as const,
+      meta: t.vendor ? `Theme · ${t.vendor}` : 'Theme',
+    })),
   },
 ];
 const byCat = new Map<string, AppListItem[]>();
@@ -172,16 +294,62 @@ for (const [label, items] of [...byCat.entries()].sort((x, y) => x[0].localeComp
     options: items
       .slice()
       .sort((x, y) => x.short_name.localeCompare(y.short_name))
-      .map((a) => ({ value: a.slug, label: a.short_name, kind: 'app' as const })),
+      .map((a) => ({
+        value: a.slug,
+        label: a.short_name,
+        kind: 'app' as const,
+        icon: a.icon_url,
+        meta: a.category?.name ?? 'App',
+      })),
   });
 }
 
-const columns = '52px minmax(0, 1fr) 112px 112px';
-const head = ['N°', 'Comparison', 'Stores each', 'Run both'];
-const asOf = formatDate(meta.data_as_of);
-const scan = Object.entries(meta.sources).find(([k]) => k.startsWith('storepeek-scan'))?.[1];
+// ---- "No comparison page" answer ---------------------------------------------------------------
+interface Picked {
+  slug: string;
+  name: string;
+  href: string;
+  kind: 'app' | 'theme';
+  icon: string | null;
+  meta: string;
+}
+const picked = (slug: string): Picked | null => {
+  const a = appBySlug.get(slug);
+  if (a)
+    return {
+      slug,
+      name: a.short_name,
+      href: a.href,
+      kind: 'app',
+      icon: a.icon_url,
+      meta: a.category?.name ?? 'App',
+    };
+  const t = themeBySlug.get(slug);
+  if (t)
+    return {
+      slug,
+      name: t.name,
+      href: t.href,
+      kind: 'theme',
+      icon: null,
+      meta: t.vendor ? `Theme by ${t.vendor}` : 'Theme',
+    };
+  return null;
+};
+const answer = notCurated
+  ? (() => {
+      const pa = picked(qa);
+      const pb = picked(qb);
+      const related = all
+        .filter((c) => [qa, qb].includes(c.a.slug) || [qa, qb].includes(c.b.slug))
+        .slice(0, 4);
+      return { pa, pb, related };
+    })()
+  : null;
 
-const chipHref = (k: string | null) => (k ? `/compare?kind=${k}` : '/compare');
+const asOf = formatDate(meta.data_as_of);
+const denominator = apps[0]?.usage.denominator ?? themes.items[0]?.usage.denominator ?? 0;
+const scan = Object.entries(meta.sources).find(([k]) => k.startsWith('storepeek-scan'))?.[1];
 const jsonLd = [
   {
     '@type': 'CollectionPage',
@@ -191,8 +359,8 @@ const jsonLd = [
   {
     '@type': 'ItemList',
     name: 'Popular comparisons',
-    numberOfItems: shown.length,
-    itemListElement: shown.slice(0, 50).map((c, i) => ({
+    numberOfItems: all.length,
+    itemListElement: all.slice(0, 50).map((c, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: c.title,
@@ -201,54 +369,99 @@ const jsonLd = [
   },
 ];
 
-if (!pickError) Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+if (!pickError && !notCurated)
+  Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 else Astro.response.headers.set('Cache-Control', 'no-store');
+const groupId = (g: PairGroup) => `g-${g.key}`;
 ---
 
 <BaseLayout
   title="Compare Shopify apps and themes"
-  description="Two apps or two themes, side by side on real stores: where each renders, App Store facts and how many of 930 scanned stores run them. No winners, just evidence."
+  description={`Popular pairs of Shopify apps and themes, side by side on real stores: where each renders, App Store facts and how many of ${formatCount(denominator)} scanned stores run them. No winners, just evidence.`}
   canonical="/compare"
-  noindex={!!kind || !!pickError}
+  noindex={!!kind || !!groupSel || !!pickError || notCurated}
   jsonLd={jsonLd}
 >
-  <div class="container">
+  <div class="container cmpi">
     <PageHeader
-      title="Compare"
+      title="Comparisons"
       count={counts.all}
-      eyebrow={`Index · ${counts.all} popular pairs · any two on request`}
-      size="lg"
+      description="Popular pairs of Shopify apps and themes, side by side on the stores that run them. Facts only, no winners."
     >
-      <p slot="meta" class="cmpi__statement display">
-        Two apps or two themes, side by side on real stores. No winners, just evidence.
-      </p>
-      <div slot="actions" class="cmpi__picker">
-        <ComparePicker groups={pickerGroups} a={qa || null} b={qb || null} error={pickError} />
+      <div class="cmpi__find">
+        <ComparePicker
+          groups={pickerGroups}
+          pairs={pairs}
+          a={qa || null}
+          b={qb || null}
+          error={pickError}
+        />
+        {answer && (
+          <section class="cmpi__answer" aria-labelledby="no-page" role="status">
+            <div class="cmpi__answer-head">
+              <Icon name="info" size={20} />
+              <div>
+                <h2 id="no-page" class="cmpi__answer-title">
+                  {answer.pa && answer.pb
+                    ? `There’s no comparison page for ${answer.pa.name} and ${answer.pb.name}.`
+                    : 'There’s no comparison page for that pair.'}
+                </h2>
+                <p class="cmpi__answer-body">
+                  We only publish comparisons for popular pairs, so every page has enough real data
+                  behind it. Each one still has its own page:
+                </p>
+              </div>
+            </div>
+            {answer.pa && answer.pb && (
+              <ul class="cmpi__answer-items">
+                {[answer.pa, answer.pb].map((p) => (
+                  <li>
+                    <a href={p.href} class="cmpi__item">
+                      <AppIcon src={p.icon} name={p.name} size={36} />
+                      <span class="cmpi__item-text">
+                        <span class="cmpi__item-name">{p.name}</span>
+                        <span class="cmpi__item-meta">{p.meta}</span>
+                      </span>
+                      <span class="cmpi__item-go">
+                        {p.kind === 'app' ? 'App page' : 'Theme page'}
+                        <Icon name="arrow-right" size={14} />
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {answer.related.length > 0 && (
+              <div class="cmpi__answer-rel">
+                <p class="eyebrow">Comparisons that exist</p>
+                <ul>
+                  {answer.related.map((c) => (
+                    <li>
+                      <a href={c.href}>{c.title}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </PageHeader>
 
-    <div class="cmpi__bar">
-      <ChipRow label="Kind">
-        <Chip href={chipHref(null)} selected={!kind} count={counts.all}>
-          All
-        </Chip>
-        <Chip href={chipHref('app')} selected={kind === 'app'} count={counts.app}>
-          Apps
-        </Chip>
-        <Chip href={chipHref('theme')} selected={kind === 'theme'} count={counts.theme}>
-          Themes
-        </Chip>
-      </ChipRow>
-      <MonoLabel as="p" bullet={false} class="cmpi__count">
-        {`${shown.length} ${shown.length === 1 ? 'pair' : 'pairs'} · ${asOf}`}
-      </MonoLabel>
-    </div>
+    <BrowseBar
+      groups={groupsForBar}
+      pills="kind"
+      total={shownCount}
+      noun={shownCount === 1 ? 'pair' : 'pairs'}
+      clearHref="/compare"
+    />
 
-    {shown.length === 0 ? (
+    {shownCount === 0 ? (
       <div class="page-block">
         <EmptyState
-          title="No popular pairs here yet"
-          body="Pick any two above, or see every comparison."
+          title="No popular pairs in this view"
+          body="This filter has no curated comparisons. Clear it to see every pair."
+          align="start"
         >
           <Button href="/compare" variant="secondary">
             All comparisons
@@ -256,128 +469,409 @@ else Astro.response.headers.set('Cache-Control', 'no-store');
         </EmptyState>
       </div>
     ) : (
-      <>
-        {appSection.length > 0 && (
-          <section class="page-block" aria-labelledby="cmpi-apps">
-            <div class="cmpi__kind">
-              <h2 id="cmpi-apps" class="cmpi__kind-title">
-                Apps<sup class="count-sup">{counts.app}</sup>
+      [
+        { id: 'cmpi-apps', label: 'Apps', groups: appGroups, n: counts.app },
+        { id: 'cmpi-themes', label: 'Themes', groups: themeGroups, n: counts.theme },
+      ]
+        .filter((k) => k.groups.length > 0)
+        .map((k) => (
+          <section class="cmpi__kind" aria-labelledby={k.id}>
+            <div class="cmpi__kind-head">
+              <h2 id={k.id} class="h2">
+                {k.label === 'Apps' ? 'App pairs' : 'Theme pairs'}
+                <span class="cmpi__kind-n num">{k.n}</span>
               </h2>
               <p class="cmpi__kind-desc">
-                The three most used apps in each category, compared pair by pair.
+                {k.label === 'Apps'
+                  ? 'The three most used apps in each category, compared pair by pair.'
+                  : 'The most used themes against each other, and themes from the same vendor.'}
               </p>
             </div>
-            <GroupedIndex
-              groups={appSection}
-              columns={columns}
-              head={head}
-              listLabel={(l) => `${l} comparisons`}
-            />
+            {k.groups.map((g) => (
+              <section class="cmpi__group" aria-labelledby={groupId(g)}>
+                <div class="cmpi__ghead">
+                  <h3 id={groupId(g)} class="cmpi__gtitle">
+                    {g.label}
+                  </h3>
+                  <p class="cmpi__gnote">
+                    {`${g.links.length} ${g.links.length === 1 ? 'pair' : 'pairs'} · ${g.note}`}
+                  </p>
+                  {g.href && (
+                    <a class="cmpi__glink" href={g.href}>
+                      {g.linkLabel}
+                      <Icon name="arrow-right" size={14} />
+                    </a>
+                  )}
+                </div>
+                <ul class:list={['cmpi__grid', { 'cmpi__grid--one': g.links.length === 1 }]}>
+                  {g.links.map((c) => {
+                    const card = cardFor(c);
+                    return (
+                      <li>
+                        <PairCard
+                          href={c.href}
+                          a={card.a}
+                          b={card.b}
+                          line={card.line}
+                          shared={c.shared_stores ?? null}
+                          sharedVerb={c.kind === 'app' ? 'run' : 'ran'}
+                          eyebrow={eyebrowOf.get(c.slug)}
+                          marks={!card.preview}
+                          level={4}
+                        >
+                          {card.preview && (card.preview.a || card.preview.b) && (
+                            <div slot="media" class="cmpi__shots">
+                              {(['a', 'b'] as const).map((side) => {
+                                const p = card.preview![side];
+                                return p ? (
+                                  <Shot
+                                    src={p.image.src}
+                                    width={p.image.width}
+                                    height={p.image.height}
+                                    device="desktop"
+                                    ratio="5 / 4"
+                                    flush
+                                    alt={`${card[side].name} on a curated store, home page`}
+                                  />
+                                ) : (
+                                  <div class="cmpi__shot-none">No capture yet</div>
+                                );
+                              })}
+                              <span class="cmpi__shots-vs" aria-hidden="true">
+                                vs
+                              </span>
+                            </div>
+                          )}
+                        </PairCard>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
           </section>
-        )}
-        {themeSection.length > 0 && (
-          <section class="page-block" aria-labelledby="cmpi-themes">
-            <div class="cmpi__kind">
-              <h2 id="cmpi-themes" class="cmpi__kind-title">
-                Themes<sup class="count-sup">{counts.theme}</sup>
-              </h2>
-              <p class="cmpi__kind-desc">
-                The most used themes against each other, and themes from the same vendor.
-              </p>
-            </div>
-            <GroupedIndex
-              groups={themeSection}
-              columns={columns}
-              head={head}
-              start={appSection.reduce((n, g) => n + g.rows.length, 0) + 1}
-              listLabel={(l) => `${l} comparisons`}
-            />
-          </section>
-        )}
-      </>
+        ))
     )}
 
-    <div class="page-block cmpi__foot">
+    <footer class="cmpi__foot">
       <SourceNote
-        source={`${scan?.label ?? 'Our scan of public storefronts'}. Pairs are ordered by usage, not quality`}
+        source={`${scan?.label ?? 'Our scan of public storefronts'}. Pairs are ordered by usage, not quality; data as of ${asOf}`}
       />
-      <p class="cmpi__alts">
-        Looking for a replacement rather than a pair?{' '}
-        <a href="/alternatives">Browse alternatives</a>
-      </p>
-    </div>
+      <a class="cmpi__alts" href="/alternatives">
+        Looking for a replacement instead? Browse alternatives
+        <Icon name="arrow-right" size={14} />
+      </a>
+    </footer>
   </div>
 </BaseLayout>
 
 <style>
-  .cmpi__statement {
-    max-width: 18em;
-    margin-top: var(--space-5);
-    font-size: clamp(1.625rem, 1.1rem + 1.9vw, 2.75rem);
-    line-height: 1.08;
+  .cmpi {
+    padding-bottom: var(--section-y-app);
+  }
+  .cmpi__find {
+    max-width: 920px;
+    margin-top: var(--space-8);
+  }
+
+  /* "No comparison page" answer */
+  .cmpi__answer {
+    margin-top: var(--space-4);
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--bg-subtle);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .cmpi__answer-head {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: var(--space-3);
+    color: var(--ink-2);
+  }
+  .cmpi__answer-head > :global(.icon) {
+    margin-top: 2px;
     color: var(--ink);
   }
-  .cmpi__picker {
-    width: 100%;
+  .cmpi__answer-title {
+    color: var(--ink);
+    font-size: var(--text-h4);
+    font-weight: var(--weight-strong);
+    line-height: 1.4;
   }
-  .cmpi__bar {
+  .cmpi__answer-body {
+    margin-top: 4px;
+    color: var(--ink-2);
+    font-size: var(--text-ui);
+    line-height: 1.5;
+  }
+  .cmpi__answer-items {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+  .cmpi__item {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3) var(--space-6);
-    padding-block: var(--space-4);
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+    gap: var(--space-3);
+    min-height: 56px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs);
+    transition: box-shadow var(--dur-base) var(--ease-out);
   }
-  .cmpi__bar :global(.chip-row) {
+  .cmpi__item:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-sm);
+  }
+  .cmpi__item-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     min-width: 0;
   }
-  .cmpi__count {
-    flex: none;
+  .cmpi__item-name {
+    font-weight: var(--weight-medium);
   }
+  .cmpi__item-meta {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .cmpi__item-go {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .cmpi__item:hover .cmpi__item-go :global(.icon) {
+    transform: translateX(2px);
+  }
+  .cmpi__item-go :global(.icon) {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .cmpi__answer-rel {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .cmpi__answer-rel ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+  .cmpi__answer-rel a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .cmpi__answer-rel a:hover {
+    background: var(--surface-2);
+  }
+
+  /* Groups */
   .cmpi__kind {
+    margin-top: var(--space-10);
+  }
+  .cmpi__kind + .cmpi__kind {
+    margin-top: var(--space-16);
+  }
+  .cmpi__kind-head {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--space-2) var(--space-6);
-    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--line);
   }
-  .cmpi__kind-title {
-    font-family: var(--font-serif);
+  .cmpi__kind-n {
+    margin-left: var(--space-2);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
     font-weight: 400;
-    font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
-    letter-spacing: -0.02em;
-    line-height: 1;
+    letter-spacing: 0;
+    vertical-align: 0.35em;
   }
   .cmpi__kind-desc {
-    max-width: 420px;
+    max-width: 440px;
     color: var(--ink-3);
-    font-size: var(--text-base);
+    font-size: var(--text-ui);
   }
+  .cmpi__group {
+    padding-block: var(--space-6);
+    border-bottom: 1px solid var(--line);
+  }
+  .cmpi__ghead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 2px var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .cmpi__gtitle {
+    font-size: var(--text-h4);
+    font-weight: var(--weight-strong);
+    letter-spacing: -0.01em;
+  }
+  .cmpi__gnote {
+    grid-column: 1;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .cmpi__glink {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .cmpi__glink:hover {
+    color: var(--ink);
+  }
+  .cmpi__glink :global(.icon) {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .cmpi__glink:hover :global(.icon) {
+    transform: translateX(2px);
+  }
+
+  /* <640: a shelf per category (cards snap, the next one peeks); ≥640: a grid. */
+  .cmpi__grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min(82%, 320px);
+    gap: var(--space-3);
+    margin-inline: calc(var(--page-gutter) * -1);
+    padding: 4px var(--page-gutter) var(--space-2);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--page-gutter);
+    scrollbar-width: none;
+  }
+  .cmpi__grid::-webkit-scrollbar {
+    display: none;
+  }
+  .cmpi__grid--one {
+    grid-auto-columns: 100%;
+  }
+  .cmpi__grid > li {
+    scroll-snap-align: start;
+    min-width: 0;
+  }
+
+  /* Theme pairs: both home pages facing each other in the card's media well. */
+  .cmpi__shots {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .cmpi__shots > :global(*:first-child) {
+    box-shadow: inset -1px 0 0 var(--line);
+  }
+  .cmpi__shot-none {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 5 / 4;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .cmpi__shots-vs {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-xs);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1;
+    transform: translate(-50%, -50%);
+  }
+
   .cmpi__foot {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
     gap: var(--space-3) var(--space-8);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
+    margin-top: var(--space-8);
   }
   .cmpi__alts {
-    color: var(--ink-3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    color: var(--ink-2);
     font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
   }
-  .cmpi__alts a {
+  .cmpi__alts:hover {
     color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
+  }
+
+  @media (min-width: 640px) {
+    .cmpi__grid {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-columns: auto;
+      gap: var(--space-4);
+      margin-inline: 0;
+      padding: 0;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
   }
   @media (min-width: 1024px) {
-    .cmpi__picker {
-      max-width: 340px;
-      margin-left: auto;
+    .cmpi__group {
+      display: grid;
+      grid-template-columns: 232px minmax(0, 1fr);
+      gap: var(--space-8);
+      padding-block: var(--space-8);
+    }
+    .cmpi__ghead {
+      position: sticky;
+      top: calc(var(--header-h) + 88px);
+      align-self: start;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      margin: 0;
+      padding-top: 6px;
+    }
+    .cmpi__glink {
+      align-self: flex-start;
+      min-height: 32px;
+      margin-top: var(--space-2);
+    }
+    .cmpi__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 </style>

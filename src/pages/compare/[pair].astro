@@ -1,27 +1,46 @@
 ---
 /**
- * /compare/<a>-vs-<b> — two apps or two themes side by side. Any valid pair renders; a
- * non-alphabetical order 301s to the canonical slug the API returns; unknown, identical or
- * mixed (app + theme) pairs are 404s.
+ * /compare/<a>-vs-<b> — two apps or two themes side by side. Only curated popular pairs have a
+ * page (the API 404s any other pair with details[0].message = "not_curated"); a reversed
+ * curated pair 301s to the canonical slug; unknown, identical or mixed (app + theme) pairs are
+ * 404s too.
+ *
+ * Composition: both products facing each other → "Seen on" captures with pinned tags → the
+ * fact matrix → overlap (stores using both) → plans or price → a verdict-free summary of the
+ * facts → more comparisons and alternatives.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
-import IndexList from '~/components/ui/IndexList.astro';
-import IndexRow from '~/components/ui/IndexRow.astro';
-import EmptyState from '~/components/ui/EmptyState.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
+import Icon from '~/components/ui/Icon.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
 import CompareHead from '~/components/compare/CompareHead.astro';
 import Stage from '~/components/compare/Stage.astro';
 import FactMatrix, { type ExtraRow } from '~/components/compare/FactMatrix.astro';
-import BlockHead from '~/components/compare/BlockHead.astro';
 import Diptych from '~/components/compare/Diptych.astro';
 import PlanList from '~/components/compare/PlanList.astro';
 import ThemeSpec from '~/components/compare/ThemeSpec.astro';
-import Overlap from '~/components/compare/Overlap.astro';
+import Overlap, { type SharedStoreRow } from '~/components/compare/Overlap.astro';
+import PairCard from '~/components/compare/PairCard.astro';
 import { api, isApiError } from '~/server/api';
-import type { ComparisonDetail, ResponseMeta, StoreListItem } from '~/server/api/v1/types';
+import type {
+  AppListItem,
+  ComparisonDetail,
+  ResponseMeta,
+  StoreListItem,
+  ThemeListItem,
+} from '~/server/api/v1/types';
 import { formatCount, formatDate } from '~/lib/format';
-import { appStage, pluralStores, sides, themeStage } from '~/components/compare/compare';
+import {
+  appPairLine,
+  appStage,
+  factSentences,
+  pluralStores,
+  sides,
+  themePairLine,
+  themeStage,
+} from '~/components/compare/compare';
 
 const pair = Astro.params.pair ?? '';
 let cmp: ComparisonDetail;
@@ -29,6 +48,16 @@ let meta: ResponseMeta;
 try {
   ({ data: cmp, meta } = await api.getComparison({ pair }));
 } catch (err) {
+  // Two real items without a curated page: answer like the picker does ("there's no comparison
+  // page for these two", links to both), still with a 404 status.
+  if (
+    isApiError(err) &&
+    err.code === 'not_found' &&
+    err.details?.some((d) => d.message === 'not_curated')
+  ) {
+    const [pa = '', pb = ''] = pair.split('-vs-');
+    return Astro.rewrite(`/compare?a=${encodeURIComponent(pa)}&b=${encodeURIComponent(pb)}`);
+  }
   // Unknown slugs (404), mixed kinds or the same item twice (400) and malformed pairs are all
   // "no such page" for a visitor.
   if (isApiError(err) && err.status < 500) return Astro.rewrite('/404');
@@ -44,7 +73,7 @@ const scanKey =
   Object.keys(meta.sources).find((k) => k.startsWith('storepeek-scan')) ?? 'storepeek-scan';
 const scan = meta.sources[scanKey];
 
-// ---- Stage ----------------------------------------------------------------------------------
+// ---- Seen on ----------------------------------------------------------------------------------
 const stage = cmp.apps
   ? appStage(cmp.apps.a, cmp.apps.b)
   : themeStage(cmp.themes!.a, cmp.themes!.b);
@@ -64,9 +93,26 @@ if (cmp.apps) {
     return t ? `${t.theme.name} (${formatCount(t.stores)})` : undefined;
   };
   extra.push(
-    { source: scanKey, label: 'Run both', both: pluralStores(cmp.shared_stores.total) },
-    { source: scanKey, label: 'Most often installed with', a: top('a'), b: top('b') },
-    { source: scanKey, label: 'Most common theme', a: theme('a'), b: theme('b') },
+    {
+      source: scanKey,
+      label: 'Run both',
+      help: 'Scanned stores running both right now',
+      both: pluralStores(cmp.shared_stores.total),
+    },
+    {
+      source: scanKey,
+      label: 'Most often installed with',
+      help: 'The app most often found next to it',
+      a: top('a'),
+      b: top('b'),
+    },
+    {
+      source: scanKey,
+      label: 'Most common theme',
+      help: 'The theme its stores run most',
+      a: theme('a'),
+      b: theme('b'),
+    },
   );
 } else {
   const latest = (side: 'a' | 'b') =>
@@ -82,9 +128,26 @@ if (cmp.apps) {
       : undefined;
   };
   extra.push(
-    { source: scanKey, label: 'Ran both', both: pluralStores(cmp.shared_stores.total) },
-    { source: scanKey, label: 'Latest version seen', a: latest('a'), b: latest('b') },
-    { source: scanKey, label: 'Most used app on its stores', a: topApp('a'), b: topApp('b') },
+    {
+      source: scanKey,
+      label: 'Ran both',
+      help: 'Stores seen on both themes at some point',
+      both: pluralStores(cmp.shared_stores.total),
+    },
+    {
+      source: scanKey,
+      label: 'Latest version seen',
+      help: 'Highest version detected on a live store',
+      a: latest('a'),
+      b: latest('b'),
+    },
+    {
+      source: scanKey,
+      label: 'Most used app on its stores',
+      help: 'The app its stores run most',
+      a: topApp('a'),
+      b: topApp('b'),
+    },
   );
 }
 const appStoreChecked = cmp.apps ? (cmp.apps.a.app.checked_on ?? cmp.apps.b.app.checked_on) : null;
@@ -94,46 +157,82 @@ for (const key of Object.keys(meta.sources)) {
     notes[key] = `Shopify App Store listings, checked ${formatDate(appStoreChecked)}`;
 }
 
-// ---- Shared stores, enriched with list data (theme, category, preview) where we have it ------
-const lookups = await Promise.all(
-  (cmp.shared_stores.items.length > 0 ? (['a', 'b'] as const) : []).map((side) =>
-    api
-      .listStores(
-        isApp
-          ? { app: sides(cmp)[side === 'a' ? 0 : 1].slug, limit: 60 }
-          : { theme: sides(cmp)[side === 'a' ? 0 : 1].slug, limit: 60 },
-      )
-      .then((r) => r.data.items)
-      .catch(() => [] as StoreListItem[]),
-  ),
-);
-const storeInfo = new Map(lookups.flat().map((s) => [s.domain, s]));
-const sharedRows = cmp.shared_stores.items.map((s) => {
+// ---- Shared stores, enriched with list data (theme, market, apps) where we have it -----------
+// One lookup of exactly the stores shown; listStores defaults to the curated stores, overlap is
+// about every detected store (scope all).
+const sharedDomains = cmp.shared_stores.items.map((s) => s.domain);
+const lookups =
+  sharedDomains.length > 0
+    ? await api
+        .listStores({
+          domains: sharedDomains,
+          scope: 'all',
+          limit: sharedDomains.length,
+          facets: false,
+        })
+        .then((r) => r.data.items)
+        .catch(() => [] as StoreListItem[])
+    : [];
+const storeInfo = new Map(lookups.map((s) => [s.domain, s]));
+const sharedRows: SharedStoreRow[] = cmp.shared_stores.items.map((s) => {
   const info = storeInfo.get(s.domain);
   return {
+    domain: s.domain,
+    name: s.display_name,
     href: s.href,
-    title: s.display_name,
-    subtitle: info ? [info.theme.label, info.category?.name].filter(Boolean).join(' · ') : s.domain,
-    cells: [
-      { value: info?.theme.label ?? '—', muted: !info },
-      {
-        value: info ? [info.country, info.currency].filter(Boolean).join(' · ') || '—' : '—',
-        mono: true,
-        muted: true,
-      },
-      { value: info ? `(${info.app_count} apps)` : '', serif: true, mobile: true },
-    ],
-    preview: info?.preview
-      ? {
-          src: info.preview.image.src,
-          width: info.preview.image.width,
-          height: info.preview.image.height,
-        }
-      : null,
+    theme: info?.theme.label ?? null,
+    market: info ? [info.country, info.currency].filter(Boolean).join(' · ') || null : null,
+    apps: info?.app_count ?? null,
   };
 });
-const onlyA = Math.max(0, a.stores - cmp.shared_stores.total);
-const onlyB = Math.max(0, b.stores - cmp.shared_stores.total);
+
+// ---- Related (curated pairs only) -------------------------------------------------------------
+// One list call gives usage and listing facts for exactly the apps/themes in the related pairs,
+// so the cards read like the ones on the compare index.
+const relatedApps = new Map<string, AppListItem>();
+const relatedThemes = new Map<string, ThemeListItem>();
+const relatedSlugs = [...new Set(cmp.related.flatMap((r) => [r.a.slug, r.b.slug]))];
+if (relatedSlugs.length > 0) {
+  const lookup = { slugs: relatedSlugs, limit: 100, facets: false };
+  if (cmp.apps) {
+    const r = await api.listApps(lookup).catch(() => null);
+    for (const x of r?.data.items ?? []) relatedApps.set(x.slug, x);
+  } else {
+    const r = await api.listThemes(lookup).catch(() => null);
+    for (const x of r?.data.items ?? []) relatedThemes.set(x.slug, x);
+  }
+}
+// Titles are "<short A> vs <short B>"; entity refs carry full listing names.
+const related = cmp.related.map((r) => {
+  const [na, nb] = r.title.split(' vs ');
+  const appA = relatedApps.get(r.a.slug);
+  const appB = relatedApps.get(r.b.slug);
+  const thA = relatedThemes.get(r.a.slug);
+  const thB = relatedThemes.get(r.b.slug);
+  const line =
+    appA && appB
+      ? appPairLine(appA, appB)
+      : thA && thB
+        ? themePairLine(thA, thB)
+        : r.shared_stores
+          ? `${pluralStores(r.shared_stores)} ${isApp ? 'run' : 'ran'} both`
+          : 'Side by side on real stores';
+  return {
+    href: r.href,
+    a: {
+      name: na ?? r.a.name,
+      iconUrl: r.a.icon_url,
+      stores: appA?.usage.stores ?? thA?.usage.stores ?? null,
+    },
+    b: {
+      name: nb ?? r.b.name,
+      iconUrl: r.b.icon_url,
+      stores: appB?.usage.stores ?? thB?.usage.stores ?? null,
+    },
+    shared: r.shared_stores ?? null,
+    line,
+  };
+});
 
 // ---- JSON-LD ----------------------------------------------------------------------------------
 const abs = (path: string) => new URL(path, Astro.site ?? Astro.url).href;
@@ -166,8 +265,14 @@ const jsonLd = [
   },
 ];
 const description = `${cmp.title}: ${isApp ? 'where each app renders on real Shopify stores' : 'the same pages on real stores using each theme'}, ${isApp ? 'ratings, plans' : 'prices, versions'} and how many of ${formatCount(a.denominator)} scanned stores run them. Facts only, no winner.`;
-let n = 0;
-const blockN = () => String(++n).padStart(2, '0');
+const sections: Array<[string, string]> = [
+  ['stage', 'Seen on'],
+  ['facts', 'Facts'],
+  ['overlap', 'Overlap'],
+  ...(cmp.themes && cmp.shared_apps.length > 0 ? [['stacks', 'Apps'] as [string, string]] : []),
+  ['pricing', isApp ? 'Plans' : 'Price'],
+  ['summary', 'In short'],
+];
 ---
 
 <BaseLayout
@@ -185,132 +290,98 @@ const blockN = () => String(++n).padStart(2, '0');
         { label: cmp.title },
       ]}
     />
-    <CompareHead cmp={cmp} meta={meta} />
+    <CompareHead cmp={cmp} meta={meta} sections={sections} />
   </div>
 
   <div class="cmp__stage">
     <Stage model={stage} a={a} b={b} page={qPage} device={qDevice} />
   </div>
 
-  <div class="container">
-    <section class="page-block" aria-labelledby="facts">
-      <BlockHead
-        id="facts"
-        label={`${blockN()} — Facts`}
-        title="Fact by fact"
-        description="Listing facts and what our scan sees, row by row. Ticks are facts, not points: nothing here is scored."
+  <div class="container cmp">
+    <section class="cmp__block" id="facts" aria-labelledby="facts-title">
+      <SectionHeader
+        id="facts-title"
+        title="The listing and our scan, row by row"
+        description="Check marks are facts, not points. Nothing here is scored or added up."
       />
       <FactMatrix rows={cmp.matrix} meta={meta} a={a} b={b} extra={extra} notes={notes} />
     </section>
 
-    <section class="page-block" aria-labelledby="overlap">
-      <BlockHead
-        id="overlap"
-        label={`${blockN()} — Overlap`}
+    <section class="cmp__block" id="overlap" aria-labelledby="overlap-title">
+      <SectionHeader
+        id="overlap-title"
         title={isApp ? 'Stores running both' : 'Stores that ran both'}
         count={cmp.shared_stores.total}
         description={
           isApp
             ? `Of ${formatCount(a.denominator)} scanned stores, how many run one, the other, or both at the same time.`
-            : 'Stores we have seen on both themes at some point, for example after a switch.'
+            : 'Stores we have seen on both themes, and how many run each one now.'
         }
       />
-      <div class="cmp__overlap">
-        <Overlap
-          cells={
-            isApp
-              ? [
-                  { value: onlyA, label: `${a.name} only` },
-                  { value: cmp.shared_stores.total, label: 'Both' },
-                  { value: onlyB, label: `${b.name} only` },
-                ]
-              : [
-                  { value: a.stores, label: `On ${a.name} now` },
-                  { value: cmp.shared_stores.total, label: 'Ran both' },
-                  { value: b.stores, label: `On ${b.name} now` },
-                ]
-          }
-          source={`${scan?.label ?? 'Our scan'}`}
-        />
-        <div class="cmp__shared">
-          {sharedRows.length > 0 ? (
-            <>
-              <IndexList
-                columns="52px minmax(0, 1.4fr) minmax(0, 1.2fr) 88px 88px"
-                head={['N°', 'Store', 'Theme', 'Market', 'Apps']}
-                label={`Stores running ${a.name} and ${b.name}`}
-              >
-                {sharedRows.map((r, i) => (
-                  <IndexRow n={i + 1} {...r} />
-                ))}
-              </IndexList>
-              {cmp.shared_stores.total > sharedRows.length && (
-                <p class="cmp__more mono">
-                  Showing {sharedRows.length} of {formatCount(cmp.shared_stores.total)}, highest
-                  ranked first
-                </p>
-              )}
-            </>
-          ) : (
-            <EmptyState
-              size="sm"
-              align="start"
-              title={isApp ? `No scanned store runs both` : 'No scanned store has run both'}
-              body={
-                isApp
-                  ? `${a.name} and ${b.name} don’t share a store in our scan of ${formatCount(a.denominator)}. Stores usually pick one.`
-                  : `We haven’t seen a store switch between ${a.name} and ${b.name} yet. Switches show up here as scans repeat.`
-              }
-            />
-          )}
-        </div>
-      </div>
+      <Overlap
+        a={a}
+        b={b}
+        total={cmp.shared_stores.total}
+        rows={sharedRows}
+        source={scan?.label ?? 'Our scan'}
+      />
     </section>
 
     {cmp.themes && cmp.shared_apps.length > 0 && (
-      <section class="page-block" aria-labelledby="shared-apps">
-        <BlockHead
-          id="shared-apps"
-          label={`${blockN()} — Stacks`}
+      <section class="cmp__block" id="stacks" aria-labelledby="stacks-title">
+        <SectionHeader
+          id="stacks-title"
           title="Apps used on both themes"
           count={cmp.shared_apps.length}
-          description={`Apps that stores on each theme run, by number of stores. What a store adds on top of ${a.name} or ${b.name}.`}
+          description={`What stores add on top of ${a.name} or ${b.name}, by number of stores on each.`}
         />
-        <IndexList
-          columns="52px minmax(0, 2fr) minmax(0, 1fr) 120px 120px"
-          head={['N°', 'App', 'Category', `On ${a.name}`, `On ${b.name}`]}
-          label={`Apps used on both ${a.name} and ${b.name}`}
-        >
-          {cmp.shared_apps.map((s, i) => (
-            <IndexRow
-              n={i + 1}
-              href={s.app.href}
-              title={s.app.short_name}
-              subtitle={`${a.name} ${s.a_stores} · ${b.name} ${s.b_stores}`}
-              cells={[
-                { value: s.app.category?.name ?? '—', muted: true },
-                { value: pluralStores(s.a_stores), mono: true },
-                { value: pluralStores(s.b_stores), mono: true },
-              ]}
-            />
-          ))}
-        </IndexList>
+        <table class="table cmp__apps">
+          <caption class="visually-hidden">{`Apps used on both ${a.name} and ${b.name}`}</caption>
+          <thead>
+            <tr>
+              <th scope="col">App</th>
+              <th scope="col" class="cmp__opt">
+                Category
+              </th>
+              <th scope="col" class="is-num">
+                {`On ${a.name}`}
+              </th>
+              <th scope="col" class="is-num">
+                {`On ${b.name}`}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {cmp.shared_apps.map((s) => (
+              <tr>
+                <td>
+                  <a href={s.app.href} class="cmp__app">
+                    <AppIcon src={s.app.icon_url} name={s.app.short_name} size={24} />
+                    <span>{s.app.short_name}</span>
+                  </a>
+                </td>
+                <td class="cmp__opt cmp__muted">{s.app.category?.name ?? '—'}</td>
+                <td class="is-num num">{formatCount(s.a_stores)}</td>
+                <td class="is-num num">{formatCount(s.b_stores)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         <SourceNote source={scan?.label ?? 'Our scan'} class="cmp__note" />
       </section>
     )}
 
-    <section class="page-block" aria-labelledby="pricing">
-      <BlockHead
-        id="pricing"
-        label={`${blockN()} — ${isApp ? 'Plans' : 'Price'}`}
+    <section class="cmp__block" id="pricing" aria-labelledby="pricing-title">
+      <SectionHeader
+        id="pricing-title"
         title={isApp ? 'Plans side by side' : 'Price and versions'}
         description={
           isApp
-            ? `As listed on the Shopify App Store${appStoreChecked ? `, checked ${formatDate(appStoreChecked)}` : ''}. Prices in USD per month.`
+            ? `As listed on the Shopify App Store${appStoreChecked ? `, checked ${formatDate(appStoreChecked)}` : ''}. Prices in USD.`
             : 'List price from the vendor, and the versions we detect on live stores.'
         }
       />
-      <Diptych>
+      <Diptych labels={[a.name, b.name]} name="cmp-plans">
         {(['a', 'b'] as const).map((side) => (
           <div slot={side}>
             {cmp.apps ? (
@@ -323,62 +394,75 @@ const blockN = () => String(++n).padStart(2, '0');
       </Diptych>
     </section>
 
-    <section class="page-block cmp__next" aria-labelledby="next">
-      <BlockHead id="next" label={`${blockN()} — Next`} title="Keep comparing" />
-      <div class="cols-12">
-        <div class="span-8">
-          {cmp.related.length > 0 ? (
-            <IndexList
-              columns="52px minmax(0, 2fr) minmax(0, 1fr)"
-              head={['N°', 'Related comparison', 'Run both']}
-              label="Related comparisons"
-            >
-              {cmp.related.map((r, i) => (
-                <IndexRow
-                  n={i + 1}
-                  href={r.href}
-                  title={r.title}
-                  cells={[
-                    r.shared_stores
-                      ? { value: `(${pluralStores(r.shared_stores)})`, serif: true, mobile: true }
-                      : { value: '(none)', serif: true, muted: true, mobile: true },
-                  ]}
-                />
-              ))}
-            </IndexList>
-          ) : (
-            <p class="cmp__muted">
-              No other popular comparisons with these two yet. Pick any pair on the compare index.
-            </p>
-          )}
-          <a class="cmp__all" href="/compare">
-            All comparisons →
-          </a>
-        </div>
-        <nav class="start-9 cmp__alts" aria-label="Alternatives">
-          <p class="mlabel mlabel--bullet">Replacements</p>
-          {[a, b].map((s) => (
-            <a href={s.alternativesHref} class="cmp__alt">
+    <section class="cmp__block cmp__summary" id="summary" aria-labelledby="summary-title">
+      <div class="cmp__summary-main">
+        <SectionHeader
+          id="summary-title"
+          title="What the data says"
+          description="The facts above in plain sentences. Which one fits depends on your store; we don’t pick."
+        />
+        <ul class="cmp__facts">
+          {factSentences(cmp).map((f) => (
+            <li>
+              <span class="cmp__dot" aria-hidden="true" />
+              <span>{f}</span>
+            </li>
+          ))}
+        </ul>
+        <SourceNote
+          class="cmp__note"
+          source={
+            isApp
+              ? `${scan?.label ?? 'our scan'}; ratings, plans and prices from each Shopify App Store listing${appStoreChecked ? `, checked ${formatDate(appStoreChecked)}` : ''}`
+              : `${scan?.label ?? 'our scan'}; prices and vendors are editorial, from each theme’s listing`
+          }
+        />
+      </div>
+      <nav class="cmp__alts" aria-label="Alternatives">
+        <p class="eyebrow">Looking for a replacement?</p>
+        {[a, b].map((s) => (
+          <a href={s.alternativesHref} class="cmp__alt">
+            <AppIcon src={s.iconUrl} name={s.name} size={32} />
+            <span class="cmp__alt-text">
               <span class="cmp__alt-k">Alternatives to</span>
               <span class="cmp__alt-name">{s.name}</span>
-              <span aria-hidden="true" class="cmp__alt-arrow">
-                →
-              </span>
-            </a>
-          ))}
-        </nav>
-      </div>
+            </span>
+            <Icon name="arrow-right" size={16} />
+          </a>
+        ))}
+      </nav>
     </section>
 
-    <div class="page-block cmp__source">
-      <SourceNote
-        source={
-          isApp
-            ? `${scan?.label ?? 'our scan'}; ratings, plans and prices from each Shopify App Store listing${appStoreChecked ? `, checked ${formatDate(appStoreChecked)}` : ''}`
-            : `${scan?.label ?? 'our scan'}; prices and vendors are editorial, from each theme’s listing`
-        }
+    <section class="cmp__block" aria-labelledby="next-title">
+      <SectionHeader
+        id="next-title"
+        title={related.length > 0 ? 'Related comparisons' : 'More comparisons'}
+        href="/compare"
+        linkLabel="All comparisons"
       />
-    </div>
+      {related.length > 0 ? (
+        <ul class="cmp__related">
+          {related.map((r) => (
+            <li>
+              <PairCard
+                href={r.href}
+                a={r.a}
+                b={r.b}
+                line={r.line}
+                shared={r.shared}
+                sharedVerb={isApp ? 'run' : 'ran'}
+                level={3}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="cmp__muted">
+          No other popular comparisons with these two yet. Every curated pair is on the compare
+          index.
+        </p>
+      )}
+    </section>
   </div>
 </BaseLayout>
 
@@ -387,86 +471,171 @@ const blockN = () => String(++n).padStart(2, '0');
     padding-top: var(--space-6);
   }
   .cmp__stage {
-    margin-top: var(--space-12);
+    margin-top: var(--space-10);
   }
-  .cmp__overlap {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-10);
+  .cmp {
+    padding-bottom: var(--section-y-app);
   }
-  .cmp__more {
-    margin-top: var(--space-3);
-    color: var(--ink-3);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+  .cmp__block {
+    padding-top: var(--space-12);
+    scroll-margin-top: calc(var(--header-h) + 48px);
   }
-  .cmp__note {
+  .cmp__block + .cmp__block {
     margin-top: var(--space-4);
+  }
+  .cmp :global(.cmp__note) {
+    margin-top: var(--space-5);
   }
   .cmp__muted {
     color: var(--ink-3);
-    font-size: var(--text-base);
+    font-size: var(--text-ui);
   }
-  .cmp__all {
-    display: inline-block;
-    margin-top: var(--space-4);
-    font-size: var(--text-sm);
+  .cmp__opt {
+    display: none;
+  }
+  .cmp__apps {
+    table-layout: fixed;
+  }
+  .cmp__apps th:nth-child(3),
+  .cmp__apps th:nth-child(4) {
+    width: 26%;
+  }
+  .cmp__app {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
     font-weight: var(--weight-medium);
+  }
+  .cmp__app span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cmp__app:hover span {
     text-decoration: underline;
     text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.25em;
+    text-underline-offset: 0.2em;
+  }
+  .cmp__muted,
+  td.cmp__muted {
+    color: var(--ink-2);
+  }
+
+  /* In short */
+  .cmp__summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+  .cmp__facts {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 720px;
+  }
+  .cmp__facts li {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr);
+    gap: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+  .cmp__dot {
+    width: 6px;
+    height: 6px;
+    margin-top: 0.62em;
+    border-radius: 50%;
+    background: var(--ink-3);
   }
   .cmp__alts {
     display: flex;
     flex-direction: column;
+    gap: var(--space-2);
   }
-  .cmp__alts .mlabel {
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--ink);
+  .cmp__alts .eyebrow {
+    margin-bottom: var(--space-1);
   }
   .cmp__alt {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 2px var(--space-3);
-    padding-block: var(--space-4);
-    border-bottom: 1px solid var(--line);
-    transition: padding var(--dur-base) var(--ease-out);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 64px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+    color: var(--ink-3);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
   }
   .cmp__alt:hover {
-    padding-left: var(--space-2);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+    transform: translateY(-2px);
+  }
+  .cmp__alt :global(.icon) {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .cmp__alt:hover :global(.icon) {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+  .cmp__alt-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
   }
   .cmp__alt-k {
     color: var(--ink-3);
     font-size: var(--text-xs);
   }
   .cmp__alt-name {
-    grid-column: 1;
-    font-family: var(--font-serif);
-    font-size: var(--text-2xl);
-    line-height: 1.1;
+    overflow: hidden;
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .cmp__alt-arrow {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    align-self: center;
-    color: var(--ink-3);
+  .cmp__related {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
   }
-  .cmp__source {
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
+
+  @media (min-width: 640px) {
+    .cmp__opt {
+      display: table-cell;
+    }
+    .cmp__related {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
   }
   @media (min-width: 1024px) {
-    .cmp__overlap {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: var(--space-6);
+    .cmp__stage {
+      margin-top: var(--space-12);
+    }
+    .cmp__block {
+      padding-top: var(--space-16);
+    }
+    .cmp__summary {
+      grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+      gap: var(--space-12);
       align-items: start;
     }
-    .cmp__overlap > :global(.ovl) {
-      grid-column: span 5;
+    .cmp__alts {
+      padding-top: var(--space-2);
     }
-    .cmp__shared {
-      grid-column: 7 / -1;
+    .cmp__related {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 </style>

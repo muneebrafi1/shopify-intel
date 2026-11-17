@@ -1,37 +1,47 @@
 ---
 /**
- * Living styleguide. Every shared component with fixture data, so the system can be reviewed
- * (and screenshot-tested) as a whole. Not linked from the site; noindex.
+ * Living styleguide (v2, "product-grade SaaS"). Every shared component with fixture data, so
+ * the system can be reviewed (and screenshot-tested) as a whole, in both themes. Not linked from
+ * the site; noindex. Rules behind it: docs/DESIGN.md. Binding direction: docs/design/direction.md.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Button from '~/components/ui/Button.astro';
+import Badge from '~/components/ui/Badge.astro';
+import AnnouncementPill from '~/components/ui/AnnouncementPill.astro';
+import Kbd from '~/components/ui/Kbd.astro';
+import Card from '~/components/ui/Card.astro';
+import Window from '~/components/ui/Window.astro';
 import Chip from '~/components/ui/Chip.astro';
 import ChipRow from '~/components/ui/ChipRow.astro';
 import Segmented from '~/components/ui/Segmented.astro';
 import Tabs from '~/components/ui/Tabs.astro';
-import Badge from '~/components/ui/Badge.astro';
-import Rating from '~/components/ui/Rating.astro';
+import ThemeToggle from '~/components/ui/ThemeToggle.astro';
+import ThemeSwitch from '~/components/ui/ThemeSwitch.astro';
+import BrowseBar from '~/components/ui/BrowseBar.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import Facts from '~/components/ui/Facts.astro';
+import FactsCard from '~/components/ui/FactsCard.astro';
 import Stat from '~/components/ui/Stat.astro';
 import StatList from '~/components/ui/StatList.astro';
+import Counter from '~/components/ui/Counter.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
+import Rating from '~/components/ui/Rating.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
+import Notice from '~/components/ui/Notice.astro';
 import Skeleton from '~/components/ui/Skeleton.astro';
 import Pagination from '~/components/ui/Pagination.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
-import Notice from '~/components/ui/Notice.astro';
 import Field from '~/components/ui/Field.astro';
 import Input from '~/components/ui/Input.astro';
 import Checkbox from '~/components/ui/Checkbox.astro';
 import Dialog from '~/components/ui/Dialog.astro';
-import SectionHeader from '~/components/ui/SectionHeader.astro';
-import PageHeader from '~/components/ui/PageHeader.astro';
-import Facts from '~/components/ui/Facts.astro';
-import Kbd from '~/components/ui/Kbd.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
-import Count from '~/components/ui/Count.astro';
 import IndexList from '~/components/ui/IndexList.astro';
 import IndexRow from '~/components/ui/IndexRow.astro';
-import FilterBar from '~/components/ui/FilterBar.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Logo from '~/components/site/Logo.astro';
 import Shot from '~/components/media/Shot.astro';
 import FullPage from '~/components/media/FullPage.astro';
 import StoreCard from '~/components/domain/StoreCard.astro';
@@ -47,6 +57,7 @@ import { sectionTypeName } from '~/lib/taxonomy';
 
 export const prerender = false;
 
+/* ---------- Fixtures: drawn placeholder captures (same renderer as the site) ---------- */
 type Layout = [string, number][];
 function stack(layout: Layout): PlaceholderSection[] {
   let y = 0;
@@ -87,14 +98,6 @@ const PRODUCT_D: PlaceholderSection[] = [
   { type: 'upsell', y: 2152, height: 560 },
   { type: 'footer', y: 2712, height: 440 },
 ];
-const CART_M: Layout = [
-  ['header', 60],
-  ['shipping-bar', 96],
-  ['cart-items', 520],
-  ['cart-summary', 420],
-  ['upsell', 560],
-  ['footer', 620],
-];
 
 const dataUri = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 function shot(
@@ -111,19 +114,6 @@ function shot(
   );
   return { src, width, height, device, sections };
 }
-const STORES = [
-  ['youngla.com', 'YoungLA', 'Prestige · 11 apps'],
-  ['thursdayboots.com', 'Thursday Boot Co.', 'Atlantic · 12 apps'],
-  ['lskd.co', 'LSKD', 'Impulse · 13 apps'],
-  ['thesill.com', 'The Sill', 'Horizon · 9 apps'],
-  ['eatfishwife.com', 'Fishwife', 'Blockshop · 13 apps'],
-  ['koh.com', 'Koh', 'Impact · 9 apps'],
-] as const;
-const homeShots = STORES.map(([d, n]) => shot(d, n, 'desktop', stack(HOME_D)));
-const mobileShots = STORES.slice(0, 4).map(([d, n]) => shot(d, n, 'mobile', stack(HOME_M)));
-const product = shot('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'product');
-const cartMobile = shot('negativeunderwear.com', 'Negative', 'mobile', stack(CART_M), 'cart');
-
 function crop(
   seed: string,
   label: string,
@@ -140,701 +130,1420 @@ function crop(
   );
   return { src: dataUri(svg), width, height: s.height };
 }
-const COLORS = [
-  'bg',
-  'surface',
-  'tile',
-  'fill',
-  'line',
-  'line-strong',
-  'ink',
-  'ink-2',
-  'ink-3',
-  'ink-4',
-  'accent',
-  'accent-text',
-  'accent-soft',
-  'positive',
-  'caution',
-  'critical',
+const STORES = [
+  ['youngla.com', 'YoungLA', 'Prestige · 11 apps'],
+  ['thursdayboots.com', 'Thursday Boot Co.', 'Atlantic · 12 apps'],
+  ['lskd.co', 'LSKD', 'Impulse · 13 apps'],
+  ['thesill.com', 'The Sill', 'Horizon · 9 apps'],
+  ['eatfishwife.com', 'Fishwife', 'Blockshop · 13 apps'],
+  ['koh.com', 'Koh', 'Impact · 9 apps'],
+] as const;
+const homeShots = STORES.map(([d, n]) => shot(d, n, 'desktop', stack(HOME_D)));
+const mobileShots = STORES.slice(0, 4).map(([d, n]) => shot(d, n, 'mobile', stack(HOME_M)));
+const product = shot('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'product');
+
+/* ---------- Token reference ---------- */
+const COLOR_TOKENS: { name: string; light: string; dark: string; use: string }[] = [
+  { name: 'bg', light: '#ffffff', dark: '#0a0a0b', use: 'Page' },
+  { name: 'bg-subtle', light: '#fafaf9', dark: '#0e0e10', use: 'Alternating bands, footer' },
+  { name: 'surface', light: '#ffffff', dark: '#131315', use: 'Cards, popovers, windows' },
+  { name: 'surface-2', light: '#f5f5f4', dark: '#18181b', use: 'Screenshot wells, inputs' },
+  { name: 'surface-3', light: '#eeeeec', dark: '#202024', use: 'Hover on surface-2' },
+  { name: 'line', light: '#ebebe9', dark: 'white 7%', use: 'Hairlines, card borders' },
+  { name: 'line-strong', light: '#dcdcd9', dark: 'white 12%', use: 'Inputs, hovered cards' },
+  { name: 'ink', light: '#121211', dark: '#f2f2f0', use: 'Headings, primary text' },
+  { name: 'ink-2', light: '#4b4b48', dark: '#b3b3ae', use: 'Body, secondary text' },
+  { name: 'ink-3', light: '#6b6b67', dark: '#8d8d88', use: 'Meta, captions (AA)' },
+  { name: 'ink-4', light: '#a6a6a1', dark: '#5b5b58', use: 'Disabled, decorative only' },
+  { name: 'accent', light: '#e4572e', dark: '#ff6b3d', use: 'Logo, focus, selected tags' },
+  { name: 'accent-text', light: '#c23e17', dark: '#ff8f6b', use: 'Accent-coloured text (AA)' },
+  { name: 'accent-soft', light: '#fdece5', dark: 'accent 14%', use: 'Accent pills, rows' },
+  { name: 'btn-bg', light: '#121211', dark: '#f2f2f0', use: 'Primary button' },
+  { name: 'positive', light: '#1d7a4c', dark: '#4ac08a', use: 'Status: done, free' },
+  { name: 'caution', light: '#95620f', dark: '#e3a64a', use: 'Status: pending' },
+  { name: 'critical', light: '#c2352b', dark: '#f26b5f', use: 'Status: error' },
+];
+const TYPE_SCALE: { cls: string; spec: string; sample: string }[] = [
+  {
+    cls: 'display-xl',
+    spec: '64/1.02 · −0.04em · 600 (40 at 390)',
+    sample: 'Every store, page by page.',
+  },
+  {
+    cls: 'display-lg',
+    spec: '48/1.05 · −0.035em · 600 (34)',
+    sample: 'Pricing for people who ship stores.',
+  },
+  { cls: 'display-md', spec: '36/1.1 · −0.03em · 600 (28)', sample: 'Themes' },
+  { cls: 'h2', spec: '28/1.15 · −0.025em · 600 (24)', sample: 'Apps most used with Prestige' },
+  { cls: 'h3', spec: '20/1.3 · −0.015em · 600', sample: 'Reviews on the product page' },
+  { cls: 'h4', spec: '16/1.4 · 560', sample: 'Detected apps' },
+  {
+    cls: 'lead',
+    spec: '18/1.55 · ink-2 (16)',
+    sample: 'See how every Shopify theme and app looks on live stores.',
+  },
+  {
+    cls: 'text-body',
+    spec: '15/1.6 · ink-2',
+    sample:
+      'youngla.com runs Prestige 9.3.0 with 11 detected apps. Loox renders the reviews on the product page.',
+  },
+  {
+    cls: 'eyebrow',
+    spec: 'Geist Mono 12 · uppercase · 0.06em · ink-3',
+    sample: 'Theme · Maestrooo',
+  },
+  {
+    cls: 'mono',
+    spec: 'Geist Mono · versions, domains, API paths',
+    sample: 'GET /api/v1/stores/youngla.com · prestige@9.3.0',
+  },
+];
+const RADII = [
+  ['control', '8'],
+  ['well', '10'],
+  ['card', '12'],
+  ['band', '20'],
+  ['pill', '999'],
+] as const;
+const SHADOWS = ['xs', 'sm', 'md', 'lg'] as const;
+
+const TOC = [
+  ['themes', 'Themes & colour'],
+  ['type', 'Type'],
+  ['shape', 'Radius & depth'],
+  ['buttons', 'Buttons'],
+  ['badges', 'Badges & pills'],
+  ['cards', 'Cards'],
+  ['window', 'Window & tags'],
+  ['switches', 'Tabs & switches'],
+  ['browse', 'Browse bar'],
+  ['data', 'Tables & data'],
+  ['facts', 'Facts & numbers'],
+  ['states', 'Forms & states'],
+  ['domain', 'Product cards'],
+  ['motion', 'Motion'],
+  ['chrome', 'Header & footer'],
+] as const;
+
+const BROWSE_GROUPS = [
+  {
+    key: 'category',
+    label: 'Category',
+    options: [
+      { label: 'All', href: '#', selected: true, count: 930 },
+      { label: 'Apparel', href: '#', count: 214 },
+      { label: 'Beauty', href: '#', count: 121 },
+      { label: 'Food & drink', href: '#', count: 88 },
+      { label: 'Home', href: '#', count: 97 },
+      { label: 'Fitness', href: '#', count: 64 },
+      { label: 'Pets', href: '#', count: 31 },
+    ],
+  },
+  {
+    key: 'theme',
+    label: 'Theme',
+    options: [
+      { label: 'All themes', href: '#' },
+      { label: 'Prestige', href: '#', selected: true, count: 13 },
+      { label: 'Dawn', href: '#', count: 20 },
+    ],
+  },
+  {
+    key: 'app',
+    label: 'App',
+    options: [
+      { label: 'All apps', href: '#', selected: true },
+      { label: 'Judge.me', href: '#', count: 221 },
+      { label: 'Klaviyo', href: '#', count: 383 },
+    ],
+  },
 ];
 ---
 
-<BaseLayout title="Design system" noindex>
-  <div class="container">
+<BaseLayout title="Design system" noindex wide>
+  <div class="container--wide ds">
     <PageHeader
-      title="Design system"
-      count={42}
-      eyebrow="Reference · Specimen archive"
-      lede="Tokens and components used across the site. Screenshots here are drawn placeholders: the same renderer the site uses until real captures land."
-      size="lg"
+      eyebrow="Foundation · v2"
+      title="Design system."
+      titleMuted="Tokens and components, in both themes."
+      description="The living reference for every page. Captures here are drawn placeholders from the same renderer the site uses until real captures land."
     >
       <Breadcrumbs slot="top" items={[{ label: 'Home', href: '/' }, { label: 'Design system' }]} />
+      <div slot="actions" class="ds-themepick">
+        <span class="eyebrow">Theme</span>
+        <ThemeSwitch labels size="md" />
+      </div>
     </PageHeader>
 
-    <section class="ds-block">
-      <SectionHeader
-        label="01 — Signature"
-        title="Specimen archive"
-        count={6}
-        description="Specimen numbers, mono spec labels, superscript counts, crop marks, contact-sheet captions, grid ↔ index. See docs/design/direction.md."
-        rule
-      />
-      <div class="row" style="gap:20px">
-        <MonoLabel>Detected 17 Nov 2026</MonoLabel>
-        <MonoLabel tone="ink">Theme</MonoLabel>
-        <MonoLabel tone="accent">Capture pending</MonoLabel>
-        <MonoLabel bullet={false}>N°014 — Store</MonoLabel>
-      </div>
-      <p style="margin-top:24px;font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.035em;line-height:1">
-        Themes
-        <Count value={20} /> &nbsp;Stores
-        <Count value={930} />
-      </p>
-      <div class="marks ds-stats-marks">
-        <StatList columns={4}>
-          <Stat
-            display
-            value={930}
-            label="Stores scanned"
-            source="StorePeek scan"
-            asOf="17 Nov 2026"
+    <div class="ds-layout">
+      <nav class="ds-toc" aria-label="On this page">
+        <p class="eyebrow">On this page</p>
+        <ul>
+          {TOC.map(([id, label]) => (
+            <li>
+              <a href={`#${id}`}>{label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="ds-main">
+        {/* ---------------------------------------------------------------- Themes */}
+        <section class="ds-block" id="themes">
+          <SectionHeader
+            eyebrow="Foundation"
+            title="Themes & colour"
+            description="Light is the default; dark follows the system until someone picks. Any element with data-theme renders its subtree in that theme: the two panels below are the same markup."
           />
-          <Stat display value="41.2%" label="Run Klaviyo" source="383 of 930 stores" />
-          <Stat display value={20} label="Themes tracked" source="Theme Store" />
-          <Stat display value={160} label="Plates queued" source="20 stores × 8" />
-        </StatList>
-      </div>
-      <FilterBar
-        class="ds-fbar"
-        total={20}
-        noun="stores"
-        clearHref="#"
-        groups={[
-          {
-            key: 'theme',
-            label: 'Theme',
-            options: [
-              { label: 'All themes', href: '#' },
-              { label: 'Prestige', href: '#', selected: true, count: 13 },
-              { label: 'Dawn', href: '#', count: 20 },
-            ],
-          },
-          {
-            key: 'app',
-            label: 'App',
-            options: [
-              { label: 'All apps', href: '#', selected: true },
-              { label: 'Judge.me', href: '#', count: 221 },
-              { label: 'Klaviyo', href: '#', count: 383 },
-            ],
-          },
-          {
-            key: 'category',
-            label: 'Category',
-            options: [
-              { label: 'All categories', href: '#', selected: true },
-              { label: 'Apparel', href: '#', count: 4 },
-            ],
-          },
-          {
-            key: 'currency',
-            label: 'Currency',
-            options: [
-              { label: 'Any currency', href: '#', selected: true },
-              { label: 'USD', href: '#', count: 570 },
-            ],
-          },
-        ]}
-        sort={[
-          { label: 'Most apps', href: '#', selected: true },
-          { label: 'Tranco rank', href: '#' },
-          { label: 'Domain A–Z', href: '#' },
-        ]}
-        view={{ current: 'index', gridHref: '#', indexHref: '#' }}
-      />
-      <div class="ds-index">
-        <IndexList
-          columns="56px minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,0.8fr) 110px"
-          head={['N°', 'Store', 'Theme', 'Category', 'Market', 'Apps']}
-          label="Stores"
-        >
-          {STORES.map(([d, n, meta], i) => (
-            <IndexRow
-              n={i + 1}
-              href="#"
-              title={n}
-              subtitle={`${d} · ${meta}`}
-              preview={homeShots[i]}
-              cells={[
-                { value: meta.split(' · ')[0]! },
-                { value: i % 2 ? 'Food & drink' : 'Apparel', muted: true },
-                { value: i % 3 ? 'USD' : 'AUD', mono: true },
-                { value: `(${meta.split(' · ')[1]})`, serif: true, mobile: true },
+          <div class="ds-pair">
+            {(['light', 'dark'] as const).map((t) => (
+              <div class="ds-themepanel" data-theme={t}>
+                <div class="ds-themepanel__head">
+                  <span class="eyebrow">data-theme="{t}"</span>
+                  <Badge tone="accent" size="sm">
+                    {t === 'light' ? 'Default' : 'Follows system'}
+                  </Badge>
+                </div>
+                <div class="ds-surfaces">
+                  {['bg', 'bg-subtle', 'surface', 'surface-2', 'surface-3'].map((n) => (
+                    <span class="ds-surface" style={`background:var(--${n})`}>
+                      <code>{n}</code>
+                    </span>
+                  ))}
+                </div>
+                <div class="ds-inks">
+                  {['ink', 'ink-2', 'ink-3', 'ink-4'].map((n) => (
+                    <span style={`color:var(--${n})`}>
+                      Aa <code>{n}</code>
+                    </span>
+                  ))}
+                </div>
+                <div class="ds-mini">
+                  <div class="ds-mini__card">
+                    <div class="ds-mini__row">
+                      <StoreMark domain="youngla.com" name="YoungLA" size={28} />
+                      <div>
+                        <p class="ds-mini__title">YoungLA</p>
+                        <p class="ds-mini__meta">Prestige · 11 apps</p>
+                      </div>
+                      <Badge tone="positive" dot size="sm">
+                        Live
+                      </Badge>
+                    </div>
+                    <div class="ds-mini__actions">
+                      <Button variant="primary" size="sm" arrow>
+                        Open store
+                      </Button>
+                      <Button size="sm">Compare</Button>
+                      <Button variant="accent" size="sm">
+                        Get Pro
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div class="table-wrap ds-tokens">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Light</th>
+                  <th>Dark</th>
+                  <th class="ds-hide-sm">Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COLOR_TOKENS.map((c) => (
+                  <tr>
+                    <td>
+                      <code class="ds-code">--{c.name}</code>
+                    </td>
+                    <td>
+                      <span class="ds-swatchcell" data-theme="light">
+                        <span class="ds-chip" style={`background:var(--${c.name})`} />
+                        <span class="mono">{c.light}</span>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="ds-swatchcell" data-theme="dark">
+                        <span class="ds-chip" style={`background:var(--${c.name})`} />
+                        <span class="mono">{c.dark}</span>
+                      </span>
+                    </td>
+                    <td class="ds-hide-sm muted">{c.use}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <SourceNote
+            source="docs/design/direction.md → Tokens. v1 names (--tile, --fill, --inverse, --ink-inverse …) still resolve as aliases; migrate them"
+            href=""
+          />
+        </section>
+
+        {/* ---------------------------------------------------------------- Type */}
+        <section class="ds-block" id="type">
+          <SectionHeader
+            eyebrow="Foundation"
+            title="Type"
+            description="Instrument Sans for everything, Geist Mono for eyebrows, versions, domains and numbers in tables. No serif."
+          />
+          <div class="ds-typelist">
+            {TYPE_SCALE.map((t) => (
+              <div class="ds-typerow">
+                <div class="ds-typerow__meta">
+                  <code class="ds-code">.{t.cls}</code>
+                  <span>{t.spec}</span>
+                </div>
+                <p class={t.cls}>{t.sample}</p>
+              </div>
+            ))}
+            <div class="ds-typerow">
+              <div class="ds-typerow__meta">
+                <code class="ds-code">.tone-muted</code>
+                <span>Two-tone heading: once per section, max</span>
+              </div>
+              <p class="display-md">
+                Shopify themes and apps,{' '}
+                <span class="tone-muted">on the stores that run them.</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Shape */}
+        <section class="ds-block" id="shape">
+          <SectionHeader
+            eyebrow="Foundation"
+            title="Radius & depth"
+            description="Hairlines first, then shadow. In dark, cards and windows also get a lit top edge."
+          />
+          <div class="ds-shapes">
+            {RADII.map(([n, v]) => (
+              <div class="ds-shape">
+                <span class="ds-shape__box" style={`border-radius:var(--radius-${n})`} />
+                <code class="ds-code">--radius-{n}</code>
+                <span class="muted">{v}px</span>
+              </div>
+            ))}
+          </div>
+          <div class="ds-shadows">
+            {SHADOWS.map((n) => (
+              <div class="ds-shadow" style={`box-shadow:var(--shadow-${n}), var(--highlight)`}>
+                <code class="ds-code">--shadow-{n}</code>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Buttons */}
+        <section class="ds-block" id="buttons">
+          <SectionHeader
+            eyebrow="Components"
+            title="Buttons"
+            description="Primary is ink, not vermilion. Accent is reserved for Pro CTAs. Sizes 30 / 36 / 44; touch always gets a 44px hit area."
+          />
+          <div class="ds-canvas">
+            <div class="ds-matrix">
+              {(['primary', 'secondary', 'ghost', 'accent'] as const).map((v) => (
+                <div class="ds-matrix__row">
+                  <code class="ds-code ds-matrix__label">{v}</code>
+                  <Button variant={v} size="sm">
+                    Small
+                  </Button>
+                  <Button variant={v}>Medium</Button>
+                  <Button variant={v} size="lg" arrow>
+                    Large
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div class="ds-row">
+              <Button variant="primary" icon="magnifying-glass">
+                Search
+              </Button>
+              <Button iconRight="arrow-up-right" external href="#">
+                Visit store
+              </Button>
+              <Button variant="link" arrow href="#">
+                All themes
+              </Button>
+              <Button variant="quiet">Quiet (v1)</Button>
+              <Button icon="bookmark-simple" label="Save" />
+              <Button variant="ghost" icon="dots-three" label="More" />
+              <Button disabled>Disabled</Button>
+              <SaveButton itemType="screenshot" itemId={1} />
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Badges */}
+        <section class="ds-block" id="badges">
+          <SectionHeader
+            eyebrow="Components"
+            title="Badges & pills"
+            description="22px pills, 12px/520. Filter chips are links (URL state); selected is an ink fill."
+          />
+          <div class="ds-canvas ds-stack">
+            <div class="ds-row">
+              <Badge>Neutral</Badge>
+              <Badge tone="outline">Outline</Badge>
+              <Badge tone="accent">Accent</Badge>
+              <Badge tone="positive" dot>
+                Captured
+              </Badge>
+              <Badge tone="caution" dot>
+                Pending
+              </Badge>
+              <Badge tone="critical">Removed</Badge>
+              <Badge tone="outline" size="sm">
+                BFS
+              </Badge>
+              <Badge mono size="sm">
+                v9.3.0
+              </Badge>
+            </div>
+            <div class="ds-row">
+              <AnnouncementPill href="#">Teardown: how YoungLA sells gymwear</AnnouncementPill>
+              <span class="ds-kbd">
+                <Kbd>⌘</Kbd>
+                <Kbd>K</Kbd>
+              </span>
+              <Rating rating={4.9} reviews={50275} source="Shopify App Store, 17 Nov 2026" />
+            </div>
+            <ChipRow label="Page type">
+              <Chip href="#" selected count={20}>
+                All pages
+              </Chip>
+              <Chip href="#" count={20}>
+                Home
+              </Chip>
+              <Chip href="#" count={20}>
+                Collection
+              </Chip>
+              <Chip href="#" count={20}>
+                Product
+              </Chip>
+              <Chip href="#" count={20}>
+                Cart
+              </Chip>
+              <Chip size="sm" selected removable>
+                Theme: Prestige
+              </Chip>
+            </ChipRow>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Cards */}
+        <section class="ds-block" id="cards">
+          <SectionHeader
+            eyebrow="Components"
+            title="Cards"
+            description="Surface, 1px line, radius 12, shadow-xs. Interactive cards lift 2px. Media wells hold real UI, never an icon in a circle."
+          />
+          <div class="ds-grid3">
+            <Card>
+              <p class="eyebrow">Static</p>
+              <h3 class="h4 ds-cardtitle">A plain panel</h3>
+              <p class="muted">Use for grouped content and settings. Padding md (20).</p>
+            </Card>
+            <Card href="#" padding="none">
+              <Fragment slot="media">
+                <Shot
+                  src={homeShots[1]!.src}
+                  width={homeShots[1]!.width}
+                  height={homeShots[1]!.height}
+                  device="desktop"
+                  alt="Thursday Boot Co. home page"
+                  ratio="16 / 10"
+                  flush
+                />
+              </Fragment>
+              <div class="ds-cardbody">
+                <h3 class="h4">Interactive, with media</h3>
+                <p class="muted">The whole card is the link.</p>
+              </div>
+            </Card>
+            <Card spotlight interactive>
+              <p class="eyebrow">Spotlight</p>
+              <h3 class="h4 ds-cardtitle">
+                <a href="#" class="stretched-link">
+                  Follows the cursor
+                </a>
+              </h3>
+              <p class="muted">Home feature cards only. Off under reduced motion.</p>
+            </Card>
+            <Card dashed>
+              <p class="eyebrow">Dashed</p>
+              <h3 class="h4 ds-cardtitle">Placeholder / add tile</h3>
+              <p class="muted">Also the empty-state frame.</p>
+            </Card>
+            <Card padding="lg">
+              <h3 class="h3">Padding lg</h3>
+              <p class="muted">24 → 32 at ≥1024. For pricing plans and feature panels.</p>
+              <Fragment slot="footer">
+                <Icon name="clock" size={14} /> Footer slot · hairline above
+              </Fragment>
+            </Card>
+            <Card>
+              <StatList columns={2}>
+                <Stat value={930} label="Stores scanned" size="sm" />
+                <Stat value="41.2%" label="Run Klaviyo" size="sm" />
+              </StatList>
+            </Card>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Window */}
+        <section class="ds-block" id="window">
+          <SectionHeader
+            eyebrow="Signature"
+            title="Window & pinned section tags"
+            description="The product frame (neutral dots, mono URL pill) around the full-page viewer. Every section is outlined and labelled; hover a rail item or a section to light it in accent."
+          />
+          <Window url="youngla.com/products/core-hoodie" padded>
+            <Segmented
+              slot="toolbar"
+              label="Device"
+              size="sm"
+              items={[
+                {
+                  label: 'Desktop',
+                  value: 'desktop',
+                  icon: 'desktop',
+                  iconOnly: true,
+                  selected: true,
+                },
+                { label: 'Mobile', value: 'mobile', icon: 'device-mobile', iconOnly: true },
               ]}
             />
-          ))}
-        </IndexList>
-      </div>
-    </section>
-    <section class="ds-block">
-      <SectionHeader
-        title="Colour"
-        description="Warm neutrals and one accent. The accent marks state, never decoration."
-      />
-      <div class="swatches">
-        {COLORS.map((c) => (
-          <div class="swatch">
-            <span style={`background:var(--${c})`} />
-            <code>--{c}</code>
+            <FullPage
+              src={product.src}
+              width={product.width}
+              height={product.height}
+              device="desktop"
+              alt="YoungLA product page, desktop"
+              bare
+              sections={product.sections.map((s, i) => ({
+                id: `p${i}`,
+                type: s.type,
+                name: sectionTypeName(s.type),
+                y: s.y,
+                height: s.height,
+                x: s.type === 'buy-box' ? 860 : s.type === 'product-gallery' ? 0 : null,
+                w: s.type === 'buy-box' ? 580 : s.type === 'product-gallery' ? 860 : null,
+                app: s.type === 'reviews' ? { name: 'Loox', slug: 'loox' } : null,
+              }))}
+            />
+          </Window>
+        </section>
+
+        {/* ---------------------------------------------------------------- Switches */}
+        <section class="ds-block" id="switches">
+          <SectionHeader
+            eyebrow="Components"
+            title="Tabs & switches"
+            description="Underline tabs for page sub-views; a pill track for 2–3-way switches. Both slide their indicator."
+          />
+          <div class="ds-canvas ds-stack">
+            <Tabs
+              label="Page type"
+              items={[
+                { label: 'Home', href: '#home', selected: true, count: 9 },
+                { label: 'Collection', href: '#collection', count: 7 },
+                { label: 'Product', href: '#product', count: 8 },
+                { label: 'Cart', href: '#cart', count: 5 },
+              ]}
+            />
+            <div class="ds-row">
+              <Segmented
+                label="Billing"
+                name="ds-billing"
+                items={[
+                  { label: 'Monthly', value: 'monthly', selected: true },
+                  { label: 'Yearly · 2 months free', value: 'yearly' },
+                ]}
+              />
+              <Segmented
+                label="Device"
+                size="sm"
+                name="ds-device"
+                items={[
+                  { label: 'Desktop', value: 'desktop', icon: 'desktop', selected: true },
+                  { label: 'Mobile', value: 'mobile', icon: 'device-mobile' },
+                ]}
+              />
+              <ThemeSwitch />
+              <ThemeToggle />
+            </div>
           </div>
-        ))}
-      </div>
-    </section>
+        </section>
 
-    <section class="ds-block">
-      <SectionHeader
-        title="Type"
-        description="Instrument Sans for the interface, Newsreader for editorial headings only, Geist Mono for data."
-      />
-      <div class="type-specimen">
-        <p class="display" style="font-size:var(--text-5xl)">
-          Every theme, on real stores.
-        </p>
-        <p style="font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.02em;line-height:1.1">
-          Prestige on 13 stores
-        </p>
-        <p style="font-size:var(--text-2xl);font-weight:600;letter-spacing:-0.01em">
-          Apps most used with Prestige
-        </p>
-        <p style="font-size:var(--text-md);color:var(--ink-2);max-width:640px">
-          youngla.com runs Prestige 9.3.0 with 11 detected apps. Loox renders the reviews on the
-          product page; Attentive handles SMS signup in the footer.
-        </p>
-        <p class="muted" style="font-size:var(--text-sm)">
-          Seen on 221 of 930 scanned stores · 17 Nov 2026
-        </p>
-        <p class="mono">GET /api/v1/stores/youngla.com · prestige@9.3.0</p>
-      </div>
-    </section>
-
-    <section class="ds-block">
-      <SectionHeader title="Buttons" />
-      <div class="row">
-        <Button variant="primary">Primary</Button>
-        <Button>Secondary</Button>
-        <Button variant="quiet">Quiet</Button>
-        <Button variant="ghost">Ghost</Button>
-        <Button variant="primary" iconRight="arrow-up-right">
-          View on Theme Store
-        </Button>
-        <Button size="sm" icon="sliders-horizontal">
-          Filters
-        </Button>
-        <Button size="lg" variant="primary">
-          Large
-        </Button>
-        <Button icon="bookmark-simple" label="Save" />
-        <Button disabled>Disabled</Button>
-        <SaveButton itemType="screenshot" itemId={1} />
-      </div>
-    </section>
-
-    <section class="ds-block">
-      <SectionHeader
-        title="Filters"
-        description="Filters are URL state: chips are links, so results are shareable and work without JavaScript."
-      />
-      <ChipRow label="Page type">
-        <Chip href="#" selected count={20}>
-          All pages
-        </Chip>
-        <Chip href="#" count={20}>
-          Home
-        </Chip>
-        <Chip href="#" count={20}>
-          Collection
-        </Chip>
-        <Chip href="#" count={20}>
-          Product
-        </Chip>
-        <Chip href="#" count={20}>
-          Cart
-        </Chip>
-        <Chip href="#" icon="star">
-          Reviews
-        </Chip>
-      </ChipRow>
-      <div class="row" style="margin-top:16px">
-        <Segmented
-          label="Device"
-          items={[
-            { label: 'Desktop', value: 'desktop', icon: 'desktop', selected: true, href: '#' },
-            { label: 'Mobile', value: 'mobile', icon: 'device-mobile', href: '#' },
-          ]}
-        />
-        <Segmented
-          label="View"
-          size="sm"
-          items={[
-            { label: 'Grid', value: 'grid', icon: 'squares-four', iconOnly: true, selected: true },
-            { label: 'List', value: 'list', icon: 'rows', iconOnly: true },
-          ]}
-        />
-        <Chip size="sm" selected removable>
-          Theme: Prestige
-        </Chip>
-        <Chip size="sm" selected removable>
-          App: Judge.me
-        </Chip>
-        <Button size="sm" variant="ghost">
-          Clear all
-        </Button>
-      </div>
-      <Tabs
-        class="ds-tabs"
-        label="Example tabs"
-        items={[
-          { label: 'Home', href: '#', selected: true },
-          { label: 'Collection', href: '#' },
-          { label: 'Product', href: '#' },
-          { label: 'Cart', href: '#', count: 2 },
-        ]}
-      />
-    </section>
-
-    <section class="ds-block">
-      <SectionHeader title="Badges, ratings, numbers" />
-      <div class="row">
-        <Badge>Neutral</Badge>
-        <Badge tone="outline">BFS</Badge>
-        <Badge tone="accent">Affiliate</Badge>
-        <Badge tone="positive" icon="check">
-          Captured
-        </Badge>
-        <Badge tone="caution">Pending review</Badge>
-        <Badge tone="inverse">Pro</Badge>
-        <Rating rating={4.9} reviews={50275} source="Shopify App Store, checked 17 Nov 2026" />
-        <Rating rating={null} />
-        <Kbd>⌘</Kbd>
-        <Kbd>K</Kbd>
-      </div>
-      <StatList class="ds-stats">
-        <Stat value={930} label="Stores scanned" source="StorePeek scan" asOf="17 Nov 2026" />
-        <Stat value="41.2%" label="Run Klaviyo" source="383 of 930" />
-        <Stat value={20} label="Themes tracked" />
-        <Stat value={160} label="Placeholder captures" />
-      </StatList>
-      <SourceNote source="StorePeek scan of 930 Shopify stores (pre-v7 rules)" asOf="17 Nov 2026" />
-    </section>
-
-    <section class="ds-block">
-      <SectionHeader
-        title="Screenshot tiles"
-        description="Top of the full page, inset in a warm well; it bleeds off the bottom because the page continues."
-      />
-      <div class="grid-3">
-        {homeShots.slice(0, 3).map((s, i) => (
-          <StoreCard
-            domain={STORES[i]![0]}
-            name={STORES[i]![1]}
-            meta={STORES[i]![2]}
-            shot={s}
-            href="#"
+        {/* ---------------------------------------------------------------- Browse */}
+        <section class="ds-block" id="browse">
+          <SectionHeader
+            eyebrow="Pattern"
+            title="Browse bar"
+            description="Index pages: search, pills, dropdown filters, count, sort, grid/list. Sticky under the header on real pages (sticky={false} here)."
           />
-        ))}
-      </div>
-      <div class="grid-4" style="margin-top:32px">
-        {mobileShots.map((s, i) => (
-          <StoreCard
-            domain={STORES[i]![0]}
-            name={STORES[i]![1]}
-            meta="Home · Mobile"
-            shot={s}
-            href="#"
+          <BrowseBar
+            sticky={false}
+            search={{ placeholder: 'Search stores', action: '#' }}
+            pills="category"
+            groups={BROWSE_GROUPS}
+            total={13}
+            noun="stores"
+            clearHref="#"
+            sort={[
+              { label: 'Most apps', href: '#', selected: true },
+              { label: 'Tranco rank', href: '#' },
+              { label: 'Domain A–Z', href: '#' },
+            ]}
+            view={{ current: 'grid', gridHref: '#', indexHref: '#' }}
           />
-        ))}
-      </div>
-      <div class="grid-3" style="margin-top:32px">
-        <StoreCard domain="aetrio.com" meta="Infinity · not captured" shot={null} href="#" />
-        <Shot
-          src={product.src}
-          width={product.width}
-          height={product.height}
-          device="desktop"
-          alt="Product page"
-          tag="Product"
-        />
-        <Shot
-          src={cartMobile.src}
-          width={cartMobile.width}
-          height={cartMobile.height}
-          device="mobile"
-          alt="Cart page"
-          tag="Cart · Mobile"
-        />
-      </div>
-    </section>
+        </section>
 
-    <section class="ds-block">
-      <SectionHeader
-        title="Theme cards"
-        description="A theme as a deck of the real stores using it."
-      />
-      <div class="grid-3">
-        <ThemeCard
-          slug="prestige"
-          name="Prestige"
-          vendor="Maestrooo"
-          priceLabel="$400"
-          storesCount={13}
-          shots={homeShots.slice(0, 3)}
-        />
-        <ThemeCard
-          slug="dawn"
-          name="Dawn"
-          vendor="Shopify"
-          priceLabel="Free"
-          storesCount={20}
-          shots={homeShots.slice(3, 6)}
-        />
-        <ThemeCard
-          slug="hyper"
-          name="Hyper"
-          vendor="FoxEcom"
-          priceLabel="$400"
-          storesCount={8}
-          shots={homeShots.slice(1, 2)}
-        />
-      </div>
-    </section>
-
-    <section class="ds-block">
-      <SectionHeader
-        title="App rows"
-        description="Dense and ranked. Numbers right-aligned in tabular figures."
-      />
-      <AppTable>
-        <AppRow
-          rank={1}
-          slug="klaviyo"
-          name="Klaviyo: Email Marketing & SMS"
-          developer="Klaviyo"
-          category="Email & SMS"
-          rating={4.7}
-          reviews={3450}
-          priceLabel="Free plan"
-          storesCount={383}
-          sharePct={41.18}
-          iconUrl="https://cdn.shopify.com/app-store/listing_images/5edd9000b933a8fa88c152d1e498531f/icon/CP6B2OOv3PYCEAE=.png"
-          href="#"
-        />
-        <AppRow
-          rank={2}
-          slug="judgeme"
-          name="Judge.me Product Reviews App"
-          developer="Judge.me"
-          category="Reviews"
-          rating={5}
-          reviews={50275}
-          priceLabel="Free plan"
-          storesCount={221}
-          sharePct={23.76}
-          builtForShopify
-          href="#"
-        />
-        <AppRow
-          rank={3}
-          slug="rebuy"
-          name="Rebuy Personalization Engine"
-          developer="Rebuy"
-          category="Upsell & Bundles"
-          rating={null}
-          priceLabel={null}
-          storesCount={47}
-          sharePct={5.05}
-          href="#"
-        />
-      </AppTable>
-    </section>
-
-    <section class="ds-block">
-      <SectionHeader
-        title="Section cards"
-        description="Sliced sections in fixed-aspect wells so desktop strips and mobile slices share a grid."
-      />
-      <div class="grid-4">
-        <SectionCard
-          href="#"
-          device="desktop"
-          typeName="Hero"
-          storeLabel="YoungLA"
-          meta="Hero · Prestige"
-          crop={crop('youngla.com', 'YoungLA', 'desktop', stack(HOME_D), 'hero')}
-        />
-        <SectionCard
-          href="#"
-          device="desktop"
-          typeName="Reviews"
-          storeLabel="YoungLA"
-          meta="Reviews · Product"
-          app={{ name: 'Loox' }}
-          crop={crop('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'reviews')}
-        />
-        <SectionCard
-          href="#"
-          device="mobile"
-          typeName="Featured collection"
-          storeLabel="The Sill"
-          meta="Featured collection · Mobile"
-          crop={crop('thesill.com', 'The Sill', 'mobile', stack(HOME_M), 'featured-collection')}
-        />
-        <SectionCard
-          href="#"
-          device="desktop"
-          typeName="Footer"
-          storeLabel="Koh"
-          meta="Footer · Impact"
-          crop={crop('koh.com', 'Koh', 'desktop', stack(HOME_D), 'footer')}
-        />
-      </div>
-    </section>
-
-    <section class="ds-block">
-      <SectionHeader
-        title="Full-page viewer"
-        description="Sections rail on the left, outlines on the capture. Hover either side; scrolling marks the section in view."
-      />
-      <FullPage
-        src={product.src}
-        width={product.width}
-        height={product.height}
-        device="desktop"
-        alt="YoungLA product page, desktop"
-        sections={product.sections.map((s, i) => ({
-          id: `p${i}`,
-          type: s.type,
-          name: sectionTypeName(s.type),
-          y: s.y,
-          height: s.height,
-          app: s.type === 'reviews' ? { name: 'Loox', slug: 'loox' } : null,
-        }))}
-      />
-    </section>
-
-    <section class="ds-block two-col">
-      <div>
-        <SectionHeader title="Facts + call to action" level={3} />
-        <Facts
-          items={[
-            { label: 'Vendor', value: 'Maestrooo', href: '#' },
-            { label: 'Price', value: '$400 one-time' },
-            { label: 'Theme Store ID', value: '855', mono: true },
-            { label: 'Latest version seen', value: '9.3.0', mono: true },
-          ]}
-        />
-        <AffiliateCta class="ds-cta" href="#" label="View on Theme Store" isAffiliate />
-        <AffiliateCta
-          class="ds-cta"
-          href="#"
-          label="View on Theme Store"
-          isAffiliate={false}
-          size="md"
-        />
-      </div>
-      <div>
-        <SectionHeader title="Teardown card" level={3} />
-        <TeardownCard
-          slug="youngla"
-          title="How YoungLA runs gymwear on Prestige and eleven apps"
-          dek="A stack built for repeat buyers: photo reviews, SMS and a loyalty program."
-          storeLabel="youngla.com"
-          publishedAt="2026-11-17"
-          shot={homeShots[0]}
-          isSample
-        />
-      </div>
-    </section>
-
-    <section class="ds-block two-col">
-      <div>
-        <SectionHeader title="Forms" level={3} />
-        <form class="form-demo" onsubmit="return false">
-          <Field
-            label="Store domain"
-            for="d-domain"
-            hint="The domain customers visit, e.g. example.com"
-          >
-            <Input id="d-domain" name="domain" placeholder="example.com" />
-          </Field>
-          <Field
-            label="Your email"
-            for="d-email"
-            error="Use an address at the store's domain so we can verify ownership."
-          >
-            <Input id="d-email" type="email" value="someone@gmail.com" />
-          </Field>
-          <Field label="What should we remove?" for="d-scope">
-            <Input as="select" id="d-scope">
-              <option>Screenshots only</option>
-              <option>Everything</option>
-            </Input>
-          </Field>
-          <Field label="Anything else" for="d-note" optional>
-            <Input as="textarea" id="d-note" rows="3" />
-          </Field>
-          <Checkbox
-            label="I own or manage this store"
-            hint="We may ask for proof before removing anything."
+        {/* ---------------------------------------------------------------- Data */}
+        <section class="ds-block" id="data">
+          <SectionHeader
+            eyebrow="Components"
+            title="Tables & lists"
+            description="14px rows of 48px, hairlines, sticky header, numbers right-aligned in tabular figures."
           />
-          <div class="row">
-            <Button variant="primary" type="submit">
-              Send request
-            </Button>
-            <Button variant="ghost">Cancel</Button>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Store</th>
+                  <th>Theme</th>
+                  <th class="ds-hide-sm">Category</th>
+                  <th class="is-num">Apps</th>
+                </tr>
+              </thead>
+              <tbody>
+                {STORES.slice(0, 4).map(([d, n, meta], i) => (
+                  <tr>
+                    <td>
+                      <span class="ds-cell">
+                        <StoreMark domain={d} name={n} size={24} />
+                        <span>
+                          {n} <span class="mono muted ds-hide-sm">{d}</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td>{meta.split(' · ')[0]}</td>
+                    <td class="ds-hide-sm muted">{i % 2 ? 'Food & drink' : 'Apparel'}</td>
+                    <td class="is-num">{meta.split(' · ')[1]!.split(' ')[0]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </form>
-      </div>
-      <div class="stack">
-        <SectionHeader title="States" level={3} />
-        <Notice title="Screenshots are placeholders">
-          Drawn from each page's detected sections until the first capture run.
-        </Notice>
-        <Notice tone="caution">This store hasn't been rescanned in 90 days.</Notice>
-        <Notice tone="positive">Request received. Reference R-2026-0012.</Notice>
-        <EmptyState
-          title="No stores match these filters"
-          body="Try removing a filter, or browse all 930 detected stores."
-          size="sm"
-        >
-          <Button size="sm">Clear filters</Button>
-        </EmptyState>
-        <div>
-          <Skeleton lines={3} />
-        </div>
-        <div class="grid-2">
-          <Skeleton variant="tile" />
-          <Skeleton variant="tile" />
-        </div>
-        <Pagination page={2} pageSize={24} total={930} hrefFor={(p) => `#p${p}`} noun="stores" />
-        <div class="row">
-          <Button data-dialog-open="ds-dialog">Open dialog</Button>
-        </div>
-        <Dialog id="ds-dialog" title="Save to board">
-          <EmptyState
-            title="Boards are a Pro feature"
-            body="Collect screens and sections into boards to share with clients."
-            size="sm"
-            align="start"
+
+          <div class="ds-sub">
+            <p class="eyebrow">AppTable + AppRow</p>
+            <AppTable>
+              <AppRow
+                rank={1}
+                slug="klaviyo"
+                name="Klaviyo: Email Marketing & SMS"
+                developer="Klaviyo"
+                category="Email & SMS"
+                rating={4.7}
+                reviews={3450}
+                priceLabel="Free plan"
+                storesCount={383}
+                sharePct={41.18}
+                href="#"
+              />
+              <AppRow
+                rank={2}
+                slug="judgeme"
+                name="Judge.me Product Reviews App"
+                developer="Judge.me"
+                category="Reviews"
+                rating={5}
+                reviews={50275}
+                priceLabel="Free plan"
+                storesCount={221}
+                sharePct={23.76}
+                builtForShopify
+                href="#"
+              />
+              <AppRow
+                rank={3}
+                slug="rebuy"
+                name="Rebuy Personalization Engine"
+                developer="Rebuy"
+                category="Upsell & Bundles"
+                rating={null}
+                priceLabel={null}
+                storesCount={47}
+                sharePct={5.05}
+                href="#"
+              />
+            </AppTable>
+          </div>
+
+          <div class="ds-sub">
+            <p class="eyebrow">IndexList + IndexRow (numbering="rank")</p>
+            <IndexList
+              columns="40px minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) 90px"
+              head={['#', 'Store', 'Theme', 'Category', 'Apps']}
+              label="Stores"
+            >
+              {STORES.slice(0, 4).map(([d, n, meta], i) => (
+                <IndexRow
+                  n={i + 1}
+                  numbering="rank"
+                  href="#"
+                  title={n}
+                  subtitle={`${d} · ${meta}`}
+                  preview={homeShots[i]}
+                  cells={[
+                    { value: meta.split(' · ')[0]! },
+                    { value: i % 2 ? 'Food & drink' : 'Apparel', muted: true },
+                    { value: meta.split(' · ')[1]!, mono: true, mobile: true },
+                  ]}
+                />
+              ))}
+            </IndexList>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Facts */}
+        <section class="ds-block" id="facts">
+          <SectionHeader
+            eyebrow="Components"
+            title="Facts & numbers"
+            description="Every number carries a source and a date. Facts cards sit sticky beside the main column on detail pages."
           />
-          <Fragment slot="footer">
-            <Button data-dialog-close>Not now</Button>
-            <Button variant="primary" href="/pro">
-              See Pro
-            </Button>
-          </Fragment>
-        </Dialog>
+          <div class="ds-split">
+            <FactsCard
+              title="Theme facts"
+              source="Shopify Theme Store"
+              asOf="17 Nov 2026"
+              items={[
+                { label: 'Vendor', value: 'Maestrooo', href: '#' },
+                { label: 'Price', value: '$400 one-time' },
+                { label: 'Theme Store ID', value: '855', mono: true },
+                { label: 'Latest version seen', value: '9.3.0', mono: true },
+                { label: 'Stores in scan', value: '13' },
+              ]}
+            >
+              <AffiliateCta
+                slot="actions"
+                href="#"
+                label="Get Prestige"
+                isAffiliate
+                size="md"
+                full
+              />
+            </FactsCard>
+            <div class="ds-stack">
+              <Counter
+                items={[
+                  { value: 930, label: 'stores scanned' },
+                  { value: 1294, label: 'sections tagged' },
+                ]}
+                asOf="17 Nov 2026"
+              />
+              <StatList boxed columns={3}>
+                <Stat value={930} label="Stores scanned" source="Our scan" asOf="17 Nov 2026" />
+                <Stat value="41.2%" label="Run Klaviyo" source="383 of 930" />
+                <Stat value={20} label="Themes tracked" source="Theme Store" />
+              </StatList>
+              <StatList columns={3}>
+                <Stat display value={930} label="Stores" source="Scan · 17 Nov 2026" />
+                <Stat display value={102} label="Apps" source="App Store" />
+                <Stat display value="1,294" label="Sections" source="20 stores × 8" />
+              </StatList>
+              <Facts
+                items={[
+                  { label: 'Detected', value: '17 Nov 2026', mono: true },
+                  { label: 'Theme', value: 'Prestige 9.3.0' },
+                ]}
+              />
+              <SourceNote source="Our scan of 930 public Shopify storefronts" asOf="17 Nov 2026" />
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- States */}
+        <section class="ds-block" id="states">
+          <SectionHeader
+            eyebrow="Components"
+            title="Forms & states"
+            description="Empty states say what is missing, why, and offer one way out."
+          />
+          <div class="ds-split">
+            <form class="ds-form" onsubmit="return false">
+              <Field
+                label="Store domain"
+                for="d-domain"
+                hint="The domain customers visit, e.g. example.com"
+              >
+                <Input id="d-domain" name="domain" placeholder="example.com" />
+              </Field>
+              <Field
+                label="Your email"
+                for="d-email"
+                error="Use an address at the store's domain so we can verify ownership."
+              >
+                <Input id="d-email" type="email" value="someone@gmail.com" />
+              </Field>
+              <Field label="What should we remove?" for="d-scope">
+                <Input as="select" id="d-scope">
+                  <option>Screenshots only</option>
+                  <option>Everything</option>
+                </Input>
+              </Field>
+              <Field label="Anything else" for="d-note" optional>
+                <Input as="textarea" id="d-note" rows="3" />
+              </Field>
+              <Checkbox
+                label="I own or manage this store"
+                hint="We may ask for proof before removing anything."
+              />
+              <div class="ds-row">
+                <Button variant="primary" type="submit">
+                  Send request
+                </Button>
+                <Button variant="ghost">Cancel</Button>
+              </div>
+            </form>
+            <div class="ds-stack">
+              <EmptyState
+                icon="funnel-simple"
+                title="No stores match these filters"
+                body="Prestige + Pets has no stores in this scan. Remove a filter, or browse all 930 detected stores."
+              >
+                <Button size="sm">Clear filters</Button>
+              </EmptyState>
+              <Notice title="Screenshots are placeholders">
+                Drawn from each page's detected sections until the first capture run.
+              </Notice>
+              <Notice tone="caution">This store hasn't been rescanned in 90 days.</Notice>
+              <Notice tone="positive">Request received. Reference R-2026-0012.</Notice>
+              <Notice tone="critical">The capture failed. We retry tonight.</Notice>
+              <div class="ds-row ds-skel">
+                <Skeleton variant="tile" />
+                <div class="ds-skel__lines">
+                  <Skeleton lines={3} />
+                </div>
+              </div>
+              <Pagination
+                page={2}
+                pageSize={24}
+                total={930}
+                hrefFor={(p) => `#p${p}`}
+                noun="stores"
+              />
+              <div class="ds-row">
+                <Button data-dialog-open="ds-dialog">Open dialog</Button>
+              </div>
+              <Dialog id="ds-dialog" title="Save to board">
+                <EmptyState
+                  title="Boards are a Pro feature"
+                  body="Collect screens and sections into boards to share with clients."
+                  size="sm"
+                />
+                <Fragment slot="footer">
+                  <Button data-dialog-close>Not now</Button>
+                  <Button variant="primary" href="/pro">
+                    See Pro
+                  </Button>
+                </Fragment>
+              </Dialog>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Domain */}
+        <section class="ds-block" id="domain">
+          <SectionHeader
+            eyebrow="Product"
+            title="Store, theme, section and teardown cards"
+            description="Screenshot well, title row with mark or icon, one meta line, badges. One link per card."
+          />
+          <div class="ds-grid3">
+            {homeShots.slice(0, 3).map((s, i) => (
+              <StoreCard
+                domain={STORES[i]![0]}
+                name={STORES[i]![1]}
+                meta={STORES[i]![2]}
+                shot={s}
+                href="#"
+                tag="Home"
+                badges={i === 0 ? [{ label: 'Curated', tone: 'accent' }] : []}
+              />
+            ))}
+          </div>
+          <div class="ds-grid4 ds-sub">
+            {mobileShots.map((s, i) => (
+              <StoreCard
+                domain={STORES[i]![0]}
+                name={STORES[i]![1]}
+                meta="Home · Mobile"
+                shot={s}
+                href="#"
+              />
+            ))}
+          </div>
+          <div class="ds-grid3 ds-sub">
+            <ThemeCard
+              slug="prestige"
+              name="Prestige"
+              vendor="Maestrooo"
+              priceLabel="$400"
+              storesCount={13}
+              shots={homeShots.slice(0, 3)}
+            />
+            <ThemeCard
+              slug="dawn"
+              name="Dawn"
+              vendor="Shopify"
+              priceLabel="Free"
+              storesCount={20}
+              shots={[homeShots[3]!, mobileShots[3]!]}
+            />
+            <StoreCard domain="aetrio.com" meta="Infinity · not captured" shot={null} href="#" />
+          </div>
+          <div class="ds-grid4 ds-sub">
+            <SectionCard
+              href="#"
+              device="desktop"
+              typeName="Hero"
+              storeLabel="YoungLA"
+              meta="Hero · Prestige"
+              crop={crop('youngla.com', 'YoungLA', 'desktop', stack(HOME_D), 'hero')}
+            />
+            <SectionCard
+              href="#"
+              device="desktop"
+              typeName="Reviews"
+              storeLabel="YoungLA"
+              meta="Reviews · Product page"
+              app={{ name: 'Loox' }}
+              crop={crop('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'reviews')}
+            />
+            <SectionCard
+              href="#"
+              device="mobile"
+              typeName="Featured collection"
+              storeLabel="The Sill"
+              meta="Featured collection · Mobile"
+              crop={crop('thesill.com', 'The Sill', 'mobile', stack(HOME_M), 'featured-collection')}
+            />
+            <SectionCard
+              href="#"
+              device="desktop"
+              typeName="Footer"
+              storeLabel="Koh"
+              meta="Footer · Impact"
+              crop={crop('koh.com', 'Koh', 'desktop', stack(HOME_D), 'footer')}
+            />
+          </div>
+          <div class="ds-split ds-sub">
+            <TeardownCard
+              slug="youngla"
+              title="How YoungLA runs gymwear on Prestige and eleven apps"
+              dek="A stack built for repeat buyers: photo reviews, SMS and a loyalty program."
+              storeLabel="youngla.com"
+              publishedAt="2026-11-17"
+              shot={homeShots[0]}
+              size="lg"
+              isSample
+            />
+            <div class="ds-stack">
+              <p class="eyebrow">Icons and marks</p>
+              <div class="ds-row">
+                <StoreMark domain="youngla.com" name="YoungLA" />
+                <StoreMark domain="thesill.com" name="The Sill" />
+                <StoreMark domain="koh.com" name="Koh" />
+                <AppIcon name="Loox" size={32} />
+                <AppIcon name="Klaviyo" size={32} />
+              </div>
+              <AffiliateCta href="#" label="View on Theme Store" isAffiliate={false} size="md" />
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Motion */}
+        <section class="ds-block" id="motion">
+          <SectionHeader
+            eyebrow="Foundation"
+            title="Motion"
+            description="Quick, physical, optional: 120ms colour, 180ms lift, 320ms reveals. Everything goes to 0 under reduced motion."
+          />
+          <div class="ds-grid3">
+            {[
+              [
+                '.reveal',
+                'Fades + rises 8px once in view. Home and Pro only. Stagger with --reveal-delay.',
+              ],
+              [
+                '.spotlight',
+                'Radial highlight follows the cursor through --mx/--my. Home feature cards.',
+              ],
+              ['[data-indicator]', 'Tabs and Segmented slide one indicator between items.'],
+            ].map(([name, body], i) => (
+              <Card class="reveal" style={`--reveal-delay:${i * 80}ms`}>
+                <code class="ds-code">{name}</code>
+                <p class="muted ds-cardtitle">{body}</p>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------------- Chrome */}
+        <section class="ds-block" id="chrome">
+          <SectionHeader
+            eyebrow="Chrome"
+            title="Header & footer"
+            description="Shared by every page through BaseLayout. Pass wide on gallery pages so the chrome lines up with the 1440 container."
+          />
+          <div class="ds-split">
+            <Card>
+              <Logo />
+              <ul class="ds-notes">
+                <li>
+                  64px (56 mobile), sticky, transparent at the top; blur + hairline once scrolled.
+                </li>
+                <li>
+                  Nav: Stores, Themes, Apps, Sections, Teardowns, Compare. Search trigger opens the
+                  command palette (<Kbd>⌘</Kbd>
+                  <Kbd>K</Kbd>), theme toggle, Sign in, Get Pro.
+                </li>
+                <li>
+                  Below 1024: a menu button opens a full-height sheet with counts, the theme switch
+                  and the Pro CTA.
+                </li>
+              </ul>
+            </Card>
+            <Card>
+              <p class="eyebrow">Footer</p>
+              <ul class="ds-notes">
+                <li>
+                  --bg-subtle with a top hairline; logo, one line, System / Light / Dark switch.
+                </li>
+                <li>Explore · Compare · Product · Company · Legal.</li>
+                <li>
+                  Bottom row: © year + LEGAL_ENTITY, the data date, "Not affiliated with Shopify
+                  Inc."
+                </li>
+              </ul>
+            </Card>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   </div>
 </BaseLayout>
 
 <style>
+  .ds {
+    padding-bottom: var(--space-12);
+  }
+  .ds-themepick {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .ds-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+  }
+  @media (min-width: 1200px) {
+    .ds-layout {
+      grid-template-columns: 184px minmax(0, 1fr);
+      gap: var(--space-12);
+    }
+  }
+  .ds-toc {
+    display: none;
+  }
+  @media (min-width: 1200px) {
+    .ds-toc {
+      display: block;
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-8));
+      align-self: start;
+    }
+    .ds-toc ul {
+      margin-top: var(--space-3);
+      border-left: 1px solid var(--line);
+    }
+    .ds-toc a {
+      display: block;
+      margin-left: -1px;
+      padding: 5px 0 5px var(--space-4);
+      border-left: 1px solid transparent;
+      color: var(--ink-3);
+      font-size: var(--text-sm);
+      transition:
+        color var(--dur-fast) var(--ease-out),
+        border-color var(--dur-fast) var(--ease-out);
+    }
+    .ds-toc a:hover {
+      color: var(--ink);
+      border-left-color: var(--ink-3);
+    }
+  }
+  .ds-main {
+    min-width: 0;
+  }
   .ds-block {
-    padding-block: var(--space-10);
+    scroll-margin-top: calc(var(--header-h) + var(--space-6));
+  }
+  .ds-block + .ds-block {
+    margin-top: var(--space-16);
+    padding-top: var(--space-12);
     border-top: 1px solid var(--line);
   }
-  .row {
+  .ds-sub {
+    margin-top: var(--space-8);
+  }
+  .ds-sub > .eyebrow {
+    margin-bottom: var(--space-3);
+  }
+  .ds-code {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-2);
+  }
+  .ds-canvas {
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--bg-subtle);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  @media (min-width: 1024px) {
+    .ds-canvas {
+      padding: var(--space-8);
+    }
+  }
+  .ds-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
-  .stack {
+  .ds-stack {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+    min-width: 0;
   }
-  .swatches {
+  .ds-canvas.ds-stack {
+    gap: var(--space-6);
+  }
+  .ds-hide-sm {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .ds-hide-sm {
+      display: revert;
+    }
+  }
+
+  /* Themes */
+  .ds-pair {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  @media (min-width: 900px) {
+    .ds-pair {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .ds-themepanel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--bg);
+    box-shadow: 0 0 0 1px var(--line-strong);
+  }
+  .ds-themepanel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ds-surfaces {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .ds-surface {
+    display: flex;
+    align-items: flex-end;
+    height: 64px;
+    padding: 6px;
+    border-radius: var(--radius-control);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .ds-surface code,
+  .ds-inks code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ds-inks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+  }
+  .ds-mini__card {
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-sm),
+      var(--highlight);
+  }
+  .ds-mini__row {
+    display: flex;
+    align-items: center;
     gap: var(--space-3);
   }
-  .swatch span {
-    display: block;
-    height: 56px;
-    border-radius: var(--radius-md);
-    box-shadow: inset 0 0 0 1px rgb(25 24 22 / 0.08);
+  .ds-mini__row > div {
+    flex: 1;
+    min-width: 0;
   }
-  .swatch code {
-    display: block;
-    margin-top: 6px;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
+  .ds-mini__title {
+    font-weight: var(--weight-semibold);
+  }
+  .ds-mini__meta {
     color: var(--ink-3);
+    font-size: var(--text-sm);
   }
-  .type-specimen > * + * {
+  .ds-mini__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
     margin-top: var(--space-4);
   }
-  :global(.ds-tabs) {
+  .ds-tokens {
     margin-top: var(--space-6);
   }
-  .ds-stats-marks {
-    margin-block: var(--space-10) var(--space-12);
-    padding: var(--space-6);
+  .ds-tokens + :global(.source-note) {
+    margin-top: var(--space-3);
   }
-  :global(.ds-fbar) {
-    margin-top: var(--space-10);
+  .ds-swatchcell {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 3px 8px 3px 3px;
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink-2);
+    font-size: var(--text-xs);
+    white-space: nowrap;
   }
-  .ds-index {
-    margin-top: var(--space-6);
+  .ds-chip {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--line-strong);
   }
-  :global(.ds-stats) {
-    margin-block: var(--space-6) var(--space-4);
+
+  /* Type */
+  .ds-typelist {
+    border-top: 1px solid var(--line);
   }
-  :global(.ds-cta) {
-    margin-top: var(--space-5);
-  }
-  .grid-2,
-  .grid-3,
-  .grid-4 {
+  .ds-typerow {
     display: grid;
-    gap: var(--space-8) var(--space-6);
     grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-6);
+    border-bottom: 1px solid var(--line);
   }
-  .grid-2,
-  .grid-4 {
+  @media (min-width: 1024px) {
+    .ds-typerow {
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: var(--space-8);
+      align-items: baseline;
+    }
+  }
+  .ds-typerow__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .ds-typerow p {
+    min-width: 0;
+  }
+
+  /* Shape */
+  .ds-shapes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-5);
+  }
+  .ds-shape {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: var(--text-xs);
+  }
+  .ds-shape__box {
+    height: 72px;
+    margin-bottom: var(--space-2);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .ds-shadows {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-6) var(--space-3);
+    gap: var(--space-5);
+    margin-top: var(--space-8);
+    padding: var(--space-8) var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--bg-subtle);
   }
   @media (min-width: 768px) {
-    .grid-3 {
+    .ds-shadows {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .ds-shadow {
+    display: flex;
+    align-items: flex-end;
+    height: 96px;
+    padding: var(--space-3);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+
+  /* Buttons */
+  .ds-matrix {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--line);
+  }
+  .ds-matrix__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .ds-matrix__label {
+    width: 88px;
+  }
+  .ds-kbd {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  /* Cards */
+  .ds-grid3,
+  .ds-grid4 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+  @media (min-width: 640px) {
+    .ds-grid3,
+    .ds-grid4 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   @media (min-width: 1024px) {
-    .grid-3 {
+    .ds-grid3 {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-    .grid-4 {
+    .ds-grid4 {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--space-8) var(--space-6);
     }
   }
-  .two-col {
+  .ds-cardtitle {
+    margin-top: var(--space-2);
+  }
+  #cards .ds-grid3 {
+    align-items: start;
+  }
+  .ds-cardbody {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--space-4) var(--space-5) var(--space-5);
+  }
+
+  /* Data */
+  .ds-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-weight: var(--weight-medium);
+  }
+  .ds-cell .mono {
+    margin-left: 6px;
+    font-weight: var(--weight-regular);
+  }
+  .ds-split {
     display: grid;
-    gap: var(--space-10);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
   }
   @media (min-width: 1024px) {
-    .two-col {
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-16);
+    .ds-split {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--space-10);
     }
   }
-  .form-demo {
+
+  /* States */
+  .ds-form {
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
-    max-width: 440px;
+    max-width: 480px;
+  }
+  .ds-skel {
+    align-items: stretch;
+    flex-wrap: nowrap;
+  }
+  .ds-skel > :global(.skeleton) {
+    flex: 0 0 120px;
+  }
+  .ds-skel__lines {
+    flex: 1;
+    padding-top: var(--space-2);
+  }
+
+  .ds-notes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    padding-left: 1.1em;
+    list-style: disc;
+    color: var(--ink-2);
+  }
+  .ds-notes li::marker {
+    color: var(--ink-4);
   }
 </style>

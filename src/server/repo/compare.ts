@@ -1,4 +1,12 @@
-/** On-demand comparisons (any valid pair) and alternatives. */
+/**
+ * Comparisons and alternatives.
+ *
+ * Owner decision (draft): /compare pages exist only for the curated popular pairs in the
+ * `comparisons` table (top apps per category, top themes, same-vendor themes; built by the seed
+ * and the future ingest), so the site never renders thin long-tail pair pages. Any other pair,
+ * even of two valid apps or themes, is a 404 (`not_curated`). Alternatives still list every
+ * alternative but say whether a comparison page exists (`compare_available`).
+ */
 import { SOURCE_IDS, type Ctx } from '../api/v1/context.ts';
 import { ApiError, notFound } from '../api/v1/errors.ts';
 import { hrefs } from '../api/v1/hrefs.ts';
@@ -10,37 +18,78 @@ import type {
   MatrixRow,
 } from '../api/v1/schemas/compare.ts';
 import type { ThemeDetail } from '../api/v1/schemas/themes.ts';
-import { alternativeApps, findApp, getAppDetail, hydrateApps } from './apps.ts';
+import {
+  alternativeApps,
+  appDetails,
+  findApp,
+  findApps,
+  hydrateApps,
+  type AppFactsRow,
+} from './apps.ts';
 import { comparisonLinks, comparisonTitle } from './comparisons.ts';
 import { APP_REF_COLS, appRef, jsonIds } from './refs.ts';
 import { storeRefsByIds } from './stores.ts';
-import { findTheme, getThemeDetail, hydrateThemes, similarThemes } from './themes.ts';
+import {
+  findTheme,
+  findThemes,
+  hydrateThemes,
+  similarThemes,
+  themeDetails,
+  type ThemeRow,
+} from './themes.ts';
 
 /** Canonical pair slug: alphabetical order. */
 export const canonicalPair = (a: string, b: string) => (a < b ? `${a}-vs-${b}` : `${b}-vs-${a}`);
 
-type Resolved = { kind: 'app'; a: string; b: string } | { kind: 'theme'; a: string; b: string };
+/** Canonical slugs among `slugs` that are curated comparisons of `kind` (one query). */
+export async function curatedPairs(
+  ctx: Ctx,
+  kind: 'app' | 'theme',
+  slugs: readonly string[],
+): Promise<Set<string>> {
+  if (slugs.length === 0) return new Set();
+  const rows = await ctx.db.all<{ slug: string }>(
+    'SELECT slug FROM comparisons WHERE kind = ? AND slug IN (SELECT value FROM json_each(?))',
+    [kind, jsonIds(slugs)],
+  );
+  return new Set(rows.map((r) => r.slug));
+}
 
-/** Tries every '-vs-' split point (slugs may contain hyphens) and resolves both sides. */
+/** True when the canonical pair has a /compare page (it is a curated popular pair). */
+export async function isCuratedComparison(
+  ctx: Ctx,
+  kind: 'app' | 'theme',
+  canonicalSlug: string,
+): Promise<boolean> {
+  return (await curatedPairs(ctx, kind, [canonicalSlug])).has(canonicalSlug);
+}
+
+type Resolved =
+  { kind: 'app'; a: AppFactsRow; b: AppFactsRow } | { kind: 'theme'; a: ThemeRow; b: ThemeRow };
+
+/**
+ * Tries every '-vs-' split point (slugs may contain hyphens) and resolves both sides: two
+ * queries per split point (apps, themes), and the rows feed the details directly.
+ */
 async function resolvePair(ctx: Ctx, pair: string): Promise<Resolved> {
   const parts = pair.split('-vs-');
   let mixed = false;
   for (let i = 1; i < parts.length; i++) {
     const left = parts.slice(0, i).join('-vs-');
     const right = parts.slice(i).join('-vs-');
-    const [appA, appB, themeA, themeB] = await Promise.all([
-      findApp(ctx, left),
-      findApp(ctx, right),
-      findTheme(ctx, left),
-      findTheme(ctx, right),
+    const [apps, themes] = await Promise.all([
+      findApps(ctx, [left, right]),
+      findThemes(ctx, [left, right]),
     ]);
+    const [appA, appB] = [apps.get(left), apps.get(right)];
+    const [themeA, themeB] = [themes.get(left), themes.get(right)];
     if (appA && appB) {
       if (appA.id === appB.id) throw new ApiError('bad_request', 'Pick two different apps');
-      return { kind: 'app', a: appA.app_slug, b: appB.app_slug };
+      return { kind: 'app', a: appA, b: appB };
     }
     if (themeA && themeB) {
       if (themeA.id === themeB.id) throw new ApiError('bad_request', 'Pick two different themes');
-      return { kind: 'theme', a: themeA.slug, b: themeB.slug };
+      return { kind: 'theme', a: themeA, b: themeB };
     }
     if ((appA && themeB) || (themeA && appB)) mixed = true;
   }
@@ -165,9 +214,16 @@ function themeMatrix(ctx: Ctx, a: ThemeDetail, b: ThemeDetail): MatrixRow[] {
 // ---------------------------------------------------------------------------------------------
 export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonDetail> {
   const resolved = await resolvePair(ctx, pair);
-  const canonical = canonicalPair(resolved.a, resolved.b);
-  const [first, second] =
-    resolved.a < resolved.b ? [resolved.a, resolved.b] : [resolved.b, resolved.a];
+  const slugOf = (side: 'a' | 'b') =>
+    resolved.kind === 'app' ? resolved[side].app_slug : resolved[side].slug;
+  const canonical = canonicalPair(slugOf('a'), slugOf('b'));
+  if (!(await isCuratedComparison(ctx, resolved.kind, canonical))) {
+    throw new ApiError(
+      'not_found',
+      `No comparison page for '${canonical}': only curated popular pairs have one`,
+      { details: [{ path: 'pair', message: 'not_curated' }] },
+    );
+  }
   const base = {
     kind: resolved.kind,
     slug: pair,
@@ -178,20 +234,23 @@ export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonD
   const opts = { storesLimit: 12, sectionsLimit: 8 };
 
   if (resolved.kind === 'app') {
-    const [a, b] = await Promise.all([
-      getAppDetail(ctx, first, opts),
-      getAppDetail(ctx, second, opts),
+    // Both details in one set of queries, first side alphabetically first.
+    const sides = [resolved.a, resolved.b].sort((x, y) => (x.app_slug < y.app_slug ? -1 : 1));
+    const [first, second] = [sides[0]!.app_slug, sides[1]!.app_slug];
+    const [[a, b], shared, related] = await Promise.all([
+      appDetails(ctx, sides, opts),
+      ctx.db.all<{ store_id: number }>(
+        `SELECT x.store_id FROM store_apps x
+         JOIN store_apps y ON y.store_id = x.store_id AND y.removed_at IS NULL
+         JOIN stores s ON s.id = x.store_id AND s.status = 'active'
+         WHERE x.app_id = (SELECT id FROM apps WHERE slug = ?) AND y.app_id = (SELECT id FROM apps WHERE slug = ?)
+           AND x.removed_at IS NULL
+         ORDER BY s.list_position`,
+        [first, second],
+      ),
+      relatedLinks(ctx, 'app', [first, second], canonical),
     ]);
-    const shared = await ctx.db.all<{ store_id: number }>(
-      `SELECT x.store_id FROM store_apps x
-       JOIN store_apps y ON y.store_id = x.store_id AND y.removed_at IS NULL
-       JOIN stores s ON s.id = x.store_id AND s.status = 'active'
-       WHERE x.app_id = (SELECT id FROM apps WHERE slug = ?) AND y.app_id = (SELECT id FROM apps WHERE slug = ?)
-         AND x.removed_at IS NULL
-       ORDER BY s.list_position`,
-      [first, second],
-    );
-    const related = await relatedLinks(ctx, 'app', [a.app.slug, b.app.slug], canonical);
+    if (!a || !b) throw notFound(`Comparison '${pair}'`);
     return {
       ...base,
       title: comparisonTitle(a.app.short_name, b.app.short_name),
@@ -210,11 +269,10 @@ export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonD
     };
   }
 
-  const [a, b] = await Promise.all([
-    getThemeDetail(ctx, first, opts),
-    getThemeDetail(ctx, second, opts),
-  ]);
-  const [shared, sharedApps] = await Promise.all([
+  const sides = [resolved.a, resolved.b].sort((x, y) => (x.slug < y.slug ? -1 : 1));
+  const [first, second] = [sides[0]!.slug, sides[1]!.slug];
+  const [[a, b], shared, sharedApps, related] = await Promise.all([
+    themeDetails(ctx, sides, opts),
     // Stores that ran both themes at some point (detection history).
     ctx.db.all<{ store_id: number }>(
       `SELECT DISTINCT x.store_id FROM store_themes x
@@ -233,7 +291,9 @@ export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonD
        ORDER BY MIN(ua.store_count, ub.store_count) DESC, a.slug LIMIT 10`,
       [first, second],
     ),
+    relatedLinks(ctx, 'theme', [first, second], canonical),
   ]);
+  if (!a || !b) throw notFound(`Comparison '${pair}'`);
   return {
     ...base,
     title: comparisonTitle(a.theme.name, b.theme.name),
@@ -252,7 +312,7 @@ export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonD
       b_stores: r.b_stores,
     })),
     matrix: themeMatrix(ctx, a, b),
-    related: await relatedLinks(ctx, 'theme', [a.theme.slug, b.theme.slug], canonical),
+    related,
   };
 }
 
@@ -278,7 +338,14 @@ export async function getAlternatives(
       alternativeApps(ctx, app, 12),
       comparisonLinks(ctx, { kind: 'app', entityId: app.id, limit: 12 }),
     ]);
-    const shared = await coInstallCounts(ctx, app.id, alts);
+    const [shared, curated] = await Promise.all([
+      coInstallCounts(ctx, app.id, alts),
+      curatedPairs(
+        ctx,
+        'app',
+        alts.map((alt) => canonicalPair(app.app_slug, alt.slug)),
+      ),
+    ]);
     return {
       kind: 'app',
       slug: app.app_slug,
@@ -291,6 +358,7 @@ export async function getAlternatives(
         theme: null,
         shared_stores: shared.get(alt.slug) ?? 0,
         compare_href: hrefs.compare(canonicalPair(app.app_slug, alt.slug)),
+        compare_available: curated.has(canonicalPair(app.app_slug, alt.slug)),
         reasons: ['same-category'],
       })),
       comparisons: links,
@@ -303,6 +371,11 @@ export async function getAlternatives(
     similarThemes(ctx, theme, 12),
     comparisonLinks(ctx, { kind: 'theme', entityId: theme.id, limit: 12 }),
   ]);
+  const curated = await curatedPairs(
+    ctx,
+    'theme',
+    similar.map((x) => canonicalPair(theme.slug, x.theme.slug)),
+  );
   return {
     kind: 'theme',
     slug: theme.slug,
@@ -315,6 +388,7 @@ export async function getAlternatives(
       theme: s.theme,
       shared_stores: 0,
       compare_href: hrefs.compare(canonicalPair(theme.slug, s.theme.slug)),
+      compare_available: curated.has(canonicalPair(theme.slug, s.theme.slug)),
       reasons: s.reasons,
     })),
     comparisons: links,

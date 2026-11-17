@@ -6,6 +6,7 @@
  * rebuild the derived tables afterwards (src/server/repo/maintenance.ts).
  */
 import type { Db, Statement } from '../db/types.ts';
+import { captureBlockStatement, isCaptureBlocked } from '../repo/capture.ts';
 import { rebuildDerived } from '../repo/maintenance.ts';
 import { normalizeDomain } from '../lib/slug.ts';
 import { auditStatement, diffFields } from './audit.ts';
@@ -142,6 +143,10 @@ export async function queueJob(
   ]);
   if (tomb || store?.status === 'opted_out') return fail('opted_out');
   if (!store && input.kind !== 'detect') return fail('unknown_store');
+  // A removal request of scope 'screenshots' blocks captures for good (detection still runs).
+  if (input.kind === 'capture' && (await isCaptureBlocked(db, domain))) {
+    return fail('capture_blocked');
+  }
 
   const open = await db.first<{ id: number }>(
     `SELECT id FROM scan_jobs WHERE domain = ? AND kind = ? AND status IN ('queued', 'running') LIMIT 1`,
@@ -328,11 +333,15 @@ async function deleteStoreMedia(
 
 /**
  * Approve a removal request.
- *   scope 'store'       → store status opted_out (+ opted_out_at), tombstone, unpublish its
- *                         teardowns, cancel queued jobs, retire screenshots/sections, delete R2.
- *   scope 'screenshots' → retire screenshots/sections and delete R2; the store stays listed.
+ *   scope 'store'       → store status opted_out (+ opted_out_at), tombstone, capture block,
+ *                         unpublish its teardowns, cancel queued jobs, retire
+ *                         screenshots/sections, delete R2.
+ *   scope 'screenshots' → capture block (no future captures, queued capture jobs cancelled),
+ *                         retire screenshots/sections and delete R2; the store stays listed.
  *   scope 'details'     → the admin edits the store by hand; the request is marked done.
  * The request is 'approved' while media deletion is outstanding and 'done' once it succeeded.
+ * The capture block is written in the same batch as the approval, so it holds even if the media
+ * deletion fails, and it outlives the request record (see src/server/repo/capture.ts).
  */
 export async function approveRemoval(
   ctx: ActionContext,
@@ -375,6 +384,21 @@ export async function approveRemoval(
       },
     );
   }
+  if (req.scope === 'store' || req.scope === 'screenshots') {
+    statements.push(
+      captureBlockStatement(
+        { domain, scope: req.scope, removalRequestId: req.id, reference: req.reference },
+        now,
+      ),
+    );
+    if (req.scope === 'screenshots') {
+      statements.push({
+        sql: `UPDATE scan_jobs SET status = 'cancelled', finished_at = ?, error = 'Captures blocked by a removal request'
+              WHERE (domain = ? OR store_id = ?) AND kind = 'capture' AND status = 'queued'`,
+        params: [ts, domain, store?.id ?? -1],
+      });
+    }
+  }
   if ((req.scope === 'store' || req.scope === 'screenshots') && store) {
     statements.push(
       { sql: 'UPDATE screenshots SET is_current = 0 WHERE store_id = ?', params: [store.id] },
@@ -397,6 +421,7 @@ export async function approveRemoval(
           domain,
           scope: req.scope,
           store_found: !!store,
+          capture_blocked: req.scope !== 'details',
           note: input.note,
         },
       },

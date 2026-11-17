@@ -1,18 +1,42 @@
 ---
+/**
+ * Small status / meta label. 22px pill, 12px/520.
+ *
+ *   <Badge>Prestige</Badge>  <Badge tone="accent">New</Badge>  <Badge tone="positive" dot>Live</Badge>
+ *
+ * Tones: neutral (surface-2), outline, accent (accent-soft + accent-text), positive, caution,
+ * critical, inverse (ink fill; v1). `dot` adds a leading status dot in the tone colour.
+ * `size="sm"` (18px) is for dense tables and rows.
+ */
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
 
-type Tone = 'neutral' | 'outline' | 'accent' | 'positive' | 'caution' | 'inverse';
+type Tone = 'neutral' | 'outline' | 'accent' | 'positive' | 'caution' | 'critical' | 'inverse';
 interface Props {
   tone?: Tone;
   icon?: IconName;
+  dot?: boolean;
+  size?: 'sm' | 'md';
+  mono?: boolean;
   title?: string;
   class?: string;
 }
-const { tone = 'neutral', icon, title, class: className } = Astro.props;
+const {
+  tone = 'neutral',
+  icon,
+  dot = false,
+  size = 'md',
+  mono = false,
+  title,
+  class: className,
+} = Astro.props;
 ---
 
-<span class:list={['badge', `badge--${tone}`, className]} title={title}>
+<span
+  class:list={['badge', `badge--${tone}`, `badge--${size}`, { 'badge--mono': mono }, className]}
+  title={title}
+>
+  {dot && <span class="badge__dot" aria-hidden="true" />}
   {icon && <Icon name={icon} size={12} />}
   <slot />
 </span>
@@ -22,19 +46,37 @@ const { tone = 'neutral', icon, title, class: className } = Astro.props;
     display: inline-flex;
     flex: none;
     align-items: center;
-    gap: 4px;
-    height: 20px;
-    padding: 0 7px;
+    gap: 5px;
+    height: 22px;
+    padding: 0 8px;
     border-radius: var(--radius-pill);
-    font-size: var(--text-2xs);
+    font-size: var(--text-xs);
     font-weight: var(--weight-medium);
     line-height: 1;
-    letter-spacing: 0.01em;
     white-space: nowrap;
+    vertical-align: middle;
+  }
+  .badge--sm {
+    height: 18px;
+    padding: 0 6px;
+    gap: 4px;
+    font-size: var(--text-2xs);
+  }
+  .badge--mono {
+    font-family: var(--font-mono);
+    font-weight: 450;
+    letter-spacing: 0.02em;
+  }
+  .badge__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
   }
   .badge--neutral {
-    background: var(--fill);
+    background: var(--surface-2);
     color: var(--ink-2);
+    box-shadow: inset 0 0 0 1px var(--line);
   }
   .badge--outline {
     box-shadow: inset 0 0 0 1px var(--line-strong);
@@ -52,8 +94,12 @@ const { tone = 'neutral', icon, title, class: className } = Astro.props;
     background: var(--caution-soft);
     color: var(--caution);
   }
+  .badge--critical {
+    background: var(--critical-soft);
+    color: var(--critical);
+  }
   .badge--inverse {
-    background: var(--inverse);
-    color: var(--ink-inverse);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
   }
 </style>

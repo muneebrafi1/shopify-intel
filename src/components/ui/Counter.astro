@@ -1,0 +1,99 @@
+---
+/**
+ * Live mono counter line (Stripe pattern), above or under a hero headline:
+ *   ● 930 stores scanned · 1,294 sections tagged · scanned 17 Nov 2026
+ * The dot is the one place the accent appears as a fill outside CTAs ("live"). Real numbers
+ * only, each with its source on the page.
+ */
+interface Props {
+  items: { value: number | string; label: string }[];
+  /** Trailing date, e.g. "17 Nov 2026" (rendered as "updated <date>"). */
+  asOf?: string;
+  asOfLabel?: string;
+  /** Pulse the live dot (off under reduced motion). */
+  live?: boolean;
+  class?: string;
+}
+const { items, asOf, asOfLabel = 'data', live = true, class: className } = Astro.props;
+const fmt = (v: number | string) => (typeof v === 'number' ? v.toLocaleString('en-US') : v);
+---
+
+<p class:list={['counter', { 'counter--live': live }, className]}>
+  <span class="counter__dot" aria-hidden="true"></span>
+  {items.map((it, i) => (
+    <span class="counter__item">
+      {i > 0 && (
+        <span class="counter__sep" aria-hidden="true">
+          ·
+        </span>
+      )}
+      <span class="counter__value num">{fmt(it.value)}</span> {it.label}
+    </span>
+  ))}
+  {asOf && (
+    <span class="counter__item">
+      <span class="counter__sep" aria-hidden="true">
+        ·
+      </span>
+      {asOfLabel} <span class="num">{asOf}</span>
+    </span>
+  )}
+</p>
+
+<style>
+  .counter {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: inherit;
+    gap: 2px 0;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.01em;
+    line-height: 1.6;
+  }
+  .counter__dot {
+    flex: none;
+    position: relative;
+    width: 6px;
+    height: 6px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .counter--live .counter__dot::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .counter--live .counter__dot::after {
+      animation: counter-pulse 2.4s var(--ease-out) infinite;
+    }
+  }
+  @keyframes counter-pulse {
+    0% {
+      opacity: 0.6;
+      transform: scale(0.6);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+  }
+  .counter__item {
+    white-space: nowrap;
+  }
+  .counter__sep {
+    margin-inline: 8px;
+    color: var(--ink-4);
+  }
+  .counter__value {
+    color: var(--ink);
+  }
+</style>
