@@ -1,0 +1,154 @@
+---
+/**
+ * One app's plans as spec rows (name left, price right), with the first few features of each
+ * plan and the labelled outbound CTA. Plans come from the App Store listing.
+ */
+import AffiliateCta from '~/components/domain/AffiliateCta.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import type { AppFacts } from '~/server/api/v1/types';
+
+interface Props {
+  app: AppFacts;
+}
+const { app } = Astro.props;
+const FEATURES = 3;
+const price = (p: AppFacts['plans'][number]) =>
+  p.price_cents === 0
+    ? 'Free'
+    : `${p.price_label}${p.period ? ` / ${p.period === 'month' ? 'mo' : p.period === 'year' ? 'yr' : p.period}` : ''}`;
+---
+
+<div class="plans">
+  <p class="plans__who">
+    <AppIcon src={app.icon_url} name={app.short_name} size={28} />
+    <span class="plans__name">{app.short_name}</span>
+    <MonoLabel
+      bullet={false}
+      class="plans__n"
+    >{`${app.plans.length} ${app.plans.length === 1 ? 'plan' : 'plans'}`}</MonoLabel>
+  </p>
+  {app.plans.length > 0 ? (
+    <ol class="plans__list">
+      {app.plans.map((p) => (
+        <li class="plan">
+          <div class="plan__row">
+            <span class="plan__name">{p.name}</span>
+            <span class="plan__price num">{price(p)}</span>
+          </div>
+          {p.trial_days ? <p class="plan__trial mono">{p.trial_days}-day free trial</p> : null}
+          {p.features.length > 0 && (
+            <ul class="plan__features">
+              {p.features.slice(0, FEATURES).map((f) => (
+                <li>{f}</li>
+              ))}
+              {p.features.length > FEATURES && (
+                <li class="plan__more">+{p.features.length - FEATURES} more on the listing</li>
+              )}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <p class="plans__none">{app.pricing.label ?? 'No plans listed on the App Store.'}</p>
+  )}
+  {app.cta && (
+    <AffiliateCta
+      href={app.cta.href}
+      label={app.cta.label}
+      isAffiliate={app.cta.is_affiliate}
+      size="md"
+      class="plans__cta"
+    />
+  )}
+</div>
+
+<style>
+  .plans {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .plans__who {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--ink);
+  }
+  .plans__name {
+    min-width: 0;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .plans :global(.plans__n) {
+    margin-left: auto;
+    flex: none;
+  }
+  .plan {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+  .plan__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .plan__name {
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+  }
+  .plan__price {
+    flex: none;
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
+    letter-spacing: -0.01em;
+  }
+  .plan__trial {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .plan__features {
+    display: grid;
+    gap: 3px;
+    margin-top: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+  }
+  .plan__features li {
+    position: relative;
+    padding-left: 14px;
+  }
+  .plan__features li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 5px;
+    height: 1px;
+    background: var(--ink-4);
+  }
+  .plan__more {
+    color: var(--ink-3);
+    font-style: italic;
+  }
+  .plans__none {
+    padding-block: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    border-bottom: 1px solid var(--line);
+  }
+  .plans :global(.plans__cta) {
+    margin-top: var(--space-6);
+  }
+</style>

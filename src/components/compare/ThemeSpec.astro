@@ -1,0 +1,126 @@
+---
+/**
+ * One theme's price and the versions we see in the wild, as spec rows, with the labelled
+ * outbound CTA. Mirrors PlanList so the two halves of the diptych line up.
+ */
+import AffiliateCta from '~/components/domain/AffiliateCta.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import { pluralStores } from './compare';
+import type { ThemeDetail } from '~/server/api/v1/types';
+
+interface Props {
+  detail: ThemeDetail;
+}
+const { detail } = Astro.props;
+const t = detail.theme;
+const versions = detail.versions
+  .slice()
+  .sort((x, y) => (y.version ?? '').localeCompare(x.version ?? '', 'en', { numeric: true }));
+const MAX = 6;
+---
+
+<div class="tspec">
+  <p class="tspec__who">
+    <span class="tspec__name display">{t.name}</span>
+    <MonoLabel bullet={false} class="tspec__vendor">
+      {t.vendor ?? 'Vendor not listed'}
+    </MonoLabel>
+  </p>
+  <dl class="tspec__rows">
+    <div class="tspec__row">
+      <dt>Price</dt>
+      <dd class="tspec__price">{t.price.label ?? 'Not listed'}</dd>
+    </div>
+    <div class="tspec__row">
+      <dt>Sold on</dt>
+      <dd>{t.marketplace ?? '—'}</dd>
+    </div>
+    {detail.presets.length > 0 && (
+      <div class="tspec__row">
+        <dt>Presets</dt>
+        <dd>{detail.presets.map((p) => p.name).join(', ')}</dd>
+      </div>
+    )}
+  </dl>
+  <MonoLabel as="p" class="tspec__label">
+    Versions seen · {versions.length}
+  </MonoLabel>
+  <ol class="tspec__versions">
+    {versions.slice(0, MAX).map((v) => (
+      <li>
+        <span class="mono">{v.version ?? 'Version not exposed'}</span>
+        <span class="num">{pluralStores(v.stores)}</span>
+      </li>
+    ))}
+    {versions.length > MAX && <li class="tspec__more">+{versions.length - MAX} more</li>}
+  </ol>
+  {t.cta && (
+    <AffiliateCta
+      href={t.cta.href}
+      label={t.cta.label}
+      isAffiliate={t.cta.is_affiliate}
+      size="md"
+      class="tspec__cta"
+    />
+  )}
+</div>
+
+<style>
+  .tspec {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .tspec__who {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--ink);
+  }
+  .tspec__name {
+    min-width: 0;
+    font-size: var(--text-3xl);
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tspec :global(.tspec__vendor) {
+    flex: none;
+  }
+  .tspec__row,
+  .tspec__versions li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .tspec__row dt {
+    color: var(--ink-3);
+  }
+  .tspec__row dd {
+    text-align: right;
+  }
+  .tspec__price {
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
+  }
+  .tspec :global(.tspec__label) {
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-1);
+  }
+  .tspec__versions li span:last-child {
+    color: var(--ink-3);
+  }
+  .tspec__more {
+    color: var(--ink-3);
+  }
+  .tspec :global(.tspec__cta) {
+    margin-top: var(--space-6);
+  }
+</style>
