@@ -1,0 +1,122 @@
+---
+/**
+ * Apps most used by stores on a theme, ranked. A theme-page variant of the shared AppRow:
+ * that row carries App Store rating and price columns, which this response doesn't include
+ * (and an empty "No rating yet" would be wrong). Here the number is the share of the theme's
+ * stores running the app, drawn as a hairline bar.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import { formatCount } from '~/lib/format';
+import type { AppRef } from '~/server/api/v1/types';
+
+interface Props {
+  apps: { app: AppRef; stores: number; share: number }[];
+  /** Stores on the theme (the share's denominator), for the accessible label. */
+  of: number;
+  class?: string;
+}
+const { apps, of, class: className } = Astro.props;
+---
+
+<ol class:list={['tapps', className]}>
+  {apps.map((a, i) => (
+    <li class="tapps__row">
+      <a href={a.app.href} class="tapps__link">
+        <span class="tapps__rank">{String(i + 1).padStart(2, '0')}</span>
+        <AppIcon src={a.app.icon_url} name={a.app.short_name} size={28} />
+        <span class="tapps__main">
+          <span class="tapps__name">{a.app.short_name}</span>
+          {a.app.category && <span class="tapps__cat">{a.app.category.name}</span>}
+        </span>
+        <span class="tapps__usage" aria-label={`${a.stores} of ${of} stores`}>
+          <span class="tapps__track" aria-hidden="true">
+            <span class="tapps__bar" style={`--w:${Math.round(a.share * 100)}%`} />
+          </span>
+          <span class="tapps__n num">{formatCount(a.stores)}</span>
+          <span class="tapps__pct num">{Math.round(a.share * 100)}%</span>
+        </span>
+      </a>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .tapps {
+    border-top: 1px solid var(--line);
+  }
+  .tapps__row {
+    border-bottom: 1px solid var(--line);
+  }
+  .tapps__link {
+    display: grid;
+    grid-template-columns: 1.75rem 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 10px 0;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .tapps__link:hover {
+    background: color-mix(in srgb, var(--fill) 70%, transparent);
+  }
+  .tapps__rank {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .tapps__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .tapps__name {
+    font-weight: var(--weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tapps__cat {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tapps__usage {
+    display: grid;
+    grid-template-columns: 72px 2.25rem 2.75rem;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .tapps__track {
+    position: relative;
+    height: 1px;
+    background: var(--line-strong);
+  }
+  .tapps__bar {
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: var(--w);
+    height: 3px;
+    background: var(--ink);
+  }
+  .tapps__n {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .tapps__pct {
+    text-align: right;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  @media (max-width: 479px) {
+    .tapps__usage {
+      grid-template-columns: 2rem 2.5rem;
+    }
+    .tapps__track {
+      display: none;
+    }
+  }
+</style>
