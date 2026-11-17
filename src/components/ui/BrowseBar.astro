@@ -340,11 +340,18 @@ const hidden = Object.entries(search?.hidden ?? {}).filter(
   .fbar {
     padding-block: var(--space-3);
   }
+  /* Sticky only where it is one row (≥1024). Below that the bar is three rows (search, pills,
+     filters) and would cover a quarter of a phone screen, so it scrolls away with the page. */
   .fbar--sticky {
-    position: sticky;
-    top: var(--header-h);
+    position: relative;
     z-index: var(--z-sticky);
     background: var(--bg);
+  }
+  @media (min-width: 1024px) {
+    .fbar--sticky {
+      position: sticky;
+      top: var(--header-h);
+    }
   }
   /* Full-bleed background + hairline once stuck. Drawn as box-shadows on a pseudo-element the
      size of the bar (shadows never cause overflow) and clipped to the bar's height, so the
@@ -625,8 +632,9 @@ const hidden = Object.entries(search?.hidden ?? {}).filter(
     .fbar__row {
       flex-wrap: nowrap;
     }
+    /* A long pill row scrolls; it must never squeeze the search field down to an icon. */
     .fbar__search {
-      flex: 0 1 280px;
+      flex: 0 0 clamp(200px, 20vw, 280px);
     }
     .fbar__pills {
       flex: 0 1 auto;

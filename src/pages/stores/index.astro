@@ -406,21 +406,6 @@ const title = hasFilters
     display: flex;
     align-items: center;
   }
-  /* Below 1024 the bar is three rows (search, pills, filters): sticking it would cover a
-     quarter of a phone screen, so it scrolls away with the header. */
-  @media (max-width: 1023px) {
-    .stores :global(.stores__bar.fbar--sticky) {
-      position: relative;
-      top: auto;
-    }
-  }
-  /* Long pill rows must not squeeze the search field to an icon. */
-  @media (min-width: 1024px) {
-    .stores :global(.stores__bar .fbar__search) {
-      flex-shrink: 0;
-      width: 240px;
-    }
-  }
   .stores__results {
     margin-top: var(--space-6);
   }
