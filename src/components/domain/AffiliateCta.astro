@@ -1,0 +1,63 @@
+---
+/**
+ * Outbound call to action for a theme or app. When the link is an affiliate link it is
+ * labelled right under the button (never hidden in a footnote) and marked rel="sponsored".
+ * URLs come from data (`/go/<id>` redirects); never put affiliate URLs in components.
+ */
+import Button from '~/components/ui/Button.astro';
+
+interface Props {
+  href: string;
+  label: string;
+  isAffiliate: boolean;
+  size?: 'md' | 'lg';
+  full?: boolean;
+  class?: string;
+}
+const { href, label, isAffiliate, size = 'lg', full = false, class: className } = Astro.props;
+---
+
+<div class:list={['cta', className]}>
+  <Button
+    href={href}
+    variant="primary"
+    size={size}
+    iconRight="arrow-up-right"
+    external
+    rel={isAffiliate ? 'sponsored' : undefined}
+    full={full}
+  >
+    {label}
+  </Button>
+  <p class="cta__note">
+    {isAffiliate ? (
+      <>
+        Affiliate link. We may earn a commission; it never changes our data.{' '}
+        <a href="/affiliate-disclosure">Disclosure</a>
+      </>
+    ) : (
+      <>Official listing. No affiliate relationship.</>
+    )}
+  </p>
+</div>
+
+<style>
+  .cta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: flex-start;
+  }
+  .cta__note {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.4;
+    max-width: 320px;
+  }
+  .cta__note a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+</style>

@@ -1,0 +1,161 @@
+---
+/**
+ * One catalogue row inside <IndexList>: N° · title (+ subtitle) · cells. On small screens only
+ * the number, title and cells marked `mobile` are shown.
+ */
+import { thumbCropHeight, thumbUrl } from '~/lib/media';
+import type { Device } from '~/lib/taxonomy';
+
+export interface IndexCell {
+  value: string;
+  mono?: boolean;
+  /** Editorial parenthetical in the serif, e.g. "(13 stores)". */
+  serif?: boolean;
+  muted?: boolean;
+  /** Keep this cell visible on small screens (shown at the end of the row). */
+  mobile?: boolean;
+  href?: string;
+}
+
+interface Props {
+  n: number;
+  href: string;
+  title: string;
+  subtitle?: string;
+  cells?: IndexCell[];
+  preview?: { src: string; width: number; height: number; device?: Device } | null;
+  class?: string;
+}
+const { n, href, title, subtitle, cells = [], preview, class: className } = Astro.props;
+const device = preview?.device ?? 'desktop';
+const previewSrc = preview
+  ? thumbUrl(preview.src, {
+      cropHeight: thumbCropHeight(preview.width, preview.height, device),
+      width: 600,
+    })
+  : undefined;
+const num = `N°${String(n).padStart(3, '0')}`;
+---
+
+<li
+  class:list={['irow', className]}
+  data-preview={previewSrc}
+  data-preview-device={preview ? device : undefined}
+>
+  <a href={href} class="irow__link">
+    <span class="irow__n">{num}</span>
+    <span class="irow__title">
+      <span class="irow__name">{title}</span>
+      {subtitle && <span class="irow__sub">{subtitle}</span>}
+    </span>
+    {cells.map((c, i) => (
+      <span
+        class:list={[
+          'irow__cell',
+          {
+            'irow__cell--mono': c.mono,
+            'irow__cell--serif': c.serif,
+            'irow__cell--muted': c.muted,
+            'irow__cell--mobile': c.mobile,
+            'irow__cell--end': i === cells.length - 1,
+          },
+        ]}
+      >
+        {c.value}
+      </span>
+    ))}
+  </a>
+</li>
+
+<style>
+  .irow {
+    border-bottom: 1px solid var(--line);
+  }
+  .irow__link {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: 14px 0;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      padding var(--dur-base) var(--ease-out);
+  }
+  .irow__link:hover {
+    background: color-mix(in srgb, var(--fill) 70%, transparent);
+  }
+  .irow__n {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+  }
+  .irow__title {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .irow__name {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-snug);
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .irow__sub {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .irow__cell {
+    display: none;
+    min-width: 0;
+    color: var(--ink);
+    font-size: var(--text-base);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .irow__cell--mobile {
+    display: block;
+    text-align: right;
+  }
+  .irow__cell--mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.02em;
+  }
+  .irow__cell--serif {
+    font-family: var(--font-serif);
+    font-size: var(--text-md);
+    font-style: italic;
+    color: var(--ink-2);
+  }
+  .irow__cell--muted {
+    color: var(--ink-3);
+  }
+  @media (min-width: 900px) {
+    .irow__link {
+      grid-template-columns: var(--index-cols);
+      gap: var(--space-4);
+      padding: 16px 0;
+    }
+    .irow__link:hover {
+      padding-left: var(--space-2);
+    }
+    .irow__cell {
+      display: block;
+      text-align: left;
+    }
+    .irow__cell--end {
+      text-align: right;
+    }
+    .irow__sub {
+      display: none;
+    }
+  }
+</style>

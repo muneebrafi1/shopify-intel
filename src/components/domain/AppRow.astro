@@ -1,0 +1,182 @@
+---
+/**
+ * Dense, ranked app row (apps index, alternatives, co-installs). Numbers are right-aligned in
+ * tabular figures so columns scan. Use inside <AppTable> for the column header.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Badge from '~/components/ui/Badge.astro';
+import Rating from '~/components/ui/Rating.astro';
+
+interface Props {
+  slug: string;
+  name: string;
+  iconUrl?: string | null;
+  developer?: string | null;
+  category?: string | null;
+  rating?: number | null;
+  reviews?: number | null;
+  priceLabel?: string | null;
+  /** Stores in our scan running it. */
+  storesCount?: number | null;
+  /** Share of scanned stores (percentage, 0–100). */
+  sharePct?: number | null;
+  rank?: number;
+  builtForShopify?: boolean | null;
+  href?: string;
+  ratingSource?: string;
+  class?: string;
+}
+const {
+  slug,
+  name,
+  iconUrl,
+  developer,
+  category,
+  rating,
+  reviews,
+  priceLabel,
+  storesCount,
+  sharePct,
+  rank,
+  builtForShopify,
+  href = `/apps/${slug}`,
+  ratingSource,
+  class: className,
+} = Astro.props;
+// Strip the App Store suffix after a colon/dash for a calmer list ("Klaviyo: Email…" → "Klaviyo").
+const shortName = name.split(/\s[:‑–—-]\s|:\s/)[0] ?? name;
+---
+
+<li class:list={['app-row', className]}>
+  <a href={href} class="app-row__link">
+    {typeof rank === 'number' && <span class="app-row__rank num">{rank}</span>}
+    <AppIcon src={iconUrl} name={name} size={36} />
+    <span class="app-row__main">
+      <span class="app-row__name">
+        {shortName}
+        {builtForShopify && (
+          <Badge tone="outline" title="Built for Shopify badge on the App Store">
+            BFS
+          </Badge>
+        )}
+      </span>
+      <span class="app-row__sub">{[developer, category].filter(Boolean).join(' · ')}</span>
+    </span>
+    <span class="app-row__rating">
+      <Rating rating={rating} reviews={reviews} size="sm" source={ratingSource} />
+    </span>
+    <span class="app-row__price">{priceLabel ?? '—'}</span>
+    <span class="app-row__usage num">
+      {typeof storesCount === 'number' ? (
+        <>
+          <span class="app-row__count">{storesCount.toLocaleString('en-US')}</span>
+          {typeof sharePct === 'number' && (
+            <span class="app-row__share">{sharePct.toFixed(1)}%</span>
+          )}
+        </>
+      ) : (
+        '—'
+      )}
+    </span>
+  </a>
+</li>
+
+<style>
+  .app-row {
+    border-bottom: 1px solid var(--line);
+  }
+  .app-row__link {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'icon main usage'
+      'icon meta usage';
+    align-items: center;
+    column-gap: var(--space-3);
+    padding: var(--space-3) var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    border-radius: var(--radius-md);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .app-row__link:hover {
+    background: var(--fill);
+  }
+  .app-row__rank {
+    display: none;
+  }
+  .app-row__link > :global(.app-icon) {
+    grid-area: icon;
+  }
+  .app-row__main {
+    grid-area: main;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .app-row__name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .app-row__sub {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .app-row__rating {
+    grid-area: meta;
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+  }
+  .app-row__price {
+    display: none;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .app-row__usage {
+    grid-area: usage;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .app-row__count {
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+  }
+  .app-row__share {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  @media (min-width: 768px) {
+    .app-row__link {
+      grid-template-columns: 28px 36px minmax(0, 1fr) 150px 110px 96px;
+      grid-template-areas: none;
+      column-gap: var(--space-4);
+    }
+    .app-row__link > :global(.app-icon),
+    .app-row__main,
+    .app-row__rating,
+    .app-row__usage {
+      grid-area: auto;
+    }
+    .app-row__rank {
+      display: block;
+      color: var(--ink-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      text-align: right;
+    }
+    .app-row__price {
+      display: block;
+    }
+  }
+</style>

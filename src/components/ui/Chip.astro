@@ -1,0 +1,99 @@
+---
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+interface Props {
+  /** Links are the default: filters are URL state, so they work without JS and can be shared. */
+  href?: string;
+  selected?: boolean;
+  count?: number | null;
+  icon?: IconName;
+  /** Show a remove affordance (for active-filter summaries). */
+  removable?: boolean;
+  size?: 'sm' | 'md';
+  class?: string;
+  [key: `data-${string}`]: string | undefined;
+}
+const {
+  href,
+  selected = false,
+  count,
+  icon,
+  removable = false,
+  size = 'md',
+  class: className,
+  ...rest
+} = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag
+  href={href}
+  type={href ? undefined : 'button'}
+  class:list={['chip', `chip--${size}`, { 'chip--selected': selected }, className]}
+  aria-current={href && selected ? 'true' : undefined}
+  aria-pressed={!href ? (selected ? 'true' : 'false') : undefined}
+  rel={href ? 'nofollow' : undefined}
+  {...rest}
+>
+  {icon && <Icon name={icon} size={14} />}
+  <span class="chip__label">
+    <slot />
+  </span>
+  {typeof count === 'number' && (
+    <span class="chip__count num">{count.toLocaleString('en-US')}</span>
+  )}
+  {removable && <Icon name="x" size={12} class="chip__x" />}
+</Tag>
+
+<style>
+  .chip {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .chip--sm {
+    height: 26px;
+    padding: 0 10px;
+    font-size: var(--text-xs);
+  }
+  .chip:hover {
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .chip:focus-visible {
+    border-radius: var(--radius-pill);
+  }
+  .chip__count {
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+  }
+  .chip--selected,
+  .chip--selected:hover {
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    box-shadow: none;
+  }
+  .chip--selected .chip__count {
+    color: var(--ink-inverse-2);
+  }
+  .chip__x {
+    margin-right: -2px;
+    opacity: 0.7;
+  }
+</style>

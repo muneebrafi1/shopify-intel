@@ -1,0 +1,840 @@
+---
+/**
+ * Living styleguide. Every shared component with fixture data, so the system can be reviewed
+ * (and screenshot-tested) as a whole. Not linked from the site; noindex.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Button from '~/components/ui/Button.astro';
+import Chip from '~/components/ui/Chip.astro';
+import ChipRow from '~/components/ui/ChipRow.astro';
+import Segmented from '~/components/ui/Segmented.astro';
+import Tabs from '~/components/ui/Tabs.astro';
+import Badge from '~/components/ui/Badge.astro';
+import Rating from '~/components/ui/Rating.astro';
+import Stat from '~/components/ui/Stat.astro';
+import StatList from '~/components/ui/StatList.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Skeleton from '~/components/ui/Skeleton.astro';
+import Pagination from '~/components/ui/Pagination.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import Notice from '~/components/ui/Notice.astro';
+import Field from '~/components/ui/Field.astro';
+import Input from '~/components/ui/Input.astro';
+import Checkbox from '~/components/ui/Checkbox.astro';
+import Dialog from '~/components/ui/Dialog.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import Facts from '~/components/ui/Facts.astro';
+import Kbd from '~/components/ui/Kbd.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Count from '~/components/ui/Count.astro';
+import IndexList from '~/components/ui/IndexList.astro';
+import IndexRow from '~/components/ui/IndexRow.astro';
+import FilterBar from '~/components/ui/FilterBar.astro';
+import Shot from '~/components/media/Shot.astro';
+import FullPage from '~/components/media/FullPage.astro';
+import StoreCard from '~/components/domain/StoreCard.astro';
+import ThemeCard from '~/components/domain/ThemeCard.astro';
+import AppRow from '~/components/domain/AppRow.astro';
+import AppTable from '~/components/domain/AppTable.astro';
+import SectionCard from '~/components/domain/SectionCard.astro';
+import TeardownCard from '~/components/domain/TeardownCard.astro';
+import AffiliateCta from '~/components/domain/AffiliateCta.astro';
+import SaveButton from '~/components/domain/SaveButton.astro';
+import { renderPlaceholderSvg, type PlaceholderSection } from '~/server/media/placeholder-svg';
+import { sectionTypeName } from '~/lib/taxonomy';
+
+export const prerender = false;
+
+type Layout = [string, number][];
+function stack(layout: Layout): PlaceholderSection[] {
+  let y = 0;
+  return layout.map(([type, height]) => {
+    const s = { type, y, height };
+    y += height;
+    return s;
+  });
+}
+const HOME_D: Layout = [
+  ['announcement-bar', 40],
+  ['header', 84],
+  ['hero', 680],
+  ['featured-collection', 640],
+  ['image-with-text', 600],
+  ['logo-list', 200],
+  ['testimonials', 380],
+  ['newsletter', 340],
+  ['footer', 440],
+];
+const HOME_M: Layout = [
+  ['announcement-bar', 36],
+  ['header', 60],
+  ['hero', 600],
+  ['featured-collection', 820],
+  ['image-with-text', 760],
+  ['testimonials', 440],
+  ['newsletter', 400],
+  ['footer', 620],
+];
+const PRODUCT_D: PlaceholderSection[] = [
+  { type: 'header', y: 0, height: 84 },
+  { type: 'breadcrumbs', y: 84, height: 48 },
+  { type: 'product-gallery', y: 132, height: 820 },
+  { type: 'buy-box', y: 132, height: 820 },
+  { type: 'product-details', y: 952, height: 380 },
+  { type: 'reviews', y: 1332, height: 820 },
+  { type: 'upsell', y: 2152, height: 560 },
+  { type: 'footer', y: 2712, height: 440 },
+];
+const CART_M: Layout = [
+  ['header', 60],
+  ['shipping-bar', 96],
+  ['cart-items', 520],
+  ['cart-summary', 420],
+  ['upsell', 560],
+  ['footer', 620],
+];
+
+const dataUri = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+function shot(
+  seed: string,
+  label: string,
+  device: 'desktop' | 'mobile',
+  sections: PlaceholderSection[],
+  pageType = 'home',
+) {
+  const width = device === 'desktop' ? 1440 : 390;
+  const height = sections.reduce((m, s) => Math.max(m, s.y + s.height), 0);
+  const src = dataUri(
+    renderPlaceholderSvg({ seed, label, device, pageType, width, height, sections }),
+  );
+  return { src, width, height, device, sections };
+}
+const STORES = [
+  ['youngla.com', 'YoungLA', 'Prestige · 11 apps'],
+  ['thursdayboots.com', 'Thursday Boot Co.', 'Atlantic · 12 apps'],
+  ['lskd.co', 'LSKD', 'Impulse · 13 apps'],
+  ['thesill.com', 'The Sill', 'Horizon · 9 apps'],
+  ['eatfishwife.com', 'Fishwife', 'Blockshop · 13 apps'],
+  ['koh.com', 'Koh', 'Impact · 9 apps'],
+] as const;
+const homeShots = STORES.map(([d, n]) => shot(d, n, 'desktop', stack(HOME_D)));
+const mobileShots = STORES.slice(0, 4).map(([d, n]) => shot(d, n, 'mobile', stack(HOME_M)));
+const product = shot('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'product');
+const cartMobile = shot('negativeunderwear.com', 'Negative', 'mobile', stack(CART_M), 'cart');
+
+function crop(
+  seed: string,
+  label: string,
+  device: 'desktop' | 'mobile',
+  sections: PlaceholderSection[],
+  type: string,
+) {
+  const width = device === 'desktop' ? 1440 : 390;
+  const height = sections.reduce((m, s) => Math.max(m, s.y + s.height), 0);
+  const s = sections.find((x) => x.type === type)!;
+  const svg = renderPlaceholderSvg(
+    { seed, label, device, width, height, sections },
+    { crop: { y: s.y, height: s.height } },
+  );
+  return { src: dataUri(svg), width, height: s.height };
+}
+const COLORS = [
+  'bg',
+  'surface',
+  'tile',
+  'fill',
+  'line',
+  'line-strong',
+  'ink',
+  'ink-2',
+  'ink-3',
+  'ink-4',
+  'accent',
+  'accent-text',
+  'accent-soft',
+  'positive',
+  'caution',
+  'critical',
+];
+---
+
+<BaseLayout title="Design system" noindex>
+  <div class="container">
+    <PageHeader
+      title="Design system"
+      count={42}
+      eyebrow="Reference · Specimen archive"
+      lede="Tokens and components used across the site. Screenshots here are drawn placeholders: the same renderer the site uses until real captures land."
+      size="lg"
+    >
+      <Breadcrumbs slot="top" items={[{ label: 'Home', href: '/' }, { label: 'Design system' }]} />
+    </PageHeader>
+
+    <section class="ds-block">
+      <SectionHeader
+        label="01 — Signature"
+        title="Specimen archive"
+        count={6}
+        description="Specimen numbers, mono spec labels, superscript counts, crop marks, contact-sheet captions, grid ↔ index. See docs/design/direction.md."
+        rule
+      />
+      <div class="row" style="gap:20px">
+        <MonoLabel>Detected 17 Nov 2026</MonoLabel>
+        <MonoLabel tone="ink">Theme</MonoLabel>
+        <MonoLabel tone="accent">Capture pending</MonoLabel>
+        <MonoLabel bullet={false}>N°014 — Store</MonoLabel>
+      </div>
+      <p style="margin-top:24px;font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.035em;line-height:1">
+        Themes
+        <Count value={20} /> &nbsp;Stores
+        <Count value={930} />
+      </p>
+      <div class="marks ds-stats-marks">
+        <StatList columns={4}>
+          <Stat
+            display
+            value={930}
+            label="Stores scanned"
+            source="StorePeek scan"
+            asOf="17 Nov 2026"
+          />
+          <Stat display value="41.2%" label="Run Klaviyo" source="383 of 930 stores" />
+          <Stat display value={20} label="Themes tracked" source="Theme Store" />
+          <Stat display value={160} label="Plates queued" source="20 stores × 8" />
+        </StatList>
+      </div>
+      <FilterBar
+        class="ds-fbar"
+        total={20}
+        noun="stores"
+        clearHref="#"
+        groups={[
+          {
+            key: 'theme',
+            label: 'Theme',
+            options: [
+              { label: 'All themes', href: '#' },
+              { label: 'Prestige', href: '#', selected: true, count: 13 },
+              { label: 'Dawn', href: '#', count: 20 },
+            ],
+          },
+          {
+            key: 'app',
+            label: 'App',
+            options: [
+              { label: 'All apps', href: '#', selected: true },
+              { label: 'Judge.me', href: '#', count: 221 },
+              { label: 'Klaviyo', href: '#', count: 383 },
+            ],
+          },
+          {
+            key: 'category',
+            label: 'Category',
+            options: [
+              { label: 'All categories', href: '#', selected: true },
+              { label: 'Apparel', href: '#', count: 4 },
+            ],
+          },
+          {
+            key: 'currency',
+            label: 'Currency',
+            options: [
+              { label: 'Any currency', href: '#', selected: true },
+              { label: 'USD', href: '#', count: 570 },
+            ],
+          },
+        ]}
+        sort={[
+          { label: 'Most apps', href: '#', selected: true },
+          { label: 'Tranco rank', href: '#' },
+          { label: 'Domain A–Z', href: '#' },
+        ]}
+        view={{ current: 'index', gridHref: '#', indexHref: '#' }}
+      />
+      <div class="ds-index">
+        <IndexList
+          columns="56px minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,0.8fr) 110px"
+          head={['N°', 'Store', 'Theme', 'Category', 'Market', 'Apps']}
+          label="Stores"
+        >
+          {STORES.map(([d, n, meta], i) => (
+            <IndexRow
+              n={i + 1}
+              href="#"
+              title={n}
+              subtitle={`${d} · ${meta}`}
+              preview={homeShots[i]}
+              cells={[
+                { value: meta.split(' · ')[0]! },
+                { value: i % 2 ? 'Food & drink' : 'Apparel', muted: true },
+                { value: i % 3 ? 'USD' : 'AUD', mono: true },
+                { value: `(${meta.split(' · ')[1]})`, serif: true, mobile: true },
+              ]}
+            />
+          ))}
+        </IndexList>
+      </div>
+    </section>
+    <section class="ds-block">
+      <SectionHeader
+        title="Colour"
+        description="Warm neutrals and one accent. The accent marks state, never decoration."
+      />
+      <div class="swatches">
+        {COLORS.map((c) => (
+          <div class="swatch">
+            <span style={`background:var(--${c})`} />
+            <code>--{c}</code>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader
+        title="Type"
+        description="Instrument Sans for the interface, Newsreader for editorial headings only, Geist Mono for data."
+      />
+      <div class="type-specimen">
+        <p class="display" style="font-size:var(--text-5xl)">
+          Every theme, on real stores.
+        </p>
+        <p style="font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.02em;line-height:1.1">
+          Prestige on 13 stores
+        </p>
+        <p style="font-size:var(--text-2xl);font-weight:600;letter-spacing:-0.01em">
+          Apps most used with Prestige
+        </p>
+        <p style="font-size:var(--text-md);color:var(--ink-2);max-width:640px">
+          youngla.com runs Prestige 9.3.0 with 11 detected apps. Loox renders the reviews on the
+          product page; Attentive handles SMS signup in the footer.
+        </p>
+        <p class="muted" style="font-size:var(--text-sm)">
+          Seen on 221 of 930 scanned stores · 17 Nov 2026
+        </p>
+        <p class="mono">GET /api/v1/stores/youngla.com · prestige@9.3.0</p>
+      </div>
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader title="Buttons" />
+      <div class="row">
+        <Button variant="primary">Primary</Button>
+        <Button>Secondary</Button>
+        <Button variant="quiet">Quiet</Button>
+        <Button variant="ghost">Ghost</Button>
+        <Button variant="primary" iconRight="arrow-up-right">
+          View on Theme Store
+        </Button>
+        <Button size="sm" icon="sliders-horizontal">
+          Filters
+        </Button>
+        <Button size="lg" variant="primary">
+          Large
+        </Button>
+        <Button icon="bookmark-simple" label="Save" />
+        <Button disabled>Disabled</Button>
+        <SaveButton itemType="screenshot" itemId={1} />
+      </div>
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader
+        title="Filters"
+        description="Filters are URL state: chips are links, so results are shareable and work without JavaScript."
+      />
+      <ChipRow label="Page type">
+        <Chip href="#" selected count={20}>
+          All pages
+        </Chip>
+        <Chip href="#" count={20}>
+          Home
+        </Chip>
+        <Chip href="#" count={20}>
+          Collection
+        </Chip>
+        <Chip href="#" count={20}>
+          Product
+        </Chip>
+        <Chip href="#" count={20}>
+          Cart
+        </Chip>
+        <Chip href="#" icon="star">
+          Reviews
+        </Chip>
+      </ChipRow>
+      <div class="row" style="margin-top:16px">
+        <Segmented
+          label="Device"
+          items={[
+            { label: 'Desktop', value: 'desktop', icon: 'desktop', selected: true, href: '#' },
+            { label: 'Mobile', value: 'mobile', icon: 'device-mobile', href: '#' },
+          ]}
+        />
+        <Segmented
+          label="View"
+          size="sm"
+          items={[
+            { label: 'Grid', value: 'grid', icon: 'squares-four', iconOnly: true, selected: true },
+            { label: 'List', value: 'list', icon: 'rows', iconOnly: true },
+          ]}
+        />
+        <Chip size="sm" selected removable>
+          Theme: Prestige
+        </Chip>
+        <Chip size="sm" selected removable>
+          App: Judge.me
+        </Chip>
+        <Button size="sm" variant="ghost">
+          Clear all
+        </Button>
+      </div>
+      <Tabs
+        class="ds-tabs"
+        label="Example tabs"
+        items={[
+          { label: 'Home', href: '#', selected: true },
+          { label: 'Collection', href: '#' },
+          { label: 'Product', href: '#' },
+          { label: 'Cart', href: '#', count: 2 },
+        ]}
+      />
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader title="Badges, ratings, numbers" />
+      <div class="row">
+        <Badge>Neutral</Badge>
+        <Badge tone="outline">BFS</Badge>
+        <Badge tone="accent">Affiliate</Badge>
+        <Badge tone="positive" icon="check">
+          Captured
+        </Badge>
+        <Badge tone="caution">Pending review</Badge>
+        <Badge tone="inverse">Pro</Badge>
+        <Rating rating={4.9} reviews={50275} source="Shopify App Store, checked 17 Nov 2026" />
+        <Rating rating={null} />
+        <Kbd>⌘</Kbd>
+        <Kbd>K</Kbd>
+      </div>
+      <StatList class="ds-stats">
+        <Stat value={930} label="Stores scanned" source="StorePeek scan" asOf="17 Nov 2026" />
+        <Stat value="41.2%" label="Run Klaviyo" source="383 of 930" />
+        <Stat value={20} label="Themes tracked" />
+        <Stat value={160} label="Placeholder captures" />
+      </StatList>
+      <SourceNote source="StorePeek scan of 930 Shopify stores (pre-v7 rules)" asOf="17 Nov 2026" />
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader
+        title="Screenshot tiles"
+        description="Top of the full page, inset in a warm well; it bleeds off the bottom because the page continues."
+      />
+      <div class="grid-3">
+        {homeShots.slice(0, 3).map((s, i) => (
+          <StoreCard
+            domain={STORES[i]![0]}
+            name={STORES[i]![1]}
+            meta={STORES[i]![2]}
+            shot={s}
+            href="#"
+          />
+        ))}
+      </div>
+      <div class="grid-4" style="margin-top:32px">
+        {mobileShots.map((s, i) => (
+          <StoreCard
+            domain={STORES[i]![0]}
+            name={STORES[i]![1]}
+            meta="Home · Mobile"
+            shot={s}
+            href="#"
+          />
+        ))}
+      </div>
+      <div class="grid-3" style="margin-top:32px">
+        <StoreCard domain="aetrio.com" meta="Infinity · not captured" shot={null} href="#" />
+        <Shot
+          src={product.src}
+          width={product.width}
+          height={product.height}
+          device="desktop"
+          alt="Product page"
+          tag="Product"
+        />
+        <Shot
+          src={cartMobile.src}
+          width={cartMobile.width}
+          height={cartMobile.height}
+          device="mobile"
+          alt="Cart page"
+          tag="Cart · Mobile"
+        />
+      </div>
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader
+        title="Theme cards"
+        description="A theme as a deck of the real stores using it."
+      />
+      <div class="grid-3">
+        <ThemeCard
+          slug="prestige"
+          name="Prestige"
+          vendor="Maestrooo"
+          priceLabel="$400"
+          storesCount={13}
+          shots={homeShots.slice(0, 3)}
+        />
+        <ThemeCard
+          slug="dawn"
+          name="Dawn"
+          vendor="Shopify"
+          priceLabel="Free"
+          storesCount={20}
+          shots={homeShots.slice(3, 6)}
+        />
+        <ThemeCard
+          slug="hyper"
+          name="Hyper"
+          vendor="FoxEcom"
+          priceLabel="$400"
+          storesCount={8}
+          shots={homeShots.slice(1, 2)}
+        />
+      </div>
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader
+        title="App rows"
+        description="Dense and ranked. Numbers right-aligned in tabular figures."
+      />
+      <AppTable>
+        <AppRow
+          rank={1}
+          slug="klaviyo"
+          name="Klaviyo: Email Marketing & SMS"
+          developer="Klaviyo"
+          category="Email & SMS"
+          rating={4.7}
+          reviews={3450}
+          priceLabel="Free plan"
+          storesCount={383}
+          sharePct={41.18}
+          iconUrl="https://cdn.shopify.com/app-store/listing_images/5edd9000b933a8fa88c152d1e498531f/icon/CP6B2OOv3PYCEAE=.png"
+          href="#"
+        />
+        <AppRow
+          rank={2}
+          slug="judgeme"
+          name="Judge.me Product Reviews App"
+          developer="Judge.me"
+          category="Reviews"
+          rating={5}
+          reviews={50275}
+          priceLabel="Free plan"
+          storesCount={221}
+          sharePct={23.76}
+          builtForShopify
+          href="#"
+        />
+        <AppRow
+          rank={3}
+          slug="rebuy"
+          name="Rebuy Personalization Engine"
+          developer="Rebuy"
+          category="Upsell & Bundles"
+          rating={null}
+          priceLabel={null}
+          storesCount={47}
+          sharePct={5.05}
+          href="#"
+        />
+      </AppTable>
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader
+        title="Section cards"
+        description="Sliced sections in fixed-aspect wells so desktop strips and mobile slices share a grid."
+      />
+      <div class="grid-4">
+        <SectionCard
+          href="#"
+          device="desktop"
+          typeName="Hero"
+          storeLabel="YoungLA"
+          meta="Hero · Prestige"
+          crop={crop('youngla.com', 'YoungLA', 'desktop', stack(HOME_D), 'hero')}
+        />
+        <SectionCard
+          href="#"
+          device="desktop"
+          typeName="Reviews"
+          storeLabel="YoungLA"
+          meta="Reviews · Product"
+          app={{ name: 'Loox' }}
+          crop={crop('youngla.com', 'YoungLA', 'desktop', PRODUCT_D, 'reviews')}
+        />
+        <SectionCard
+          href="#"
+          device="mobile"
+          typeName="Featured collection"
+          storeLabel="The Sill"
+          meta="Featured collection · Mobile"
+          crop={crop('thesill.com', 'The Sill', 'mobile', stack(HOME_M), 'featured-collection')}
+        />
+        <SectionCard
+          href="#"
+          device="desktop"
+          typeName="Footer"
+          storeLabel="Koh"
+          meta="Footer · Impact"
+          crop={crop('koh.com', 'Koh', 'desktop', stack(HOME_D), 'footer')}
+        />
+      </div>
+    </section>
+
+    <section class="ds-block">
+      <SectionHeader
+        title="Full-page viewer"
+        description="Sections rail on the left, outlines on the capture. Hover either side; scrolling marks the section in view."
+      />
+      <FullPage
+        src={product.src}
+        width={product.width}
+        height={product.height}
+        device="desktop"
+        alt="YoungLA product page, desktop"
+        sections={product.sections.map((s, i) => ({
+          id: `p${i}`,
+          type: s.type,
+          name: sectionTypeName(s.type),
+          y: s.y,
+          height: s.height,
+          app: s.type === 'reviews' ? { name: 'Loox', slug: 'loox' } : null,
+        }))}
+      />
+    </section>
+
+    <section class="ds-block two-col">
+      <div>
+        <SectionHeader title="Facts + call to action" level={3} />
+        <Facts
+          items={[
+            { label: 'Vendor', value: 'Maestrooo', href: '#' },
+            { label: 'Price', value: '$400 one-time' },
+            { label: 'Theme Store ID', value: '855', mono: true },
+            { label: 'Latest version seen', value: '9.3.0', mono: true },
+          ]}
+        />
+        <AffiliateCta class="ds-cta" href="#" label="View on Theme Store" isAffiliate />
+        <AffiliateCta
+          class="ds-cta"
+          href="#"
+          label="View on Theme Store"
+          isAffiliate={false}
+          size="md"
+        />
+      </div>
+      <div>
+        <SectionHeader title="Teardown card" level={3} />
+        <TeardownCard
+          slug="youngla"
+          title="How YoungLA runs gymwear on Prestige and eleven apps"
+          dek="A stack built for repeat buyers: photo reviews, SMS and a loyalty program."
+          storeLabel="youngla.com"
+          publishedAt="2026-11-17"
+          shot={homeShots[0]}
+          isSample
+        />
+      </div>
+    </section>
+
+    <section class="ds-block two-col">
+      <div>
+        <SectionHeader title="Forms" level={3} />
+        <form class="form-demo" onsubmit="return false">
+          <Field
+            label="Store domain"
+            for="d-domain"
+            hint="The domain customers visit, e.g. example.com"
+          >
+            <Input id="d-domain" name="domain" placeholder="example.com" />
+          </Field>
+          <Field
+            label="Your email"
+            for="d-email"
+            error="Use an address at the store's domain so we can verify ownership."
+          >
+            <Input id="d-email" type="email" value="someone@gmail.com" />
+          </Field>
+          <Field label="What should we remove?" for="d-scope">
+            <Input as="select" id="d-scope">
+              <option>Screenshots only</option>
+              <option>Everything</option>
+            </Input>
+          </Field>
+          <Field label="Anything else" for="d-note" optional>
+            <Input as="textarea" id="d-note" rows="3" />
+          </Field>
+          <Checkbox
+            label="I own or manage this store"
+            hint="We may ask for proof before removing anything."
+          />
+          <div class="row">
+            <Button variant="primary" type="submit">
+              Send request
+            </Button>
+            <Button variant="ghost">Cancel</Button>
+          </div>
+        </form>
+      </div>
+      <div class="stack">
+        <SectionHeader title="States" level={3} />
+        <Notice title="Screenshots are placeholders">
+          Drawn from each page's detected sections until the first capture run.
+        </Notice>
+        <Notice tone="caution">This store hasn't been rescanned in 90 days.</Notice>
+        <Notice tone="positive">Request received. Reference R-2026-0012.</Notice>
+        <EmptyState
+          title="No stores match these filters"
+          body="Try removing a filter, or browse all 930 detected stores."
+          size="sm"
+        >
+          <Button size="sm">Clear filters</Button>
+        </EmptyState>
+        <div>
+          <Skeleton lines={3} />
+        </div>
+        <div class="grid-2">
+          <Skeleton variant="tile" />
+          <Skeleton variant="tile" />
+        </div>
+        <Pagination page={2} pageSize={24} total={930} hrefFor={(p) => `#p${p}`} noun="stores" />
+        <div class="row">
+          <Button data-dialog-open="ds-dialog">Open dialog</Button>
+        </div>
+        <Dialog id="ds-dialog" title="Save to board">
+          <EmptyState
+            title="Boards are a Pro feature"
+            body="Collect screens and sections into boards to share with clients."
+            size="sm"
+            align="start"
+          />
+          <Fragment slot="footer">
+            <Button data-dialog-close>Not now</Button>
+            <Button variant="primary" href="/pro">
+              See Pro
+            </Button>
+          </Fragment>
+        </Dialog>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .ds-block {
+    padding-block: var(--space-10);
+    border-top: 1px solid var(--line);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-3);
+  }
+  .swatch span {
+    display: block;
+    height: 56px;
+    border-radius: var(--radius-md);
+    box-shadow: inset 0 0 0 1px rgb(25 24 22 / 0.08);
+  }
+  .swatch code {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+  .type-specimen > * + * {
+    margin-top: var(--space-4);
+  }
+  :global(.ds-tabs) {
+    margin-top: var(--space-6);
+  }
+  .ds-stats-marks {
+    margin-block: var(--space-10) var(--space-12);
+    padding: var(--space-6);
+  }
+  :global(.ds-fbar) {
+    margin-top: var(--space-10);
+  }
+  .ds-index {
+    margin-top: var(--space-6);
+  }
+  :global(.ds-stats) {
+    margin-block: var(--space-6) var(--space-4);
+  }
+  :global(.ds-cta) {
+    margin-top: var(--space-5);
+  }
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    display: grid;
+    gap: var(--space-8) var(--space-6);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .grid-2,
+  .grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-3);
+  }
+  @media (min-width: 768px) {
+    .grid-3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-8) var(--space-6);
+    }
+  }
+  .two-col {
+    display: grid;
+    gap: var(--space-10);
+  }
+  @media (min-width: 1024px) {
+    .two-col {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+    }
+  }
+  .form-demo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: 440px;
+  }
+</style>

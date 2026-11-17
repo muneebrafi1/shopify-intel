@@ -1,0 +1,134 @@
+---
+/**
+ * The one HTML shell for every public page: head/SEO, header, main, footer.
+ * Pages pass a plain title (no brand); the brand is appended from SITE_NAME.
+ */
+import '~/styles/base.css';
+import fontUrl from '@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url';
+import { SITE_NAME, SITE_TAGLINE, SHOW_CAPTURE_PREVIEW_NOTICE } from '~/config/site';
+import PreviewNotice from '~/components/site/PreviewNotice.astro';
+import { api } from '~/server/api';
+import { formatDate } from '~/lib/format';
+import Header from '~/components/site/Header.astro';
+import Footer from '~/components/site/Footer.astro';
+
+interface Props {
+  /** Page title without the brand. Omit on the home page. */
+  title?: string;
+  description?: string;
+  /** Canonical path (defaults to the current path, without query string). */
+  canonical?: string;
+  noindex?: boolean;
+  ogImage?: string;
+  /** One or more schema.org objects, serialised as JSON-LD. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Hide the global header/footer (admin, focused flows). */
+  chrome?: 'full' | 'minimal' | 'none';
+  bodyClass?: string;
+  /** Live nav counts (see Header). Filled from the API meta by `getChromeData`. */
+  navCounts?: Record<string, number>;
+  /** Footer data line (source + as-of). */
+  dataNote?: string;
+}
+
+const {
+  title,
+  description = `${SITE_TAGLINE}. See how every Shopify theme and app looks on live stores — home, collection, product and cart, on desktop and mobile.`,
+  canonical,
+  noindex = false,
+  ogImage,
+  jsonLd,
+  chrome = 'full',
+  bodyClass,
+} = Astro.props;
+
+// Live chrome data (nav superscript counts, footer data line) from the same API the pages use.
+// Cached per isolate by the API layer; failures (e.g. prerender without D1) degrade silently.
+let navCounts = Astro.props.navCounts;
+let dataNote = Astro.props.dataNote;
+if (chrome === 'full' && (!navCounts || !dataNote)) {
+  try {
+    const { data: meta } = await api.getMeta({});
+    const c = meta.counts;
+    navCounts ??= {
+      '/stores': c.stores_scanned,
+      '/themes': c.themes,
+      '/apps': c.apps,
+      '/sections': c.sections,
+      '/teardowns': c.teardowns,
+    };
+    dataNote ??= `${c.stores_scanned.toLocaleString('en-US')} stores scanned · ${c.stores_curated} curated · data as of ${formatDate(meta.data_as_of)}`;
+  } catch {
+    /* chrome renders without live numbers */
+  }
+}
+
+const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} — ${SITE_TAGLINE}`;
+const canonicalUrl = new URL(canonical ?? Astro.url.pathname, Astro.site ?? Astro.url).href;
+const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
+    <meta name="theme-color" content="#fcfbf9" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={title ?? SITE_NAME} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    {ogImage && (
+      <meta property="og:image" content={new URL(ogImage, Astro.site ?? Astro.url).href} />
+    )}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    {ldItems.map((item) => (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify({ '@context': 'https://schema.org', ...item })}
+      />
+    ))}
+    <script is:inline>
+      // Remote images (app icons from the App Store CDN) can fail; drop them so the monogram
+      // underneath shows instead of a broken-image glyph.
+      document.addEventListener(
+        'error',
+        (event) => {
+          const el = event.target;
+          if (el instanceof HTMLImageElement && el.closest('.app-icon')) el.remove();
+        },
+        true,
+      );
+    </script>
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
+    {SHOW_CAPTURE_PREVIEW_NOTICE && chrome === 'full' && <PreviewNotice />}
+    {chrome !== 'none' && <Header minimal={chrome === 'minimal'} counts={navCounts} />}
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    {chrome === 'full' && <Footer dataNote={dataNote} />}
+    <slot name="end" />
+  </body>
+</html>
+
+<style>
+  main {
+    display: block;
+    min-height: 60vh;
+  }
+  main:focus {
+    outline: none;
+  }
+</style>

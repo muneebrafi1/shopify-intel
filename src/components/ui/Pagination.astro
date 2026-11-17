@@ -1,0 +1,73 @@
+---
+import Button from './Button.astro';
+
+interface Props {
+  /** 1-based current page. */
+  page: number;
+  pageSize: number;
+  total: number;
+  /** Build the href for a page number (keeps the other query params). */
+  hrefFor: (page: number) => string;
+  noun?: string;
+  class?: string;
+}
+const { page, pageSize, total, hrefFor, noun = 'results', class: className } = Astro.props;
+const pages = Math.max(1, Math.ceil(total / pageSize));
+const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+const to = Math.min(total, page * pageSize);
+---
+
+{total > 0 && (
+  <nav class:list={['pager', className]} aria-label="Pagination">
+    <p class="pager__status num">
+      {from.toLocaleString('en-US')}–{to.toLocaleString('en-US')} of {total.toLocaleString('en-US')}{' '}
+      {noun}
+    </p>
+    {pages > 1 && (
+      <div class="pager__buttons">
+        <Button
+          href={page > 1 ? hrefFor(page - 1) : undefined}
+          disabled={page <= 1}
+          size="sm"
+          icon="caret-left"
+          rel="prev"
+        >
+          Previous
+        </Button>
+        <span class="pager__page num">
+          Page {page} of {pages}
+        </span>
+        <Button
+          href={page < pages ? hrefFor(page + 1) : undefined}
+          disabled={page >= pages}
+          size="sm"
+          iconRight="caret-right"
+          rel="next"
+        >
+          Next
+        </Button>
+      </div>
+    )}
+  </nav>
+)}
+
+<style>
+  .pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-6);
+  }
+  .pager__status,
+  .pager__page {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .pager__buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+</style>

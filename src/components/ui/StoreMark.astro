@@ -1,0 +1,47 @@
+---
+/**
+ * A store's mark in lists, until we capture real favicons: a tiny page in the store's own
+ * palette (header band, image block, a line of text). It matches the tone of that store's
+ * captures, so a caption and its screenshot read as one specimen. Decorative only.
+ */
+import { toneFor } from '~/lib/tone';
+
+interface Props {
+  domain: string;
+  /** Kept for API compatibility (the mark is decorative; the name is always shown beside it). */
+  name?: string | null;
+  size?: number;
+  class?: string;
+}
+const { domain, size = 28, class: className } = Astro.props;
+const t = toneFor(domain);
+---
+
+<svg
+  class:list={['store-mark', className]}
+  viewBox="0 0 20 20"
+  width={size}
+  height={size}
+  aria-hidden="true"
+  focusable="false"
+>
+  <rect
+    x="0.5"
+    y="0.5"
+    width="19"
+    height="19"
+    rx="5"
+    fill={t.paper}
+    stroke="rgb(25 24 22 / 0.14)"
+  ></rect>
+  <rect x="3.5" y="3.5" width="13" height="2.5" rx="1" fill={t.announce}></rect>
+  <rect x="3.5" y="7.25" width="13" height="5.75" rx="1.25" fill={t.tone}></rect>
+  <rect x="3.5" y="14.5" width="8" height="1.6" rx="0.8" fill={t.ink} opacity="0.55"></rect>
+</svg>
+
+<style>
+  .store-mark {
+    display: inline-block;
+    flex: none;
+  }
+</style>

@@ -1,0 +1,125 @@
+---
+/**
+ * Numbered index view of a collection (catalogue rows). Every collection page offers it next to
+ * the visual grid. On devices with a pointer, hovering a row with a `preview` floats that
+ * capture next to the cursor.
+ *
+ * `columns` is a CSS grid-template for desktop, e.g. "56px minmax(0,2fr) minmax(0,1fr) 96px".
+ * The first column is the N° number, the second the title; the rest are <IndexRow> cells.
+ */
+interface Props {
+  columns: string;
+  /** Column headings (same count as columns). Use '' for none. */
+  head?: string[];
+  label?: string;
+  class?: string;
+}
+const { columns, head, label, class: className } = Astro.props;
+---
+
+<div class:list={['index', className]} style={`--index-cols:${columns}`} data-index-list>
+  {head && (
+    <div class="index__head" aria-hidden="true">
+      {head.map((h, i) => (
+        <span class:list={['mlabel', { 'index__head--end': i === head.length - 1 && i > 1 }]}>
+          {h}
+        </span>
+      ))}
+    </div>
+  )}
+  <ol class="index__list" aria-label={label}>
+    <slot />
+  </ol>
+  <div class="index__preview" aria-hidden="true">
+    <img alt="" decoding="async" />
+  </div>
+</div>
+
+<script>
+  // Cursor-following preview (pointer devices only).
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.querySelectorAll<HTMLElement>('[data-index-list]').forEach((list) => {
+      const box = list.querySelector<HTMLElement>('.index__preview');
+      const img = box?.querySelector('img');
+      if (!box || !img) return;
+      let frame = 0;
+      let x = 0;
+      let y = 0;
+      const place = () => {
+        frame = 0;
+        const w = box.offsetWidth;
+        const h = box.offsetHeight;
+        const left = Math.min(window.innerWidth - w - 16, x + 28);
+        const top = Math.min(window.innerHeight - h - 16, Math.max(16, y - h / 2));
+        box.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+      };
+      list.addEventListener('pointermove', (event) => {
+        const row = (event.target as HTMLElement).closest<HTMLElement>('[data-preview]');
+        if (!row) {
+          box.classList.remove('is-on');
+          return;
+        }
+        const src = row.dataset.preview!;
+        if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+        box.dataset.device = row.dataset.previewDevice ?? 'desktop';
+        box.classList.add('is-on');
+        x = event.clientX;
+        y = event.clientY;
+        if (!frame) frame = requestAnimationFrame(place);
+      });
+      list.addEventListener('pointerleave', () => box.classList.remove('is-on'));
+    });
+  }
+</script>
+
+<style>
+  .index__head {
+    display: none;
+  }
+  .index__list {
+    border-top: 1px solid var(--ink);
+  }
+  @media (min-width: 900px) {
+    .index__head {
+      display: grid;
+      grid-template-columns: var(--index-cols);
+      gap: var(--space-4);
+      padding-bottom: var(--space-2);
+    }
+    .index__head--end {
+      justify-content: flex-end;
+    }
+  }
+  .index__preview {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: var(--z-overlay);
+    width: 300px;
+    padding: 6px;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow-float);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+  .index__preview[data-device='mobile'] {
+    width: 170px;
+  }
+  .index__preview.is-on {
+    opacity: 1;
+  }
+  .index__preview img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-xs);
+    aspect-ratio: 1440 / 1000;
+    object-fit: cover;
+    object-position: top;
+    background: var(--tile);
+  }
+  .index__preview[data-device='mobile'] img {
+    aspect-ratio: 390 / 760;
+  }
+</style>
