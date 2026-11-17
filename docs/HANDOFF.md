@@ -3,6 +3,25 @@
 _Last updated: 17 Nov 2026, end of the base-build session. Update this file before stopping for any
 reason._
 
+## Current work — SaaS redesign (PR #12, branch `feat/12-saas-redesign`)
+
+Owner direction (Muneeb, after the base build): move from the editorial "specimen archive" look to
+a **modern SaaS** look at Linear / Vercel / Stripe / Raycast / Framer / Attio polish — clear value-prop
+hero with product visuals, crisp nav, strong type, cards, subtle gradients and depth, smooth
+micro-interactions, polished Pro pricing, proper light **and dark** themes, equal quality at 1440
+and 390. Still nothing AI-looking or templated. Keep all data, routes, features and tests working.
+
+Plan (stacked on #11; no merge, no deploy):
+
+1. Mobbin research of top SaaS sites → `docs/design/direction.md` rewritten (v2, SaaS).
+2. Design-system rebuild: tokens (light + dark via `prefers-color-scheme` and a toggle), type,
+   cards, depth, motion, header/footer, hero patterns; `/design-system` updated.
+3. Every page redesigned in parallel by area (home+search, stores+teardowns, themes, apps,
+   compare+alternatives, sections, static/legal/account/pro, admin), each checked at 390/1440.
+4. Full gate (lint, astro check, unit, build, size, e2e) → PR #12 with screenshots.
+
+Status: see the newest commits on `feat/12-saas-redesign`; this section is updated as steps land.
+
 ## Status
 
 The base build is complete and split into a stack of 11 focused PRs (below). Every section and page
