@@ -1,0 +1,94 @@
+---
+/**
+ * Status as a quiet pill with a square marker. The only place semantic colour appears in the
+ * admin: pending/queued = caution, approved/done/active/published = positive, rejected/failed/
+ * opted out = critical, everything else neutral.
+ */
+interface Props {
+  status: string;
+  /** Override the visible text (defaults to the status, humanised). */
+  label?: string;
+  /** `dot`: marker and text only, for long tables where a filled pill per row is noise. */
+  variant?: 'pill' | 'dot';
+  class?: string;
+}
+const { status, label, variant = 'pill', class: className } = Astro.props;
+const TONES: Record<string, 'caution' | 'positive' | 'critical' | 'accent' | 'neutral'> = {
+  pending: 'caution',
+  queued: 'caution',
+  approved: 'positive',
+  done: 'positive',
+  active: 'positive',
+  published: 'positive',
+  running: 'accent',
+  rejected: 'critical',
+  failed: 'critical',
+  opted_out: 'critical',
+  blocked: 'critical',
+};
+const tone = TONES[status] ?? 'neutral';
+const text = label ?? status.replace(/[_-]+/g, ' ').replace(/^./, (c) => c.toUpperCase());
+---
+
+<span class:list={['pill', `pill--${tone}`, { 'pill--dot': variant === 'dot' }, className]}>
+  {text}
+</span>
+
+<style>
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    background: var(--fill);
+    color: var(--ink-2);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .pill::before {
+    content: '';
+    flex: none;
+    width: 6px;
+    height: 6px;
+    background: var(--ink-4);
+  }
+  .pill--caution {
+    background: var(--caution-soft);
+    color: var(--caution);
+  }
+  .pill--positive {
+    background: var(--positive-soft);
+    color: var(--positive);
+  }
+  .pill--critical {
+    background: var(--critical-soft);
+    color: var(--critical);
+  }
+  .pill--accent {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+  }
+  .pill--dot {
+    height: auto;
+    padding: 0;
+    background: none;
+    font-weight: var(--weight-regular);
+  }
+  .pill--dot.pill--positive,
+  .pill--dot.pill--neutral {
+    color: var(--ink-2);
+  }
+  .pill--dot.pill--positive::before {
+    background: var(--positive);
+  }
+  .pill--caution::before,
+  .pill--positive::before,
+  .pill--critical::before,
+  .pill--accent::before {
+    background: currentColor;
+  }
+</style>

@@ -1,0 +1,123 @@
+---
+/**
+ * Compact page header for admin pages: a mono trail (ADMIN / STORES / …), the title with an
+ * optional superscript count, a one-line description and actions on the right.
+ */
+import Count from '~/components/ui/Count.astro';
+
+interface Crumb {
+  label: string;
+  href?: string;
+}
+interface Props {
+  title: string;
+  description?: string;
+  count?: number;
+  countLabel?: string;
+  trail?: Crumb[];
+}
+const { title, description, count, countLabel, trail = [] } = Astro.props;
+const crumbs: Crumb[] = [{ label: 'Admin', href: '/admin' }, ...trail];
+---
+
+<header class="ahead">
+  <nav class="ahead__trail" aria-label="Breadcrumb">
+    <ol>
+      {crumbs.map((c, i) => (
+        <li>
+          {c.href && i < crumbs.length - 1 ? (
+            <a href={c.href}>{c.label}</a>
+          ) : (
+            <span>{c.label}</span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
+  <div class="ahead__row">
+    <div class="ahead__text">
+      <h1 class="ahead__title">
+        <slot name="before-title" />
+        <span class="ahead__title-text">{title}</span>
+        {typeof count === 'number' && <Count value={count} label={countLabel} />}
+      </h1>
+      {description && <p class="ahead__desc">{description}</p>}
+      <slot name="meta" />
+    </div>
+    {Astro.slots.has('actions') && (
+      <div class="ahead__actions">
+        <slot name="actions" />
+      </div>
+    )}
+  </div>
+</header>
+
+<style>
+  .ahead {
+    padding-bottom: var(--space-6);
+  }
+  .ahead__trail ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .ahead__trail li {
+    display: inline-flex;
+    gap: 6px;
+    min-width: 0;
+  }
+  .ahead__trail li + li::before {
+    content: '/';
+    color: var(--ink-4);
+  }
+  .ahead__trail span {
+    overflow-wrap: anywhere;
+  }
+  .ahead__trail a:hover {
+    color: var(--ink);
+  }
+  .ahead__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-6);
+    margin-top: var(--space-3);
+  }
+  .ahead__text {
+    min-width: 0;
+    max-width: 720px;
+  }
+  .ahead__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.15;
+  }
+  .ahead__title-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .ahead__title :global(.count-sup) {
+    margin-left: -6px;
+    font-size: 11px;
+  }
+  .ahead__desc {
+    margin-top: var(--space-1-5);
+    color: var(--ink-3);
+    font-size: var(--text-base);
+  }
+  .ahead__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+</style>

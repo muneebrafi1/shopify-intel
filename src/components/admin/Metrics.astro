@@ -1,0 +1,130 @@
+---
+/**
+ * A strip of numbers: mono label, the number in tabular figures, one quiet note. Cells are
+ * divided by hairlines (no cards, no icons). 2 columns on phones, 3 on tablets, up to 6 wide.
+ */
+interface Metric {
+  label: string;
+  value: number | string;
+  note?: string;
+  href?: string;
+}
+interface Props {
+  items: Metric[];
+  /** Source line under the strip (every number shows where it came from). */
+  source?: string;
+}
+const { items, source } = Astro.props;
+const fmt = (v: number | string) => (typeof v === 'number' ? v.toLocaleString('en-US') : v);
+---
+
+<div class="metrics-wrap">
+  <dl class="metrics" style={`--n:${items.length}`}>
+    {items.map((m) => (
+      <div class="metric">
+        <dt class="metric__label">{m.label}</dt>
+        <dd class="metric__value num">
+          {m.href ? <a href={m.href}>{fmt(m.value)}</a> : fmt(m.value)}
+        </dd>
+        {m.note && <dd class="metric__note">{m.note}</dd>}
+      </div>
+    ))}
+  </dl>
+  {source && <p class="metrics__source">{source}</p>}
+</div>
+
+<style>
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--line);
+  }
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 767px) {
+    .metric:nth-child(2n) {
+      padding-left: var(--space-4);
+      border-left: 1px solid var(--line);
+    }
+    /* The last row has no bottom rule (the strip has one). */
+    .metric:nth-last-child(-n + 2):nth-child(2n + 1),
+    .metric:nth-last-child(-n + 2):nth-child(2n + 1) ~ .metric {
+      border-bottom: 0;
+    }
+  }
+  .metric__label {
+    order: 1;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .metric__value {
+    order: 2;
+    font-size: var(--text-3xl);
+    font-weight: 400;
+    letter-spacing: var(--tracking-tight);
+    line-height: 1;
+    color: var(--ink);
+  }
+  .metric__value a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.12em;
+  }
+  .metric__note {
+    order: 3;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.35;
+  }
+  .metrics__source {
+    margin-top: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .metrics {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .metric,
+    .metric:nth-child(2n) {
+      padding: var(--space-5) var(--space-5) var(--space-5) var(--space-5);
+      border-left: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .metric:nth-child(3n + 1) {
+      padding-left: 0;
+      border-left: 0;
+    }
+    .metric:nth-last-child(-n + 3):nth-child(3n + 1),
+    .metric:nth-last-child(-n + 3):nth-child(3n + 1) ~ .metric {
+      border-bottom: 0;
+    }
+  }
+  @media (min-width: 1280px) {
+    .metrics {
+      grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    }
+    .metric {
+      padding: var(--space-5);
+      border-left: 1px solid var(--line);
+      border-bottom: 0;
+    }
+    .metric:first-child {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+</style>

@@ -1,0 +1,625 @@
+---
+import AdminLayout from '~/layouts/AdminLayout.astro';
+import AdminHeader from '~/components/admin/AdminHeader.astro';
+import AuditList from '~/components/admin/AuditList.astro';
+import FlashNotice from '~/components/admin/FlashNotice.astro';
+import StatusPill from '~/components/admin/StatusPill.astro';
+import Button from '~/components/ui/Button.astro';
+import Checkbox from '~/components/ui/Checkbox.astro';
+import Count from '~/components/ui/Count.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Field from '~/components/ui/Field.astro';
+import Input from '~/components/ui/Input.astro';
+import Notice from '~/components/ui/Notice.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import { adminDb } from '~/server/admin/env';
+import { queueJob, updateStore } from '~/server/admin/actions';
+import { checkbox, oneOf, optionalText, text } from '~/server/admin/forms';
+import { runAction, requireAdmin } from '~/server/admin/page';
+import {
+  getRecentAudit,
+  getRemovalsForDomain,
+  getStore,
+  getStoreCategories,
+  getStoreHistory,
+  getStoreJobs,
+} from '~/server/admin/queries';
+import { fullTime, shortDate, timeAgo } from '~/server/admin/format';
+import { PAGE_TYPES } from '~/lib/taxonomy';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
+
+const domain = (Astro.params.domain ?? '').toLowerCase();
+
+if (Astro.request.method === 'POST') {
+  return runAction(Astro, async (form, ctx) => {
+    const intent = text(form, 'intent', 20);
+    if (intent === 'update') {
+      return updateStore(ctx, domain, {
+        name: optionalText(form, 'name', 120),
+        category: optionalText(form, 'category', 80),
+        country: optionalText(form, 'country', 2),
+        status: oneOf(form, 'status', ['active', 'hidden'] as const),
+        curated: checkbox(form, 'curated'),
+      });
+    }
+    if (intent === 'rescan' || intent === 'capture') {
+      return queueJob(ctx, { domain, kind: intent });
+    }
+    return { ok: false, flash: 'bad_request' };
+  });
+}
+
+const db = adminDb();
+const store = await getStore(db, domain);
+if (!store) Astro.response.status = 404;
+
+const [categories, history, jobs, audit, removals] = store
+  ? await Promise.all([
+      getStoreCategories(db),
+      getStoreHistory(db, store.id),
+      getStoreJobs(db, store.id, store.domain),
+      getRecentAudit(db, { targetType: 'store', targetId: store.domain, limit: 8 }),
+      getRemovalsForDomain(db, store.domain),
+    ])
+  : [[], null, [], [], []];
+
+const now = new Date();
+const pageLabel = (type: string) => PAGE_TYPES.find((p) => p.slug === type)?.name ?? type;
+const optedOut = store?.status === 'opted_out';
+const spec = store
+  ? [
+      { label: 'Domain', value: store.domain, mono: true },
+      { label: 'Theme', value: store.theme_name ?? store.current_theme_name ?? '—' },
+      { label: 'Version', value: store.current_theme_version ?? '—', mono: true },
+      { label: 'Apps', value: String(store.app_count) },
+      {
+        label: 'Tranco rank',
+        value: store.tranco_rank ? store.tranco_rank.toLocaleString('en-US') : '—',
+      },
+      { label: 'Country', value: store.country ?? '—' },
+      { label: 'Currency', value: store.currency ?? '—' },
+      { label: 'Category', value: store.category_name ?? '—' },
+      { label: 'First seen', value: shortDate(store.first_seen) },
+      { label: 'Last seen', value: shortDate(store.last_seen) },
+      { label: 'Edited', value: timeAgo(store.updated_at, now) },
+    ]
+  : [];
+const captureState = (c: {
+  screenshot_id: number | null;
+  is_placeholder: number | null;
+  has_r2: number | null;
+}) =>
+  !c.screenshot_id
+    ? 'Not captured'
+    : c.is_placeholder
+      ? 'Layout preview'
+      : c.has_r2
+        ? 'Captured'
+        : 'No image';
+---
+
+<AdminLayout title={store ? (store.name ?? store.domain) : 'Store not found'} section="stores">
+  {!store ? (
+    <>
+      <AdminHeader
+        title="Store not found"
+        trail={[{ label: 'Stores', href: '/admin/stores' }, { label: domain || '—' }]}
+      />
+      <EmptyState
+        title="No store with that domain"
+        body="It may have been typed wrong, or it was never scanned."
+      >
+        <Button href="/admin/stores" variant="primary" size="sm">
+          Back to stores
+        </Button>
+      </EmptyState>
+    </>
+  ) : (
+    <>
+      <AdminHeader
+        title={store.name ?? store.domain}
+        trail={[{ label: 'Stores', href: '/admin/stores' }, { label: store.domain }]}
+      >
+        <StoreMark slot="before-title" domain={store.domain} name={store.name} size={32} />
+        <p slot="meta" class="meta">
+          <StatusPill status={store.status} />
+          {store.is_curated ? <span class="meta__tag">Curated</span> : null}
+          {store.status === 'active' && (
+            <a class="a-link" href={`/stores/${store.domain}`}>
+              Public page
+            </a>
+          )}
+          <a
+            class="a-link"
+            href={store.url ?? `https://${store.domain}`}
+            rel="noopener noreferrer nofollow"
+            target="_blank"
+          >
+            {store.domain} ↗
+          </a>
+        </p>
+        {!optedOut && (
+          <div slot="actions" class="actions">
+            <form method="post">
+              <input type="hidden" name="intent" value="rescan" />
+              <Button type="submit" size="sm" icon="arrow-clockwise">
+                Queue rescan
+              </Button>
+            </form>
+            <form method="post">
+              <input type="hidden" name="intent" value="capture" />
+              <Button type="submit" size="sm" icon="desktop">
+                Queue capture
+              </Button>
+            </form>
+          </div>
+        )}
+      </AdminHeader>
+      <FlashNotice />
+
+      {optedOut && (
+        <Notice tone="critical" title="Opted out" class="state-notice">
+          Removed on {shortDate(store.opted_out_at)} after a removal request. It is hidden
+          everywhere, its media was deleted and the domain is tombstoned, so the crawler never adds
+          it again.
+        </Notice>
+      )}
+      {store.status === 'hidden' && (
+        <Notice tone="caution" title="Hidden" class="state-notice">
+          Not shown anywhere on the public site, including counts. Set the status back to active to
+          show it.
+        </Notice>
+      )}
+
+      <div class="a-split">
+        <div>
+          <section aria-labelledby="details">
+            <div class="a-block__head">
+              <div>
+                <h2 class="a-h2" id="details">
+                  Details
+                </h2>
+                <p class="a-block__desc">
+                  Editorial fields. Detection data comes from scans and is not edited here.
+                </p>
+              </div>
+            </div>
+            <form method="post" class="a-form a-panel">
+              <input type="hidden" name="intent" value="update" />
+              <div class="a-form__row">
+                <Field
+                  label="Display name"
+                  for="s-name"
+                  optional
+                  hint="Leave empty to show the domain."
+                >
+                  <Input
+                    id="s-name"
+                    name="name"
+                    value={store.name ?? ''}
+                    maxlength={120}
+                    placeholder={store.domain}
+                  />
+                </Field>
+                <Field label="Category" for="s-category" optional>
+                  <Input as="select" id="s-category" name="category">
+                    <option value="">No category</option>
+                    {categories.map((c) => (
+                      <option value={c.value} selected={c.value === store.category_slug}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </Input>
+                </Field>
+              </div>
+              <div class="a-form__row">
+                <Field
+                  label="Country"
+                  for="s-country"
+                  optional
+                  hint="Two-letter ISO code, only when unambiguous."
+                >
+                  <Input
+                    id="s-country"
+                    name="country"
+                    value={store.country ?? ''}
+                    maxlength={2}
+                    pattern="[A-Za-z]{2}"
+                    autocomplete="off"
+                    class="country"
+                  />
+                </Field>
+                <Field
+                  label="Status"
+                  for="s-status"
+                  hint={
+                    optedOut
+                      ? 'Opted-out stores stay removed.'
+                      : 'Hidden stores disappear from every public page and count.'
+                  }
+                >
+                  <Input as="select" id="s-status" name="status" disabled={optedOut}>
+                    {optedOut && (
+                      <option value="" selected>
+                        Opted out
+                      </option>
+                    )}
+                    <option value="active" selected={store.status === 'active'}>
+                      Active
+                    </option>
+                    <option value="hidden" selected={store.status === 'hidden'}>
+                      Hidden
+                    </option>
+                  </Input>
+                </Field>
+              </div>
+              <Checkbox
+                name="curated"
+                checked={!!store.is_curated}
+                label="Curated"
+                hint="Part of the hand-picked library: gets full captures and ranks above uncurated stores."
+              />
+              <div class="a-form__actions">
+                <Button type="submit" variant="primary" size="sm">
+                  Save changes
+                </Button>
+              </div>
+            </form>
+          </section>
+
+          <section class="a-block" aria-labelledby="captures">
+            <div class="a-block__head">
+              <div>
+                <h2 class="a-h2" id="captures">
+                  Pages and captures
+                  <Count value={history?.captures.length ?? 0} />
+                </h2>
+                <p class="a-block__desc">
+                  Layout previews are drawn from detected sections until a real capture replaces
+                  them.
+                </p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table a-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Page</th>
+                    <th scope="col">Device</th>
+                    <th scope="col">State</th>
+                    <th scope="col" class="is-num">
+                      Sections
+                    </th>
+                    <th scope="col" class="is-num">
+                      Height
+                    </th>
+                    <th scope="col">Captured</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history && history.captures.length === 0 ? (
+                    <tr>
+                      <td colspan="6" class="a-empty-cell">
+                        No pages planned yet. Queue a capture to add them.
+                      </td>
+                    </tr>
+                  ) : (
+                    history?.captures.map((c) => (
+                      <tr>
+                        <td class="a-strong">{pageLabel(c.page_type)}</td>
+                        <td class="a-muted">
+                          {c.device ? c.device[0]!.toUpperCase() + c.device.slice(1) : '—'}
+                        </td>
+                        <td>
+                          <StatusPill
+                            status={
+                              captureState(c) === 'Captured'
+                                ? 'done'
+                                : captureState(c) === 'Layout preview'
+                                  ? 'preview'
+                                  : 'none'
+                            }
+                            label={captureState(c)}
+                          />
+                        </td>
+                        <td class="is-num">{c.sections}</td>
+                        <td class="is-num a-muted a-nowrap">
+                          {c.height ? `${c.height.toLocaleString('en-US')} px` : '—'}
+                        </td>
+                        <td class="a-muted a-nowrap">
+                          {c.captured_at ? shortDate(c.captured_at) : '—'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="a-block" aria-labelledby="themes">
+            <div class="a-block__head">
+              <div>
+                <h2 class="a-h2" id="themes">
+                  Theme history
+                </h2>
+                <p class="a-block__desc">
+                  Each row is one theme and version span. Switches close the old row.
+                </p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table a-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Theme</th>
+                    <th scope="col">Version</th>
+                    <th scope="col">First seen</th>
+                    <th scope="col">Last seen</th>
+                    <th scope="col">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history && history.themes.length === 0 ? (
+                    <tr>
+                      <td colspan="5" class="a-empty-cell">
+                        No theme detected yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    history?.themes.map((t) => (
+                      <tr>
+                        <td>
+                          <span class="a-strong">{t.theme_name ?? t.raw_name ?? 'Unknown'}</span>
+                          {t.preset_name || t.is_custom === 1 ? (
+                            <span class="a-sub">
+                              {t.is_custom ? 'Custom theme' : `Preset ${t.preset_name}`}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td class="a-mono">{t.version ?? '—'}</td>
+                        <td class="a-nowrap a-muted">{shortDate(t.first_seen)}</td>
+                        <td class="a-nowrap a-muted">{shortDate(t.last_seen)}</td>
+                        <td>
+                          {t.replaced_at ? (
+                            <span class="a-muted a-nowrap">
+                              Replaced {shortDate(t.replaced_at)}
+                            </span>
+                          ) : (
+                            <StatusPill status="active" label="Current" />
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="a-block" aria-labelledby="apps">
+            <div class="a-block__head">
+              <div>
+                <h2 class="a-h2" id="apps">
+                  App history
+                  <Count value={history?.apps.length ?? 0} />
+                </h2>
+                <p class="a-block__desc">
+                  Unmatched detections have no app profile yet and show their detection slug.
+                </p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table a-table">
+                <thead>
+                  <tr>
+                    <th scope="col">App</th>
+                    <th scope="col">First seen</th>
+                    <th scope="col">Last seen</th>
+                    <th scope="col">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history && history.apps.length === 0 ? (
+                    <tr>
+                      <td colspan="4" class="a-empty-cell">
+                        No apps detected.
+                      </td>
+                    </tr>
+                  ) : (
+                    history?.apps.map((a) => (
+                      <tr>
+                        <td>
+                          {a.resolved ? (
+                            <a
+                              class="a-row-link"
+                              href={`/admin/apps?q=${encodeURIComponent(a.slug ?? a.name)}`}
+                            >
+                              {a.name}
+                            </a>
+                          ) : (
+                            <span class="a-mono">{a.name}</span>
+                          )}
+                          {!a.resolved && <span class="a-sub">No profile yet</span>}
+                        </td>
+                        <td class="a-nowrap a-muted">{shortDate(a.first_seen)}</td>
+                        <td class="a-nowrap a-muted">{shortDate(a.last_seen)}</td>
+                        <td>
+                          {a.removed_at ? (
+                            <span class="a-muted a-nowrap">Removed {shortDate(a.removed_at)}</span>
+                          ) : (
+                            <StatusPill status="active" label="Current" />
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {history && history.scans.length > 0 && (
+            <section class="a-block" aria-labelledby="scans">
+              <div class="a-block__head">
+                <h2 class="a-h2" id="scans">
+                  Recent scans
+                </h2>
+              </div>
+              <div class="table-wrap">
+                <table class="table a-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Ran</th>
+                      <th scope="col">Source</th>
+                      <th scope="col">Rules</th>
+                      <th scope="col" class="is-num">
+                        HTTP
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.scans.map((s) => (
+                      <tr>
+                        <td class="a-nowrap">{shortDate(s.ran_at)}</td>
+                        <td class="a-mono">{s.source}</td>
+                        <td class="a-mono">{s.rules_version ?? '—'}</td>
+                        <td class="is-num">{s.http_status ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+        </div>
+
+        <aside class="rail" aria-label="Store facts">
+          <dl class="a-spec">
+            {spec.map((row) => (
+              <div class="a-spec__row">
+                <dt>{row.label}</dt>
+                <dd class:list={[{ 'a-mono': row.mono }]}>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <section class="a-block" aria-labelledby="jobs">
+            <div class="a-block__head">
+              <h2 class="a-h2" id="jobs">
+                Jobs
+              </h2>
+              <a class="a-link" href="/admin/scans">
+                Queue
+              </a>
+            </div>
+            {jobs.length === 0 ? (
+              <p class="rail__empty">No scan or capture jobs yet.</p>
+            ) : (
+              <ul class="rail__list">
+                {jobs.map((j) => (
+                  <li>
+                    <span>
+                      <span class="a-strong">{j.kind[0]!.toUpperCase() + j.kind.slice(1)}</span>
+                      <span class="a-sub" title={fullTime(j.created_at)}>
+                        #{j.id} · {timeAgo(j.created_at, now)} · {j.requested_by ?? 'crawler'}
+                      </span>
+                    </span>
+                    <StatusPill status={j.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {removals.length > 0 && (
+            <section class="a-block" aria-labelledby="removals">
+              <div class="a-block__head">
+                <h2 class="a-h2" id="removals">
+                  Removal requests
+                </h2>
+              </div>
+              <ul class="rail__list">
+                {removals.map((r) => (
+                  <li>
+                    <span>
+                      <a class="a-row-link a-mono" href={`/admin/removals/${r.id}`}>
+                        {r.reference}
+                      </a>
+                      <span class="a-sub">{timeAgo(r.created_at, now)}</span>
+                    </span>
+                    <StatusPill status={r.status} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section class="a-block" aria-labelledby="activity">
+            <div class="a-block__head">
+              <h2 class="a-h2" id="activity">
+                Activity
+              </h2>
+            </div>
+            <AuditList rows={audit} hideTarget empty="No admin changes to this store yet." />
+          </section>
+        </aside>
+      </div>
+    </>
+  )}
+</AdminLayout>
+
+<style>
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+  }
+  .meta__tag {
+    padding: 0 6px;
+    border-radius: var(--radius-xs);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    line-height: 20px;
+    text-transform: uppercase;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  :global(.state-notice) {
+    margin-bottom: var(--space-8);
+  }
+  :global(.country) {
+    max-width: 96px;
+    text-transform: uppercase;
+  }
+  .rail__list {
+    border-top: 1px solid var(--line);
+  }
+  .rail__list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .rail__empty {
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+</style>
