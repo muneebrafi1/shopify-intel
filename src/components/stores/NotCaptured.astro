@@ -1,0 +1,195 @@
+---
+/**
+ * Store page state for stores we detected but have not captured: an honest "detection
+ * specimen" — the four plates we would capture, drawn empty, next to what we know and what we
+ * don't yet.
+ */
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Icon from '~/components/ui/Icon.astro';
+import { CORE_PAGE_TYPES, PAGE_TYPES } from '~/lib/taxonomy';
+import { formatDate } from '~/lib/format';
+
+interface Props {
+  label: string;
+  detectedOn: string;
+  appCount: number;
+  themeLabel: string;
+  pixelCount: number;
+}
+const { label, detectedOn, appCount, themeLabel, pixelCount } = Astro.props;
+const pages = CORE_PAGE_TYPES.map((slug) => PAGE_TYPES.find((p) => p.slug === slug)!);
+---
+
+<section class="nc" aria-labelledby="nc-title">
+  <MonoLabel as="p" tone="ink" class="nc__label">
+    {label}
+  </MonoLabel>
+  <div class="nc__stage marks" aria-hidden="true">
+    <ol class="nc__plates">
+      {pages.map((p, i) => (
+        <li class="nc__plate">
+          <span class="nc__page">
+            <span class="nc__bar" />
+            <span class="nc__void mono">Not captured</span>
+          </span>
+          <span class="nc__cap mono">
+            <span>{String(i + 1).padStart(2, '0')}</span> {p.name}
+          </span>
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  <div class="nc__text">
+    <h2 id="nc-title" class="nc__title display">
+      Not captured yet.
+    </h2>
+    <p class="nc__body">
+      We detected its stack on {formatDate(detectedOn)}. Screenshots come with the capture pipeline,
+      which starts with the curated stores.
+    </p>
+    <dl class="nc__known">
+      <div>
+        <dt class="mlabel mlabel--bullet mlabel--ink">On file</dt>
+        <dd>
+          {`${themeLabel} · ${appCount} ${appCount === 1 ? 'app' : 'apps'} · ${pixelCount ? `${pixelCount} ${pixelCount === 1 ? 'pixel' : 'pixels'}` : 'no pixels'}`}
+        </dd>
+      </div>
+      <div>
+        <dt class="mlabel mlabel--bullet">Not yet</dt>
+        <dd>Home, collection, product and cart pages on desktop and mobile, and their sections</dd>
+      </div>
+    </dl>
+    <a class="nc__link" href="/methodology">
+      How detection works
+      <Icon name="arrow-right" size={14} />
+    </a>
+  </div>
+</section>
+
+<style>
+  .nc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+  @media (min-width: 1024px) {
+    .nc {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: var(--space-12);
+      align-items: center;
+    }
+  }
+  .nc :global(.nc__label) {
+    grid-column: 1 / -1;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--ink);
+    margin-bottom: calc(var(--space-2) * -1);
+  }
+  .nc__stage {
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    background:
+      repeating-linear-gradient(-45deg, transparent 0 10px, rgb(25 24 22 / 0.022) 10px 11px),
+      var(--tile);
+  }
+  @media (min-width: 1024px) {
+    .nc__stage {
+      padding: var(--space-10) var(--space-8);
+    }
+  }
+  .nc__plates {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  @media (min-width: 640px) {
+    .nc__plates {
+      gap: var(--space-5) var(--space-4);
+    }
+  }
+  @media (max-width: 639px) {
+    .nc__void {
+      display: none;
+    }
+    .nc__cap {
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+  .nc__plate {
+    min-width: 0;
+  }
+  .nc__page {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--line-strong);
+    background: color-mix(in srgb, var(--surface) 55%, transparent);
+    overflow: hidden;
+  }
+  .nc__bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 9%;
+    border-bottom: 1px dashed var(--line-strong);
+  }
+  .nc__void {
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .nc__cap {
+    display: block;
+    margin-top: 8px;
+    color: var(--ink-2);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .nc__cap span {
+    color: var(--ink-4);
+  }
+
+  .nc__title {
+    font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+  }
+  .nc__body {
+    margin-top: var(--space-3);
+    max-width: 44ch;
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+  .nc__known {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .nc__known dd {
+    margin-top: 4px;
+    padding-left: 13px;
+    font-size: var(--text-sm);
+    color: var(--ink-2);
+  }
+  .nc__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: var(--space-6);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.22em;
+  }
+</style>

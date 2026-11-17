@@ -1,0 +1,199 @@
+---
+/**
+ * The page's one dark moment on /stores: under the curated captures, the size of the rest of
+ * the archive (stores we detected but have not captured), a few of them as index rows, and the
+ * way into the full index.
+ */
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Icon from '~/components/ui/Icon.astro';
+import type { StoreListItem } from '~/server/api/v1/types';
+import { formatCount } from '~/lib/format';
+import { specimen } from './query';
+
+interface Props {
+  count: number;
+  items: StoreListItem[];
+  href: string;
+  /** "on Prestige", "running Klaviyo"… (empty when unfiltered). */
+  filterSummary?: string;
+  source: string;
+  asOf: string;
+}
+const { count, items, href, filterSummary, source, asOf } = Astro.props;
+const shown = items.slice(0, 6);
+const more = Math.max(0, count - shown.length);
+---
+
+<section class="rest" aria-labelledby="rest-title">
+  <div class="container">
+    <div class="rest__grid cols-12">
+      <div class="rest__lead span-5">
+        <MonoLabel as="p" class="rest__label">
+          Detected, not captured
+        </MonoLabel>
+        <p class="rest__num display num" aria-hidden="true">
+          {formatCount(count)}
+        </p>
+        <h2 id="rest-title" class="rest__title">
+          <span class="visually-hidden">{formatCount(count)}</span>
+          more {count === 1 ? 'store' : 'stores'}
+          {filterSummary ? ` ${filterSummary}` : ''} with their theme and apps on file. No
+          screenshots yet.
+        </h2>
+        <a class="rest__cta" href={href}>
+          Open the full index
+          <Icon name="arrow-right" size={16} />
+        </a>
+      </div>
+
+      <ol class="rest__rows" aria-label="Detected stores">
+        {shown.map((s) => (
+          <li>
+            <a href={s.href} class="rest__row">
+              <span class="rest__n">{specimen(s.position ?? 0)}</span>
+              <span class="rest__domain">{s.domain}</span>
+              <span class="rest__theme">{s.theme.label}</span>
+              <span class="rest__apps num">
+                {s.app_count} {s.app_count === 1 ? 'app' : 'apps'}
+              </span>
+            </a>
+          </li>
+        ))}
+        {more > 0 && (
+          <li>
+            <a href={href} class="rest__row rest__row--more">
+              <span class="rest__n">…</span>
+              <span class="rest__domain">and {formatCount(more)} more in the index</span>
+              <Icon name="arrow-right" size={14} />
+            </a>
+          </li>
+        )}
+      </ol>
+    </div>
+    <p class="rest__source mlabel">
+      Source: {source} · {asOf}
+    </p>
+  </div>
+</section>
+
+<style>
+  .rest {
+    margin-top: var(--space-16);
+    padding-block: var(--space-12) var(--space-8);
+    background: var(--inverse);
+    color: var(--ink-inverse);
+  }
+  @media (min-width: 1024px) {
+    .rest {
+      margin-top: var(--space-24);
+      padding-block: var(--space-20) var(--space-10);
+    }
+  }
+  .rest__grid {
+    align-items: start;
+  }
+  .rest :global(.rest__label) {
+    color: var(--ink-inverse-2);
+  }
+  .rest__num {
+    margin-top: var(--space-4);
+    font-size: clamp(4.5rem, 2rem + 9vw, 10rem);
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+  }
+  .rest__title {
+    margin-top: var(--space-5);
+    max-width: 30ch;
+    color: var(--ink-inverse);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-regular);
+    line-height: var(--leading-snug);
+  }
+  .rest__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--ink-inverse-2);
+    color: var(--ink-inverse);
+    font-weight: var(--weight-medium);
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .rest__cta:hover {
+    border-color: var(--ink-inverse);
+  }
+
+  .rest__rows {
+    border-top: 1px solid var(--ink-inverse-2);
+  }
+  @media (min-width: 1024px) {
+    .rest__rows {
+      grid-column: 7 / -1;
+      margin-top: var(--space-6);
+    }
+  }
+  .rest__row {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line-inverse);
+    transition: padding var(--dur-base) var(--ease-out);
+  }
+  .rest__row:hover {
+    padding-left: var(--space-2);
+  }
+  .rest__n {
+    color: var(--ink-inverse-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .rest__domain {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+  }
+  .rest__theme {
+    display: none;
+    color: var(--ink-inverse-2);
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rest__apps {
+    color: var(--ink-inverse-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    text-align: right;
+  }
+  .rest__row--more {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    color: var(--ink-inverse-2);
+  }
+  .rest__row--more .rest__domain {
+    font-weight: var(--weight-regular);
+  }
+  @media (min-width: 640px) {
+    .rest__row {
+      grid-template-columns: 56px minmax(0, 1.3fr) minmax(0, 1fr) 64px;
+    }
+    .rest__row--more {
+      grid-template-columns: 56px minmax(0, 1fr) auto;
+    }
+    .rest__theme {
+      display: block;
+    }
+  }
+  .rest__source {
+    margin-top: var(--space-12);
+    color: var(--ink-inverse-2);
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+</style>

@@ -1,0 +1,563 @@
+---
+/**
+ * /teardowns/<slug> — long-form editorial on one store. Serif title + dek, mono byline, the
+ * article with the store's spec sheet in a sticky sidebar, the notes on the plates (numbers
+ * match the store page's sections rail), the stack, more teardowns.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import Button from '~/components/ui/Button.astro';
+import Icon from '~/components/ui/Icon.astro';
+import SpecRows, { type SpecRow } from '~/components/stores/SpecRows.astro';
+import StackSheet from '~/components/stores/StackSheet.astro';
+import AnnotatedPlates from '~/components/teardowns/AnnotatedPlates.astro';
+import TeardownRow from '~/components/teardowns/TeardownRow.astro';
+import { renderMarkdown } from '~/components/teardowns/markdown';
+import { specimen } from '~/components/stores/query';
+import { api, orNotFound } from '~/server/api';
+import { SITE_NAME } from '~/config/site';
+import { formatCount, formatDate } from '~/lib/format';
+
+const slug = Astro.params.slug ?? '';
+const res = slug ? await orNotFound(api.getTeardown({ slug })) : null;
+if (!res) return Astro.rewrite('/404');
+
+const { data, meta } = res;
+const { teardown, store: detail, notes } = data;
+const store = detail.store;
+const { data: list } = await api.listTeardowns({});
+const ordered = [...list.items].sort(
+  (a, b) =>
+    (b.published_at ?? '').localeCompare(a.published_at ?? '') || b.note_count - a.note_count,
+);
+const number = Math.max(1, ordered.findIndex((t) => t.slug === teardown.slug) + 1);
+const others = ordered.filter((t) => t.slug !== teardown.slug).slice(0, 3);
+
+const body = renderMarkdown(teardown.body_md, { headingPrefix: true });
+const words =
+  teardown.body_md.split(/\s+/).length + notes.reduce((n, x) => n + x.body.split(/\s+/).length, 0);
+const minutes = Math.max(1, Math.round(words / 220));
+const plates = new Set(notes.map((n) => `${n.page_type}-${n.device}`)).size;
+const source = meta.sources[detail.detection.source];
+const asOf = formatDate(source?.as_of ?? detail.detection.last_seen);
+const isPreview = detail.pages.some((p) => p.is_placeholder);
+const title = store.name ?? store.domain;
+
+const specs: SpecRow[] = [
+  {
+    label: 'Theme',
+    value: store.theme.label,
+    href: store.theme.theme?.href ?? null,
+    note: store.theme.theme?.vendor ?? null,
+  },
+  { label: 'Apps', value: `${store.app_count} detected` },
+  {
+    label: 'Pixels',
+    value: detail.pixels.length ? detail.pixels.map((p) => p.name).join(', ') : 'None detected',
+    muted: !detail.pixels.length,
+  },
+  { label: 'Currency', value: store.currency ?? '—', mono: true },
+  {
+    label: 'Tranco rank',
+    value: store.tranco_rank ? formatCount(store.tranco_rank) : 'Not ranked',
+    mono: !!store.tranco_rank,
+    muted: !store.tranco_rank,
+  },
+  {
+    label: 'Detected',
+    value: formatDate(detail.detection.last_seen),
+    note: `Rules ${detail.detection.rules_version ?? 'unknown'}`,
+  },
+];
+const toc = [
+  ...body.headings.filter((h) => h.level === 2).map((h) => ({ href: `#${h.id}`, text: h.text })),
+  ...(notes.length ? [{ href: '#notes', text: 'Notes on the plates' }] : []),
+  { href: '#stack', text: 'The stack' },
+];
+
+const plateParam = Astro.url.searchParams.get('plate');
+const site = Astro.site ?? Astro.url;
+const pageUrl = new URL(teardown.href, site).href;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Teardowns',
+        item: new URL('/teardowns', site).href,
+      },
+      { '@type': 'ListItem', position: 2, name: teardown.title, item: pageUrl },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: teardown.title,
+    ...(teardown.dek ? { description: teardown.dek } : {}),
+    ...(teardown.published_at
+      ? { datePublished: teardown.published_at, dateModified: teardown.published_at }
+      : {}),
+    author: { '@type': 'Organization', name: SITE_NAME, url: new URL('/about', site).href },
+    publisher: { '@type': 'Organization', name: SITE_NAME },
+    mainEntityOfPage: pageUrl,
+    wordCount: words,
+    about: { '@type': 'OnlineStore', name: title, url: store.url },
+  },
+];
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+---
+
+<BaseLayout
+  title={teardown.title}
+  description={
+    teardown.dek ??
+    `A teardown of ${store.domain}: theme, apps and where each one shows up on the page.`
+  }
+  canonical={teardown.href}
+  jsonLd={jsonLd}
+>
+  <article class="td">
+    <div class="container">
+      <Breadcrumbs
+        items={[{ label: 'Teardowns', href: '/teardowns' }, { label: title }]}
+        class="td__crumbs"
+      />
+
+      <header class="td__head">
+        <p class="td__labels">
+          <MonoLabel tone="ink">Teardown {specimen(number).replace('N°0', 'N°')}</MonoLabel>
+          {teardown.is_sample && <MonoLabel tone="accent">Sample · detected data only</MonoLabel>}
+        </p>
+        <h1 class="td__title display">{teardown.title}</h1>
+        {teardown.dek && <p class="td__dek display">{teardown.dek}</p>}
+        <p class="td__byline mono">
+          <span>{SITE_NAME} editorial</span>
+          {teardown.published_at && <span>{formatDate(teardown.published_at)}</span>}
+          <span>{minutes} min read</span>
+          <span>
+            {notes.length} {notes.length === 1 ? 'note' : 'notes'} on {plates}{' '}
+            {plates === 1 ? 'plate' : 'plates'}
+          </span>
+          <span>Scan {asOf}</span>
+          {isPreview && <span class="td__pending">Capture pending</span>}
+        </p>
+      </header>
+
+      <div class="td__body cols-12">
+        <div class="td__article">
+          <div class="td-prose" set:html={body.html} />
+        </div>
+
+        <aside class="td__side" aria-label="The store">
+          <div class="td__sheet">
+            <MonoLabel as="p">The store</MonoLabel>
+            <p class="td__store">
+              <a href={store.href}>{title}</a>
+            </p>
+            <p class="td__domain">
+              <span class="mono">{store.domain}</span>
+              <a href={store.url} target="_blank" rel="noopener" class="td__visit">
+                Visit <Icon name="arrow-up-right" size={12} />
+              </a>
+            </p>
+            <SpecRows rows={specs} label={`${title} specification`} class="td__specs" />
+            <Button
+              href={store.href}
+              size="sm"
+              variant="secondary"
+              iconRight="arrow-right"
+              class="td__open"
+            >
+              Open the store specimen
+            </Button>
+            <nav class="td__toc" aria-label="In this teardown">
+              <MonoLabel as="p">In this teardown</MonoLabel>
+              <ol>
+                {toc.map((t, i) => (
+                  <li>
+                    <a href={t.href}>
+                      <span class="mono">{String(i + 1).padStart(2, '0')}</span>
+                      {t.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    {notes.length > 0 && (
+      <section id="notes" class="container td__notes" aria-labelledby="notes-title">
+        <SectionHeader
+          id="notes-title"
+          title="Notes on the plates"
+          count={notes.length}
+          label={isPreview ? 'Plates · layout previews, capture pending' : 'Plates'}
+          description={
+            isPreview
+              ? 'Each note points at one section. The plates are drawn from the sections we expect on each page until the store is captured.'
+              : 'Each note points at one section of a captured page.'
+          }
+          rule
+        />
+        <AnnotatedPlates notes={notes} store={detail} basePath={store.href} plate={plateParam} />
+      </section>
+    )}
+
+    <section id="stack" class="container page-block" aria-labelledby="stack-title">
+      <SectionHeader
+        id="stack-title"
+        title="The stack"
+        count={store.app_count}
+        description={`Everything the ${asOf} scan detected on ${store.domain}. App and theme names link to their pages; placements link to the section on the store’s plates.`}
+        rule
+      />
+      <StackSheet detail={detail} basePath={store.href} />
+    </section>
+
+    {others.length > 0 && (
+      <section class="container page-block td__more" aria-labelledby="more-title">
+        <SectionHeader
+          id="more-title"
+          title="More teardowns"
+          href="/teardowns"
+          linkLabel="All teardowns"
+          rule
+        />
+        <div class="td__more-list">
+          {others.map((t) => (
+            <TeardownRow item={t} n={ordered.indexOf(t) + 1} />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <div class="container">
+      <SourceNote
+        class="td__source"
+        source={`${source?.label ?? detail.detection.source}${teardown.is_sample ? '. Sample teardown: written from detected data only' : ''}`}
+        asOf={asOf}
+      />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .td :global(.td__crumbs) {
+    padding-top: var(--space-6);
+  }
+  .td__head {
+    padding-block: var(--space-10) var(--space-8);
+    max-width: 1040px;
+  }
+  @media (min-width: 1024px) {
+    .td__head {
+      padding-block: var(--space-16) var(--space-10);
+    }
+  }
+  .td__labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .td__title {
+    margin-top: var(--space-5);
+    font-size: clamp(2.5rem, 1.4rem + 4.6vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  .td__dek {
+    margin-top: var(--space-5);
+    max-width: 40ch;
+    color: var(--ink-2);
+    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
+    line-height: 1.25;
+  }
+  .td__byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 0;
+    margin-top: var(--space-8);
+    padding-block: var(--space-3);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .td__byline span + span::before {
+    content: '·';
+    margin-inline: 10px;
+    color: var(--ink-4);
+  }
+  @media (max-width: 639px) {
+    .td__byline {
+      gap: 6px 16px;
+    }
+    .td__byline span + span::before {
+      content: none;
+    }
+  }
+  .td__pending {
+    color: var(--accent-text);
+  }
+
+  .td__body {
+    align-items: start;
+    padding-top: var(--space-4);
+  }
+  .td__article {
+    min-width: 0;
+  }
+  @media (min-width: 1024px) {
+    .td__article {
+      grid-column: 1 / span 7;
+    }
+    .td__side {
+      grid-column: 9 / -1;
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+  .td__sheet {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .td__store {
+    margin-top: var(--space-2);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .td__store a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+  }
+  .td__domain {
+    display: flex;
+    gap: var(--space-3);
+    align-items: baseline;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .td__visit {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .td__sheet :global(.td__specs) {
+    margin-top: var(--space-3);
+  }
+  .td__sheet :global(.td__open) {
+    justify-self: start;
+    margin-top: var(--space-3);
+  }
+  .td__toc {
+    margin-top: var(--space-6);
+  }
+  .td__toc ol {
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--line);
+  }
+  .td__toc a {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .td__toc a:hover {
+    color: var(--ink);
+  }
+  .td__toc .mono {
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    padding-top: 2px;
+  }
+  @media (max-width: 1023px) {
+    .td__side {
+      margin-top: var(--space-10);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--ink);
+    }
+    .td__toc {
+      display: none;
+    }
+  }
+
+  /* Article typography */
+  .td-prose {
+    max-width: 680px;
+    color: var(--ink-2);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+  .td-prose :global(> * + *) {
+    margin-top: var(--space-5);
+  }
+  .td-prose :global(h2) {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-top: var(--space-12);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    scroll-margin-top: calc(var(--header-h) + var(--space-6));
+  }
+  .td-prose :global(h2 .md-n) {
+    flex: none;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 450;
+    letter-spacing: 0.04em;
+  }
+  .td-prose :global(h3) {
+    margin-top: var(--space-8);
+    color: var(--ink);
+    font-size: var(--text-lg);
+  }
+  .td-prose :global(h2 + *),
+  .td-prose :global(h3 + *) {
+    margin-top: var(--space-3);
+  }
+  .td-prose :global(strong) {
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+  }
+  .td-prose :global(a) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .td-prose :global(a:hover) {
+    text-decoration-color: currentColor;
+  }
+  .td-prose :global(ul) {
+    padding-left: 1.2em;
+    list-style: disc;
+  }
+  .td-prose :global(ul li + li) {
+    margin-top: var(--space-2);
+  }
+  .td-prose :global(li::marker) {
+    color: var(--ink-4);
+  }
+  .td-prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-xs);
+    background: var(--fill);
+    color: var(--ink);
+  }
+  /* "What to learn" lists: serif numerals on hairlines. */
+  .td-prose :global(ol.md-ol) {
+    counter-reset: learn;
+    border-top: 1px solid var(--ink);
+  }
+  .td-prose :global(ol.md-ol li) {
+    counter-increment: learn;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+  }
+  .td-prose :global(ol.md-ol li::before) {
+    content: counter(learn, decimal-leading-zero);
+    font-family: var(--font-serif);
+    font-size: 1.75rem;
+    line-height: 1;
+    color: var(--ink-3);
+  }
+  /* Pull quote */
+  .td-prose :global(.md-pull) {
+    margin-block: var(--space-10);
+    padding-block: var(--space-6);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
+    line-height: 1.22;
+    letter-spacing: -0.01em;
+  }
+  @media (min-width: 1280px) {
+    .td-prose :global(.md-pull) {
+      margin-right: -12%;
+    }
+  }
+  .td-prose :global(.md-pull strong) {
+    font-weight: 500;
+  }
+  /* Editor's note */
+  .td-prose :global(.md-note) {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+  .td-prose :global(.md-note__label) {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  .td__notes {
+    margin-top: var(--space-16);
+    scroll-margin-top: var(--header-h);
+  }
+  @media (min-width: 1024px) {
+    .td__notes {
+      margin-top: var(--space-24);
+    }
+  }
+  .td__notes :global(.sh),
+  .td__notes > :global(header) {
+    margin-bottom: var(--space-6);
+  }
+  .td__more-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: var(--space-8);
+  }
+  @media (min-width: 1024px) {
+    .td__more-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .container :global(.td__source) {
+    margin-block: var(--space-12) var(--space-16);
+  }
+</style>

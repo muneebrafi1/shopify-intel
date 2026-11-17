@@ -1,0 +1,406 @@
+---
+/**
+ * /stores/<domain> — the store specimen.
+ * Header (N°, name, visit link, spec rows) → the plates viewer (hero; ?page=&device=) or, for
+ * stores we only detected, the "not captured yet" sheet → stack → similar stores → teardown →
+ * removal link. Unknown and opted-out domains 404 (the API only serves active stores).
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import Icon from '~/components/ui/Icon.astro';
+import SpecRows, { type SpecRow } from '~/components/stores/SpecRows.astro';
+import PlateViewer from '~/components/stores/PlateViewer.astro';
+import NotCaptured from '~/components/stores/NotCaptured.astro';
+import StackSheet from '~/components/stores/StackSheet.astro';
+import SimilarStores from '~/components/stores/SimilarStores.astro';
+import TeardownBand from '~/components/stores/TeardownBand.astro';
+import { api, orNotFound } from '~/server/api';
+import { formatCount, formatDate } from '~/lib/format';
+import { parsePlate } from '~/components/stores/plates';
+import { specimen } from '~/components/stores/query';
+
+const param = (Astro.params.domain ?? '').trim();
+const res = param ? await orNotFound(api.getStore({ domain: param })) : null;
+if (!res) return Astro.rewrite('/404');
+
+const { data: detail, meta } = res;
+const store = detail.store;
+// Canonical domain (case, www., trailing dots): one URL per store.
+if (store.domain !== param) {
+  return Astro.redirect(`${store.href}${Astro.url.search}`, 301);
+}
+
+const teardownRes = detail.teardown
+  ? await orNotFound(api.getTeardown({ slug: detail.teardown.slug }))
+  : null;
+const basePath = store.href;
+const hasPlates = detail.pages.length > 0;
+const { page, device } = parsePlate(
+  Astro.url,
+  detail.pages.map((p) => p.page_type.slug),
+);
+const isPreview = detail.pages.some((p) => p.is_placeholder);
+const title = store.name ?? store.domain;
+const n = store.position ?? null;
+const source = meta.sources[detail.detection.source];
+const sourceLabel = source?.label ?? detail.detection.source;
+const asOf = formatDate(source?.as_of ?? detail.detection.last_seen);
+const firstSeen = formatDate(detail.detection.first_seen);
+const lastSeen = formatDate(detail.detection.last_seen);
+
+let regionName: string | null = null;
+if (store.country) {
+  try {
+    regionName =
+      new Intl.DisplayNames(['en'], { type: 'region' }).of(store.country) ?? store.country;
+  } catch {
+    regionName = store.country;
+  }
+}
+
+const specs: SpecRow[] = [
+  {
+    label: 'Theme',
+    value: store.theme.label,
+    href: store.theme.theme?.href ?? null,
+    note: store.theme.theme?.vendor ?? (store.theme.name ? 'No theme profile yet' : null),
+    muted: !store.theme.name,
+  },
+  {
+    label: 'Apps',
+    value: `${store.app_count} detected`,
+    note: detail.apps.unresolved.count ? `${detail.apps.unresolved.count} without a profile` : null,
+  },
+  {
+    label: 'Category',
+    value: store.category?.name ?? '—',
+    href: store.category?.href ?? null,
+    muted: !store.category,
+  },
+  {
+    label: 'Currency / country',
+    value: [store.currency ?? '—', regionName].filter(Boolean).join(' · '),
+    note: regionName ? null : 'Country not on file',
+    muted: !store.currency,
+  },
+  {
+    label: 'Tranco rank',
+    value: store.tranco_rank ? formatCount(store.tranco_rank) : 'Not ranked',
+    note: store.tranco_rank ? 'Tranco top-sites list' : null,
+    mono: !!store.tranco_rank,
+    muted: !store.tranco_rank,
+  },
+  {
+    label: 'First / last seen',
+    value: firstSeen === lastSeen ? firstSeen : `${firstSeen} – ${lastSeen}`,
+    note: firstSeen === lastSeen ? 'One scan so far' : null,
+  },
+  {
+    label: 'Detection',
+    value: source ? 'StorePeek scan' : detail.detection.source,
+    href: '/methodology',
+    note: `Rules ${detail.detection.rules_version ?? 'unknown'}`,
+  },
+  {
+    label: 'Pixels',
+    value: detail.pixels.length ? detail.pixels.map((p) => p.name).join(', ') : 'None detected',
+    muted: !detail.pixels.length,
+  },
+];
+
+const nameChars = Math.max(4, title.length);
+const article = (word: string) => (/^[aeiou]/i.test(word) ? 'An' : 'A');
+const statement = (() => {
+  const cat = store.category?.name.toLowerCase();
+  const who = cat ? `${article(cat)} ${cat} store` : 'A Shopify store';
+  const on = store.theme.name ? ` on ${store.theme.label}` : ' on a theme we couldn’t identify';
+  const apps = `${store.app_count} detected ${store.app_count === 1 ? 'app' : 'apps'}`;
+  const px = detail.pixels.length;
+  const pixels = px ? ` and ${px === 1 ? 'one tracking pixel' : `${px} tracking pixels`}` : '';
+  return `${who}${on}, running ${apps}${pixels}.`;
+})();
+let blockN = 0;
+const block = (label: string) => `${String(++blockN).padStart(2, '0')} — ${label}`;
+
+// ---- SEO ----------------------------------------------------------------------------------
+const site = Astro.site ?? Astro.url;
+const pageUrl = new URL(basePath, site).href;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Stores', item: new URL('/stores', site).href },
+      { '@type': 'ListItem', position: 2, name: title, item: pageUrl },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: `${title} — Shopify theme, apps and pages`,
+    url: pageUrl,
+    dateModified: detail.detection.last_seen.slice(0, 10),
+    about: {
+      '@type': 'OnlineStore',
+      name: title,
+      url: store.url,
+      ...(store.country
+        ? { address: { '@type': 'PostalAddress', addressCountry: store.country } }
+        : {}),
+      ...(store.currency ? { currenciesAccepted: store.currency } : {}),
+    },
+  },
+];
+const description = hasPlates
+  ? `${title} runs ${store.theme.label} with ${store.app_count} detected apps. See its home, collection, product and cart pages on desktop and mobile, section by section, and where each app renders.`
+  : `${store.domain} runs ${store.theme.label} with ${store.app_count} detected Shopify apps (scan of ${asOf}). Screenshots are not captured yet.`;
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+---
+
+<BaseLayout
+  title={
+    hasPlates
+      ? `${title}: Shopify theme, apps and pages`
+      : `${store.domain}: Shopify theme and apps`
+  }
+  description={description}
+  canonical={basePath}
+  noindex={!hasPlates}
+  jsonLd={jsonLd}
+>
+  <div class="container store">
+    <Breadcrumbs
+      items={[{ label: 'Stores', href: '/stores' }, { label: title }]}
+      class="store__crumbs"
+    />
+
+    <header class="shdr cols-12">
+      <div class="shdr__id span-8">
+        <p class="shdr__label">
+          <MonoLabel tone="ink">{n ? `${specimen(n)} — Store` : 'Store'}</MonoLabel>
+          {store.is_curated ? (
+            <MonoLabel tone="accent">Curated</MonoLabel>
+          ) : (
+            <MonoLabel>Detected only</MonoLabel>
+          )}
+        </p>
+        <h1 class="shdr__name" style={`--chars:${nameChars}`}>
+          {title}
+        </h1>
+        <p class="shdr__statement display">{statement}</p>
+        <p class="shdr__links">
+          {store.name && <span class="shdr__domain mono">{store.domain}</span>}
+          <a class="shdr__visit" href={store.url} target="_blank" rel="noopener">
+            Visit store
+            <Icon name="arrow-up-right" size={14} />
+          </a>
+        </p>
+      </div>
+      <div class="shdr__specs start-9">
+        <SpecRows rows={specs} label={`${title} specification`} />
+      </div>
+    </header>
+
+    {hasPlates ? (
+      <PlateViewer
+        label={block('Plates')}
+        basePath={basePath}
+        storeLabel={title}
+        pages={detail.pages}
+        page={page}
+        device={device}
+      />
+    ) : (
+      <NotCaptured
+        label={block('Detection')}
+        detectedOn={detail.detection.first_seen}
+        appCount={store.app_count}
+        themeLabel={store.theme.label}
+        pixelCount={detail.pixels.length}
+      />
+    )}
+
+    <section class="page-block" aria-labelledby="stack-title">
+      <SectionHeader
+        id="stack-title"
+        title="Stack"
+        count={store.app_count}
+        label={block('Stack')}
+        description={
+          hasPlates
+            ? `The theme and apps detected on ${lastSeen}, by category. Links jump to the section each app is attributed to on the plates.`
+            : `The theme and apps detected on ${lastSeen}, by category, with where apps of each kind usually render.`
+        }
+      />
+      <StackSheet detail={detail} basePath={basePath} class="store__stack" />
+    </section>
+
+    {detail.similar.length > 0 && (
+      <section class="page-block" aria-labelledby="similar-title">
+        <SectionHeader
+          id="similar-title"
+          title="Similar stores"
+          count={detail.similar.length}
+          label={block('Similar')}
+          description="Ranked by apps in common, with extra weight for the same theme. From the same scan."
+          href={store.theme.theme ? `/stores?theme=${store.theme.theme.slug}` : undefined}
+          linkLabel={store.theme.theme ? `All stores on ${store.theme.theme.name}` : undefined}
+        />
+        <SimilarStores items={detail.similar} />
+      </section>
+    )}
+  </div>
+
+  {detail.teardown && (
+    <TeardownBand
+      href={detail.teardown.href}
+      title={detail.teardown.title}
+      dek={teardownRes?.data.teardown.dek ?? null}
+      isSample={teardownRes?.data.teardown.is_sample ?? false}
+      noteCount={teardownRes?.data.notes.length ?? 0}
+      publishedAt={teardownRes?.data.teardown.published_at ?? null}
+    />
+  )}
+
+  <div class="container">
+    <aside class="optout" aria-label="Removal">
+      <div>
+        <p class="optout__title">Is this your store?</p>
+        <p class="optout__body">
+          We only show public pages and what they load. Ask us to remove the store or correct a
+          detail.
+        </p>
+      </div>
+      <a class="optout__link" href={`/opt-out?domain=${encodeURIComponent(store.domain)}`}>
+        Request removal
+        <Icon name="arrow-right" size={14} />
+      </a>
+    </aside>
+    <SourceNote
+      class="store__source"
+      source={
+        isPreview ? `${sourceLabel}; layouts are previews from the capture plan` : sourceLabel
+      }
+      asOf={asOf}
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .store :global(.store__crumbs) {
+    padding-top: var(--space-6);
+  }
+  .shdr {
+    padding-block: var(--space-6) var(--space-10);
+    align-items: end;
+  }
+  @media (min-width: 1024px) {
+    .shdr {
+      padding-block: var(--space-10) var(--space-12);
+    }
+  }
+  .shdr__id {
+    min-width: 0;
+  }
+  .shdr__label {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .shdr__name {
+    margin-top: var(--space-4);
+    /* Very large, but never wider than the column: shrink by name length. */
+    font-size: min(
+      clamp(3rem, 1.6rem + 6vw, 8rem),
+      calc((100vw - 2 * var(--page-gutter)) / (var(--chars) * 0.6))
+    );
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.05em;
+    line-height: 0.95;
+    overflow-wrap: anywhere;
+  }
+  @media (min-width: 1024px) {
+    .shdr__name {
+      font-size: min(
+        8rem,
+        calc((min(100vw, var(--page-max)) - 2 * var(--page-gutter)) * 0.64 / (var(--chars) * 0.58))
+      );
+    }
+  }
+  .shdr__statement {
+    margin-top: var(--space-5);
+    max-width: 34ch;
+    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
+    line-height: 1.2;
+    color: var(--ink-2);
+  }
+  .shdr__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-5);
+  }
+  .shdr__domain {
+    color: var(--ink-2);
+    font-size: var(--text-md);
+  }
+  .shdr__visit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--ink);
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+  }
+  .shdr__visit:hover {
+    color: var(--accent-text);
+    border-color: var(--accent-text);
+  }
+  .shdr__specs {
+    min-width: 0;
+  }
+
+  .optout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-8);
+    margin-top: var(--space-16);
+    padding-block: var(--space-5);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .optout__title {
+    font-weight: var(--weight-semibold);
+  }
+  .optout__body {
+    margin-top: 2px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .optout__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition: box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .optout__link:hover {
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+  .container :global(.store__source) {
+    margin-block: var(--space-5) var(--space-16);
+  }
+</style>
