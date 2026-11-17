@@ -22,7 +22,18 @@ export const ListStoresInput = z.object({
   category: z.string().optional().describe('Store category slug.'),
   currency: z.string().length(3).optional(),
   country: z.string().length(2).optional(),
-  curated: z.boolean().optional().describe('Only curated stores (with a capture plan).'),
+  scope: z
+    .enum(['curated', 'all'])
+    .default('curated')
+    .describe(
+      'curated (default, also with filters) = the curated stores with a capture plan; all = every detected store. An explicit `curated` overrides it.',
+    ),
+  curated: z
+    .boolean()
+    .optional()
+    .describe(
+      'true = curated stores only; false = detected-only stores (not curated). Overrides scope.',
+    ),
   captured: z.boolean().optional().describe('Only stores with real screenshots.'),
   q: z.string().max(100).optional().describe('Domain or name (prefix match).'),
   sort: StoreSortEnum.default('rank'),
@@ -61,6 +72,11 @@ export const StoreFacetsSchema = z.object({
   apps: z.array(FacetSchema),
   curated: int(),
   captured: int(),
+  scope: z
+    .object({ curated: int(), all: int() })
+    .describe(
+      'Stores matching every other filter, per scope (for a "Curated · All detected" switch).',
+    ),
 });
 
 export const ListStoresOutput = z.object({

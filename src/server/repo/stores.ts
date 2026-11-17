@@ -243,7 +243,8 @@ async function storeFacets(ctx: Ctx, f: StoreFilters): Promise<StoreFacets> {
       );
 
   const flags = storeWhere(f, ['curated', 'captured']);
-  const [themes, categories, currencies, countries, apps, flagRow] = await Promise.all([
+  const scoped = storeWhere(f, ['curated']);
+  const [themes, categories, currencies, countries, apps, flagRow, scopeRow] = await Promise.all([
     facet(
       'theme',
       (w) => `SELECT COALESCE(t.slug, lower(replace(s.current_theme_name, ' ', '-'))) AS value,
@@ -275,6 +276,10 @@ async function storeFacets(ctx: Ctx, f: StoreFilters): Promise<StoreFacets> {
       `SELECT SUM(s.is_curated) AS curated, SUM(s.is_captured) AS captured FROM stores s WHERE ${flags.sql}`,
       flags.params,
     ),
+    ctx.db.first<{ curated: number | null; all: number }>(
+      `SELECT SUM(s.is_curated) AS curated, COUNT(*) AS "all" FROM stores s WHERE ${scoped.sql}`,
+      scoped.params,
+    ),
   ]);
   return {
     themes: toFacets(themes),
@@ -284,6 +289,7 @@ async function storeFacets(ctx: Ctx, f: StoreFilters): Promise<StoreFacets> {
     apps: toFacets(apps),
     curated: flagRow?.curated ?? 0,
     captured: flagRow?.captured ?? 0,
+    scope: { curated: scopeRow?.curated ?? 0, all: scopeRow?.all ?? 0 },
   };
 }
 
@@ -309,6 +315,8 @@ export interface ListStoresParams {
   category?: string | undefined;
   currency?: string | undefined;
   country?: string | undefined;
+  /** Owner decision: lists default to the curated stores, with or without filters. */
+  scope?: 'curated' | 'all' | undefined;
   curated?: boolean | undefined;
   captured?: boolean | undefined;
   q?: string | undefined;
@@ -324,7 +332,9 @@ export async function listStores(ctx: Ctx, p: ListStoresParams) {
   if (p.category) f.category = p.category;
   if (p.currency) f.currency = p.currency;
   if (p.country) f.country = p.country;
+  // An explicit `curated` wins; otherwise the scope decides (curated by default).
   if (p.curated !== undefined) f.curated = p.curated;
+  else if ((p.scope ?? 'curated') === 'curated') f.curated = true;
   if (p.captured !== undefined) f.captured = p.captured;
   if (p.q?.trim()) f.fts = ftsPrefixQuery(p.q);
 

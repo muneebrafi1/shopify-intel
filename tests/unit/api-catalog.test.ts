@@ -1,8 +1,8 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { ApiError } from '../../src/server/api/v1/errors.ts';
-import { setup } from './helpers/db.ts';
+import { get, setup } from './helpers/db.ts';
 
-const { db, api } = setup();
+const { db, api, http } = setup();
 afterAll(() => db.close());
 
 describe('meta', () => {
@@ -20,15 +20,42 @@ describe('meta', () => {
 });
 
 describe('stores', () => {
+  it('defaults to the curated stores, with or without filters (owner decision)', async () => {
+    const curated = await api.listStores({ limit: 60 });
+    expect(curated.meta.pagination?.total).toBe(20);
+    expect(curated.data.items.every((s) => s.is_curated)).toBe(true);
+    expect(curated.data.facets.scope).toEqual({ curated: 20, all: 930 });
+    // Filters keep the curated default; scope=all reaches every detected store.
+    const dawn = await api.listStores({ theme: 'dawn' });
+    expect(dawn.data.items.every((s) => s.is_curated)).toBe(true);
+    expect(dawn.meta.pagination?.total).toBe(dawn.data.facets.scope.curated);
+    expect(dawn.data.facets.scope.all).toBe(20);
+    expect((await api.listStores({ theme: 'dawn', scope: 'all' })).meta.pagination?.total).toBe(20);
+    // An explicit curated flag overrides the scope.
+    const rest = await api.listStores({ curated: false });
+    expect(rest.meta.pagination?.total).toBe(910);
+    expect(rest.data.items.some((s) => s.is_curated)).toBe(false);
+  });
+
+  it('serves the curated default over HTTP too', async () => {
+    const res = await get(http, '/api/v1/stores?theme=dawn');
+    const body = (await res.json()) as { meta: { pagination: { total: number } } };
+    const all = await get(http, '/api/v1/stores?theme=dawn&scope=all');
+    const allBody = (await all.json()) as { meta: { pagination: { total: number } } };
+    expect(body.meta.pagination.total).toBeLessThan(allBody.meta.pagination.total);
+    expect(allBody.meta.pagination.total).toBe(20);
+    expect((await get(http, '/api/v1/stores?scope=some')).status).toBe(400);
+  });
+
   it('lists with facets and stable keyset pagination', async () => {
-    const first = await api.listStores({ limit: 24 });
+    const first = await api.listStores({ scope: 'all', limit: 24 });
     expect(first.meta.pagination?.total).toBe(930);
     expect(first.data.items[0]?.domain).toBe('youngla.com');
     expect(first.data.facets.curated).toBe(20);
     const seen = new Set(first.data.items.map((s) => s.domain));
     let cursor = first.meta.pagination?.next_cursor ?? null;
     for (let i = 0; i < 3 && cursor; i++) {
-      const next = await api.listStores({ limit: 24, cursor });
+      const next = await api.listStores({ scope: 'all', limit: 24, cursor });
       for (const s of next.data.items) {
         expect(seen.has(s.domain)).toBe(false);
         seen.add(s.domain);
@@ -39,15 +66,15 @@ describe('stores', () => {
   });
 
   it('filters by theme and app with counts from the scan', async () => {
-    const dawn = await api.listStores({ theme: 'dawn', limit: 60 });
+    const dawn = await api.listStores({ theme: 'dawn', scope: 'all', limit: 60 });
     expect(dawn.meta.pagination?.total).toBe(20);
     expect(dawn.data.items.every((s) => s.theme.theme?.slug === 'dawn')).toBe(true);
-    const klaviyo = await api.listStores({ app: 'klaviyo', sort: 'apps', limit: 10 });
+    const klaviyo = await api.listStores({ app: 'klaviyo', scope: 'all', sort: 'apps', limit: 10 });
     expect(klaviyo.meta.pagination?.total).toBe(383);
     const counts = klaviyo.data.items.map((s) => s.app_count);
     expect([...counts].sort((a, b) => b - a)).toEqual(counts);
     // A detected theme without a record is filterable by its slugified name.
-    const foodie = await api.listStores({ theme: 'foodie' });
+    const foodie = await api.listStores({ theme: 'foodie', scope: 'all' });
     expect(foodie.meta.pagination?.total).toBe(5);
     // Facets ignore their own filter.
     expect(dawn.data.facets.themes.find((f) => f.value === 'horizon')?.count).toBe(14);
@@ -79,7 +106,7 @@ describe('stores', () => {
   });
 
   it('counts unresolved apps without inventing profiles', async () => {
-    const list = await api.listStores({ sort: 'apps', limit: 1 });
+    const list = await api.listStores({ scope: 'all', sort: 'apps', limit: 1 });
     const top = list.data.items[0];
     if (!top) throw new Error('no store');
     const { data } = await api.getStore({ domain: top.domain });
