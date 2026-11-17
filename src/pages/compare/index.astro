@@ -29,7 +29,8 @@ if (params.has('a') || params.has('b')) {
   const valid = (s: string) => /^[a-z0-9][a-z0-9.-]*$/.test(s);
   if (!qa || !qb) pickError = 'Choose two apps or two themes to compare.';
   else if (qa === qb) pickError = 'Pick two different ones.';
-  else if (!valid(qa) || !valid(qb)) pickError = 'We couldn’t find one of those. Pick from the lists.';
+  else if (!valid(qa) || !valid(qb))
+    pickError = 'We couldn’t find one of those. Pick from the lists.';
   else {
     try {
       const { data } = await api.getComparison({ pair: `${qa}-vs-${qb}` });
@@ -67,31 +68,55 @@ const appBySlug = new Map(apps.map((a) => [a.slug, a]));
 const themeBySlug = new Map(themes.items.map((t) => [t.slug, t]));
 
 const all = list.items;
-const counts = { all: all.length, app: all.filter((c) => c.kind === 'app').length, theme: all.filter((c) => c.kind === 'theme').length };
+const counts = {
+  all: all.length,
+  app: all.filter((c) => c.kind === 'app').length,
+  theme: all.filter((c) => c.kind === 'theme').length,
+};
 const shown = kind ? all.filter((c) => c.kind === kind) : all;
 
 const storesOf = (c: ComparisonLink, side: 'a' | 'b') =>
-  c.kind === 'app' ? appBySlug.get(c[side].slug)?.usage.stores : themeBySlug.get(c[side].slug)?.usage.stores;
+  c.kind === 'app'
+    ? appBySlug.get(c[side].slug)?.usage.stores
+    : themeBySlug.get(c[side].slug)?.usage.stores;
 const row = (c: ComparisonLink, subtitle: string) => {
   const sa = storesOf(c, 'a');
   const sb = storesOf(c, 'b');
   return {
     href: c.href,
     title: c.title,
-    subtitle,
+    subtitle:
+      sa !== undefined && sb !== undefined
+        ? `On ${formatCount(sa)} and ${formatCount(sb)} stores`
+        : subtitle,
     cells: [
-      { value: sa !== undefined && sb !== undefined ? `${formatCount(sa)} · ${formatCount(sb)}` : '—', mono: true, muted: true },
-      { value: `(${pluralStores(c.shared_stores ?? 0)})`, serif: true, mobile: true },
+      {
+        value:
+          sa !== undefined && sb !== undefined ? `${formatCount(sa)} · ${formatCount(sb)}` : '—',
+        mono: true,
+        muted: true,
+      },
+      c.shared_stores
+        ? { value: `(${pluralStores(c.shared_stores)})`, serif: true, mobile: true }
+        : { value: '(none)', serif: true, muted: true, mobile: true },
     ],
   };
 };
 
 // App pairs grouped by category, busiest categories first.
-const appGroups = new Map<string, { label: string; href?: string; weight: number; links: ComparisonLink[] }>();
+const appGroups = new Map<
+  string,
+  { label: string; href?: string; weight: number; links: ComparisonLink[] }
+>();
 for (const c of shown.filter((x) => x.kind === 'app')) {
   const cat = appBySlug.get(c.a.slug)?.category ?? appBySlug.get(c.b.slug)?.category ?? null;
   const key = cat?.slug ?? 'other';
-  const g = appGroups.get(key) ?? { label: cat?.name ?? 'Other apps', href: cat?.href, weight: 0, links: [] };
+  const g = appGroups.get(key) ?? {
+    label: cat?.name ?? 'Other apps',
+    href: cat?.href,
+    weight: 0,
+    links: [],
+  };
   g.weight = Math.max(g.weight, storesOf(c, 'a') ?? 0, storesOf(c, 'b') ?? 0);
   g.links.push(c);
   appGroups.set(key, g);
@@ -102,12 +127,14 @@ const appSection: Group[] = [...appGroups.entries()]
     id: `apps-${key}`,
     label: g.label,
     href: g.href,
-    note: 'Top apps in category',
     rows: g.links.map((c) => row(c, g.label)),
   }));
 
 // Theme pairs: the most used, then same-vendor pairs grouped by vendor.
-const themeGroups = new Map<string, { label: string; note: string; href?: string; links: ComparisonLink[] }>();
+const themeGroups = new Map<
+  string,
+  { label: string; note: string; href?: string; links: ComparisonLink[] }
+>();
 for (const c of shown.filter((x) => x.kind === 'theme')) {
   const vendor = themeBySlug.get(c.a.slug)?.vendor_info ?? null;
   const key = c.reason === 'same-vendor' && vendor ? `vendor-${vendor.slug}` : 'most-used';
@@ -149,7 +176,7 @@ for (const [label, items] of [...byCat.entries()].sort((x, y) => x[0].localeComp
   });
 }
 
-const columns = '52px minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1fr)';
+const columns = '52px minmax(0, 1fr) 112px 112px';
 const head = ['N°', 'Comparison', 'Stores each', 'Run both'];
 const asOf = formatDate(meta.data_as_of);
 const scan = Object.entries(meta.sources).find(([k]) => k.startsWith('storepeek-scan'))?.[1];
@@ -186,7 +213,12 @@ else Astro.response.headers.set('Cache-Control', 'no-store');
   jsonLd={jsonLd}
 >
   <div class="container">
-    <PageHeader title="Compare" count={counts.all} eyebrow={`Index · ${counts.all} popular pairs · any two on request`} size="lg">
+    <PageHeader
+      title="Compare"
+      count={counts.all}
+      eyebrow={`Index · ${counts.all} popular pairs · any two on request`}
+      size="lg"
+    >
       <p slot="meta" class="cmpi__statement display">
         Two apps or two themes, side by side on real stores. No winners, just evidence.
       </p>
@@ -197,65 +229,81 @@ else Astro.response.headers.set('Cache-Control', 'no-store');
 
     <div class="cmpi__bar">
       <ChipRow label="Kind">
-        <Chip href={chipHref(null)} selected={!kind} count={counts.all}>All</Chip>
-        <Chip href={chipHref('app')} selected={kind === 'app'} count={counts.app}>Apps</Chip>
-        <Chip href={chipHref('theme')} selected={kind === 'theme'} count={counts.theme}>Themes</Chip>
+        <Chip href={chipHref(null)} selected={!kind} count={counts.all}>
+          All
+        </Chip>
+        <Chip href={chipHref('app')} selected={kind === 'app'} count={counts.app}>
+          Apps
+        </Chip>
+        <Chip href={chipHref('theme')} selected={kind === 'theme'} count={counts.theme}>
+          Themes
+        </Chip>
       </ChipRow>
       <MonoLabel as="p" bullet={false} class="cmpi__count">
         {`${shown.length} ${shown.length === 1 ? 'pair' : 'pairs'} · ${asOf}`}
       </MonoLabel>
     </div>
 
-    {
-      shown.length === 0 ? (
-        <div class="page-block">
-          <EmptyState title="No popular pairs here yet" body="Pick any two above, or see every comparison.">
-            <Button href="/compare" variant="secondary">
-              All comparisons
-            </Button>
-          </EmptyState>
-        </div>
-      ) : (
-        <>
-          {appSection.length > 0 && (
-            <section class="page-block" aria-labelledby="cmpi-apps">
-              <div class="cmpi__kind">
-                <h2 id="cmpi-apps" class="cmpi__kind-title">
-                  Apps<sup class="count-sup">{counts.app}</sup>
-                </h2>
-                <p class="cmpi__kind-desc">The three most used apps in each category, compared pair by pair.</p>
-              </div>
-              <GroupedIndex groups={appSection} columns={columns} head={head} listLabel={(l) => `${l} comparisons`} />
-            </section>
-          )}
-          {themeSection.length > 0 && (
-            <section class="page-block" aria-labelledby="cmpi-themes">
-              <div class="cmpi__kind">
-                <h2 id="cmpi-themes" class="cmpi__kind-title">
-                  Themes<sup class="count-sup">{counts.theme}</sup>
-                </h2>
-                <p class="cmpi__kind-desc">The most used themes against each other, and themes from the same vendor.</p>
-              </div>
-              <GroupedIndex
-                groups={themeSection}
-                columns={columns}
-                head={head}
-                start={appSection.reduce((n, g) => n + g.rows.length, 0) + 1}
-                listLabel={(l) => `${l} comparisons`}
-              />
-            </section>
-          )}
-        </>
-      )
-    }
+    {shown.length === 0 ? (
+      <div class="page-block">
+        <EmptyState
+          title="No popular pairs here yet"
+          body="Pick any two above, or see every comparison."
+        >
+          <Button href="/compare" variant="secondary">
+            All comparisons
+          </Button>
+        </EmptyState>
+      </div>
+    ) : (
+      <>
+        {appSection.length > 0 && (
+          <section class="page-block" aria-labelledby="cmpi-apps">
+            <div class="cmpi__kind">
+              <h2 id="cmpi-apps" class="cmpi__kind-title">
+                Apps<sup class="count-sup">{counts.app}</sup>
+              </h2>
+              <p class="cmpi__kind-desc">
+                The three most used apps in each category, compared pair by pair.
+              </p>
+            </div>
+            <GroupedIndex
+              groups={appSection}
+              columns={columns}
+              head={head}
+              listLabel={(l) => `${l} comparisons`}
+            />
+          </section>
+        )}
+        {themeSection.length > 0 && (
+          <section class="page-block" aria-labelledby="cmpi-themes">
+            <div class="cmpi__kind">
+              <h2 id="cmpi-themes" class="cmpi__kind-title">
+                Themes<sup class="count-sup">{counts.theme}</sup>
+              </h2>
+              <p class="cmpi__kind-desc">
+                The most used themes against each other, and themes from the same vendor.
+              </p>
+            </div>
+            <GroupedIndex
+              groups={themeSection}
+              columns={columns}
+              head={head}
+              start={appSection.reduce((n, g) => n + g.rows.length, 0) + 1}
+              listLabel={(l) => `${l} comparisons`}
+            />
+          </section>
+        )}
+      </>
+    )}
 
     <div class="page-block cmpi__foot">
       <SourceNote
-        source={`stores each and “run both” from ${scan?.label ?? 'our scan of public storefronts'}. Order is by usage, not quality`}
-        asOf={asOf}
+        source={`${scan?.label ?? 'Our scan of public storefronts'}. Pairs are ordered by usage, not quality`}
       />
       <p class="cmpi__alts">
-        Looking for a replacement rather than a pair? <a href="/alternatives">Browse alternatives</a>
+        Looking for a replacement rather than a pair?{' '}
+        <a href="/alternatives">Browse alternatives</a>
       </p>
     </div>
   </div>

@@ -19,20 +19,34 @@ const { label, path, excerpt, endpoints } = Astro.props;
 
 <div class="bld cols-12">
   <div class="bld__text span-5">
-    <MonoLabel as="p" class="bld__label">{label}</MonoLabel>
-    <h2 id="home-builders" class="bld__statement display">Every number here comes from one public API.</h2>
+    <MonoLabel as="p" class="bld__label">
+      {label}
+    </MonoLabel>
+    <h2 id="home-builders" class="bld__statement display">
+      Every number here comes from one public API.
+    </h2>
     <p class="bld__body">
-      Stores, themes, apps, sections and screenshots as JSON, with a source and a date on every figure.
-      Next: an MCP server, so Claude and ChatGPT can pull real store references while they help people
-      build on Shopify.
+      Stores, themes, apps, sections and screenshots as JSON, with a source and a date on every
+      figure. Next: an MCP server, so Claude and ChatGPT can pull real store references while they
+      help people build on Shopify.
     </p>
     <ul class="bld__spec">
-      <li><MonoLabel>Today</MonoLabel><span>REST · JSON · OpenAPI 3.1 · {endpoints} endpoints</span></li>
-      <li><MonoLabel>Next</MonoLabel><span>MCP server for Claude and ChatGPT</span></li>
+      <li>
+        <MonoLabel>Today</MonoLabel>
+        <span>REST · JSON · OpenAPI 3.1 · {endpoints} endpoints</span>
+      </li>
+      <li>
+        <MonoLabel>Next</MonoLabel>
+        <span>MCP server for Claude and ChatGPT</span>
+      </li>
     </ul>
     <p class="bld__links">
-      <a href="/developers" class="bld__link">API &amp; MCP docs <span aria-hidden="true">→</span></a>
-      <a href="/api/v1/openapi.json" class="bld__link bld__link--quiet">openapi.json</a>
+      <a href="/developers" class="bld__link">
+        API &amp; MCP docs <span aria-hidden="true">→</span>
+      </a>
+      <a href="/api/v1/openapi.json" class="bld__link bld__link--quiet">
+        openapi.json
+      </a>
     </p>
   </div>
   <figure class="bld__code start-7">

@@ -15,20 +15,18 @@ const { vendors, label = 'Theme vendors', class: className } = Astro.props;
 
 <nav class:list={['vstrip', className]} aria-label={label}>
   <ul class="vstrip__list">
-    {
-      vendors.map((v) => (
-        <li>
-          <a
-            href={v.href}
-            class:list={['vstrip__item', { 'is-on': v.selected }]}
-            aria-current={v.selected ? 'true' : undefined}
-          >
-            {v.label}
-            <Count value={v.count} label={v.count === 1 ? 'theme' : 'themes'} />
-          </a>
-        </li>
-      ))
-    }
+    {vendors.map((v) => (
+      <li>
+        <a
+          href={v.href}
+          class:list={['vstrip__item', { 'is-on': v.selected }]}
+          aria-current={v.selected ? 'true' : undefined}
+        >
+          {v.label}
+          <Count value={v.count} label={v.count === 1 ? 'theme' : 'themes'} />
+        </a>
+      </li>
+    ))}
   </ul>
 </nav>
 

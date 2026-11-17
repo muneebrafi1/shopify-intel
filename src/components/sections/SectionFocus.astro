@@ -31,7 +31,6 @@ const pad = (n: number, w = 2) => String(n).padStart(w, '0');
 const deviceLabel = s.device === 'mobile' ? 'Mobile' : 'Desktop';
 const fullPageHref = `${s.store.href}?page=${s.page_type}&device=${s.device}#section-${s.id}`;
 const captured = shot.captured_at && !s.is_placeholder ? formatDate(shot.captured_at) : null;
-const isMobile = s.device === 'mobile';
 const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.width}px`;
 ---
 
@@ -113,7 +112,7 @@ const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.wi
             <dd>
               <a href={s.app.href} class="sf__app">
                 <AppIcon src={s.app.icon_url} name={s.app.short_name} size={18} />
-                {s.app.short_name}
+                <span>{s.app.short_name}</span>
               </a>
             </dd>
           </div>
@@ -196,7 +195,7 @@ const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.wi
     display: grid;
     place-items: center;
     flex: 1;
-    min-height: clamp(220px, 46vh, 520px);
+    min-height: clamp(200px, 34vh, 320px);
     padding: var(--space-6) var(--space-4);
   }
   .sf--mobile .sf__stage {
@@ -238,6 +237,7 @@ const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.wi
   }
   @media (min-width: 1024px) {
     .sf__plate {
+      min-height: clamp(240px, 58vh, 620px);
       padding: var(--space-12) var(--space-10);
     }
     .sf__cap {
@@ -255,7 +255,7 @@ const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.wi
       top: calc(var(--header-h) + var(--space-6));
     }
   }
-  .sf__label {
+  .sf__sheet :global(.sf__label) {
     margin-bottom: var(--space-3);
   }
   .sf__title {
@@ -313,10 +313,23 @@ const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.wi
   .sf__row a:hover {
     text-decoration-color: currentColor;
   }
-  .sf__app {
-    display: inline-flex;
-    align-items: center;
+  .sf__row a.sf__app {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
     gap: 8px;
+    text-decoration: none;
+  }
+  .sf__app :global(.app-icon) {
+    margin-top: 1px;
+  }
+  .sf__app span {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .sf__app:hover span {
+    text-decoration-color: currentColor;
   }
   .sf__mono {
     font-family: var(--font-mono);

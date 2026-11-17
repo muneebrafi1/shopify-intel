@@ -68,8 +68,12 @@ const specs: SpecRow[] = [
   },
   { label: 'Apps', value: `${store.app_count} detected`, note: detail.apps.unresolved.count ? `${detail.apps.unresolved.count} without a profile` : null },
   { label: 'Category', value: store.category?.name ?? '—', href: store.category?.href ?? null, muted: !store.category },
-  { label: 'Currency', value: store.currency ?? '—', mono: true, muted: !store.currency },
-  { label: 'Country', value: regionName ?? '—', muted: !regionName },
+  {
+    label: 'Currency / country',
+    value: [store.currency ?? '—', regionName].filter(Boolean).join(' · '),
+    note: regionName ? null : 'Country not on file',
+    muted: !store.currency,
+  },
   {
     label: 'Tranco rank',
     value: store.tranco_rank ? formatCount(store.tranco_rank) : 'Not ranked',
@@ -96,6 +100,16 @@ const specs: SpecRow[] = [
 ];
 
 const nameChars = Math.max(4, title.length);
+const article = (word: string) => (/^[aeiou]/i.test(word) ? 'An' : 'A');
+const statement = (() => {
+  const cat = store.category?.name.toLowerCase();
+  const who = cat ? `${article(cat)} ${cat} store` : 'A Shopify store';
+  const on = store.theme.name ? ` on ${store.theme.label}` : ' on a theme we couldn’t identify';
+  const apps = `${store.app_count} detected ${store.app_count === 1 ? 'app' : 'apps'}`;
+  const px = detail.pixels.length;
+  const pixels = px ? ` and ${px === 1 ? 'one tracking pixel' : `${px} tracking pixels`}` : '';
+  return `${who}${on}, running ${apps}${pixels}.`;
+})();
 let blockN = 0;
 const block = (label: string) => `${String(++blockN).padStart(2, '0')} — ${label}`;
 
@@ -150,6 +164,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           {store.is_curated ? <MonoLabel tone="accent">Curated</MonoLabel> : <MonoLabel>Detected only</MonoLabel>}
         </p>
         <h1 class="shdr__name" style={`--chars:${nameChars}`}>{title}</h1>
+        <p class="shdr__statement display">{statement}</p>
         <p class="shdr__links">
           {store.name && <span class="shdr__domain mono">{store.domain}</span>}
           <a class="shdr__visit" href={store.url} target="_blank" rel="noopener">
@@ -165,9 +180,17 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
     {
       hasPlates ? (
-        <PlateViewer basePath={basePath} storeLabel={title} pages={detail.pages} page={page} device={device} />
+        <PlateViewer
+          label={block('Plates')}
+          basePath={basePath}
+          storeLabel={title}
+          pages={detail.pages}
+          page={page}
+          device={device}
+        />
       ) : (
         <NotCaptured
+          label={block('Detection')}
           detectedOn={detail.detection.first_seen}
           appCount={store.app_count}
           themeLabel={store.theme.label}
@@ -283,6 +306,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         calc((min(100vw, var(--page-max)) - 2 * var(--page-gutter)) * 0.64 / (var(--chars) * 0.58))
       );
     }
+  }
+  .shdr__statement {
+    margin-top: var(--space-5);
+    max-width: 34ch;
+    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
+    line-height: 1.2;
+    color: var(--ink-2);
   }
   .shdr__links {
     display: flex;

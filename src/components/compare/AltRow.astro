@@ -25,7 +25,17 @@ interface Props {
   crop?: SectionCard | null;
   ratingSource?: string;
 }
-const { n, app, theme, originalName, sharedStores, compareHref, reasons = [], crop, ratingSource } = Astro.props;
+const {
+  n,
+  app,
+  theme,
+  originalName,
+  sharedStores,
+  compareHref,
+  reasons = [],
+  crop,
+  ratingSource,
+} = Astro.props;
 const REASON: Record<string, string> = {
   'same-vendor': 'Same vendor',
   'similar-price': 'Similar price',
@@ -46,81 +56,91 @@ const preview = theme?.previews[0] ?? null;
     <div class="alt__id-text">
       <h3 class="alt__name">
         <a href={href}>{name}</a>
-        {app?.built_for_shopify && <Badge tone="outline" title="Built for Shopify badge on the App Store">BFS</Badge>}
+        {app?.built_for_shopify && (
+          <Badge tone="outline" title="Built for Shopify badge on the App Store">
+            BFS
+          </Badge>
+        )}
       </h3>
       <p class="alt__sub">
-        {app ? [app.developer && `by ${app.developer}`, app.tagline].filter(Boolean).join(' · ') : [theme!.vendor && `by ${theme!.vendor}`, theme!.marketplace].filter(Boolean).join(' · ')}
+        {app
+          ? [app.developer && `by ${app.developer}`, app.tagline].filter(Boolean).join(' · ')
+          : [theme!.vendor && `by ${theme!.vendor}`, theme!.marketplace]
+              .filter(Boolean)
+              .join(' · ')}
       </p>
     </div>
   </div>
 
   <dl class="alt__facts">
-    {
-      app && (
-        <div class="alt__fact">
-          <dt class="visually-hidden">Rating</dt>
-          <dd>
-            <Rating rating={app.rating} reviews={app.reviews} size="sm" source={ratingSource} />
-          </dd>
-        </div>
-      )
-    }
+    {app && (
+      <div class="alt__fact">
+        <dt class="visually-hidden">Rating</dt>
+        <dd>
+          <Rating rating={app.rating} reviews={app.reviews} size="sm" source={ratingSource} />
+        </dd>
+      </div>
+    )}
     <div class="alt__fact">
       <dt class="visually-hidden">Price</dt>
-      <dd class="alt__price">{app ? (app.pricing.label ?? 'Pricing not listed') : (theme!.price.label ?? 'Price not listed')}</dd>
+      <dd class="alt__price">
+        {app
+          ? (app.pricing.label ?? 'Pricing not listed')
+          : (theme!.price.label ?? 'Price not listed')}
+      </dd>
     </div>
     <div class="alt__fact alt__fact--mono">
       <dt>Seen on</dt>
-      <dd class="num">{formatCount(usage.stores)} of {formatCount(usage.denominator)}</dd>
+      <dd class="num">
+        {formatCount(usage.stores)} of {formatCount(usage.denominator)}
+      </dd>
     </div>
-    {
-      sharedStores > 0 && (
-        <div class="alt__fact alt__fact--mono">
-          <dt>With {originalName}</dt>
-          <dd class="num">{formatCount(sharedStores)} {sharedStores === 1 ? 'store' : 'stores'}</dd>
-        </div>
-      )
-    }
-    {
-      reasons.length > 0 && theme && (
-        <div class="alt__fact alt__fact--mono">
-          <dt class="visually-hidden">Why it’s here</dt>
-          <dd>{reasons.map((r) => REASON[r] ?? r).join(' · ')}</dd>
-        </div>
-      )
-    }
+    {sharedStores > 0 && (
+      <div class="alt__fact alt__fact--mono">
+        <dt>With {originalName}</dt>
+        <dd class="num">
+          {formatCount(sharedStores)} {sharedStores === 1 ? 'store' : 'stores'}
+        </dd>
+      </div>
+    )}
+    {reasons.length > 0 && theme && (
+      <div class="alt__fact alt__fact--mono">
+        <dt class="visually-hidden">Why it’s here</dt>
+        <dd>{reasons.map((r) => REASON[r] ?? r).join(' · ')}</dd>
+      </div>
+    )}
   </dl>
 
-  <div class="alt__plate">
-    {
-      crop ? (
-        <SectionCrop
-          src={crop.crop.src}
-          width={crop.crop.width}
-          height={crop.crop.height}
-          device={crop.device}
-          href={crop.href}
-          alt={`${crop.type.name} by ${name} on ${crop.store.display_name}`}
-        />
-      ) : preview ? (
-        <Shot
-          src={preview.image.src}
-          width={preview.image.width}
-          height={preview.image.height}
-          device="desktop"
-          href={href}
-          alt={`${name} on a curated store, home page, desktop`}
-        />
-      ) : (
-        <span class="alt__noplate">{app ? 'No section attributed yet' : 'No curated store yet'}</span>
-      )
-    }
+  <div class:list={['alt__plate', { 'alt__plate--none': !crop && !preview }]}>
+    {crop ? (
+      <SectionCrop
+        src={crop.crop.src}
+        width={crop.crop.width}
+        height={crop.crop.height}
+        device={crop.device}
+        href={crop.href}
+        alt={`${crop.type.name} by ${name} on ${crop.store.display_name}`}
+      />
+    ) : preview ? (
+      <Shot
+        src={preview.image.src}
+        width={preview.image.width}
+        height={preview.image.height}
+        device="desktop"
+        href={href}
+        alt={`${name} on a curated store, home page, desktop`}
+      />
+    ) : null}
   </div>
 
   <a class="alt__cmp" href={compareHref}>
     <span class="alt__cmp-k">Compare</span>
-    <span class="alt__cmp-v">{originalName} vs {name}</span>
-    <span class="alt__cmp-arrow" aria-hidden="true">→</span>
+    <span class="alt__cmp-v">
+      {originalName} vs {name}
+    </span>
+    <span class="alt__cmp-arrow" aria-hidden="true">
+      →
+    </span>
   </a>
 </li>
 
@@ -217,24 +237,10 @@ const preview = theme?.previews[0] ?? null;
   }
   .alt__plate {
     grid-area: plate;
-    max-width: 280px;
+    max-width: 240px;
   }
-  .alt__plate:has(.alt__noplate) {
+  .alt__plate--none {
     display: none;
-  }
-  .alt__noplate {
-    display: grid;
-    place-items: center;
-    aspect-ratio: 4 / 3;
-    border-radius: var(--radius-lg);
-    border: 1px dashed var(--line-strong);
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    text-align: center;
-    padding: var(--space-3);
   }
   .alt__cmp {
     grid-area: cmp;
@@ -282,7 +288,7 @@ const preview = theme?.previews[0] ?? null;
     .alt__plate {
       max-width: none;
     }
-    .alt__plate:has(.alt__noplate) {
+    .alt__plate--none {
       display: block;
     }
     .alt__cmp {

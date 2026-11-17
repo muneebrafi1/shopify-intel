@@ -100,7 +100,7 @@ const priceValue = (() => {
 })();
 const missing = listingRead ? 'Not listed' : 'Not checked yet';
 const languages = app.languages;
-const specRows: SpecRow[] = [
+const allSpecRows: SpecRow[] = [
   {
     label: 'Category',
     value: app.category?.name ?? null,
@@ -143,13 +143,37 @@ const specRows: SpecRow[] = [
     missing,
   },
 ];
-const known = [
-  app.rating,
-  app.pricing.label,
-  app.launched_on,
-  app.plans.length || null,
-  languages.length || null,
-].filter(Boolean).length;
+const MISSING_PHRASES: Record<string, string> = {
+  Category: 'category',
+  Rating: 'rating',
+  'Price from': 'price',
+  'Free plan': 'free plan',
+  Trial: 'trial',
+  'Built for Shopify': 'Built for Shopify badge',
+  Launched: 'launch date',
+  Languages: 'languages',
+};
+const hasValue = (r: SpecRow) => r.value !== null && r.value !== undefined && r.value !== '';
+// When the listing has not been read, gather what's missing into one row instead of a column of
+// "not checked yet": the sheet then shows what we know first, and names what we don't.
+const missingRows = listingRead ? [] : allSpecRows.filter((r) => !hasValue(r));
+const specRows: SpecRow[] = listingRead
+  ? allSpecRows
+  : [
+      ...allSpecRows.filter(hasValue),
+      {
+        label: 'Not checked yet',
+        value: missingRows
+          .map((r, i) => {
+            const phrase = MISSING_PHRASES[r.label] ?? r.label.toLowerCase();
+            return i === 0 ? phrase.charAt(0).toUpperCase() + phrase.slice(1) : phrase;
+          })
+          .join(', '),
+        sub: 'From the App Store listing, once we read it.',
+        wide: true,
+      },
+    ];
+const known = allSpecRows.filter(hasValue).length - 1;
 
 // ---- Stores running it (hover previews for curated stores) ----
 const previewByDomain = new Map(
@@ -273,7 +297,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         </MonoLabel>
         <div class="head__name">
           <AppIcon src={app.icon_url} name={name} size={84} class="head__icon" />
-          <h1 class="head__title">{name}</h1>
+          <h1 class:list={['head__title', { 'head__title--long': name.length > 14 }]}>{name}</h1>
         </div>
         <p class="head__full">
           {full && <span>{full}</span>}
@@ -326,15 +350,10 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <div class="basic">
             <p class="mlabel mlabel--bullet mlabel--accent">Basic profile</p>
             <p class="basic__text">
-              We detect {name} on {app.usage.stores.toLocaleString('en-US')} scanned stores, but we
-              have
-              {known > 0 ? ' only partly read ' : ' not read '}
-              its App Store listing yet.{' '}
-              {known > 0
-                ? 'Plans, features and languages'
-                : 'Rating, pricing, plans and languages'}{' '}
-              are missing. Detection data, the stores running it and its co-installs below are
-              complete.
+              {known > 0 ? 'Only part of' : 'None of'} {name}’s App Store listing is on file yet, so
+              plans and features are missing. What is complete: where it was detected (
+              {app.usage.stores.toLocaleString('en-US')} scanned stores), where it shows up on
+              curated stores, and the apps and themes it runs with.
             </p>
           </div>
         )}
@@ -385,7 +404,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
                   : null
               }
               cells={[
-                { value: row.theme.label, muted: row.theme.is_custom },
+                { value: row.theme.label, muted: row.theme.is_custom || !row.theme.theme },
                 { value: `(${row.app_count} apps)`, serif: true },
                 {
                   value: row.store.is_curated ? 'Layout preview' : 'Scan only',
@@ -474,7 +493,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
             title="Installed alongside"
             level={2}
             label="Co-installs"
-            description={`Apps most often found on the same stores. Share is of the ${storesTotal.toLocaleString('en-US')} stores running ${name}.`}
+            description={`Share of the ${storesTotal.toLocaleString('en-US')} stores running ${name}.`}
           />
           <RankedRefs items={coInstalled} kind="app" shareOf={`of ${name} stores`} />
         </div>
@@ -485,7 +504,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
             title={`Themes on stores running ${name}`}
             level={2}
             label="Themes"
-            description="Tracked themes only; custom and untracked themes are left out."
+            description="Tracked themes only; custom themes are left out."
           />
           <RankedRefs items={themes} kind="theme" shareOf={`of ${name} stores`} />
         </div>
@@ -528,7 +547,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
     {pairs.length > 0 && (
       <section class="page-block compare cols-12" aria-labelledby="compare-title">
-        <div class="span-4">
+        <div class="compare__intro">
           <MonoLabel as="p">Head to head</MonoLabel>
           <h2 class="compare__title" id="compare-title">
             Compare {name}
@@ -538,7 +557,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
             winners.
           </p>
         </div>
-        <div class="start-6 compare__list">
+        <div class="compare__list">
           <CompareList items={pairs.slice(0, 6)} />
         </div>
       </section>
@@ -589,6 +608,10 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     letter-spacing: -0.045em;
     line-height: 0.95;
     overflow-wrap: anywhere;
+  }
+  .head__title--long {
+    font-size: clamp(2.25rem, 1.2rem + 3.6vw, 4.75rem);
+    letter-spacing: -0.04em;
   }
   .head__full {
     display: flex;
@@ -653,15 +676,17 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   }
   .basic {
     display: grid;
-    gap: var(--space-2);
-    max-width: 72ch;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2) var(--space-4);
     margin-top: var(--space-6);
-    padding: var(--space-4) var(--space-5);
-    border-left: 2px solid var(--accent);
-    background: var(--fill);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  @media (min-width: 768px) {
+    .basic {
+      grid-template-columns: minmax(118px, 20%) minmax(0, 1fr);
+    }
   }
   .basic__text {
+    max-width: 64ch;
     color: var(--ink-2);
     font-size: var(--text-sm);
     line-height: var(--leading-normal);
@@ -736,7 +761,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     min-width: 0;
   }
 
-  .compare {
+  /* The intro and the list each carry their own ink rule (CompareList draws the list's). */
+  .compare__intro {
     padding-top: var(--space-4);
     border-top: 1px solid var(--ink);
   }
@@ -753,6 +779,9 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     color: var(--ink-3);
   }
   @media (min-width: 1024px) {
+    .compare__intro {
+      grid-column: 1 / 5;
+    }
     .compare__list {
       grid-column: 6 / -1;
     }

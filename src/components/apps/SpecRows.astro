@@ -14,6 +14,8 @@ export interface SpecRow {
   missing?: string;
   mono?: boolean;
   title?: string;
+  /** Span both columns. */
+  wide?: boolean;
 }
 interface Props {
   rows: SpecRow[];
@@ -27,7 +29,7 @@ const { rows, columns = 2, class: className } = Astro.props;
   {rows.map((r) => {
     const has = r.value !== null && r.value !== undefined && r.value !== '';
     return (
-      <div class:list={['specs__row', { 'specs__row--missing': !has }]}>
+      <div class:list={['specs__row', { 'specs__row--missing': !has, 'specs__row--wide': r.wide }]}>
         <dt class="specs__label">{r.label}</dt>
         <dd class="specs__value" title={r.title}>
           {has ? (
@@ -66,6 +68,14 @@ const { rows, columns = 2, class: className } = Astro.props;
     gap: var(--space-4);
     padding: 11px 0;
     border-bottom: 1px solid var(--line);
+  }
+  .specs__row--wide {
+    grid-column: 1 / -1;
+  }
+  @media (min-width: 768px) {
+    .specs--2 .specs__row--wide {
+      grid-template-columns: calc((100% - var(--space-10)) / 2 * 0.4) minmax(0, 1fr);
+    }
   }
   .specs__label {
     display: inline-flex;

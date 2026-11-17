@@ -23,13 +23,11 @@ const surfaces = c.surfaces.map((s) => s.name);
     <span class="centry__main">
       <span class="centry__name">{c.name}</span>
       <span class="centry__where">
-        {
-          surfaces.length > 0 ? (
-            surfaces.map((s) => <span class="mlabel mlabel--bullet">{s}</span>)
-          ) : (
-            <span class="mlabel centry__none">No storefront section</span>
-          )
-        }
+        {surfaces.length > 0 ? (
+          surfaces.map((s) => <span class="mlabel mlabel--bullet">{s}</span>)
+        ) : (
+          <span class="mlabel centry__none">No storefront section</span>
+        )}
       </span>
     </span>
     <span class="centry__apps">
@@ -42,15 +40,21 @@ const surfaces = c.surfaces.map((s) => s.name);
         {c.store_count.toLocaleString('en-US')} of {denominator.toLocaleString('en-US')} stores
       </span>
     </span>
-    <span class="centry__top" aria-label={`Most used: ${c.top_apps.map((a) => a.short_name).join(', ')}`}>
-      {
-        c.top_apps.slice(0, 3).map((a) => (
-          <span class="centry__app" title={a.short_name}>
-            <AppIcon src={a.icon_url} name={a.short_name} size={28} />
-          </span>
-        ))
-      }
-      <span class="centry__top-names">{c.top_apps.slice(0, 3).map((a) => a.short_name).join(', ')}</span>
+    <span
+      class="centry__top"
+      aria-label={`Most used: ${c.top_apps.map((a) => a.short_name).join(', ')}`}
+    >
+      {c.top_apps.slice(0, 3).map((a) => (
+        <span class="centry__app" title={a.short_name}>
+          <AppIcon src={a.icon_url} name={a.short_name} size={28} />
+        </span>
+      ))}
+      <span class="centry__top-names">
+        {c.top_apps
+          .slice(0, 3)
+          .map((a) => a.short_name)
+          .join(', ')}
+      </span>
     </span>
   </a>
 </li>

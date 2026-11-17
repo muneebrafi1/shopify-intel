@@ -33,47 +33,49 @@ const { pairs, alternatives, comparisonsTotal } = Astro.props;
 <div class="cmpi cols-12">
   <section class="cmpi__col span-7" aria-labelledby="cmpi-compare">
     <div class="cmpi__head">
-      <MonoLabel as="h3" id="cmpi-compare" tone="ink">Side by side</MonoLabel>
+      <MonoLabel as="h3" id="cmpi-compare" tone="ink">
+        Side by side
+      </MonoLabel>
       <span class="cmpi__count">{formatCount(comparisonsTotal)} pairs</span>
     </div>
     <ol class="cmpi__list">
-      {
-        pairs.map((p) => (
-          <li>
-            <a href={p.href} class="cmpi__pair">
-              <span class="cmpi__marks" aria-hidden="true">
-                <AppIcon src={p.a.icon} name={p.a.name} size={28} />
-                <AppIcon src={p.b.icon} name={p.b.name} size={28} />
-              </span>
-              <span class="cmpi__names">
-                {p.a.name} <span class="cmpi__vs">vs</span> {p.b.name}
-              </span>
-              <span class="cmpi__note">{p.note}</span>
-            </a>
-          </li>
-        ))
-      }
+      {pairs.map((p) => (
+        <li>
+          <a href={p.href} class="cmpi__pair">
+            <span class="cmpi__marks" aria-hidden="true">
+              <AppIcon src={p.a.icon} name={p.a.name} size={28} />
+              <AppIcon src={p.b.icon} name={p.b.name} size={28} />
+            </span>
+            <span class="cmpi__names">
+              {p.a.name} <span class="cmpi__vs">vs</span> {p.b.name}
+            </span>
+            <span class="cmpi__note">{p.note}</span>
+          </a>
+        </li>
+      ))}
     </ol>
   </section>
 
   <section class="cmpi__col start-9" aria-labelledby="cmpi-alts">
     <div class="cmpi__head">
-      <MonoLabel as="h3" id="cmpi-alts" tone="ink">Alternatives to</MonoLabel>
-      <a href="/alternatives" class="cmpi__all">All alternatives <span aria-hidden="true">→</span></a>
+      <MonoLabel as="h3" id="cmpi-alts" tone="ink">
+        Alternatives to
+      </MonoLabel>
+      <a href="/alternatives" class="cmpi__all">
+        All alternatives <span aria-hidden="true">→</span>
+      </a>
     </div>
     <ol class="cmpi__list">
-      {
-        alternatives.map((a) => (
-          <li>
-            <a href={a.href} class="cmpi__alt">
-              <span class="cmpi__alt-name">{a.name}</span>
-              <span class="cmpi__alt-n num">
-                {a.alternatives} {a.alternatives === 1 ? 'alternative' : 'alternatives'}
-              </span>
-            </a>
-          </li>
-        ))
-      }
+      {alternatives.map((a) => (
+        <li>
+          <a href={a.href} class="cmpi__alt">
+            <span class="cmpi__alt-name">{a.name}</span>
+            <span class="cmpi__alt-n num">
+              {a.alternatives} {a.alternatives === 1 ? 'alternative' : 'alternatives'}
+            </span>
+          </a>
+        </li>
+      ))}
     </ol>
   </section>
 </div>

@@ -64,7 +64,10 @@ const columns = LAYOUT.map((col, ci) => {
     dir: ci % 2 === 0 ? 'up' : 'down',
     tiles: tiles.map((t) => ({
       ...t,
-      thumb: thumbUrl(t.src, { cropHeight: Math.min(t.height, VIEWPORT[t.device]), width: t.device === 'desktop' ? 640 : 320 }),
+      thumb: thumbUrl(t.src, {
+        cropHeight: Math.min(t.height, VIEWPORT[t.device]),
+        width: t.device === 'desktop' ? 640 : 320,
+      }),
       cropH: Math.min(t.height, VIEWPORT[t.device]),
       page: pageTypeName(t.pageType),
     })),
@@ -75,43 +78,53 @@ const allPlaceholders = [...desktop, ...mobile].every((t) => t.isPlaceholder);
 ---
 
 <section class="wall" aria-labelledby="wall-label">
-  <input type="checkbox" id="wall-pause" class="wall__pause-input visually-hidden" aria-label="Pause the moving wall" />
+  <input
+    type="checkbox"
+    id="wall-pause"
+    class="wall__pause-input visually-hidden"
+    aria-label="Pause the moving wall"
+  />
   <div class="wall__stage">
     <div class="wall__cols">
-      {
-        columns.map((col) => (
-          <div class:list={['wall__col', `wall__col--${col.device}`, `wall__col--${col.dir}`]} style={`--dur:${col.dur}s;--offset:${col.offset}px`}>
-            <div class="wall__track">
-              {[0, 1].map((copy) => (
-                <ul class="wall__set" aria-hidden={copy === 1 ? 'true' : undefined}>
-                  {col.tiles.map((t) => (
-                    <li>
-                      <a href={t.href} class:list={['wall__tile', `wall__tile--${t.device}`]} tabindex={copy === 1 ? -1 : undefined}>
-                        <img
-                          src={t.thumb}
-                          alt=""
-                          width={t.width}
-                          height={t.cropH}
-                          loading={copy === 0 ? 'eager' : 'lazy'}
-                          fetchpriority="low"
-                          decoding="async"
-                        />
-                        <span class="wall__pill">
-                          <span class="wall__domain">{t.domain}</span>
-                          <span class="wall__page">{t.page}</span>
-                          <span class="visually-hidden">
-                            {`, ${t.device} ${t.isPlaceholder ? 'layout preview' : 'capture'}`}
-                          </span>
+      {columns.map((col) => (
+        <div
+          class:list={['wall__col', `wall__col--${col.device}`, `wall__col--${col.dir}`]}
+          style={`--dur:${col.dur}s;--offset:${col.offset}px`}
+        >
+          <div class="wall__track">
+            {[0, 1].map((copy) => (
+              <ul class="wall__set" aria-hidden={copy === 1 ? 'true' : undefined}>
+                {col.tiles.map((t) => (
+                  <li>
+                    <a
+                      href={t.href}
+                      class:list={['wall__tile', `wall__tile--${t.device}`]}
+                      tabindex={copy === 1 ? -1 : undefined}
+                    >
+                      <img
+                        src={t.thumb}
+                        alt=""
+                        width={t.width}
+                        height={t.cropH}
+                        loading={copy === 0 ? 'eager' : 'lazy'}
+                        fetchpriority="low"
+                        decoding="async"
+                      />
+                      <span class="wall__pill">
+                        <span class="wall__domain">{t.domain}</span>
+                        <span class="wall__page">{t.page}</span>
+                        <span class="visually-hidden">
+                          {`, ${t.device} ${t.isPlaceholder ? 'layout preview' : 'capture'}`}
                         </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ))}
-            </div>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ))}
           </div>
-        ))
-      }
+        </div>
+      ))}
     </div>
   </div>
 
@@ -120,15 +133,23 @@ const allPlaceholders = [...desktop, ...mobile].every((t) => t.isPlaceholder);
       {storeCount} curated stores · home, collection, product · desktop + mobile
     </MonoLabel>
     <p class="wall__note">
-      {allPlaceholders ? 'Layout previews drawn from detected sections until the first capture run.' : 'Captured from live storefronts.'}
+      {allPlaceholders
+        ? 'Layout previews drawn from detected sections until the first capture run.'
+        : 'Captured from live storefronts.'}
     </p>
     <div class="wall__actions">
       <label for="wall-pause" class="wall__pause">
         <span class="wall__pause-icon" aria-hidden="true"></span>
-        <span class="wall__pause-off" aria-hidden="true">Pause</span>
-        <span class="wall__pause-on" aria-hidden="true">Play</span>
+        <span class="wall__pause-off" aria-hidden="true">
+          Pause
+        </span>
+        <span class="wall__pause-on" aria-hidden="true">
+          Play
+        </span>
       </label>
-      <a href={storesHref} class="wall__link">Browse all stores <span aria-hidden="true">→</span></a>
+      <a href={storesHref} class="wall__link">
+        Browse all stores <span aria-hidden="true">→</span>
+      </a>
     </div>
   </div>
 </section>
@@ -278,7 +299,9 @@ const allPlaceholders = [...desktop, ...mobile].every((t) => t.isPlaceholder);
   }
   .wall__tile:focus-visible {
     border-radius: var(--radius-sm);
-    box-shadow: 0 0 0 2px var(--inverse), 0 0 0 4px var(--accent);
+    box-shadow:
+      0 0 0 2px var(--inverse),
+      0 0 0 4px var(--accent);
   }
 
   /* Domain pill (Ploy-style), sitting on the capture. */
@@ -404,6 +427,8 @@ const allPlaceholders = [...desktop, ...mobile].every((t) => t.isPlaceholder);
   }
   .wall__pause-input:focus-visible ~ .wall__caption .wall__pause {
     border-radius: var(--radius-xs);
-    box-shadow: 0 0 0 2px var(--inverse), 0 0 0 4px var(--accent);
+    box-shadow:
+      0 0 0 2px var(--inverse),
+      0 0 0 4px var(--accent);
   }
 </style>

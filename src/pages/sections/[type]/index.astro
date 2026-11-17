@@ -99,6 +99,13 @@ const apps = whole.data.facets.apps.slice(0, 6).map((a) => ({
   href: `/apps/${a.value}`,
 }));
 const attributed = whole.data.facets.apps.reduce((n, a) => n + a.count, 0);
+const appTotal = whole.data.facets.apps.length;
+const attributionNote =
+  attributed === 0
+    ? `The theme itself: no detected app renders these sections.`
+    : attributed >= info.count
+      ? `${appTotal} ${appTotal === 1 ? 'app' : 'apps'} · all ${fmt(info.count)} sections attributed`
+      : `${appTotal} ${appTotal === 1 ? 'app' : 'apps'} · ${fmt(attributed)} of ${fmt(info.count)} sections; the rest are the theme's own`;
 const devices = whole.data.facets.devices;
 const deviceLine = devices.map((d) => `${d.label} ${fmt(d.count)}`).join(' · ') || '—';
 
@@ -142,27 +149,28 @@ const jsonLd = [
     <div class="chap__row cols-12">
       <div class="chap__lede span-7">
         <p class="chap__statement">{info.description}</p>
-        <div class="chap__pages">
-          <MonoLabel as="p">Usually appears on</MonoLabel>
-          <ul class="chap__page-list">
-            {
-              usualPages.map((p) => (
-                <li>
-                  {p.count > 0 ? (
-                    <a href={p.href} rel="nofollow">
-                      {p.name}
-                      <Count value={p.count} />
+
+        <div class="chap__apps">
+          <p class="chap__apps-head">
+            <MonoLabel tone="ink">Rendered by</MonoLabel>
+            <span class="chap__apps-note">{attributionNote}</span>
+          </p>
+          {
+            apps.length > 0 && (
+              <ol class="chap__app-list">
+                {apps.map((a) => (
+                  <li>
+                    <a href={a.href} class="chap__app">
+                      <AppIcon src={a.icon} name={a.name} size={20} />
+                      <span class="chap__app-name">{a.name}</span>
+                      <span class="chap__lead" aria-hidden="true" />
+                      <span class="chap__app-n num">{fmt(a.count)}</span>
                     </a>
-                  ) : (
-                    <span class="chap__page-off" title="Not seen on this page type yet">
-                      {p.name}
-                      <Count value="0" />
-                    </span>
-                  )}
-                </li>
-              ))
-            }
-          </ul>
+                  </li>
+                ))}
+              </ol>
+            )
+          }
         </div>
       </div>
 
@@ -176,37 +184,29 @@ const jsonLd = [
           ]}
           source={source}
         />
-
-        <div class="chap__apps">
-          <MonoLabel as="p" tone="ink">Rendered by</MonoLabel>
-          {
-            apps.length > 0 ? (
-              <ol class="chap__app-list">
-                {apps.map((a) => (
-                  <li>
-                    <a href={a.href} class="chap__app">
-                      <AppIcon src={a.icon} name={a.name} size={20} />
-                      <span class="chap__app-name">{a.name}</span>
+        <div class="chap__pages">
+          <MonoLabel as="p" tone="ink">Usually appears on</MonoLabel>
+          <ul class="chap__page-list">
+            {
+              usualPages.map((p) => (
+                <li>
+                  {p.count > 0 ? (
+                    <a href={p.href} rel="nofollow" class="chap__page">
+                      <span>{p.name} page</span>
                       <span class="chap__lead" aria-hidden="true" />
-                      <span class="chap__app-n num">{fmt(a.count)}</span>
+                      <span class="chap__page-n num">{fmt(p.count)}</span>
                     </a>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p class="chap__none">
-                The theme itself — no app is attributed to these {lower} sections.
-              </p>
-            )
-          }
-          {
-            apps.length > 0 && (
-              <p class="chap__apps-note">
-                <span class="num">{fmt(attributed)}</span> of <span class="num">{fmt(info.count)}</span>{' '}
-                attributed to a detected app; the rest are theme sections.
-              </p>
-            )
-          }
+                  ) : (
+                    <span class="chap__page is-off" title="Not seen on this page type yet">
+                      <span>{p.name} page</span>
+                      <span class="chap__lead" aria-hidden="true" />
+                      <span class="chap__page-n num">—</span>
+                    </span>
+                  )}
+                </li>
+              ))
+            }
+          </ul>
         </div>
       </div>
     </div>
@@ -232,7 +232,7 @@ const jsonLd = [
   .chap {
     padding-top: var(--space-6);
   }
-  .chap__eyebrow {
+  .chap :global(.chap__eyebrow) {
     margin-top: var(--space-8);
     margin-bottom: var(--space-4);
   }
@@ -263,48 +263,39 @@ const jsonLd = [
     letter-spacing: -0.015em;
     line-height: 1.12;
   }
-  .chap__pages {
-    margin-top: var(--space-8);
+  .chap__apps {
+    margin-top: var(--space-10);
   }
-  .chap__page-list {
+  .chap__apps-head {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-6);
-    margin-top: var(--space-3);
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--ink);
   }
-  .chap__page-list a,
-  .chap__page-off {
-    font-size: var(--text-xl);
-    font-weight: var(--weight-medium);
-    letter-spacing: var(--tracking-snug);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.22em;
-    transition: text-decoration-color var(--dur-fast) var(--ease-out);
-  }
-  .chap__page-list a:hover {
-    text-decoration-color: currentColor;
-  }
-  .chap__page-off {
-    color: var(--ink-4);
-    text-decoration: none;
-  }
-
-  .chap__side {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
+  .chap__apps-note {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
   }
   .chap__app-list {
-    margin-top: var(--space-3);
-    border-top: 1px solid var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: var(--space-8);
   }
-  .chap__app {
+  @media (min-width: 640px) {
+    .chap__app-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .chap__app,
+  .chap__page {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: 8px 0;
+    min-height: 40px;
+    padding: 6px 0;
     border-bottom: 1px solid var(--line);
     font-size: var(--text-base);
   }
@@ -317,29 +308,48 @@ const jsonLd = [
   .chap__lead {
     flex: 1;
     min-width: 12px;
+    align-self: baseline;
     border-bottom: 1px dotted var(--line-strong);
-    transform: translateY(4px);
+    transform: translateY(-4px);
   }
-  .chap__app-n {
+  .chap__app .chap__lead {
+    align-self: center;
+    transform: translateY(3px);
+  }
+  .chap__app-n,
+  .chap__page-n {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--ink-2);
   }
-  .chap__app:hover .chap__app-name {
+  .chap__app:hover .chap__app-name,
+  a.chap__page:hover > span:first-child {
     text-decoration: underline;
+    text-decoration-color: var(--line-strong);
     text-underline-offset: 0.2em;
   }
-  .chap__none,
-  .chap__apps-note {
+  .chap__page {
+    align-items: baseline;
+    min-height: 0;
+    padding: 8px 0;
+  }
+  .chap__page.is-off {
+    color: var(--ink-4);
+  }
+  .chap__page-list {
     margin-top: var(--space-3);
-    color: var(--ink-3);
-    font-size: var(--text-sm);
+    border-top: 1px solid var(--ink);
+  }
+  .chap__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
   }
   .chap__body {
     margin-top: var(--space-12);
   }
   @media (min-width: 1024px) {
-    .chap__eyebrow {
+    .chap :global(.chap__eyebrow) {
       margin-top: var(--space-12);
     }
     .chap__row {

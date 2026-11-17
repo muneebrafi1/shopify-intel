@@ -15,14 +15,46 @@ import { api } from '~/server/api';
 import { formatDate } from '~/lib/format';
 import { breadcrumbLd } from '~/components/apps/helpers';
 
-const [{ data, meta }, { data: siteMeta }] = await Promise.all([api.listAppCategories({}), api.getMeta({})]);
-const categories = [...data.items].sort((a, b) => b.store_count - a.store_count || a.name.localeCompare(b.name));
+const [{ data, meta }, { data: siteMeta }] = await Promise.all([
+  api.listAppCategories({}),
+  api.getMeta({}),
+]);
+const categories = [...data.items].sort(
+  (a, b) => b.store_count - a.store_count || a.name.localeCompare(b.name),
+);
 const denominator = siteMeta.counts.stores_scanned;
 const apps = siteMeta.counts.apps;
 const source = meta.sources[categories[0]?.source ?? ''] ?? siteMeta.source;
 const withSurface = categories.filter((c) => c.surfaces.length > 0).length;
 
-const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen', 'Twenty', 'Twenty-one', 'Twenty-two', 'Twenty-three', 'Twenty-four', 'Twenty-five'];
+const words = [
+  'Zero',
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+  'Eleven',
+  'Twelve',
+  'Thirteen',
+  'Fourteen',
+  'Fifteen',
+  'Sixteen',
+  'Seventeen',
+  'Eighteen',
+  'Nineteen',
+  'Twenty',
+  'Twenty-one',
+  'Twenty-two',
+  'Twenty-three',
+  'Twenty-four',
+  'Twenty-five',
+];
 const countWord = words[categories.length] ?? String(categories.length);
 
 const crumbs = [
@@ -54,12 +86,16 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   jsonLd={jsonLd}
 >
   <div class="container">
-    <PageHeader title="App categories" count={categories.length} eyebrow="Catalogue — ordered by reach">
+    <PageHeader
+      title="App categories"
+      count={categories.length}
+      eyebrow="Catalogue — ordered by reach"
+    >
       <Breadcrumbs slot="top" items={crumbs} />
       <Fragment slot="meta">
         <p class="statement display">
-          {countWord} kinds of app, ordered by how many of {denominator.toLocaleString('en-US')} scanned stores run at least
-          one — and where on the page each kind shows up.
+          {countWord} kinds of app, ordered by how many of {denominator.toLocaleString('en-US')}{' '}
+          scanned stores run at least one — and where on the page each kind shows up.
         </p>
         <div class="specline">
           <MonoLabel>Scanned {formatDate(source?.as_of)}</MonoLabel>
@@ -68,8 +104,12 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         </div>
       </Fragment>
       <Fragment slot="actions">
-        <Button href="/apps" size="sm" iconRight="arrow-right">All apps, ranked</Button>
-        <Button href="/sections" size="sm" variant="quiet">Sections library</Button>
+        <Button href="/apps" size="sm" iconRight="arrow-right">
+          All apps, ranked
+        </Button>
+        <Button href="/sections" size="sm" variant="quiet">
+          Sections library
+        </Button>
       </Fragment>
     </PageHeader>
 
@@ -82,15 +122,19 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         <span>Most used</span>
       </div>
       <ol class="catalogue__list" aria-label="App categories by reach">
-        {categories.map((c, i) => <CategoryEntry n={i + 1} category={c} denominator={denominator} />)}
+        {categories.map((c, i) => (
+          <CategoryEntry n={i + 1} category={c} denominator={denominator} />
+        ))}
       </ol>
     </div>
 
     <div class="cat-sources">
-      <SourceNote source={`${source?.label ?? 'StorePeek scan'}: reach is the share of scanned stores running at least one app in the category`} />
+      <SourceNote
+        source={`${source?.label ?? 'StorePeek scan'}: reach is the share of scanned stores running at least one app in the category`}
+      />
       <p class="cat-note">
-        “Where it shows up” is the section type apps in a category usually render. Categories without one work as
-        scripts, widgets or in the back office.
+        “Where it shows up” is the section type apps in a category usually render. Categories
+        without one work as scripts, widgets or in the back office.
       </p>
     </div>
   </div>

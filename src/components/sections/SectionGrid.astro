@@ -106,7 +106,7 @@ const to = from + items.length - 1;
       if (!incoming) throw new Error('no cards');
       const first = incoming.firstElementChild;
       const before = cards.children.length;
-      cards.append(...Array.from(incoming.children));
+      for (const card of Array.from(incoming.children)) cards.appendChild(card);
       const after = cards.children.length;
       const status = root.querySelector<HTMLElement>('[data-sgrid-status]');
       const range = status?.querySelector('[data-sgrid-range]');

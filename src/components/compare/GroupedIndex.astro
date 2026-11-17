@@ -35,42 +35,54 @@ interface Props {
   start?: number;
   class?: string;
 }
-const { groups, columns, head, listLabel = (l: string) => l, start = 1, class: className } = Astro.props;
+const {
+  groups,
+  columns,
+  head,
+  listLabel = (l: string) => l,
+  start = 1,
+  class: className,
+} = Astro.props;
 let n = start - 1;
 const numbered = groups.map((g) => ({ ...g, rows: g.rows.map((r) => ({ ...r, n: ++n })) }));
 ---
 
 <div class:list={['gidx', className]}>
-  {
-    head && (
-      <div class="gidx__head" aria-hidden="true">
-        <span class="mlabel">Group</span>
-        <div class="gidx__head-cols" style={`--index-cols:${columns}`}>
-          {head.map((h, i) => (
-            <span class:list={['mlabel', { 'gidx__head-end': i === head.length - 1 && i > 1 }]}>{h}</span>
-          ))}
-        </div>
+  {head && (
+    <div class="gidx__head" aria-hidden="true">
+      <span class="mlabel">Group</span>
+      <div class="gidx__head-cols" style={`--index-cols:${columns}`}>
+        {head.map((h, i) => (
+          <span class:list={['mlabel', { 'gidx__head-end': i === head.length - 1 && i > 1 }]}>
+            {h}
+          </span>
+        ))}
       </div>
-    )
-  }
-  {
-    numbered.map((g) => (
-      <section class="gidx__group" id={g.id} aria-label={g.label}>
-        <div class="gidx__label">
-          <h3 class="gidx__name">
-            {g.href ? <a href={g.href}>{g.label}</a> : g.label}
-            <Count value={g.rows.length} />
-          </h3>
-          {g.note && <p class="gidx__note">{g.note}</p>}
-        </div>
-        <IndexList columns={columns} label={listLabel(g.label)} class="gidx__list">
-          {g.rows.map((r) => (
-            <IndexRow n={r.n} href={r.href} title={r.title} subtitle={r.subtitle} cells={r.cells} preview={r.preview} />
-          ))}
-        </IndexList>
-      </section>
-    ))
-  }
+    </div>
+  )}
+  {numbered.map((g) => (
+    <section class="gidx__group" id={g.id} aria-label={g.label}>
+      <div class="gidx__label">
+        <h3 class="gidx__name">
+          {g.href ? <a href={g.href}>{g.label}</a> : g.label}
+          <Count value={g.rows.length} />
+        </h3>
+        {g.note && <p class="gidx__note">{g.note}</p>}
+      </div>
+      <IndexList columns={columns} label={listLabel(g.label)} class="gidx__list">
+        {g.rows.map((r) => (
+          <IndexRow
+            n={r.n}
+            href={r.href}
+            title={r.title}
+            subtitle={r.subtitle}
+            cells={r.cells}
+            preview={r.preview}
+          />
+        ))}
+      </IndexList>
+    </section>
+  ))}
 </div>
 
 <style>

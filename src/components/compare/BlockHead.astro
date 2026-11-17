@@ -19,9 +19,12 @@ const { label, title, id, count, description, class: className } = Astro.props;
 
 <div class:list={['bh', className]}>
   <div class="bh__text">
-    <MonoLabel as="p" class="bh__label">{label}</MonoLabel>
+    <MonoLabel as="p" class="bh__label">
+      {label}
+    </MonoLabel>
     <h2 class="bh__title" id={id}>
-      {title}{typeof count === 'number' && <Count value={count} />}
+      {title}
+      {typeof count === 'number' && <Count value={count} />}
     </h2>
   </div>
   {description && <p class="bh__desc">{description}</p>}

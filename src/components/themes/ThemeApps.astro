@@ -19,27 +19,25 @@ const { apps, of, class: className } = Astro.props;
 ---
 
 <ol class:list={['tapps', className]}>
-  {
-    apps.map((a, i) => (
-      <li class="tapps__row">
-        <a href={a.app.href} class="tapps__link">
-          <span class="tapps__rank">{String(i + 1).padStart(2, '0')}</span>
-          <AppIcon src={a.app.icon_url} name={a.app.short_name} size={28} />
-          <span class="tapps__main">
-            <span class="tapps__name">{a.app.short_name}</span>
-            {a.app.category && <span class="tapps__cat">{a.app.category.name}</span>}
+  {apps.map((a, i) => (
+    <li class="tapps__row">
+      <a href={a.app.href} class="tapps__link">
+        <span class="tapps__rank">{String(i + 1).padStart(2, '0')}</span>
+        <AppIcon src={a.app.icon_url} name={a.app.short_name} size={28} />
+        <span class="tapps__main">
+          <span class="tapps__name">{a.app.short_name}</span>
+          {a.app.category && <span class="tapps__cat">{a.app.category.name}</span>}
+        </span>
+        <span class="tapps__usage" aria-label={`${a.stores} of ${of} stores`}>
+          <span class="tapps__track" aria-hidden="true">
+            <span class="tapps__bar" style={`--w:${Math.round(a.share * 100)}%`} />
           </span>
-          <span class="tapps__usage" aria-label={`${a.stores} of ${of} stores`}>
-            <span class="tapps__track" aria-hidden="true">
-              <span class="tapps__bar" style={`--w:${Math.round(a.share * 100)}%`} />
-            </span>
-            <span class="tapps__n num">{formatCount(a.stores)}</span>
-            <span class="tapps__pct num">{Math.round(a.share * 100)}%</span>
-          </span>
-        </a>
-      </li>
-    ))
-  }
+          <span class="tapps__n num">{formatCount(a.stores)}</span>
+          <span class="tapps__pct num">{Math.round(a.share * 100)}%</span>
+        </span>
+      </a>
+    </li>
+  ))}
 </ol>
 
 <style>

@@ -10,16 +10,18 @@ import { CORE_PAGE_TYPES, PAGE_TYPES } from '~/lib/taxonomy';
 import { formatDate } from '~/lib/format';
 
 interface Props {
+  label: string;
   detectedOn: string;
   appCount: number;
   themeLabel: string;
   pixelCount: number;
 }
-const { detectedOn, appCount, themeLabel, pixelCount } = Astro.props;
+const { label, detectedOn, appCount, themeLabel, pixelCount } = Astro.props;
 const pages = CORE_PAGE_TYPES.map((slug) => PAGE_TYPES.find((p) => p.slug === slug)!);
 ---
 
 <section class="nc" aria-labelledby="nc-title">
+  <MonoLabel as="p" tone="ink" class="nc__label">{label}</MonoLabel>
   <div class="nc__stage marks" aria-hidden="true">
     <ol class="nc__plates">
       {
@@ -49,9 +51,7 @@ const pages = CORE_PAGE_TYPES.map((slug) => PAGE_TYPES.find((p) => p.slug === sl
       <div>
         <dt class="mlabel mlabel--bullet mlabel--ink">On file</dt>
         <dd>
-          {themeLabel} · {appCount}
-          {appCount === 1 ? 'app' : 'apps'} · {pixelCount}
-          {pixelCount === 1 ? 'pixel' : 'pixels'}
+          {`${themeLabel} · ${appCount} ${appCount === 1 ? 'app' : 'apps'} · ${pixelCount ? `${pixelCount} ${pixelCount === 1 ? 'pixel' : 'pixels'}` : 'no pixels'}`}
         </dd>
       </div>
       <div>
@@ -79,6 +79,12 @@ const pages = CORE_PAGE_TYPES.map((slug) => PAGE_TYPES.find((p) => p.slug === sl
       align-items: center;
     }
   }
+  .nc :global(.nc__label) {
+    grid-column: 1 / -1;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--ink);
+    margin-bottom: calc(var(--space-2) * -1);
+  }
   .nc__stage {
     padding: var(--space-5);
     border-radius: var(--radius-lg);
@@ -93,12 +99,23 @@ const pages = CORE_PAGE_TYPES.map((slug) => PAGE_TYPES.find((p) => p.slug === sl
   }
   .nc__plates {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-5) var(--space-4);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
   }
   @media (min-width: 640px) {
     .nc__plates {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-5) var(--space-4);
+    }
+  }
+  @media (max-width: 639px) {
+    .nc__void {
+      display: none;
+    }
+    .nc__cap {
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
   .nc__plate {

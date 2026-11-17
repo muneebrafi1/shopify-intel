@@ -9,6 +9,7 @@
 import Tabs from '~/components/ui/Tabs.astro';
 import Segmented from '~/components/ui/Segmented.astro';
 import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Icon from '~/components/ui/Icon.astro';
 import Shot from '~/components/media/Shot.astro';
 import FullPage, { type FullPageSection } from '~/components/media/FullPage.astro';
 import type { ScreenshotDetail, StorePage } from '~/server/api/v1/types';
@@ -17,13 +18,15 @@ import { formatCount, formatDate } from '~/lib/format';
 import { plateHref } from './plates';
 
 interface Props {
+  /** Block label, e.g. "01 — Plates". */
+  label: string;
   basePath: string;
   storeLabel: string;
   pages: StorePage[];
   page: string;
   device: Device;
 }
-const { basePath, storeLabel, pages, page, device } = Astro.props;
+const { label, basePath, storeLabel, pages, page, device } = Astro.props;
 
 const current = pages.find((p) => p.page_type.slug === page) ?? pages[0]!;
 const shot: ScreenshotDetail | null = current.screenshots[device];
@@ -65,8 +68,8 @@ const deviceName = device === 'desktop' ? 'Desktop' : 'Mobile';
 ---
 
 <section id="plates" class="plates" aria-label="Pages">
-  <div class="plates__bar">
-    <Tabs items={tabs} label="Page type" class="plates__tabs" />
+  <div class="plates__top">
+    <MonoLabel as="h2" tone="ink">{label}</MonoLabel>
     {
       hasDesktop && hasMobile && (
         <Segmented
@@ -93,6 +96,7 @@ const deviceName = device === 'desktop' ? 'Desktop' : 'Mobile';
       )
     }
   </div>
+  <Tabs items={tabs} label="Page type" class="plates__tabs" />
 
   <div class="plates__head">
     <div class="plates__meta">
@@ -140,7 +144,9 @@ const deviceName = device === 'desktop' ? 'Desktop' : 'Mobile';
               />
               <span class="strip__cap mono num" aria-current={isCurrent ? 'true' : undefined}>
                 <span>{pad(i + 1)}</span> {x.page.page_type.name}
-                <span class="strip__dev">{x.device === 'desktop' ? 'D' : 'M'}</span>
+                <span class="strip__dev" title={x.device === 'desktop' ? 'Desktop' : 'Mobile'}>
+                  <Icon name={x.device === 'desktop' ? 'desktop' : 'device-mobile'} size={11} />
+                </span>
               </span>
             </li>
           );
@@ -168,20 +174,15 @@ const deviceName = device === 'desktop' ? 'Desktop' : 'Mobile';
 </section>
 
 <style>
-  .plates__bar {
+  .plates__top {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--space-3);
   }
-  .plates__bar :global(.plates__tabs) {
-    flex: 1;
-    min-width: 0;
-    border-bottom: 0;
-  }
-  .plates__bar :global(.plates__device) {
-    margin-bottom: 6px;
+  .plates :global(.plates__tabs) {
+    border-top: 1px solid var(--ink);
   }
 
   .plates__head {
@@ -295,8 +296,10 @@ const deviceName = device === 'desktop' ? 'Desktop' : 'Mobile';
     color: var(--ink);
   }
   .strip__dev {
+    display: inline-flex;
+    align-self: center;
     margin-left: auto;
-    color: var(--ink-4);
+    color: var(--ink-3);
   }
 
   .plates__missing {

@@ -16,6 +16,7 @@ import SourceNote from '~/components/ui/SourceNote.astro';
 import StoreCard from '~/components/domain/StoreCard.astro';
 import StoreIndex from '~/components/stores/StoreIndex.astro';
 import RestOfArchive from '~/components/stores/RestOfArchive.astro';
+import PlanTile from '~/components/stores/PlanTile.astro';
 import { api, isApiError } from '~/server/api';
 import type { Facet, ListStoresOutput, PageInfo } from '~/server/api/v1/types';
 import { formatCount, formatDate } from '~/lib/format';
@@ -217,7 +218,7 @@ const title = hasFilters ? `Shopify stores ${filterSummary || 'filtered'}`.trim(
         {
           q.view === 'grid'
             ? 'Curated stores, shown as captures. Switch to all detected stores for the full catalogue.'
-            : 'Every detected store as a numbered index. Rows marked with a square are curated: hover to see the home page.'
+            : 'Every detected store, numbered. Curated stores are marked with a square and have layout previews.'
         }
       </p>
     </div>
@@ -248,6 +249,7 @@ const title = hasFilters ? `Shopify stores ${filterSummary || 'filtered'}`.trim(
                   eager={i < 3}
                 />
               ))}
+              {curatedItems.length % 3 === 2 && <PlanTile stores={counts.stores_curated} class="stores__plan" />}
             </div>
           ) : (
             <EmptyState
@@ -393,6 +395,15 @@ const title = hasFilters ? `Shopify stores ${filterSummary || 'filtered'}`.trim(
 
   .stores__results {
     margin-top: var(--space-8);
+  }
+  /* Only closes the last row of the three-column grid. */
+  .stores__results :global(.stores__plan) {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .stores__results :global(.stores__plan) {
+      display: block;
+    }
   }
   .stores__source {
     margin-top: var(--space-12);

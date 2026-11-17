@@ -1,0 +1,183 @@
+---
+/**
+ * One search result: a visual on the left (page thumbnail, section crop, app icon or store
+ * mark), the title with the matched word starts marked, a mono subtitle, and the kind.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import { thumbUrl } from '~/lib/media';
+import type { SearchHit } from '~/server/api/v1/types';
+import { highlightParts } from './highlight';
+
+interface Props {
+  hit: SearchHit;
+  words: string[];
+  kindLabel: string;
+  eager?: boolean;
+}
+const { hit, words, kindLabel, eager = false } = Astro.props;
+const parts = highlightParts(hit.title, words);
+const t = hit.thumbnail;
+const isCrop = hit.kind === 'section-type';
+const thumb = t
+  ? isCrop
+    ? t.src
+    : thumbUrl(t.src, { cropHeight: Math.min(t.height, Math.round(t.width * 0.62)), width: 240 })
+  : null;
+const thumbH = t ? (isCrop ? t.height : Math.min(t.height, Math.round(t.width * 0.62))) : 0;
+---
+
+<li class="hit">
+  <a href={hit.href} class="hit__link">
+    <span
+      class:list={[
+        'hit__media',
+        { 'hit__media--shot': thumb && !isCrop, 'hit__media--crop': thumb && isCrop },
+      ]}
+    >
+      {thumb ? (
+        <img
+          src={thumb}
+          alt=""
+          width={t!.width}
+          height={thumbH}
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+        />
+      ) : hit.kind === 'app' ? (
+        <AppIcon src={hit.icon_url} name={hit.title} size={36} />
+      ) : hit.kind === 'store' ? (
+        <StoreMark domain={hit.ref} name={hit.title} size={36} />
+      ) : (
+        <span class="hit__glyph" aria-hidden="true">
+          {hit.title.charAt(0).toUpperCase()}
+        </span>
+      )}
+    </span>
+    <span class="hit__text">
+      <span class="hit__title">
+        {parts.map((p) => (p.hit ? <mark class="hit__hl">{p.text}</mark> : p.text))}
+      </span>
+      {hit.subtitle && <span class="hit__sub">{hit.subtitle}</span>}
+    </span>
+    <span class="hit__kind">{kindLabel}</span>
+    <span class="hit__arrow" aria-hidden="true">
+      →
+    </span>
+  </a>
+</li>
+
+<style>
+  .hit {
+    border-bottom: 1px solid var(--line);
+  }
+  .hit__link {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .hit__media {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 46px;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+  }
+  .hit__media--shot,
+  .hit__media--crop {
+    background: var(--tile);
+    box-shadow: inset 0 0 0 1px rgb(25 24 22 / 0.05);
+  }
+  .hit__media--shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  .hit__media--crop img {
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+    object-fit: contain;
+  }
+  .hit__glyph {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--fill);
+    color: var(--ink-3);
+    font-weight: var(--weight-semibold);
+  }
+  .hit__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .hit__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    line-height: 1.35;
+  }
+  .hit__hl {
+    background: none;
+    color: inherit;
+    font-weight: var(--weight-semibold);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.18em;
+  }
+  .hit__sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.03em;
+  }
+  .hit__kind {
+    display: none;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .hit__arrow {
+    color: var(--ink-4);
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .hit__link:hover .hit__title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .hit__link:hover .hit__arrow {
+    color: var(--ink);
+    transform: translateX(3px);
+  }
+  @media (min-width: 768px) {
+    .hit__link {
+      grid-template-columns: 96px minmax(0, 1fr) 96px 16px;
+      gap: var(--space-5);
+    }
+    .hit__media {
+      width: 96px;
+      height: 60px;
+    }
+    .hit__kind {
+      display: block;
+      text-align: right;
+    }
+  }
+</style>

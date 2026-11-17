@@ -69,12 +69,26 @@ const pad = (n: number) => String(n).padStart(2, '0');
 </nav>
 
 <script>
-  // Bring the current entry into view inside the (independently scrolling) rail.
+  // The rail scrolls on its own once it sticks. Then (not at load, so it stays lined up with
+  // the filter bar) bring the current entry into view if it sits below the rail's fold.
   document.querySelectorAll<HTMLElement>('[data-toc]').forEach((toc) => {
     const current = toc.querySelector<HTMLElement>('.toc__types .is-current');
-    if (!current || toc.scrollHeight <= toc.clientHeight) return;
-    const top = current.offsetTop - toc.clientHeight / 2 + current.offsetHeight / 2;
-    toc.scrollTop = Math.max(0, top);
+    if (!current) return;
+    const stickyTop = parseFloat(getComputedStyle(toc).top) || 0;
+    const reveal = () => {
+      if (toc.getBoundingClientRect().top > stickyTop + 1) return false;
+      const bottom = current.offsetTop + current.offsetHeight;
+      if (bottom > toc.scrollTop + toc.clientHeight - 24) {
+        const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+        toc.scrollTo({ top: bottom - toc.clientHeight + 120, behavior: smooth ? 'smooth' : 'auto' });
+      }
+      return true;
+    };
+    if (reveal()) return;
+    const onScroll = () => {
+      if (reveal()) window.removeEventListener('scroll', onScroll);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
   });
 </script>
 

@@ -29,36 +29,34 @@ const cover = t.cover?.image ?? null;
       isSample={t.is_sample}
     />
   </div>
-  {
-    notes.length > 0 && (
-      <aside class="tdf__notes start-9" aria-labelledby="tdf-notes">
-        <MonoLabel as="h3" id="tdf-notes" tone="ink">
-          In this teardown · {notes.length} notes
-        </MonoLabel>
-        <ol class="tdf__list">
-          {notes.map((n) => (
-            <li>
-              <a href={t.href} class="tdf__note">
-                <span class="tdf__n">{String(n.n).padStart(2, '0')}</span>
-                <span class="tdf__text">
-                  <span class="tdf__title">{n.title}</span>
-                  <span class="tdf__meta">
-                    {pageTypeName(n.page_type)} · {n.device} · {n.section_type.name}
-                  </span>
+  {notes.length > 0 && (
+    <aside class="tdf__notes start-9" aria-labelledby="tdf-notes">
+      <MonoLabel as="h3" id="tdf-notes" tone="ink">
+        In this teardown · {notes.length} notes
+      </MonoLabel>
+      <ol class="tdf__list">
+        {notes.map((n) => (
+          <li>
+            <a href={t.href} class="tdf__note">
+              <span class="tdf__n">{String(n.n).padStart(2, '0')}</span>
+              <span class="tdf__text">
+                <span class="tdf__title">{n.title}</span>
+                <span class="tdf__meta">
+                  {pageTypeName(n.page_type)} · {n.device} · {n.section_type.name}
                 </span>
-              </a>
-            </li>
-          ))}
-        </ol>
-        {t.theme && (
-          <p class="tdf__foot">
-            Built on <a href={t.theme.href}>{t.theme.name}</a>
-            {t.theme.vendor && <> by {t.theme.vendor}</>}.
-          </p>
-        )}
-      </aside>
-    )
-  }
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+      {t.theme && (
+        <p class="tdf__foot">
+          Built on <a href={t.theme.href}>{t.theme.name}</a>
+          {t.theme.vendor && <> by {t.theme.vendor}</>}.
+        </p>
+      )}
+    </aside>
+  )}
 </div>
 
 <style>

@@ -84,7 +84,9 @@ const specs: SpecRow[] = [
     : { label: 'Vendor', value: 'Unknown', muted: true },
   { label: 'Price', value: priceText, mono: !theme.price.is_free && !!theme.price.label },
   ...(theme.marketplace ? [{ label: 'Marketplace', value: theme.marketplace }] : []),
-  ...(theme.theme_store_id ? [{ label: 'Theme Store ID', value: String(theme.theme_store_id), mono: true }] : []),
+  ...(theme.theme_store_id
+    ? [{ label: 'Theme Store ID', value: String(theme.theme_store_id), mono: true }]
+    : []),
   latest
     ? {
         label: 'Latest version seen',
@@ -100,11 +102,23 @@ const specs: SpecRow[] = [
   },
   detail.presets.length
     ? { label: 'Presets', value: detail.presets.map((p) => p.name).join(', ') }
-    : { label: 'Presets', value: 'Not detected yet', muted: true, note: 'Lands with the capture pipeline' },
+    : {
+        label: 'Presets',
+        value: 'Not detected yet',
+        muted: true,
+        note: 'Lands with the capture pipeline',
+      },
 ];
 
+// The name is the page's one very large thing; it is sized to fit its longest word on one line.
+const nameChars = Math.max(6, ...theme.name.split(/\s+/).map((w) => w.length));
+
 const dek = (() => {
-  const what = theme.price.is_free ? 'A free theme' : theme.price.label ? `A ${theme.price.label} theme` : 'A theme';
+  const what = theme.price.is_free
+    ? 'A free theme'
+    : theme.price.label
+      ? `A ${theme.price.label} theme`
+      : 'A theme';
   const by = theme.vendor_info ? ` by ${theme.vendor_info.name}` : '';
   const where =
     usage.stores > 0
@@ -116,18 +130,45 @@ const dek = (() => {
 // ---- Lower blocks ------------------------------------------------------------------------
 const sections = detail.sections;
 // Lead with the sections that carry a theme's look; chrome (header, footer) goes last.
-const SAMPLE_ORDER = ['hero', 'product-gallery', 'buy-box', 'featured-collection', 'image-with-text', 'collection-list', 'product-grid', 'reviews', 'testimonials', 'ugc-gallery', 'slideshow', 'collection-header', 'cart-items', 'newsletter', 'upsell'];
+const SAMPLE_ORDER = [
+  'hero',
+  'product-gallery',
+  'buy-box',
+  'featured-collection',
+  'image-with-text',
+  'collection-list',
+  'product-grid',
+  'reviews',
+  'testimonials',
+  'ugc-gallery',
+  'slideshow',
+  'collection-header',
+  'cart-items',
+  'newsletter',
+  'upsell',
+];
 const rankOf = (t: string) => {
   const i = SAMPLE_ORDER.indexOf(t);
   return i === -1 ? SAMPLE_ORDER.length + (t === 'header' || t === 'footer' ? 10 : 0) : i;
 };
-const sectionSamples = [...sections.items].sort((a, b) => rankOf(a.type.slug) - rankOf(b.type.slug)).slice(0, 8);
+const sectionSamples = [...sections.items]
+  .sort((a, b) => rankOf(a.type.slug) - rankOf(b.type.slug))
+  .slice(0, 8);
 const pageName = (p: string) => PAGE_TYPES.find((x) => x.slug === p)?.name ?? p;
 const sectionsHref = `/sections?theme=${encodeURIComponent(slug)}`;
 const similar = detail.similar.slice(0, 3);
 const comparisons = detail.comparisons;
 const similarReason = (r: string[]) =>
-  r.map((x) => ({ 'same-vendor': 'Same vendor', 'similar-price': 'Similar price', 'shared-apps': 'Shared apps' })[x] ?? x).join(' · ');
+  r
+    .map(
+      (x) =>
+        ({
+          'same-vendor': 'Same vendor',
+          'similar-price': 'Similar price',
+          'shared-apps': 'Shared apps',
+        })[x] ?? x,
+    )
+    .join(' · ');
 
 const storesFrom = (listPage - 1) * STORES_PAGE + 1;
 const storesTo = storesFrom + stores.length - 1;
@@ -179,78 +220,100 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   {jsonLd}
 >
   <div class="container">
-    <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Themes', href: '/themes' }, { label: theme.name }]} class="th-crumbs" />
+    <Breadcrumbs
+      items={[
+        { label: 'Home', href: '/' },
+        { label: 'Themes', href: '/themes' },
+        { label: theme.name },
+      ]}
+      class="th-crumbs"
+    />
 
     <header class="th-head cols-12">
       <div class="th-head__id span-8">
         <MonoLabel as="p" tone="ink">{`${specimenNo(n)} — Theme`}</MonoLabel>
         <div>
-          <h1 class="th-name">{theme.name}</h1>
+          <h1 class="th-name" style={`--chars:${nameChars}`}>
+            {theme.name}
+          </h1>
           <p class="th-dek">
-            {dek.what}{theme.vendor_info ? (<> by <a href={theme.vendor_info.href}>{theme.vendor_info.name}</a></>) : dek.by}{dek.where}
+            {dek.what}
+            {theme.vendor_info ? (
+              <>
+                {' '}
+                by <a href={theme.vendor_info.href}>{theme.vendor_info.name}</a>
+              </>
+            ) : (
+              dek.by
+            )}
+            {dek.where}
           </p>
         </div>
       </div>
       <aside class="th-head__spec start-9" aria-label={`${theme.name} specifications`}>
         <SpecRows rows={specs} />
-        {
-          theme.cta && (
-            <AffiliateCta
-              href={theme.cta.href}
-              label={theme.cta.label}
-              isAffiliate={theme.cta.is_affiliate}
-              size="md"
-              full
-              class="th-cta"
-            />
-          )
-        }
+        {theme.cta && (
+          <AffiliateCta
+            href={theme.cta.href}
+            label={theme.cta.label}
+            isAffiliate={theme.cta.is_affiliate}
+            size="md"
+            full
+            class="th-cta"
+          />
+        )}
       </aside>
     </header>
   </div>
 
-  <ThemePlates slug={slug} name={theme.name} curated={curated} state={plate} pages={pages} appCounts={appCounts} keep={keep} />
+  <ThemePlates
+    slug={slug}
+    name={theme.name}
+    curated={curated}
+    state={plate}
+    pages={pages}
+    appCounts={appCounts}
+    keep={keep}
+  />
 
   <div class="container">
-    {
-      sections.total > 0 && (
-        <section class="page-block" aria-labelledby="th-sections">
-          <SectionHeader
-            id="th-sections"
-            label={`${sections.by_type.length} section types`}
-            title={`Sections from stores on ${theme.name}`}
-            count={sections.total}
-            description="Each page is sliced into tagged sections. Start from a type, or browse them all in the library."
-            href={sectionsHref}
-            linkLabel="Open in the library"
-            rule
-          />
-          <ul class="th-types" aria-label="Section types">
-            {sections.by_type.map((t) => (
-              <li>
-                <a href={`${t.type.href}?theme=${encodeURIComponent(slug)}`}>
-                  {t.type.name}
-                  <Count value={t.count} label={t.count === 1 ? 'section' : 'sections'} />
-                </a>
-              </li>
-            ))}
-          </ul>
-          <div class="grid grid--sections th-sections">
-            {sectionSamples.map((s) => (
-              <SectionCard
-                href={s.href}
-                crop={s.crop}
-                device={s.device}
-                typeName={s.type.name}
-                storeLabel={s.store.display_name}
-                meta={`${s.type.name} · ${pageName(s.page_type)} · ${s.device}`}
-                app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
-              />
-            ))}
-          </div>
-        </section>
-      )
-    }
+    {sections.total > 0 && (
+      <section class="page-block" aria-labelledby="th-sections">
+        <SectionHeader
+          id="th-sections"
+          label={`${sections.by_type.length} section types`}
+          title={`Sections from stores on ${theme.name}`}
+          count={sections.total}
+          description="Each page is sliced into tagged sections. Start from a type, or browse them all in the library."
+          href={sectionsHref}
+          linkLabel="Open in the library"
+          rule
+        />
+        <ul class="th-types" aria-label="Section types">
+          {sections.by_type.map((t) => (
+            <li>
+              <a href={`${t.type.href}?theme=${encodeURIComponent(slug)}`}>
+                {t.type.name}
+                <Count value={t.count} label={t.count === 1 ? 'section' : 'sections'} />
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div class="grid grid--sections th-sections">
+          {sectionSamples.map((s) => (
+            <SectionCard
+              href={s.href}
+              crop={s.crop}
+              device={s.device}
+              typeName={s.type.name}
+              storeLabel={s.store.display_name}
+              meta={`${s.type.name} · ${pageName(s.page_type)} · ${s.device}`}
+              app={s.app ? { name: s.app.short_name, iconUrl: s.app.icon_url } : null}
+            />
+          ))}
+        </div>
+      </section>
+    )}
 
     <section class="page-block th-stores" id="stores" aria-labelledby="th-stores-title">
       <SectionHeader
@@ -261,86 +324,115 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         description="Every active store where we detected this theme. Stores without a capture still have a page with their theme and apps."
         rule
       />
-      {
-        stores.length === 0 ? (
-          <p class="th-empty">No active store in our scan runs {theme.name} right now.</p>
-        ) : (
-          <IndexList
-            columns="56px minmax(0,2.4fr) 112px 96px minmax(0,1fr) 140px"
-            head={['N°', 'Store', 'Version', 'Currency', 'Capture', 'Apps']}
-            label={`Stores using ${theme.name}`}
-            class="th-index"
-          >
-            {stores.map((s, i) => (
-              <IndexRow
-                n={storesFrom + i}
-                href={s.href}
-                title={s.display_name}
-                subtitle={[s.name ? s.domain : null, s.theme.version, s.currency].filter(Boolean).join(' · ') || undefined}
-                preview={s.preview ? { src: s.preview.image.src, width: s.preview.image.width, height: s.preview.image.height, device: 'desktop' } : null}
-                cells={[
-                  { value: s.theme.version ?? '—', mono: true, muted: !s.theme.version },
-                  { value: s.currency ?? '—', mono: true, muted: !s.currency },
-                  {
-                    value: s.is_captured ? 'Captured' : s.is_curated ? 'Layout preview' : 'Not captured',
-                    muted: !s.is_captured,
-                  },
-                  { value: `(${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'})`, serif: true, mobile: true },
-                ]}
-              />
-            ))}
-          </IndexList>
-        )
-      }
+      {stores.length === 0 ? (
+        <p class="th-empty">No active store in our scan runs {theme.name} right now.</p>
+      ) : (
+        <IndexList
+          columns="56px minmax(0,2.4fr) 112px 96px minmax(0,1fr) 140px"
+          head={['N°', 'Store', 'Version', 'Currency', 'Capture', 'Apps']}
+          label={`Stores using ${theme.name}`}
+          class="th-index"
+        >
+          {stores.map((s, i) => (
+            <IndexRow
+              n={storesFrom + i}
+              href={s.href}
+              title={s.display_name}
+              subtitle={
+                [s.name ? s.domain : null, s.theme.version, s.currency]
+                  .filter(Boolean)
+                  .join(' · ') || undefined
+              }
+              preview={
+                s.preview
+                  ? {
+                      src: s.preview.image.src,
+                      width: s.preview.image.width,
+                      height: s.preview.image.height,
+                      device: 'desktop',
+                    }
+                  : null
+              }
+              cells={[
+                { value: s.theme.version ?? '—', mono: true, muted: !s.theme.version },
+                { value: s.currency ?? '—', mono: true, muted: !s.currency },
+                {
+                  value: s.is_captured
+                    ? 'Captured'
+                    : s.is_curated
+                      ? 'Layout preview'
+                      : 'Not captured',
+                  muted: !s.is_captured,
+                },
+                {
+                  value: `(${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'})`,
+                  serif: true,
+                  mobile: true,
+                },
+              ]}
+            />
+          ))}
+        </IndexList>
+      )}
       <div class="th-pager">
-        <p class="th-pager__status num">
-          {stores.length > 0 ? `${formatCount(storesFrom)}–${formatCount(storesTo)} of ${formatCount(storesTotal)} stores` : ''}
+        <p class="th-pager__status">
+          {stores.length > 0 && (
+            <span class="num">
+              {storesTotal > stores.length
+                ? `${formatCount(storesFrom)}–${formatCount(storesTo)} of `
+                : ''}
+              {formatCount(storesTotal)} {storesTotal === 1 ? 'store' : 'stores'} ·{' '}
+            </span>
+          )}
+          Detected in the {sourceShort}. <a href={source?.url ?? '/methodology'}>How we detect</a>
         </p>
-        <div class="th-pager__buttons">
-          {
-            listPage > 1 && (
-              <Button href={detailHref(slug, plate, { hash: 'stores' })} size="sm" icon="caret-left" rel="first">
+        {(listPage > 1 || nextCursor) && (
+          <div class="th-pager__buttons">
+            {listPage > 1 && (
+              <Button
+                href={detailHref(slug, plate, { hash: 'stores' })}
+                size="sm"
+                icon="caret-left"
+              >
                 First page
               </Button>
-            )
-          }
-          {
-            nextCursor && (
+            )}
+            {nextCursor && (
               <Button
-                href={detailHref(slug, plate, { cursor: nextCursor, p: listPage + 1, hash: 'stores' })}
+                href={detailHref(slug, plate, {
+                  cursor: nextCursor,
+                  p: listPage + 1,
+                  hash: 'stores',
+                })}
                 size="sm"
                 iconRight="caret-right"
                 rel="next"
               >
                 Next {Math.min(STORES_PAGE, storesTotal - storesTo)}
               </Button>
-            )
-          }
-        </div>
+            )}
+          </div>
+        )}
       </div>
-      <p class="th-note">
-        Detected in the {sourceShort}. <a href={source?.url ?? '/methodology'}>How we detect</a>
-      </p>
     </section>
 
     <div class="page-block th-pair cols-12">
-      {
-        detail.top_apps.length > 0 && (
-          <section class="th-apps span-7" aria-labelledby="th-apps-title">
-            <SectionHeader
-              id="th-apps-title"
-              label="Installed alongside"
-              title={`Apps most used with ${theme.name}`}
-              count={detail.top_apps.length}
-              rule
-            />
-            <ThemeApps apps={detail.top_apps} of={usage.stores} />
-            <p class="th-note">
-              Share of the {formatCount(usage.stores)} {theme.name} stores in our scan running each app · {asOf}.
-            </p>
-          </section>
-        )
-      }
+      {detail.top_apps.length > 0 && (
+        <section class="th-apps span-7" aria-labelledby="th-apps-title">
+          <SectionHeader
+            id="th-apps-title"
+            label="Installed alongside"
+            title={`Apps most used with ${theme.name}`}
+            count={detail.top_apps.length}
+            rule
+          />
+          <ThemeApps apps={detail.top_apps} of={usage.stores} />
+          <p class="th-note">
+            Share of the {formatCount(usage.stores)} {theme.name} stores in our scan running each
+            app · {asOf}.
+          </p>
+        </section>
+      )}
       <section class="th-versions start-9" aria-labelledby="th-versions-title">
         <SectionHeader
           id="th-versions-title"
@@ -352,61 +444,69 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         />
         <VersionList versions={detail.versions} />
         <p class="th-note">
-          A version is recorded when the storefront exposes it. Others count under “Not recorded” · {asOf}.
+          A version is recorded when the storefront exposes it. Others count under “Not recorded” ·{' '}
+          {asOf}.
         </p>
       </section>
     </div>
 
-    {
-      (similar.length > 0 || comparisons.length > 0) && (
-        <section class="page-block th-similar" aria-labelledby="th-similar-title">
-          <SectionHeader
-            id="th-similar-title"
-            label="Next to it on the shelf"
-            title={`Similar to ${theme.name}`}
-            count={detail.similar.length}
-            href={`/alternatives/${slug}`}
-            linkLabel={`All ${theme.name} alternatives`}
-            rule
-          />
-          {similar.length > 0 && (
-            <div class="grid grid--themes">
-              {similar.map((s) => (
-                <div class="th-similar__item">
-                  <ThemeCard
-                    slug={s.theme.slug}
-                    name={s.theme.name}
-                    href={s.theme.href}
-                    vendor={s.theme.vendor ?? 'Unknown vendor'}
-                    priceLabel={s.theme.price.label ?? '—'}
-                    storesCount={s.theme.usage.stores}
-                    shots={s.theme.previews.map((p) => ({
-                      src: p.image.src,
-                      width: p.image.width,
-                      height: p.image.height,
-                      alt: `${s.theme.name} theme on a live store, home page`,
-                    }))}
-                  />
-                  {s.reasons.length > 0 && <p class="th-similar__why mlabel mlabel--bullet">{similarReason(s.reasons)}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-          {comparisons.length > 0 && (
-            <div class="th-compare">
-              <MonoLabel as="h3" class="th-compare__label">Compare side by side</MonoLabel>
-              <CompareList slug={slug} items={comparisons} />
-            </div>
-          )}
-        </section>
-      )
-    }
+    {(similar.length > 0 || comparisons.length > 0) && (
+      <section class="page-block th-similar" aria-labelledby="th-similar-title">
+        <SectionHeader
+          id="th-similar-title"
+          label="Next to it on the shelf"
+          title={`Similar to ${theme.name}`}
+          count={similar.length}
+          href={`/alternatives/${slug}`}
+          linkLabel={`All ${theme.name} alternatives`}
+          rule
+        />
+        {similar.length > 0 && (
+          <div class="grid grid--themes">
+            {similar.map((s) => (
+              <div class="th-similar__item">
+                <ThemeCard
+                  slug={s.theme.slug}
+                  name={s.theme.name}
+                  href={s.theme.href}
+                  vendor={s.theme.vendor ?? 'Unknown vendor'}
+                  priceLabel={s.theme.price.label ?? '—'}
+                  storesCount={s.theme.usage.stores}
+                  shots={s.theme.previews.map((p) => ({
+                    src: p.image.src,
+                    width: p.image.width,
+                    height: p.image.height,
+                device: p.device,
+                    alt: `${s.theme.name} theme on a live store, home page`,
+                  }))}
+                />
+                {s.reasons.length > 0 && (
+                  <p class="th-similar__why mlabel mlabel--bullet">{similarReason(s.reasons)}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {comparisons.length > 0 && (
+          <div class="th-compare">
+            <MonoLabel as="h3" class="th-compare__label">
+              Compare side by side
+            </MonoLabel>
+            <CompareList slug={slug} items={comparisons} />
+          </div>
+        )}
+      </section>
+    )}
 
     <footer class="th-source">
-      <SourceNote source={source?.label ?? 'Our scan'} asOf={source?.label.includes(asOf) ? undefined : asOf} href={source?.url ?? '/methodology'} />
+      <SourceNote
+        source={source?.label ?? 'Our scan'}
+        asOf={source?.label.includes(asOf) ? undefined : asOf}
+        href={source?.url ?? '/methodology'}
+      />
       <p class="th-source__bias">
-        Stores were found through Shopify Theme Store example lists, so counts show reach in our scan of {formatCount(usage.denominator)} stores,
-        not market share.
+        Stores were found through Shopify Theme Store example lists, so counts show reach in our
+        scan of {formatCount(usage.denominator)} stores, not market share.
       </p>
     </footer>
   </div>
@@ -431,14 +531,22 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   }
   .th-name {
     font-family: var(--font-serif);
-    font-size: clamp(4rem, 0.5rem + 13vw, 12rem);
+    /* ≈0.5em per letter in Newsreader at this tracking: never wider than the column. */
+    font-size: min(12rem, calc((100vw - 2 * var(--page-gutter)) / (var(--chars) * 0.5)));
     font-weight: 400;
     font-optical-sizing: auto;
     letter-spacing: -0.045em;
     line-height: 0.88;
     margin-left: -0.04em;
-    overflow-wrap: anywhere;
     text-wrap: balance;
+  }
+  @media (min-width: 1024px) {
+    .th-name {
+      font-size: min(
+        12rem,
+        calc((min(100vw, var(--page-max)) - 2 * var(--page-gutter)) * 0.64 / (var(--chars) * 0.5))
+      );
+    }
   }
   .th-dek {
     margin-top: var(--space-6);
@@ -515,7 +623,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   }
   .th-pager__status {
     color: var(--ink-3);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
+  }
+  .th-pager__status a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
   }
   .th-pager__buttons {
     display: flex;

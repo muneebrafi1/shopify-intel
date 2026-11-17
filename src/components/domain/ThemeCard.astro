@@ -10,6 +10,7 @@ interface ShotRef {
   width: number;
   height: number;
   alt?: string;
+  device?: 'desktop' | 'mobile';
 }
 interface Props {
   slug: string;
@@ -24,16 +25,25 @@ interface Props {
 }
 const { slug, name, vendor, priceLabel, storesCount, shots, href = `/themes/${slug}`, eager = false, class: className } =
   Astro.props;
-const deck = shots.slice(0, 3).map((s) => {
+const desktops = shots.filter((s) => (s.device ?? 'desktop') === 'desktop');
+const mobile = shots.find((s) => s.device === 'mobile');
+const deck = desktops.slice(0, 3).map((s) => {
   const h = thumbCropHeight(s.width, s.height, 'desktop');
   return { ...s, thumb: thumbUrl(s.src, { cropHeight: h, width: 640 }), cropH: h };
 });
+// One store only: pair its desktop and mobile home pages instead of a lonely single capture.
+const pair = deck.length < 2 && mobile
+  ? (() => {
+      const h = thumbCropHeight(mobile.width, mobile.height, 'mobile');
+      return { ...mobile, thumb: thumbUrl(mobile.src, { cropHeight: h, width: 240 }), cropH: h };
+    })()
+  : null;
 // Front card last in the DOM so it paints on top.
 const ordered = [...deck].reverse();
 ---
 
 <article class:list={['theme-card', className]}>
-  <a href={href} class="theme-card__well" aria-label={`${name} theme`}>
+  <a href={href} class:list={['theme-card__well', { 'theme-card__well--pair': !!pair }]} aria-label={`${name} theme`}>
     {
       deck.length === 0 ? (
         <span class="theme-card__none">No captured stores yet</span>
@@ -49,6 +59,19 @@ const ordered = [...deck].reverse();
             decoding="async"
           />
         ))
+      )
+    }
+    {
+      pair && (
+        <img
+          class="theme-card__mobile"
+          src={pair.thumb}
+          alt=""
+          width={pair.width}
+          height={pair.cropH}
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+        />
       )
     }
   </a>
@@ -110,6 +133,31 @@ const ordered = [...deck].reverse();
   }
   .theme-card__well:hover .theme-card__img--2 {
     transform: translateX(-50%) translateY(-8px) scale(0.84);
+  }
+  /* Desktop + mobile pair: desktop shifted left, phone overlapping at the bottom right. */
+  .theme-card__well--pair .theme-card__img--0 {
+    left: 7%;
+    width: 72%;
+    transform: none;
+  }
+  .theme-card__well--pair:hover .theme-card__img--0 {
+    transform: translateY(-3px);
+  }
+  .theme-card__mobile {
+    position: absolute;
+    right: 7%;
+    top: 26%;
+    width: 22%;
+    height: auto;
+    border-radius: 10px 10px 0 0;
+    box-shadow:
+      0 0 0 1px rgb(25 24 22 / 0.08),
+      0 10px 24px rgb(25 24 22 / 0.16);
+    background: var(--surface);
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .theme-card__well--pair:hover .theme-card__mobile {
+    transform: translateY(-6px);
   }
   .theme-card__none {
     position: absolute;

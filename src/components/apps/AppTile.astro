@@ -124,6 +124,23 @@ const emptyLine = surface ? 'Not seen on a curated store yet' : 'Works in the ba
     font-weight: var(--weight-regular);
     font-size: var(--text-xs);
   }
+  /* Two-up on small screens: tighter caption, share hidden (the count stays). */
+  @media (max-width: 479px) {
+    .atile__cap {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0 var(--space-2);
+    }
+    .atile__n {
+      grid-column: 1 / -1;
+    }
+    .atile__share {
+      display: none;
+    }
+    .atile__blank-line {
+      text-align: center;
+      padding-inline: var(--space-2);
+    }
+  }
   .atile__meta {
     margin-top: 2px;
     color: var(--ink-3);

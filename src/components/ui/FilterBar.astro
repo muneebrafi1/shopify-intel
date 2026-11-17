@@ -377,9 +377,11 @@ const currentSort = sort?.find((s) => s.selected) ?? sort?.[0];
     }
   }
   @media (max-width: 899px) {
-    .fbar__right :global(.seg),
     .fpill--sort {
       display: none;
+    }
+    .fbar__right {
+      gap: var(--space-2);
     }
   }
 

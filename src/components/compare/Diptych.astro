@@ -7,9 +7,13 @@ const { class: className } = Astro.props;
 ---
 
 <div class:list={['dip', className]}>
-  <div class="dip__side dip__side--a"><slot name="a" /></div>
+  <div class="dip__side dip__side--a">
+    <slot name="a" />
+  </div>
   <div class="dip__axis" aria-hidden="true"></div>
-  <div class="dip__side dip__side--b"><slot name="b" /></div>
+  <div class="dip__side dip__side--b">
+    <slot name="b" />
+  </div>
 </div>
 
 <style>

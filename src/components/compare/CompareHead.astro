@@ -19,7 +19,9 @@ const { cmp, meta } = Astro.props;
 const [a, b] = sides(cmp);
 const isApp = cmp.kind === 'app';
 const category =
-  isApp && cmp.apps!.a.app.category?.slug === cmp.apps!.b.app.category?.slug ? cmp.apps!.a.app.category : null;
+  isApp && cmp.apps!.a.app.category?.slug === cmp.apps!.b.app.category?.slug
+    ? cmp.apps!.a.app.category
+    : null;
 
 const details = (side: 'a' | 'b') => {
   if (cmp.apps) {
@@ -47,49 +49,54 @@ const items = [a, b].map((s) => ({ ...s, d: details(s.side) }));
 <header class:list={['ch', `ch--${cmp.kind}`]}>
   <div class="ch__bar">
     <MonoLabel as="p" tone="ink">
-      Comparison · {isApp ? 'Apps' : 'Themes'}{category && ` · ${category.name}`}
+      Comparison · {isApp ? 'Apps' : 'Themes'}
+      {category && ` · ${category.name}`}
     </MonoLabel>
-    <MonoLabel as="p" bullet={false} class="ch__asof">Data as of {formatDate(meta.data_as_of)}</MonoLabel>
+    <MonoLabel as="p" bullet={false} class="ch__asof">
+      Data as of {formatDate(meta.data_as_of)}
+    </MonoLabel>
   </div>
 
   <div class="ch__diptych">
     <h1 class="ch__title">
       <span class="ch__name ch__name--a">{a.name}</span>
-      <span class="ch__vs" aria-label="versus"><span aria-hidden="true">vs</span></span>
+      <span class="ch__vs" aria-label="versus">
+        <span aria-hidden="true">vs</span>
+      </span>
       <span class="ch__name ch__name--b">{b.name}</span>
     </h1>
 
-    {
-      items.map((s) => (
-        <div class:list={['ch__side', `ch__side--${s.side}`]}>
-          <p class="ch__maker">
-            {s.kind === 'app' && <AppIcon src={s.iconUrl} name={s.name} size={24} />}
-            <span class="ch__maker-text">
-              {s.maker ? (
-                s.makerHref ? (
-                  <a href={s.makerHref}>by {s.maker}</a>
-                ) : (
-                  <>by {s.maker}</>
-                )
+    {items.map((s) => (
+      <div class:list={['ch__side', `ch__side--${s.side}`]}>
+        <p class="ch__maker">
+          {s.kind === 'app' && <AppIcon src={s.iconUrl} name={s.name} size={24} />}
+          <span class="ch__maker-text">
+            {s.maker ? (
+              s.makerHref ? (
+                <a href={s.makerHref}>by {s.maker}</a>
               ) : (
-                'Maker not listed'
-              )}
-            </span>
-          </p>
-          <p class="ch__facts">
-            {s.kind === 'app' && <Rating rating={s.d.rating} reviews={s.d.reviews} source={s.d.ratingSource} size="sm" />}
-            <span class="ch__price">{s.d.price}</span>
-          </p>
-          <p class="ch__usage mono">
-            Seen on <strong>{formatCount(s.stores)}</strong> of {formatCount(s.denominator)} stores
-          </p>
-          <p class="ch__links">
-            <a href={s.href}>{s.kind === 'app' ? 'App profile' : 'Theme page'}</a>
-            <a href={s.alternativesHref}>Alternatives</a>
-          </p>
-        </div>
-      ))
-    }
+                <>by {s.maker}</>
+              )
+            ) : (
+              'Maker not listed'
+            )}
+          </span>
+        </p>
+        <p class="ch__facts">
+          {s.kind === 'app' && (
+            <Rating rating={s.d.rating} reviews={s.d.reviews} source={s.d.ratingSource} size="sm" />
+          )}
+          <span class="ch__price">{s.d.price}</span>
+        </p>
+        <p class="ch__usage mono">
+          Seen on <strong>{formatCount(s.stores)}</strong> of {formatCount(s.denominator)} stores
+        </p>
+        <p class="ch__links">
+          <a href={s.href}>{s.kind === 'app' ? 'App profile' : 'Theme page'}</a>
+          <a href={s.alternativesHref}>Alternatives</a>
+        </p>
+      </div>
+    ))}
   </div>
 
   <p class="ch__lede">{summary(cmp)}</p>

@@ -31,63 +31,71 @@ const sides = [
 ] as const;
 ---
 
-<form class:list={['picker', className]} action="/compare" method="get" data-picker aria-describedby={error ? 'picker-error' : undefined}>
-  <MonoLabel as="p" tone="ink" class="picker__label">Compare any two</MonoLabel>
-  {
-    sides.map((s, i) => (
-      <>
-        {i === 1 && (
-          <span class="picker__vs" aria-hidden="true">
-            vs
-          </span>
-        )}
-        <label class="visually-hidden" for={`picker-${s.name}`}>
-          {s.label}
-        </label>
-        <select id={`picker-${s.name}`} name={s.name} class="picker__select" required>
-          <option value="" selected={!s.value}>
-            {i === 0 ? 'Choose an app or theme' : 'Compare with…'}
-          </option>
-          {groups.map((g) => (
-            <optgroup label={g.label}>
-              {g.options.map((o) => (
-                <option value={o.value} data-kind={o.kind} selected={o.value === s.value}>
-                  {o.label}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      </>
-    ))
-  }
-  <Button type="submit" variant="primary" iconRight="arrow-right" class="picker__go">Compare</Button>
-  {
-    error ? (
-      <p class="picker__error" id="picker-error" role="alert">
-        {error}
-      </p>
-    ) : (
-      <p class="picker__hint">Two apps or two themes. Any pair works, not only the popular ones.</p>
-    )
-  }
+<form
+  class:list={['picker', className]}
+  action="/compare"
+  method="get"
+  data-picker
+  aria-describedby={error ? 'picker-error' : undefined}
+>
+  <MonoLabel as="p" tone="ink" class="picker__label">
+    Compare any two
+  </MonoLabel>
+  {sides.map((s, i) => (
+    <>
+      {i === 1 && (
+        <span class="picker__vs" aria-hidden="true">
+          vs
+        </span>
+      )}
+      <label class="visually-hidden" for={`picker-${s.name}`}>
+        {s.label}
+      </label>
+      <select id={`picker-${s.name}`} name={s.name} class="picker__select" required>
+        <option value="" selected={!s.value}>
+          {i === 0 ? 'Choose an app or theme' : 'Compare with…'}
+        </option>
+        {groups.map((g) => (
+          <optgroup label={g.label}>
+            {g.options.map((o) => (
+              <option value={o.value} data-kind={o.kind} selected={o.value === s.value}>
+                {o.label}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+    </>
+  ))}
+  <Button type="submit" variant="primary" iconRight="arrow-right" class="picker__go">
+    Compare
+  </Button>
+  {error ? (
+    <p class="picker__error" id="picker-error" role="alert">
+      {error}
+    </p>
+  ) : (
+    <p class="picker__hint">Two apps or two themes. Any pair works, not only the popular ones.</p>
+  )}
 </form>
 
 <script>
-  document.querySelectorAll<HTMLFormElement>('[data-picker]').forEach((form) => {
-    const [first, second] = Array.from(form.querySelectorAll<HTMLSelectElement>('select'));
+  document.querySelectorAll<HTMLElement>('[data-picker]').forEach((form) => {
+    const selects: HTMLSelectElement[] = Array.from(form.querySelectorAll('select'));
+    const first = selects[0];
+    const second = selects[1];
     if (!first || !second) return;
     const kindOf = (sel: HTMLSelectElement) => sel.selectedOptions[0]?.dataset.kind ?? '';
+    const limit = (from: HTMLSelectElement, to: HTMLSelectElement) => {
+      const kind = kindOf(from);
+      to.querySelectorAll<HTMLOptionElement>('option[data-kind]').forEach((o) => {
+        o.disabled =
+          (!!kind && o.dataset.kind !== kind) || (o.value === from.value && !!from.value);
+      });
+    };
     const sync = () => {
-      for (const [from, to] of [
-        [first, second],
-        [second, first],
-      ] as const) {
-        const kind = kindOf(from);
-        to.querySelectorAll<HTMLOptionElement>('option[data-kind]').forEach((o) => {
-          o.disabled = (!!kind && o.dataset.kind !== kind) || (o.value === from.value && !!from.value);
-        });
-      }
+      limit(first, second);
+      limit(second, first);
     };
     first.addEventListener('change', sync);
     second.addEventListener('change', sync);

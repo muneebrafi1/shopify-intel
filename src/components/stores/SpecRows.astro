@@ -94,6 +94,22 @@ const { rows, label, class: className } = Astro.props;
   .spec__link:hover {
     text-decoration-color: currentColor;
   }
+  /* Small screens: two columns of label-over-value cells, so the sheet stays short. */
+  @media (max-width: 639px) {
+    .spec {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-4);
+    }
+    .spec__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 3px;
+      align-content: start;
+    }
+    .spec__value {
+      text-align: left;
+    }
+  }
   .spec__note {
     color: var(--ink-3);
     font-family: var(--font-mono);

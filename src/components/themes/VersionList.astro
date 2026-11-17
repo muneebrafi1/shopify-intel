@@ -29,23 +29,21 @@ const rows = [
 ---
 
 <ol class:list={['vlist', className]}>
-  {
-    rows.map((v) => {
-      const pct = (v.stores / total) * 100;
-      return (
-        <li class:list={['vlist__row', { 'vlist__row--unknown': !v.version }]}>
-          <span class="vlist__v">{v.version ?? 'Not recorded'}</span>
-          <span class="vlist__track" aria-hidden="true">
-            <span class="vlist__bar" style={`--w:${Math.max(pct, 1.5).toFixed(1)}%`} />
-          </span>
-          <span class="vlist__n num">
-            {formatCount(v.stores)}
-            <span class="vlist__unit">{v.stores === 1 ? 'store' : 'stores'}</span>
-          </span>
-        </li>
-      );
-    })
-  }
+  {rows.map((v) => {
+    const pct = (v.stores / total) * 100;
+    return (
+      <li class:list={['vlist__row', { 'vlist__row--unknown': !v.version }]}>
+        <span class="vlist__v">{v.version ?? 'Not recorded'}</span>
+        <span class="vlist__track" aria-hidden="true">
+          <span class="vlist__bar" style={`--w:${Math.max(pct, 1.5).toFixed(1)}%`} />
+        </span>
+        <span class="vlist__n num">
+          {formatCount(v.stores)}
+          <span class="vlist__unit">{v.stores === 1 ? 'store' : 'stores'}</span>
+        </span>
+      </li>
+    );
+  })}
 </ol>
 
 <style>

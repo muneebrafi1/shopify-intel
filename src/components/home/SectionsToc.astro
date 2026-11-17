@@ -26,50 +26,52 @@ const first = withPreview.find((t) => t.slug === featured) ?? withPreview[0];
 
 <div class="toc cols-12">
   <div class="toc__list span-8">
-    {
-      byGroup.map((g, gi) => (
-        <section class="toc__group" aria-labelledby={`toc-${g.slug}`}>
-          <h3 id={`toc-${g.slug}`} class="toc__group-title">
-            <span class="toc__group-n">{String(gi + 1).padStart(2, '0')}</span>
-            {g.name}
-          </h3>
-          <ul>
-            {g.items.map((t) => (
-              <li>
-                <a href={t.href} class="toc__item" data-toc-type={t.preview ? t.slug : undefined}>
-                  <span class="toc__name">{t.name}</span>
-                  <span class="toc__leader" aria-hidden="true" />
-                  <span class="toc__count num">{t.count.toLocaleString('en-US')}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))
-    }
+    {byGroup.map((g, gi) => (
+      <section class="toc__group" aria-labelledby={`toc-${g.slug}`}>
+        <h3 id={`toc-${g.slug}`} class="toc__group-title">
+          <span class="toc__group-n">{String(gi + 1).padStart(2, '0')}</span>
+          {g.name}
+        </h3>
+        <ul>
+          {g.items.map((t) => (
+            <li>
+              <a href={t.href} class="toc__item" data-toc-type={t.preview ? t.slug : undefined}>
+                <span class="toc__name">{t.name}</span>
+                <span class="toc__leader" aria-hidden="true" />
+                <span class="toc__count num">{t.count.toLocaleString('en-US')}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
   </div>
 
-  {
-    first && (
-      <figure class="toc__preview start-9" aria-hidden="true">
-        {withPreview.map((t) => {
-          const p = t.preview!;
-          return (
-            <div class="toc__plate" data-toc-plate={t.slug} hidden={t.slug !== first.slug}>
-              <SectionCrop src={p.crop.src} width={p.crop.width} height={p.crop.height} device={p.device} alt="" />
-              <figcaption class="toc__caption">
-                <span class="toc__caption-name">{t.name}</span>
-                <MonoLabel bullet={false}>
-                  {p.store.display_name} · {pageTypeName(p.page_type)} · {p.device}
-                  {p.is_placeholder ? ' · preview' : ''}
-                </MonoLabel>
-              </figcaption>
-            </div>
-          );
-        })}
-      </figure>
-    )
-  }
+  {first && (
+    <figure class="toc__preview start-9" aria-hidden="true">
+      {withPreview.map((t) => {
+        const p = t.preview!;
+        return (
+          <div class="toc__plate" data-toc-plate={t.slug} hidden={t.slug !== first.slug}>
+            <SectionCrop
+              src={p.crop.src}
+              width={p.crop.width}
+              height={p.crop.height}
+              device={p.device}
+              alt=""
+            />
+            <figcaption class="toc__caption">
+              <span class="toc__caption-name">{t.name}</span>
+              <MonoLabel bullet={false}>
+                {p.store.display_name} · {pageTypeName(p.page_type)} · {p.device}
+                {p.is_placeholder ? ' · preview' : ''}
+              </MonoLabel>
+            </figcaption>
+          </div>
+        );
+      })}
+    </figure>
+  )}
 </div>
 
 <script>
@@ -80,7 +82,11 @@ const first = withPreview.find((t) => t.slug === featured) ?? withPreview[0];
       if (!slug || slug === current) return;
       current = slug;
       plates.forEach((p) => (p.hidden = p.dataset.tocPlate !== slug));
-      toc.querySelectorAll('[data-toc-type]').forEach((a) => a.classList.toggle('is-current', (a as HTMLElement).dataset.tocType === slug));
+      toc
+        .querySelectorAll('[data-toc-type]')
+        .forEach((a) =>
+          a.classList.toggle('is-current', (a as HTMLElement).dataset.tocType === slug),
+        );
     };
     const handler = (event: Event) => {
       const link = (event.target as HTMLElement).closest<HTMLElement>('[data-toc-type]');

@@ -14,7 +14,9 @@ import Skeleton from '~/components/ui/Skeleton.astro';
 ---
 
 <dialog class="palette" aria-labelledby="palette-title" data-palette>
-  <h2 id="palette-title" class="visually-hidden">Search</h2>
+  <h2 id="palette-title" class="visually-hidden">
+    Search
+  </h2>
   <div class="palette__bar">
     <Icon name="magnifying-glass" size={18} class="palette__glass" />
     <input
@@ -35,27 +37,35 @@ import Skeleton from '~/components/ui/Skeleton.astro';
     />
     <span class="palette__busy" aria-hidden="true" hidden data-palette-busy></span>
     <button type="button" class="palette__close" data-palette-close>
-      <span class="palette__close-kbd" aria-hidden="true"><Kbd>esc</Kbd></span>
+      <span class="palette__close-kbd" aria-hidden="true">
+        <Kbd>esc</Kbd>
+      </span>
       <span class="palette__close-text">Cancel</span>
       <span class="visually-hidden">Close search</span>
     </button>
   </div>
 
   <div class="palette__body" data-palette-body>
-    <div id="palette-list" role="listbox" aria-label="Search results" class="palette__list" data-palette-list></div>
+    <div
+      id="palette-list"
+      role="listbox"
+      aria-label="Search results"
+      class="palette__list"
+      data-palette-list
+    ></div>
     <div class="palette__loading" hidden data-palette-loading aria-hidden="true">
-      <span class="palette__skel-label"><Skeleton width="64px" /></span>
-      {
-        [0, 1, 2, 3].map((i) => (
-          <div class="palette__skel">
-            <Skeleton variant="block" width="40px" height="30px" class="palette__skel-media" />
-            <span class="palette__skel-text">
-              <Skeleton width={`${[46, 38, 52, 30][i]}%`} />
-              <Skeleton width={`${[28, 34, 22, 26][i]}%`} height="0.65em" />
-            </span>
-          </div>
-        ))
-      }
+      <span class="palette__skel-label">
+        <Skeleton width="64px" />
+      </span>
+      {[0, 1, 2, 3].map((i) => (
+        <div class="palette__skel">
+          <Skeleton variant="block" width="40px" height="30px" class="palette__skel-media" />
+          <span class="palette__skel-text">
+            <Skeleton width={`${[46, 38, 52, 30][i]}%`} />
+            <Skeleton width={`${[28, 34, 22, 26][i]}%`} height="0.65em" />
+          </span>
+        </div>
+      ))}
     </div>
     <div class="palette__state" hidden data-palette-state>
       <p class="palette__state-title" data-palette-state-title></p>
@@ -65,16 +75,29 @@ import Skeleton from '~/components/ui/Skeleton.astro';
 
   <footer class="palette__foot">
     <span class="palette__legend" aria-hidden="true">
-      <span><Kbd>↑</Kbd><Kbd>↓</Kbd> Navigate</span>
-      <span><Kbd>↵</Kbd> Open</span>
-      <span><Kbd>esc</Kbd> Close</span>
+      <span>
+        <Kbd>↑</Kbd>
+        <Kbd>↓</Kbd> Navigate
+      </span>
+      <span>
+        <Kbd>↵</Kbd> Open
+      </span>
+      <span>
+        <Kbd>esc</Kbd> Close
+      </span>
     </span>
     <span class="palette__count" role="status" aria-live="polite" data-palette-count></span>
   </footer>
 
-  <template data-palette-icon="clock"><Icon name="clock" size={16} /></template>
-  <template data-palette-icon="arrow"><Icon name="arrow-right" size={16} /></template>
-  <template data-palette-icon="search"><Icon name="magnifying-glass" size={16} /></template>
+  <template data-palette-icon="clock">
+    <Icon name="clock" size={16} />
+  </template>
+  <template data-palette-icon="arrow">
+    <Icon name="arrow-right" size={16} />
+  </template>
+  <template data-palette-icon="search">
+    <Icon name="magnifying-glass" size={16} />
+  </template>
 </dialog>
 
 <script>
@@ -123,11 +146,36 @@ import Skeleton from '~/components/ui/Skeleton.astro';
     vendor: 'Vendor',
   };
   const JUMP: Row[] = [
-    { href: '/stores', title: 'Stores', subtitle: 'Every scanned store, with its theme and apps', icon: 'arrow' },
-    { href: '/themes', title: 'Themes', subtitle: 'Themes on the stores that run them', icon: 'arrow' },
-    { href: '/apps', title: 'Apps', subtitle: 'Most-installed apps and where they show up', icon: 'arrow' },
-    { href: '/sections', title: 'Sections', subtitle: 'The library, by section type', icon: 'arrow' },
-    { href: '/teardowns', title: 'Teardowns', subtitle: 'One store, read section by section', icon: 'arrow' },
+    {
+      href: '/stores',
+      title: 'Stores',
+      subtitle: 'Every scanned store, with its theme and apps',
+      icon: 'arrow',
+    },
+    {
+      href: '/themes',
+      title: 'Themes',
+      subtitle: 'Themes on the stores that run them',
+      icon: 'arrow',
+    },
+    {
+      href: '/apps',
+      title: 'Apps',
+      subtitle: 'Most-installed apps and where they show up',
+      icon: 'arrow',
+    },
+    {
+      href: '/sections',
+      title: 'Sections',
+      subtitle: 'The library, by section type',
+      icon: 'arrow',
+    },
+    {
+      href: '/teardowns',
+      title: 'Teardowns',
+      subtitle: 'One store, read section by section',
+      icon: 'arrow',
+    },
   ];
   const RECENT_KEY = 'palette:recent';
   const DEBOUNCE = 110;
@@ -147,8 +195,9 @@ import Skeleton from '~/components/ui/Skeleton.astro';
     const count = $<HTMLElement>('[data-palette-count]');
     const busy = $<HTMLElement>('[data-palette-busy]');
     const icon = (name: string) =>
-      (dialog.querySelector<HTMLTemplateElement>(`[data-palette-icon="${name}"]`)?.content.cloneNode(true) ??
-        document.createDocumentFragment()) as DocumentFragment;
+      (dialog
+        .querySelector<HTMLTemplateElement>(`[data-palette-icon="${name}"]`)
+        ?.content.cloneNode(true) ?? document.createDocumentFragment()) as DocumentFragment;
 
     const cache = new Map<string, Group[]>();
     let suggestions: Group[] | null = null;
@@ -164,7 +213,9 @@ import Skeleton from '~/components/ui/Skeleton.astro';
     const readRecent = (): string[] => {
       try {
         const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
-        return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, 5) : [];
+        return Array.isArray(v)
+          ? v.filter((x): x is string => typeof x === 'string').slice(0, 5)
+          : [];
       } catch {
         return [];
       }
@@ -173,7 +224,10 @@ import Skeleton from '~/components/ui/Skeleton.astro';
       const t = q.trim();
       if (t.length < 2) return;
       try {
-        const next = [t, ...readRecent().filter((x) => x.toLowerCase() !== t.toLowerCase())].slice(0, 5);
+        const next = [t, ...readRecent().filter((x) => x.toLowerCase() !== t.toLowerCase())].slice(
+          0,
+          5,
+        );
         localStorage.setItem(RECENT_KEY, JSON.stringify(next));
       } catch {
         /* storage blocked: recents are a convenience */
@@ -222,7 +276,16 @@ import Skeleton from '~/components/ui/Skeleton.astro';
       if (tag === 'TEXTAREA' || tag === 'SELECT') return true;
       if (tag === 'INPUT') {
         const type = (el as HTMLInputElement).type;
-        return !['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color', 'file'].includes(type);
+        return ![
+          'checkbox',
+          'radio',
+          'button',
+          'submit',
+          'reset',
+          'range',
+          'color',
+          'file',
+        ].includes(type);
       }
       return false;
     };
@@ -233,7 +296,14 @@ import Skeleton from '~/components/ui/Skeleton.astro';
         else open();
         return;
       }
-      if (event.key === '/' && !dialog.open && !event.metaKey && !event.ctrlKey && !event.altKey && !isTyping(event.target)) {
+      if (
+        event.key === '/' &&
+        !dialog.open &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !isTyping(event.target)
+      ) {
         // Another dialog (e.g. the mobile menu) owns the keyboard while it is open.
         if (document.querySelector('dialog[open]')) return;
         event.preventDefault();
@@ -294,7 +364,9 @@ import Skeleton from '~/components/ui/Skeleton.astro';
     async function loadSuggestions() {
       if (suggestions) return;
       try {
-        const res = await fetch('/api/v1/search?q=&limit=3', { headers: { accept: 'application/json' } });
+        const res = await fetch('/api/v1/search?q=&limit=3', {
+          headers: { accept: 'application/json' },
+        });
         if (!res.ok) return;
         suggestions = ((await res.json()) as { data: { groups: Group[] } }).data.groups;
         if (dialog.open && !input.value.trim()) renderIdle();
@@ -328,7 +400,12 @@ import Skeleton from '~/components/ui/Skeleton.astro';
       if (recent.length) {
         sections.push({
           label: 'Recent searches',
-          rows: recent.map((q) => ({ href: `/search?q=${encodeURIComponent(q)}`, title: q, icon: 'clock', fill: q })),
+          rows: recent.map((q) => ({
+            href: `/search?q=${encodeURIComponent(q)}`,
+            title: q,
+            icon: 'clock',
+            fill: q,
+          })),
           action: {
             label: 'Clear',
             run: () => {
@@ -363,10 +440,19 @@ import Skeleton from '~/components/ui/Skeleton.astro';
         count.textContent = '0 results';
         return;
       }
-      const sections: Section[] = groups.map((g) => ({ label: g.label, rows: g.items.map(hitRow) }));
+      const sections: Section[] = groups.map((g) => ({
+        label: g.label,
+        rows: g.items.map(hitRow),
+      }));
       sections.push({
         label: '',
-        rows: [{ href: `/search?q=${encodeURIComponent(q)}`, title: `See all results for “${q}”`, icon: 'search' }],
+        rows: [
+          {
+            href: `/search?q=${encodeURIComponent(q)}`,
+            title: `See all results for “${q}”`,
+            icon: 'search',
+          },
+        ],
       });
       render(sections, q);
       setActive(0);
@@ -380,7 +466,14 @@ import Skeleton from '~/components/ui/Skeleton.astro';
     }
 
     function hitRow(hit: Hit): Row {
-      return { href: hit.href, title: hit.title, subtitle: hit.subtitle, kind: hit.kind, hit, tag: KIND_LABEL[hit.kind] };
+      return {
+        href: hit.href,
+        title: hit.title,
+        subtitle: hit.subtitle,
+        kind: hit.kind,
+        hit,
+        tag: KIND_LABEL[hit.kind],
+      };
     }
 
     // ---------- rendering ----------
@@ -405,24 +498,27 @@ import Skeleton from '~/components/ui/Skeleton.astro';
           head.setAttribute('role', 'presentation');
           const label = el('span', 'pgroup__label', section.label);
           label.id = `palette-g-${si}`;
-          head.append(label);
+          add(head, label);
           if (section.action) {
             const btn = el('button', 'pgroup__action', section.action.label) as HTMLButtonElement;
             btn.type = 'button';
             btn.tabIndex = -1;
-            btn.setAttribute('aria-label', `${section.action.label} ${section.label.toLowerCase()}`);
+            btn.setAttribute(
+              'aria-label',
+              `${section.action.label} ${section.label.toLowerCase()}`,
+            );
             btn.addEventListener('click', section.action.run);
-            head.append(btn);
+            add(head, btn);
           }
-          wrap.append(head);
+          add(wrap, head);
           groupEl.setAttribute('aria-labelledby', label.id);
         } else {
           groupEl.setAttribute('aria-label', 'More');
           wrap.classList.add('pgroup--plain');
         }
-        for (const row of section.rows) groupEl.append(option(row, words));
-        wrap.append(groupEl);
-        frag.append(wrap);
+        for (const row of section.rows) add(groupEl, option(row, words));
+        add(wrap, groupEl);
+        add(frag, wrap);
       });
       list.replaceChildren(frag);
       body.scrollTop = 0;
@@ -440,17 +536,19 @@ import Skeleton from '~/components/ui/Skeleton.astro';
       a.setAttribute('aria-selected', 'false');
       if (row.kind) a.dataset.kind = row.kind;
 
-      a.append(media(row));
+      add(a, media(row));
       const text = el('span', 'prow__text');
       const title = el('span', 'prow__title');
-      title.append(highlight(row.title, words));
-      text.append(title);
-      if (row.subtitle) text.append(el('span', 'prow__sub', row.subtitle));
-      a.append(text);
+      add(title, highlight(row.title, words));
+      add(text, title);
+      if (row.subtitle) add(text, el('span', 'prow__sub', row.subtitle));
+      add(a, text);
       const end = el('span', 'prow__end');
-      if (row.tag) end.append(el('span', 'prow__tag', row.tag));
-      end.append(el('span', 'prow__enter', '↵'));
-      a.append(end);
+      if (row.tag) add(end, el('span', 'prow__tag', row.tag));
+      const enter = el('span', 'prow__enter', '↵');
+      enter.setAttribute('aria-hidden', 'true');
+      add(end, enter);
+      add(a, end);
 
       a.addEventListener('pointermove', () => {
         if (active !== index) setActive(index, false);
@@ -476,13 +574,13 @@ import Skeleton from '~/components/ui/Skeleton.astro';
       const hit = row.hit;
       if (row.icon) {
         box.classList.add('prow__media--glyph');
-        box.append(icon(row.icon));
+        add(box, icon(row.icon));
         return box;
       }
       if (!hit) return box;
       if (hit.kind === 'app') {
         box.classList.add('prow__media--icon');
-        box.append(el('span', 'prow__mono', initial(hit.title)));
+        add(box, el('span', 'prow__mono', initial(hit.title)));
         if (hit.icon_url) {
           const img = new Image(28, 28);
           img.alt = '';
@@ -491,7 +589,7 @@ import Skeleton from '~/components/ui/Skeleton.astro';
           img.referrerPolicy = 'no-referrer';
           img.addEventListener('error', () => img.remove());
           img.src = hit.icon_url;
-          box.append(img);
+          add(box, img);
         }
         return box;
       }
@@ -504,8 +602,13 @@ import Skeleton from '~/components/ui/Skeleton.astro';
         img.decoding = 'async';
         img.width = 80;
         img.height = 56;
-        img.src = shot ? thumbUrl(t.src, { cropHeight: Math.min(t.height, Math.round(t.width * 0.62)), width: 160 }) : t.src;
-        box.append(img);
+        img.src = shot
+          ? thumbUrl(t.src, {
+              cropHeight: Math.min(t.height, Math.round(t.width * 0.62)),
+              width: 160,
+            })
+          : t.src;
+        add(box, img);
         return box;
       }
       if (hit.kind === 'store') {
@@ -517,27 +620,30 @@ import Skeleton from '~/components/ui/Skeleton.astro';
         return box;
       }
       box.classList.add('prow__media--glyph');
-      box.append(el('span', 'prow__mono', initial(hit.title)));
+      add(box, el('span', 'prow__mono', initial(hit.title)));
       return box;
     }
 
     function highlight(text: string, words: string[]) {
       const frag = document.createDocumentFragment();
       if (!words.length) {
-        frag.append(text);
+        add(frag, text);
         return frag;
       }
-      const re = new RegExp(`(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'giu');
+      const re = new RegExp(
+        `(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+        'giu',
+      );
       let last = 0;
       for (const m of text.matchAll(re)) {
         const at = m.index ?? 0;
         const before = at === 0 ? '' : text[at - 1]!;
         if (before && /[\p{L}\p{N}]/u.test(before)) continue; // only word starts, like the index
-        if (at > last) frag.append(text.slice(last, at));
-        frag.append(el('mark', 'prow__hl', m[0]));
+        if (at > last) add(frag, text.slice(last, at));
+        add(frag, el('mark', 'prow__hl', m[0]));
         last = at + m[0].length;
       }
-      if (last < text.length) frag.append(text.slice(last));
+      if (last < text.length) add(frag, text.slice(last));
       return frag;
     }
 
@@ -590,6 +696,11 @@ import Skeleton from '~/components/ui/Skeleton.astro';
       }
     });
 
+    // DOM appends via appendChild: the Workers types in this project shadow Element.append.
+    function add(parent: Node, ...kids: Array<Node | string>) {
+      for (const k of kids)
+        parent.appendChild(typeof k === 'string' ? document.createTextNode(k) : k);
+    }
     function el(tag: string, className: string, text?: string) {
       const node = document.createElement(tag);
       node.className = className;
@@ -597,7 +708,12 @@ import Skeleton from '~/components/ui/Skeleton.astro';
       return node;
     }
     function initial(s: string) {
-      return (s.replace(/^www\./, '').trim().charAt(0) || '·').toUpperCase();
+      return (
+        s
+          .replace(/^www\./, '')
+          .trim()
+          .charAt(0) || '·'
+      ).toUpperCase();
     }
   }
 </script>
@@ -664,6 +780,10 @@ import Skeleton from '~/components/ui/Skeleton.astro';
   }
   .palette__input::placeholder {
     color: var(--ink-3);
+  }
+  /* The caret is the focus indicator here; the global ring would box the whole field. */
+  .palette__input:focus-visible {
+    box-shadow: none;
   }
   .palette__busy {
     width: 14px;

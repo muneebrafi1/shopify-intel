@@ -34,13 +34,18 @@ const { slug, name, curated, state, pages, appCounts, keep = {} } = Astro.props;
 
 const pageName = (p: PageType) => PAGE_TYPES.find((x) => x.slug === p)?.name ?? p;
 const deviceName = (d: Device) => DEVICES.find((x) => x.slug === d)?.name ?? d;
-const href = (page: PageType, device: Device) => detailHref(slug, { page, device }, { ...keep, hash: 'plates' });
+const href = (page: PageType, device: Device) =>
+  detailHref(slug, { page, device }, { ...keep, hash: 'plates' });
 const storePageHref = (storeHref: string, page: PageType, device: Device) => {
   const q = new URLSearchParams({ page, device });
   return `${storeHref}?${q.toString()}`;
 };
 
-const tabs = pages.map((p) => ({ label: pageName(p), href: href(p, state.device), selected: p === state.page }));
+const tabs = pages.map((p) => ({
+  label: pageName(p),
+  href: href(p, state.device),
+  selected: p === state.page,
+}));
 const devices = DEVICES.map((d) => ({
   label: d.name,
   value: d.slug,
@@ -66,12 +71,18 @@ const panels = (pages.length ? pages : CORE_PAGE_TYPES).flatMap((page) =>
 
 const facts = (f: Frame) => {
   const apps = appCounts?.get(f.store.domain);
-  return [`${name}${f.version ? ` ${f.version}` : ''}`, typeof apps === 'number' ? `${apps} ${apps === 1 ? 'app' : 'apps'}` : null]
+  return [
+    `${name}${f.version ? ` ${f.version}` : ''}`,
+    typeof apps === 'number' ? `${apps} ${apps === 1 ? 'app' : 'apps'}` : null,
+  ]
     .filter(Boolean)
     .join(' · ');
 };
-const frameNo = (i: number, n: number) => `${String(i + 1).padStart(2, '0')}/${String(n).padStart(2, '0')}`;
-const anyPlaceholder = curated.some((c) => c.pages.some((p) => p.desktop?.is_placeholder || p.mobile?.is_placeholder));
+const frameNo = (i: number, n: number) =>
+  `${String(i + 1).padStart(2, '0')}/${String(n).padStart(2, '0')}`;
+const anyPlaceholder = curated.some((c) =>
+  c.pages.some((p) => p.desktop?.is_placeholder || p.mobile?.is_placeholder),
+);
 const storeCount = curated.length;
 ---
 
@@ -87,130 +98,137 @@ const storeCount = curated.length;
   <div class="container">
     <div class="plates__head">
       <div class="plates__intro">
-        <MonoLabel as="p" tone="ink">{`Plates · ${pages.length} ${pages.length === 1 ? 'page' : 'pages'} × 2 devices`}</MonoLabel>
+        <MonoLabel
+          as="p"
+          tone="ink"
+        >{`Plates · ${pages.length} ${pages.length === 1 ? 'page' : 'pages'} × 2 devices`}</MonoLabel>
         <h2 id="plates-title" class="plates__title">
-          {name} on real stores<Count value={storeCount} label={storeCount === 1 ? 'store' : 'stores'} />
+          {name} on real stores
+          <Count value={storeCount} label={storeCount === 1 ? 'store' : 'stores'} />
         </h2>
       </div>
       <p class="plates__desc">
-        {
-          storeCount === 0
-            ? `No store running ${name} has been captured yet. The stores below are detected; captures follow.`
-            : storeCount === 1
-              ? `The same theme, page by page: home, collection, product and cart on one curated store, on desktop and mobile.`
-              : `The same theme on ${formatCount(storeCount)} curated stores, page by page, on desktop and mobile.`
-        }
+        {storeCount === 0
+          ? `No store running ${name} has been captured yet. The stores below are detected; captures follow.`
+          : storeCount === 1
+            ? `The same theme, page by page: home, collection, product and cart on one curated store, on desktop and mobile.`
+            : `The same theme on ${formatCount(storeCount)} curated stores, page by page, on desktop and mobile.`}
       </p>
     </div>
 
-    {
-      storeCount > 0 && (
-        <div class="plates__bar">
-          <Tabs items={tabs} label="Page type" class="plates__tabs" />
-          <Segmented items={devices} label="Device" size="sm" class="plates__device" />
-        </div>
-      )
-    }
+    {storeCount > 0 && (
+      <div class="plates__bar">
+        <Tabs items={tabs} label="Page type" class="plates__tabs" />
+        <Segmented items={devices} label="Device" size="sm" class="plates__device" />
+      </div>
+    )}
 
-    {
-      storeCount === 0 ? (
-        <div class="plates__empty">
-          <p>Not captured yet</p>
-          <a href="#stores">See the stores using {name}</a>
-        </div>
-      ) : (
-        panels.map((panel) => (
-          <div
-            class="plates__panel"
-            data-plate-panel
-            data-page={panel.page}
-            data-device={panel.device}
-            hidden={!panel.current}
-            role="region"
-            aria-label={`${pageName(panel.page)} page, ${deviceName(panel.device)}`}
-          >
-            {panel.frames.length === 0 ? (
-              <p class="plates__none">
-                No {pageName(panel.page).toLowerCase()} page on {panel.device} yet.
-              </p>
-            ) : panel.frames.length === 1 ? (
-              (() => {
-                const f = panel.frames[0]!;
-                const img = f.shot.image;
-                const cropH = thumbCropHeight(img.width, img.height, panel.device);
-                const link = storePageHref(f.store.href, panel.page, panel.device);
-                return (
-                  <div class:list={['solo', `solo--${panel.device}`]}>
-                    <div class="solo__stage">
-                      <a href={link} class:list={['plate', `plate--${panel.device}`, 'marks']}>
-                        <img
-                          src={thumbUrl(img.src, { cropHeight: cropH, width: panel.device === 'desktop' ? 1440 : 780 })}
-                          alt={`${f.store.display_name} ${pageName(panel.page).toLowerCase()} page on ${name}, ${panel.device}${img.is_placeholder ? ' (layout preview)' : ''}`}
-                          width={img.width}
-                          height={cropH}
-                          loading={panel.current ? 'eager' : 'lazy'}
-                          decoding="async"
-                          fetchpriority={panel.current ? 'high' : undefined}
-                        />
-                      </a>
-                    </div>
-                    <div class="solo__caption">
-                      <p class="solo__frame mlabel">
-                        Frame {frameNo(0, 1)} · {pageName(panel.page)} · {deviceName(panel.device)}
-                      </p>
-                      <h3 class="solo__store">
-                        <a href={f.store.href}>{f.store.display_name}</a>
-                      </h3>
-                      <p class="solo__domain">{f.store.domain}</p>
-                      <p class="solo__facts mlabel mlabel--bullet">{facts(f)}</p>
-                      <p class="solo__facts mlabel mlabel--bullet">
-                        {img.width} × {formatCount(img.height)} px
-                      </p>
-                      {img.is_placeholder && <p class="solo__honest">Layout preview — capture pending.</p>}
-                      <a class="solo__open" href={link}>
-                        Open the full {pageName(panel.page).toLowerCase()} page
-                        <span aria-hidden="true">→</span>
-                      </a>
-                    </div>
+    {storeCount === 0 ? (
+      <div class="plates__empty">
+        <p>Not captured yet</p>
+        <a href="#stores">See the stores using {name}</a>
+      </div>
+    ) : (
+      panels.map((panel) => (
+        <div
+          class="plates__panel"
+          data-plate-panel
+          data-page={panel.page}
+          data-device={panel.device}
+          hidden={!panel.current}
+          role="region"
+          aria-label={`${pageName(panel.page)} page, ${deviceName(panel.device)}`}
+        >
+          {panel.frames.length === 0 ? (
+            <p class="plates__none">
+              No {pageName(panel.page).toLowerCase()} page on {panel.device} yet.
+            </p>
+          ) : panel.frames.length === 1 ? (
+            (() => {
+              const f = panel.frames[0]!;
+              const img = f.shot.image;
+              const cropH = thumbCropHeight(img.width, img.height, panel.device);
+              const link = storePageHref(f.store.href, panel.page, panel.device);
+              return (
+                <div class:list={['solo', `solo--${panel.device}`]}>
+                  <div class="solo__stage">
+                    <a href={link} class:list={['plate', `plate--${panel.device}`, 'marks']}>
+                      <img
+                        src={thumbUrl(img.src, {
+                          cropHeight: cropH,
+                          width: panel.device === 'desktop' ? 1440 : 780,
+                        })}
+                        alt={`${f.store.display_name} ${pageName(panel.page).toLowerCase()} page on ${name}, ${panel.device}${img.is_placeholder ? ' (layout preview)' : ''}`}
+                        width={img.width}
+                        height={cropH}
+                        loading={panel.current ? 'eager' : 'lazy'}
+                        decoding="async"
+                        fetchpriority={panel.current ? 'high' : undefined}
+                      />
+                    </a>
                   </div>
-                );
-              })()
-            ) : (
-              <div class:list={['grid', panel.device === 'desktop' ? 'grid--shots' : 'grid--mobile-shots', 'plates__grid']}>
-                {panel.frames.map((f, i) => (
-                  <figure class="frame">
-                    <Shot
-                      src={f.shot.image.src}
-                      width={f.shot.image.width}
-                      height={f.shot.image.height}
-                      device={panel.device}
-                      alt={`${f.store.display_name} ${pageName(panel.page).toLowerCase()} page on ${name}, ${panel.device}${f.shot.is_placeholder ? ' (layout preview)' : ''}`}
-                      href={storePageHref(f.store.href, panel.page, panel.device)}
-                      eager={panel.current && i < 3}
-                    />
-                    <figcaption class="frame__caption">
-                      <span class="frame__store">{f.store.display_name}</span>
-                      <span class="frame__no mlabel">{frameNo(i, panel.frames.length)}</span>
-                      <span class="frame__facts mlabel">{facts(f)}</span>
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
-            )}
-          </div>
-        ))
-      )
-    }
+                  <div class="solo__caption">
+                    <p class="solo__frame mlabel">
+                      Frame {frameNo(0, 1)} · {pageName(panel.page)} · {deviceName(panel.device)}
+                    </p>
+                    <h3 class="solo__store">
+                      <a href={f.store.href}>{f.store.display_name}</a>
+                    </h3>
+                    {f.store.name && <p class="solo__domain">{f.store.domain}</p>}
+                    <p class="solo__facts mlabel mlabel--bullet">{facts(f)}</p>
+                    <p class="solo__facts mlabel mlabel--bullet">
+                      {img.width} × {formatCount(img.height)} px
+                    </p>
+                    {img.is_placeholder && (
+                      <p class="solo__honest">Layout preview — capture pending.</p>
+                    )}
+                    <a class="solo__open" href={link}>
+                      Open the full {pageName(panel.page).toLowerCase()} page
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
+                </div>
+              );
+            })()
+          ) : (
+            <div
+              class:list={[
+                'grid',
+                panel.device === 'desktop' ? 'grid--shots' : 'grid--mobile-shots',
+                'plates__grid',
+              ]}
+            >
+              {panel.frames.map((f, i) => (
+                <figure class="frame">
+                  <Shot
+                    src={f.shot.image.src}
+                    width={f.shot.image.width}
+                    height={f.shot.image.height}
+                    device={panel.device}
+                    alt={`${f.store.display_name} ${pageName(panel.page).toLowerCase()} page on ${name}, ${panel.device}${f.shot.is_placeholder ? ' (layout preview)' : ''}`}
+                    href={storePageHref(f.store.href, panel.page, panel.device)}
+                    eager={panel.current && i < 3}
+                  />
+                  <figcaption class="frame__caption">
+                    <span class="frame__store">{f.store.display_name}</span>
+                    <span class="frame__no mlabel">{frameNo(i, panel.frames.length)}</span>
+                    <span class="frame__facts mlabel">{facts(f)}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+        </div>
+      ))
+    )}
 
-    {
-      anyPlaceholder && (
-        <p class="plates__note">
-          <span class="mlabel mlabel--bullet">Capture plan</span>
-          These plates are drawn from each page’s detected sections until the first capture run. Theme and
-          section detection is real.
-        </p>
-      )
-    }
+    {anyPlaceholder && (
+      <p class="plates__note">
+        <span class="mlabel mlabel--bullet">Capture plan</span>
+        These plates are drawn from each page’s detected sections until the first capture run. Theme
+        and section detection is real.
+      </p>
+    )}
   </div>
 </section>
 
@@ -227,7 +245,10 @@ const storeCount = curated.length;
 
     const read = (a: HTMLAnchorElement) => {
       const u = new URL(a.href);
-      return { page: u.searchParams.get('page') ?? 'home', device: u.searchParams.get('device') ?? 'desktop' };
+      return {
+        page: u.searchParams.get('page') ?? 'home',
+        device: u.searchParams.get('device') ?? 'desktop',
+      };
     };
     const withState = (a: HTMLAnchorElement, next: { page: string; device: string }) => {
       const u = new URL(a.href);
@@ -264,7 +285,8 @@ const storeCount = curated.length;
     root.addEventListener('click', (event) => {
       const a = (event.target as HTMLElement).closest('a');
       if (!a || !(tabs.includes(a) || devices.includes(a))) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
+        return;
       event.preventDefault();
       ({ page, device } = read(a));
       apply();
@@ -386,7 +408,7 @@ const storeCount = curated.length;
     display: block;
     width: 100%;
     background: var(--surface);
-    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink-inverse) 14%, transparent);
     transition: transform var(--dur-slow) var(--ease-out);
   }
   .plate img {

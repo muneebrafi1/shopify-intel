@@ -82,18 +82,30 @@ async function themePreviews(
 ): Promise<Map<number, ScreenshotThumb[]>> {
   const out = new Map<number, ScreenshotThumb[]>();
   if (themeIds.length === 0) return out;
+  // Desktop home captures first (one per store, up to perTheme). When a theme has fewer stores
+  // than that, the first store's mobile home capture is appended so cards can pair devices.
   const rows = await ctx.db.all<ThumbRow & { theme_id: number }>(
     `SELECT sh.theme_id, ${THUMB_COLS}
      FROM screenshots sh JOIN stores st ON st.id = sh.store_id AND st.status = 'active'
      WHERE sh.theme_id IN (SELECT value FROM json_each(?)) AND sh.is_current = 1
-       AND sh.page_type = 'home' AND sh.device = 'desktop'
-     ORDER BY sh.theme_id, sh.is_placeholder, st.is_curated DESC, st.list_position`,
+       AND sh.page_type = 'home' AND sh.device IN ('desktop', 'mobile')
+     ORDER BY sh.theme_id, sh.device = 'mobile', sh.is_placeholder, st.is_curated DESC, st.list_position`,
     [jsonIds(themeIds)],
   );
+  const firstMobile = new Map<number, ScreenshotThumb>();
   for (const r of rows) {
+    if (r.device === 'mobile') {
+      if (!firstMobile.has(r.theme_id)) firstMobile.set(r.theme_id, toThumb(r, ctx));
+      continue;
+    }
     const list = out.get(r.theme_id) ?? [];
     if (list.length < perTheme) list.push(toThumb(r, ctx));
     out.set(r.theme_id, list);
+  }
+  for (const [themeId, mobile] of firstMobile) {
+    const list = out.get(themeId) ?? [];
+    if (list.length < perTheme) list.push(mobile);
+    out.set(themeId, list);
   }
   return out;
 }

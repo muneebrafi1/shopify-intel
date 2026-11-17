@@ -1,0 +1,308 @@
+---
+/**
+ * A teardown's notes on the store's plates. One plate at a time (?plate=<page>-<device>):
+ * the notes for it as a numbered legend beside the capture, each note tied to its section on
+ * the capture. Note numbers are the section numbers of the <FullPage> rail on the store page
+ * (sections sorted top to bottom), so "02 Header" means the same section in both places.
+ * Annotated sections keep their tag and outline visible on the capture.
+ */
+import Tabs from '~/components/ui/Tabs.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Icon from '~/components/ui/Icon.astro';
+import FullPage, { type FullPageSection } from '~/components/media/FullPage.astro';
+import type { ScreenshotDetail, StoreDetail, TeardownNote } from '~/server/api/v1/types';
+import { inline } from './markdown';
+
+interface Props {
+  notes: TeardownNote[];
+  store: StoreDetail;
+  basePath: string;
+  plate: string | null;
+}
+const { notes, store, basePath, plate } = Astro.props;
+
+// All screenshots of the store by id.
+const shots = new Map<number, ScreenshotDetail>();
+for (const p of store.pages) {
+  for (const d of ['desktop', 'mobile'] as const) {
+    const s = p.screenshots[d];
+    if (s) shots.set(s.id, s);
+  }
+}
+
+// FullPage numbering: sections sorted top to bottom (stable on the order we pass in).
+const toSections = (shot: ScreenshotDetail): FullPageSection[] =>
+  [...shot.sections]
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((s) => ({
+      id: s.id,
+      type: s.type.slug,
+      name: s.type.name,
+      y: s.rect.y,
+      height: s.rect.h,
+      x: s.rect.x,
+      w: s.rect.w,
+      app: s.app ? { name: s.app.short_name, slug: s.app.slug, iconUrl: s.app.icon_url } : null,
+      href: s.href,
+    }));
+const railNumbers = (sections: FullPageSection[]) => {
+  const ordered = [...sections].sort((a, b) => a.y - b.y);
+  return new Map(ordered.map((s, i) => [String(s.id), i + 1]));
+};
+
+interface Plate {
+  key: string;
+  label: string;
+  shot: ScreenshotDetail;
+  notes: TeardownNote[];
+}
+const plates: Plate[] = [];
+for (const note of [...notes].sort((a, b) => a.n - b.n)) {
+  const shot = note.screenshot_id ? shots.get(note.screenshot_id) : undefined;
+  if (!shot) continue;
+  const key = `${note.page_type}-${note.device}`;
+  let entry = plates.find((x) => x.key === key);
+  if (!entry) {
+    entry = {
+      key,
+      label: `${shot.page_type.name} · ${note.device === 'desktop' ? 'desktop' : 'mobile'}`,
+      shot,
+      notes: [],
+    };
+    plates.push(entry);
+  }
+  entry.notes.push(note);
+}
+const current = plates.find((x) => x.key === plate) ?? plates[0];
+const sections = current ? toSections(current.shot) : [];
+const numbers = railNumbers(sections);
+const pad = (n: number) => String(n).padStart(2, '0');
+const hrefFor = (key: string, hash = '') => `?plate=${encodeURIComponent(key)}${hash || '#notes'}`;
+
+// Notes on this plate, in section order; their sections stay outlined and tagged on the capture.
+const legend = (current?.notes ?? [])
+  .map((note) => ({ note, num: note.section ? numbers.get(String(note.section.id)) ?? null : null }))
+  .sort((a, b) => (a.num ?? 99) - (b.num ?? 99));
+const annotatedIds = legend.map((l) => l.note.section?.id).filter((id): id is number => typeof id === 'number');
+const css = annotatedIds
+  .map(
+    (id) =>
+      `.tdplates [data-region="${id}"]{box-shadow:inset 0 0 0 1.5px var(--accent)}` +
+      `.tdplates [data-region="${id}"] .fp__tag{opacity:1;transform:none;background:var(--accent)}`,
+  )
+  .join('');
+const storePlateHref = current
+  ? `${basePath}${current.shot.page_type.slug === 'home' ? '' : `?page=${current.shot.page_type.slug}`}${
+      current.shot.device === 'mobile' ? `${current.shot.page_type.slug === 'home' ? '?' : '&'}device=mobile` : ''
+    }#plates`
+  : basePath;
+---
+
+{
+  current && (
+    <div class="tdplates" data-tdplates>
+      {css && <Fragment set:html={`<style>${css}</style>`} />}
+      {plates.length > 1 && (
+        <Tabs
+          label="Plates with notes"
+          class="tdplates__tabs"
+          items={plates.map((x) => ({
+            label: x.label,
+            href: hrefFor(x.key),
+            selected: x.key === current.key,
+            count: x.notes.length,
+          }))}
+        />
+      )}
+
+      <div class="tdplates__grid">
+        <div class="tdplates__legend">
+          <MonoLabel as="p">{`${current.label} · ${legend.length} ${legend.length === 1 ? 'note' : 'notes'}`}</MonoLabel>
+          <ol class="tdnotes">
+            {legend.map(({ note, num }) => (
+              <li class="tdnote">
+                <a
+                  class="tdnote__num display num"
+                  href={note.section ? `#section-${note.section.id}` : undefined}
+                  data-note-target={note.section ? String(note.section.id) : undefined}
+                  aria-label={num ? `Section ${pad(num)} on the plate` : undefined}
+                >
+                  {num ? pad(num) : '—'}
+                </a>
+                <div class="tdnote__text">
+                  <p class="tdnote__where mono">
+                    {note.section_type.name}
+                    {note.section?.app && (
+                      <span class="tdnote__app">
+                        <AppIcon src={note.section.app.icon_url} name={note.section.app.short_name} size={14} />
+                        {note.section.app.short_name}
+                      </span>
+                    )}
+                  </p>
+                  <h3 class="tdnote__title">{note.title}</h3>
+                  <p class="tdnote__body" set:html={inline(note.body)} />
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p class="tdplates__hint">
+            Numbers are the section numbers on the{' '}
+            <a href={storePlateHref}>
+              store’s {current.label} plate
+              <Icon name="arrow-right" size={12} />
+            </a>
+          </p>
+          {plates.length > 1 && (
+            <ul class="tdplates__others">
+              {plates
+                .filter((x) => x.key !== current.key)
+                .map((x) => (
+                  <li>
+                    <a href={hrefFor(x.key)}>
+                      <span class="mono">{x.notes.length}</span> more on {x.label}
+                      <Icon name="arrow-right" size={12} />
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+
+        <FullPage
+          src={current.shot.image.src}
+          width={current.shot.width}
+          height={current.shot.height}
+          device={current.shot.device}
+          alt={`${current.shot.store.display_name}, ${current.label} plate${current.shot.is_placeholder ? ' (layout preview, not a screenshot)' : ''}`}
+          sections={sections}
+          rail={false}
+          class="tdplates__viewer"
+        />
+      </div>
+    </div>
+  )
+}
+
+<script>
+  // Hovering a note lights up its section on the capture (FullPage's own hover state).
+  document.querySelectorAll<HTMLElement>('[data-tdplates]').forEach((root) => {
+    root.querySelectorAll<HTMLElement>('[data-note-target]').forEach((el) => {
+      const region = root.querySelector<HTMLElement>(`[data-region="${el.dataset.noteTarget}"]`);
+      if (!region) return;
+      const on = () => region.classList.add('is-hover');
+      const off = () => region.classList.remove('is-hover');
+      el.addEventListener('mouseenter', on);
+      el.addEventListener('mouseleave', off);
+      el.addEventListener('focus', on);
+      el.addEventListener('blur', off);
+    });
+  });
+</script>
+
+<style>
+  .tdplates :global(.tdplates__tabs) {
+    margin-bottom: var(--space-6);
+  }
+  .tdplates__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+  @media (min-width: 1024px) {
+    .tdplates__grid {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: var(--space-10);
+      align-items: start;
+    }
+    .tdplates__legend {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+      max-height: calc(100dvh - var(--header-h) - var(--space-12));
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+  }
+  .tdnotes {
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--ink);
+  }
+  .tdnote {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .tdnote__num {
+    color: var(--accent-text);
+    font-size: 2.25rem;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+  }
+  a.tdnote__num:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.12em;
+  }
+  .tdnote__where {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tdnote__app {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ink-2);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .tdnote__title {
+    margin-top: 6px;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+    line-height: 1.25;
+  }
+  .tdnote__body {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+  .tdnote__body :global(a) {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .tdplates__hint {
+    margin-top: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+  }
+  .tdplates__hint a,
+  .tdplates__others a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .tdplates__others {
+    display: grid;
+    gap: 6px;
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+</style>

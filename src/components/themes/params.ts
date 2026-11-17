@@ -32,7 +32,9 @@ export function readIndexState(sp: URLSearchParams): IndexState {
   const sort = sp.get('sort');
   const p = Number.parseInt(sp.get('p') ?? '1', 10);
   return {
-    price: (PRICE_FILTERS as readonly string[]).includes(price ?? '') ? (price as PriceFilter) : undefined,
+    price: (PRICE_FILTERS as readonly string[]).includes(price ?? '')
+      ? (price as PriceFilter)
+      : undefined,
     vendor: vendor && SLUG.test(vendor) ? vendor : undefined,
     sort: SORTS.some((s) => s.value === sort) ? (sort as ThemeSort) : 'usage',
     view: sp.get('view') === 'index' ? 'index' : 'grid',

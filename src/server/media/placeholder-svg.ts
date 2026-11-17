@@ -255,8 +255,41 @@ const drawers: Record<string, Drawer> = {
   },
 
   hero: (ctx, y, h) => {
+    // Seed hints: style image|video|split (+ text_align). Unknown/missing → seeded variety.
+    const hintStyle = ctx.section.hints?.style as string | undefined;
+    const align = ctx.section.hints?.text_align as string | undefined;
     const style =
-      (ctx.section.hints?.style as string) ?? pick(ctx.rand, ['copy-left', 'copy-right', 'center', 'split', 'copy-left', 'center']);
+      hintStyle === 'split' || hintStyle === 'video'
+        ? hintStyle
+        : hintStyle === 'image'
+          ? align === 'center'
+            ? pick(ctx.rand, ['center', 'center', 'copy-left'])
+            : align === 'right'
+              ? 'copy-right'
+              : 'copy-left'
+          : pick(ctx.rand, ['copy-left', 'copy-right', 'center', 'split', 'video', 'center']);
+    if (style === 'video') {
+      // Dark, full-bleed video hero: a dim scene, centred white copy, a small play control.
+      // Footage reads as the store's own colour, darkened (not a generic charcoal).
+      ctx.c.rect(0, y, ctx.W, h, ctx.t.tone2);
+      ctx.c.rect(0, y, ctx.W, h, '#000', 0, ' opacity="0.55"');
+      const sw = Math.min(ctx.W, h) * (ctx.mobile ? 0.7 : 0.55);
+      ctx.c.circle(ctx.W * (ctx.mobile ? 0.5 : 0.62), y + h * 0.5, sw * 0.5, ctx.t.tone2);
+      ctx.c.rect(0, y, ctx.W, h, '#000', 0, ' opacity="0.25"');
+      ctx.c.rect(ctx.W * (ctx.mobile ? 0.3 : 0.2), y + h * 0.62, sw * 0.5, sw * 0.6, '#000', sw * 0.06, ' opacity="0.18"');
+      const tw = ctx.mobile ? ctx.cw : 560;
+      const tx = ctx.W / 2 - tw / 2;
+      const after = heading(ctx, tx, y + h * (ctx.mobile ? 0.58 : 0.4), tw, { size: 'lg', align: 'center', color: '#ffffff', lines: 2 });
+      const l = lines(ctx, tx, after + 10, tw, 1, { color: 'rgba(255,255,255,0.45)', align: 'center' });
+      const bw = ctx.mobile ? 150 : 180;
+      ctx.c.rect(ctx.W / 2 - bw / 2, l + 16, bw, ctx.mobile ? 42 : 48, '#ffffff', 24);
+      ctx.c.bar(ctx.W / 2 - bw * 0.2, l + 16 + (ctx.mobile ? 21 : 24) - 3, bw * 0.4, 6, '#1d1c1a');
+      const px = ctx.cx + 18;
+      const py = y + h - (ctx.mobile ? 40 : 56);
+      ctx.c.circle(px, py, ctx.mobile ? 14 : 18, 'rgba(255,255,255,0.18)');
+      ctx.c.path(`M${px - 4},${py - 7}L${px + 7},${py}L${px - 4},${py + 7}Z`, '#ffffff');
+      return;
+    }
     if (style === 'split' && !ctx.mobile) {
       image(ctx, ctx.W / 2, y, ctx.W / 2, h, 0);
       ctx.c.rect(0, y, ctx.W / 2, h, ctx.t.surface);

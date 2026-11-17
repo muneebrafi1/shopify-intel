@@ -263,16 +263,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
   .seen {
     --bg: var(--inverse);
     --ink: var(--ink-inverse);
-    --ink-2: #d9d5cd;
+    --ink-2: color-mix(in srgb, var(--ink-inverse) 84%, var(--inverse));
     --ink-3: var(--ink-inverse-2);
-    --ink-4: #7d786f;
+    --ink-4: color-mix(in srgb, var(--ink-inverse-2) 60%, var(--inverse));
     --line: var(--line-inverse);
-    --line-strong: #4a4641;
+    --line-strong: color-mix(in srgb, var(--line-inverse) 70%, var(--ink-inverse-2));
     --tile: var(--inverse-2);
-    --tile-hover: #34312d;
+    --tile-hover: color-mix(in srgb, var(--inverse-2) 85%, var(--ink-inverse));
     --fill: var(--inverse-2);
-    --surface: #3a3733;
-    --mark: #6b665f;
+    --surface: var(--line-inverse);
     background: var(--inverse);
     color: var(--ink);
     padding-block: var(--space-12) var(--space-10);
@@ -283,7 +282,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     }
   }
   .seen :global(.marks) {
-    --mark: #6b665f;
+    --mark: color-mix(in srgb, var(--ink-inverse-2) 55%, var(--inverse));
   }
   .seen__label {
     margin-bottom: var(--space-4);

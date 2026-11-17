@@ -19,14 +19,12 @@ const { cells, source, class: className } = Astro.props;
 
 <figure class:list={['ovl marks', className]}>
   <dl class="ovl__cells">
-    {
-      cells.map((c, i) => (
-        <div class:list={['ovl__cell', { 'ovl__cell--both': i === 1 }]}>
-          <dt class="ovl__label">{c.label}</dt>
-          <dd class="ovl__value num">{formatCount(c.value)}</dd>
-        </div>
-      ))
-    }
+    {cells.map((c, i) => (
+      <div class:list={['ovl__cell', { 'ovl__cell--both': i === 1 }]}>
+        <dt class="ovl__label">{c.label}</dt>
+        <dd class="ovl__value num">{formatCount(c.value)}</dd>
+      </div>
+    ))}
   </dl>
   <figcaption class="ovl__source">{source}</figcaption>
 </figure>

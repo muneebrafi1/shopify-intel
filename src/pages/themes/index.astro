@@ -63,7 +63,9 @@ if (state.p > 1 && themes.length === 0) return Astro.redirect(indexHref(state, {
 
 // ---- Filter bar --------------------------------------------------------------------------
 const bandCount = (v: string) => facets.price_bands.find((b) => b.value === v)?.count;
-const paidCount = facets.price_bands.filter((b) => b.value !== 'free').reduce((n, b) => n + b.count, 0);
+const paidCount = facets.price_bands
+  .filter((b) => b.value !== 'free')
+  .reduce((n, b) => n + b.count, 0);
 const PRICE_OPTIONS: { value: PriceFilter | undefined; label: string; count: number | null }[] = [
   { value: undefined, label: 'Any price', count: null },
   // With "paid" selected the band facet has no free row, so the free count is unknown there.
@@ -77,7 +79,9 @@ const PRICE_OPTIONS: { value: PriceFilter | undefined; label: string; count: num
 ];
 
 const vendorLabel = (slug: string) =>
-  allFacets.vendors.find((v) => v.value === slug)?.label ?? facets.vendors.find((v) => v.value === slug)?.label ?? slug;
+  allFacets.vendors.find((v) => v.value === slug)?.label ??
+  facets.vendors.find((v) => v.value === slug)?.label ??
+  slug;
 const vendorOptions = [...facets.vendors];
 if (state.vendor && !vendorOptions.some((v) => v.value === state.vendor)) {
   vendorOptions.push({ value: state.vendor, label: vendorLabel(state.vendor), count: 0 });
@@ -98,7 +102,11 @@ const groups: FilterGroup[] = [
     key: 'vendor',
     label: 'Vendor',
     options: [
-      { label: 'Any vendor', href: indexHref(state, { vendor: undefined }), selected: !state.vendor },
+      {
+        label: 'Any vendor',
+        href: indexHref(state, { vendor: undefined }),
+        selected: !state.vendor,
+      },
       ...vendorOptions.map((v) => ({
         label: v.label,
         href: indexHref(state, { vendor: v.value }),
@@ -108,14 +116,19 @@ const groups: FilterGroup[] = [
     ],
   },
 ];
-const sort = SORTS.map((s) => ({ label: s.label, href: indexHref(state, { sort: s.value }), selected: state.sort === s.value }));
+const sort = SORTS.map((s) => ({
+  label: s.label,
+  href: indexHref(state, { sort: s.value }),
+  selected: state.sort === s.value,
+}));
 const clearHref = indexHref({ sort: state.sort, view: state.view, p: 1 });
 
 // ---- Copy, SEO ---------------------------------------------------------------------------
 const priceLabel = PRICE_OPTIONS.find((o) => o.value === state.price)?.label;
 let heading = 'Shopify themes';
 if (state.vendor) heading = `${vendorLabel(state.vendor)} themes`;
-if (state.price === 'free' || state.price === 'paid') heading = `${priceLabel} ${state.vendor ? heading : 'Shopify themes'}`;
+if (state.price === 'free' || state.price === 'paid')
+  heading = `${priceLabel} ${state.vendor ? heading : 'Shopify themes'}`;
 else if (state.price) heading = `${heading} ${priceLabel?.replace(/^U/, 'u')}`;
 const title = filtered ? heading : 'Shopify themes on real stores';
 const description = filtered
@@ -123,7 +136,9 @@ const description = filtered
   : `Every Shopify theme we track (${allTotal}), shown on the real stores that run it: home, collection, product and cart pages, desktop and mobile, with price, vendor and usage in our scan.`;
 
 const singleFilter = (state.price ? 1 : 0) + (state.vendor ? 1 : 0) === 1;
-const canonical = singleFilter ? indexHref({ price: state.price, vendor: state.vendor, sort: 'usage', view: 'grid', p: 1 }) : '/themes';
+const canonical = singleFilter
+  ? indexHref({ price: state.price, vendor: state.vendor, sort: 'usage', view: 'grid', p: 1 })
+  : '/themes';
 const noindex = (filtered && !singleFilter) || state.p > 1;
 
 const offset = (state.p - 1) * PAGE_SIZE;
@@ -131,8 +146,18 @@ const jsonLd = [
   {
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site ?? Astro.url).href },
-      { '@type': 'ListItem', position: 2, name: 'Themes', item: new URL('/themes', Astro.site ?? Astro.url).href },
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: new URL('/', Astro.site ?? Astro.url).href,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Themes',
+        item: new URL('/themes', Astro.site ?? Astro.url).href,
+      },
     ],
   },
   {
@@ -182,12 +207,14 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       size="lg"
       class="ti-header"
     >
-      <p slot="meta" class="ti-statement">Every theme we track, shown on the real stores that run it.</p>
+      <p slot="meta" class="ti-statement">
+        Every theme we track, shown on the real stores that run it.
+      </p>
       <div slot="actions" class="ti-specs">
         <SpecRows rows={headerSpecs} />
         <p class="ti-bias">
-          Stores were found through Theme Store example lists, so a count shows reach in our scan, not market
-          share.
+          Stores were found through Theme Store example lists, so a count shows reach in our scan,
+          not market share.
         </p>
       </div>
     </PageHeader>
@@ -202,95 +229,109 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     />
 
     <section class="ti-results" aria-label="Themes">
-      {
-        themes.length === 0 ? (
-          <EmptyState
-            title="No themes match these filters"
-            body="Try another price or vendor, or clear the filters to see every theme we track."
-            class="ti-empty"
-          >
-            <Button href={clearHref} variant="primary" size="sm">
-              Clear filters
-            </Button>
-          </EmptyState>
-        ) : state.view === 'grid' ? (
-          <div class="grid grid--themes ti-grid">
-            {themes.map((t, i) => (
-              <ThemeCard
-                slug={t.slug}
-                name={t.name}
+      {themes.length === 0 ? (
+        <EmptyState
+          title="No themes match these filters"
+          body="Try another price or vendor, or clear the filters to see every theme we track."
+          class="ti-empty"
+        >
+          <Button href={clearHref} variant="primary" size="sm">
+            Clear filters
+          </Button>
+        </EmptyState>
+      ) : state.view === 'grid' ? (
+        <div class="grid grid--themes ti-grid">
+          {themes.map((t, i) => (
+            <ThemeCard
+              slug={t.slug}
+              name={t.name}
+              href={t.href}
+              vendor={t.vendor ?? 'Unknown vendor'}
+              priceLabel={t.price.label ?? '—'}
+              storesCount={t.usage.stores}
+              eager={i < 3}
+              shots={t.previews.map((p) => ({
+                src: p.image.src,
+                width: p.image.width,
+                height: p.image.height,
+                device: p.device,
+                alt: `${t.name} theme on a live store, home page`,
+              }))}
+            />
+          ))}
+        </div>
+      ) : (
+        <IndexList
+          columns="56px minmax(0,1.5fr) minmax(0,1.2fr) 96px 88px 150px"
+          head={['N°', 'Theme', 'Vendor', 'Price', 'Share', 'Stores']}
+          label="Themes"
+          class="ti-index"
+        >
+          {themes.map((t, i) => {
+            const shot = t.previews[0];
+            return (
+              <IndexRow
+                n={offset + i + 1}
                 href={t.href}
-                vendor={t.vendor ?? 'Unknown vendor'}
-                priceLabel={t.price.label ?? '—'}
-                storesCount={t.usage.stores}
-                eager={i < 3}
-                shots={t.previews.map((p) => ({
-                  src: p.image.src,
-                  width: p.image.width,
-                  height: p.image.height,
-                  alt: `${t.name} theme on a live store, home page`,
-                }))}
+                title={t.name}
+                subtitle={[t.vendor, t.price.label].filter(Boolean).join(' · ')}
+                preview={
+                  shot
+                    ? {
+                        src: shot.image.src,
+                        width: shot.image.width,
+                        height: shot.image.height,
+                        device: 'desktop',
+                      }
+                    : null
+                }
+                cells={[
+                  { value: t.vendor ?? '—' },
+                  { value: t.price.label ?? '—', mono: true },
+                  { value: formatPercent(t.usage.share * 100), mono: true, muted: true },
+                  {
+                    value: `(${formatCount(t.usage.stores)} ${t.usage.stores === 1 ? 'store' : 'stores'})`,
+                    serif: true,
+                    mobile: true,
+                  },
+                ]}
               />
-            ))}
-          </div>
-        ) : (
-          <IndexList
-            columns="56px minmax(0,1.5fr) minmax(0,1.2fr) 96px 88px 150px"
-            head={['N°', 'Theme', 'Vendor', 'Price', 'Share', 'Stores']}
-            label="Themes"
-            class="ti-index"
-          >
-            {themes.map((t, i) => {
-              const shot = t.previews[0];
-              return (
-                <IndexRow
-                  n={offset + i + 1}
-                  href={t.href}
-                  title={t.name}
-                  subtitle={[t.vendor, t.price.label].filter(Boolean).join(' · ')}
-                  preview={shot ? { src: shot.image.src, width: shot.image.width, height: shot.image.height, device: 'desktop' } : null}
-                  cells={[
-                    { value: t.vendor ?? '—' },
-                    { value: t.price.label ?? '—', mono: true },
-                    { value: formatPercent(t.usage.share * 100), mono: true, muted: true },
-                    { value: `(${formatCount(t.usage.stores)} ${t.usage.stores === 1 ? 'store' : 'stores'})`, serif: true, mobile: true },
-                  ]}
-                />
-              );
-            })}
-          </IndexList>
-        )
-      }
+            );
+          })}
+        </IndexList>
+      )}
 
       {total > PAGE_SIZE && (
-      <Pagination
-        page={state.p}
-        pageSize={PAGE_SIZE}
-        {total}
-        hrefFor={(p) => indexHref(state, { p })}
-        noun={total === 1 ? 'theme' : 'themes'}
-        class="ti-pager"
-      />
+        <Pagination
+          page={state.p}
+          pageSize={PAGE_SIZE}
+          {total}
+          hrefFor={(p) => indexHref(state, { p })}
+          noun={total === 1 ? 'theme' : 'themes'}
+          class="ti-pager"
+        />
       )}
     </section>
 
-    {
-      vendors.length > 0 && (
-        <section class="page-block ti-vendors cols-12" aria-labelledby="ti-vendors-title">
-          <div class="ti-vendors__head span-4">
-            <MonoLabel as="p">By vendor</MonoLabel>
-            <h2 id="ti-vendors-title" class="ti-vendors__title">
-              {vendors.length} studios make the themes we track.
-            </h2>
-            <p class="ti-vendors__desc">Pick one to see only its themes.</p>
-          </div>
-          <VendorStrip vendors={vendors} class="ti-vendors__strip span-8" />
-        </section>
-      )
-    }
+    {vendors.length > 0 && (
+      <section class="page-block ti-vendors cols-12" aria-labelledby="ti-vendors-title">
+        <div class="ti-vendors__head span-4">
+          <MonoLabel as="p">By vendor</MonoLabel>
+          <h2 id="ti-vendors-title" class="ti-vendors__title">
+            {vendors.length} studios make the themes we track.
+          </h2>
+          <p class="ti-vendors__desc">Pick one to see only its themes.</p>
+        </div>
+        <VendorStrip vendors={vendors} class="ti-vendors__strip span-8" />
+      </section>
+    )}
 
     <footer class="ti-source">
-      <SourceNote source={source.label} asOf={source.label.includes(asOf) ? undefined : asOf} href={source.url ?? '/methodology'} />
+      <SourceNote
+        source={source.label}
+        asOf={source.label.includes(asOf) ? undefined : asOf}
+        href={source.url ?? '/methodology'}
+      />
     </footer>
   </div>
 </BaseLayout>

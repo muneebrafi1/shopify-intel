@@ -1,0 +1,245 @@
+---
+/**
+ * /teardowns — editorial index. A lead teardown with its cover plate, the rest as an editorial
+ * list beside it, and a short statement of how teardowns are written (detected data only).
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Count from '~/components/ui/Count.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Button from '~/components/ui/Button.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import TeardownCard from '~/components/domain/TeardownCard.astro';
+import TeardownRow from '~/components/teardowns/TeardownRow.astro';
+import { api } from '~/server/api';
+import { formatDate } from '~/lib/format';
+
+const [{ data }, { data: meta }] = await Promise.all([api.listTeardowns({}), api.getMeta({})]);
+const items = [...data.items].sort(
+  (a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? '') || b.note_count - a.note_count,
+);
+const [lead, ...rest] = items;
+const allSamples = items.length > 0 && items.every((t) => t.is_sample);
+const asOf = formatDate(meta.data_as_of);
+
+const site = Astro.site ?? Astro.url;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Shopify store teardowns',
+  numberOfItems: items.length,
+  itemListElement: items.map((t, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: t.title,
+    url: new URL(t.href, site).href,
+  })),
+};
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+---
+
+<BaseLayout
+  title="Shopify store teardowns"
+  description="Long reads on single Shopify stores: the theme, every detected app and where it shows up on the page. Written from detection data only, never estimates."
+  jsonLd={jsonLd}
+>
+  <div class="container tds">
+    <header class="tdh cols-12">
+      <div class="span-8">
+        <MonoLabel as="p">Index — Teardowns</MonoLabel>
+        <h1 class="tdh__title display">Teardowns<Count value={items.length} label="teardowns" /></h1>
+        <p class="tdh__lede">
+          One store at a time: the theme, every app we detected and where each one lands on the page. Written from what
+          the scan found, never from estimates.
+        </p>
+      </div>
+      <div class="tdh__aside start-9">
+        {allSamples && <MonoLabel as="p" tone="accent">All samples for now</MonoLabel>}
+        <p class="tdh__note">
+          {
+            allSamples
+              ? 'These show the format. They use detection data from the '
+              : 'Written from detection data from the '
+          }
+          {asOf} scan; page layouts are previews until the first capture run.
+        </p>
+      </div>
+    </header>
+
+    {
+      lead ? (
+        <section class="tdfront cols-12" aria-label="Teardowns">
+          <div class="tdfront__lead span-7">
+            <MonoLabel as="p" class="tdfront__n">
+              N°01{lead.is_sample ? ' · Sample' : ''}
+            </MonoLabel>
+            <TeardownCard
+              slug={lead.slug}
+              title={lead.title}
+              dek={lead.dek}
+              storeLabel={lead.store.domain}
+              publishedAt={lead.published_at}
+              shot={lead.cover ? lead.cover.image : null}
+              size="lg"
+              isSample={lead.is_sample}
+            />
+            <p class="tdfront__facts mono">
+              {lead.theme ? `${lead.theme.name} · ` : ''}
+              {`${lead.note_count} ${lead.note_count === 1 ? 'note' : 'notes'} on the plates`}
+            </p>
+          </div>
+          {rest.length > 0 && (
+            <div class="tdfront__list">
+              <MonoLabel as="h2" tone="ink" class="tdfront__head">
+                More teardowns
+              </MonoLabel>
+              {rest.map((t, i) => (
+                <TeardownRow item={t} n={i + 2} />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <EmptyState title="No teardowns yet" body="The first ones are being written. Browse the stores in the meantime.">
+          <Button href="/stores" size="sm">
+            Browse stores
+          </Button>
+        </EmptyState>
+      )
+    }
+
+    <section class="tdhow cols-12" aria-labelledby="tdhow-title">
+      <h2 id="tdhow-title" class="tdhow__title display span-5">How a teardown is written</h2>
+      <ol class="tdhow__list">
+        <li>
+          <span class="mono">01</span>
+          <p>We start from one scan of the store: theme and version, every app we detect, tracking pixels.</p>
+        </li>
+        <li>
+          <span class="mono">02</span>
+          <p>Each note points at a section on a page plate, numbered the same way as on the store page.</p>
+        </li>
+        <li>
+          <span class="mono">03</span>
+          <p>No revenue, traffic or conversion estimates. If we haven’t seen it, we say so.</p>
+        </li>
+      </ol>
+    </section>
+
+    <SourceNote class="tds__source" source={meta.source.label} asOf={asOf} />
+  </div>
+</BaseLayout>
+
+<style>
+  .tds {
+    padding-bottom: var(--space-16);
+  }
+  .tdh {
+    padding-block: var(--space-10) var(--space-8);
+    align-items: end;
+  }
+  @media (min-width: 1024px) {
+    .tdh {
+      padding-block: var(--space-16) var(--space-12);
+    }
+  }
+  .tdh__title {
+    margin-top: var(--space-4);
+    font-size: clamp(3.5rem, 2rem + 6.5vw, 8.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+  }
+  .tdh__title :global(.count-sup) {
+    font-size: max(0.14em, 12px);
+    transform: translateY(0.7em);
+  }
+  .tdh__lede {
+    margin-top: var(--space-6);
+    max-width: 46ch;
+    color: var(--ink-2);
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+  }
+  .tdh__aside {
+    display: grid;
+    gap: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+  .tdh__note {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+
+  .tdfront {
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--ink);
+    align-items: start;
+  }
+  .tdfront :global(.tdfront__n) {
+    margin-bottom: var(--space-4);
+  }
+  .tdfront__facts {
+    margin-top: var(--space-3);
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tdfront__lead :global(.td-card__title) {
+    font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+  .tdfront__list {
+    min-width: 0;
+  }
+  .tdfront :global(.tdfront__head) {
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 1024px) {
+    .tdfront__list {
+      grid-column: 9 / -1;
+    }
+  }
+
+  .tdhow {
+    margin-top: var(--space-16);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+  }
+  .tdhow__title {
+    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+    line-height: 1.05;
+  }
+  .tdhow__list {
+    display: grid;
+    gap: var(--space-5);
+  }
+  @media (min-width: 1024px) {
+    .tdhow__list {
+      grid-column: 7 / -1;
+    }
+  }
+  .tdhow__list li {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: baseline;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+  .tdhow__list .mono {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .tdhow__list p {
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+  .tds :global(.tds__source) {
+    margin-top: var(--space-12);
+  }
+</style>

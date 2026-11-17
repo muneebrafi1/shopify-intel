@@ -20,24 +20,24 @@ const REASONS: Record<string, string> = {
 ---
 
 <ul class:list={['cmp', className]}>
-  {
-    items.map((c) => {
-      const other = c.a.slug === slug ? c.b : c.a;
-      const self = c.a.slug === slug ? c.a : c.b;
-      return (
-        <li class="cmp__item">
-          <a href={c.href} class="cmp__link" aria-label={c.title}>
-            <span class="cmp__names">
-              <span class="cmp__other">{other.name}</span>
-              <span class="cmp__vs">vs {self.name}</span>
-            </span>
-            <span class="cmp__why mlabel">{REASONS[c.reason] ?? c.reason.replace(/-/g, ' ')}</span>
-            <span class="cmp__arrow" aria-hidden="true">→</span>
-          </a>
-        </li>
-      );
-    })
-  }
+  {items.map((c) => {
+    const other = c.a.slug === slug ? c.b : c.a;
+    const self = c.a.slug === slug ? c.a : c.b;
+    return (
+      <li class="cmp__item">
+        <a href={c.href} class="cmp__link" aria-label={c.title}>
+          <span class="cmp__names">
+            <span class="cmp__other">{other.name}</span>
+            <span class="cmp__vs">vs {self.name}</span>
+          </span>
+          <span class="cmp__why mlabel">{REASONS[c.reason] ?? c.reason.replace(/-/g, ' ')}</span>
+          <span class="cmp__arrow" aria-hidden="true">
+            →
+          </span>
+        </a>
+      </li>
+    );
+  })}
 </ul>
 
 <style>

@@ -24,15 +24,21 @@ const { spec, entries, lede } = Astro.props;
 <section class="hero container" aria-labelledby="home-title">
   <div class="hero__top cols-12">
     <div class="hero__statement span-8">
-      <h1 id="home-title" class="hero__title display">Shopify themes and apps, on the stores that run them.</h1>
-      <MonoLabel as="p" class="hero__spec">{spec.join(' · ')}</MonoLabel>
+      <h1 id="home-title" class="hero__title display">
+        Shopify themes and apps, on the stores that run them.
+      </h1>
+      <MonoLabel as="p" class="hero__spec">
+        {spec.join(' · ')}
+      </MonoLabel>
     </div>
     <p class="hero__lede start-9">{lede}</p>
   </div>
 
   <div class="hero__search cols-12">
     <form class="hsearch span-8" action="/search" method="get" role="search" data-home-search>
-      <label for="home-q" class="visually-hidden">Search stores, themes and apps</label>
+      <label for="home-q" class="visually-hidden">
+        Search stores, themes and apps
+      </label>
       <Icon name="magnifying-glass" size={20} class="hsearch__icon" />
       <input
         id="home-q"
@@ -44,32 +50,46 @@ const { spec, entries, lede } = Astro.props;
         spellcheck="false"
         enterkeyhint="search"
       />
-      <span class="hsearch__kbd" data-kbd-hint aria-hidden="true"><Kbd>⌘</Kbd><Kbd>K</Kbd></span>
-      <button type="submit" class="hsearch__submit">Search</button>
+      <span class="hsearch__kbd" data-kbd-hint aria-hidden="true">
+        <Kbd>⌘</Kbd>
+        <Kbd>K</Kbd>
+      </span>
+      <button type="submit" class="hsearch__submit">
+        Search
+      </button>
     </form>
     <p class="hero__try start-9">
-      Try <a href="/search?q=prestige" data-try="prestige">Prestige</a>, <a href="/search?q=judge.me" data-try="judge.me"
-        >Judge.me</a
-      > or <a href="/search?q=youngla" data-try="youngla">youngla.com</a>
+      Try{' '}
+      <a href="/search?q=prestige" data-try="prestige">
+        Prestige
+      </a>
+      ,{' '}
+      <a href="/search?q=judge.me" data-try="judge.me">
+        Judge.me
+      </a>{' '}
+      or{' '}
+      <a href="/search?q=youngla" data-try="youngla">
+        youngla.com
+      </a>
     </p>
   </div>
 
   <nav class="entries" aria-label="Browse the archive">
     <ol class="entries__list">
-      {
-        entries.map((e, i) => (
-          <li>
-            <a href={e.href} class="entries__link">
-              <span class="entries__n">{String(i + 1).padStart(2, '0')}</span>
-              <span class="entries__label">
-                {e.label}
-                <Count value={e.count} />
-              </span>
-              <span class="entries__arrow" aria-hidden="true">→</span>
-            </a>
-          </li>
-        ))
-      }
+      {entries.map((e, i) => (
+        <li>
+          <a href={e.href} class="entries__link">
+            <span class="entries__n">{String(i + 1).padStart(2, '0')}</span>
+            <span class="entries__label">
+              {e.label}
+              <Count value={e.count} />
+            </span>
+            <span class="entries__arrow" aria-hidden="true">
+              →
+            </span>
+          </a>
+        </li>
+      ))}
     </ol>
   </nav>
 </section>
@@ -155,6 +175,9 @@ const { spec, entries, lede } = Astro.props;
     outline: none;
     -webkit-appearance: none;
     appearance: none;
+  }
+  .hsearch__input:focus-visible {
+    box-shadow: none;
   }
   .hsearch__input::placeholder {
     color: var(--ink-3);

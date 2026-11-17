@@ -189,7 +189,6 @@ const sortOptions = SORTS.map((s) => ({
   href: urlWith(url, { sort: s.value === 'usage' ? null : s.value }),
   selected: s.value === sort,
 }));
-const filtered = Boolean(category || price || bfs || ratingParam);
 const clearHref = urlWith(url, { category: null, price: null, bfs: null, rating: null });
 
 const hasParams = [...sp.keys()].length > 0;
@@ -411,6 +410,12 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   .grid-none {
     margin-top: var(--space-6);
     color: var(--ink-3);
+  }
+  @media (max-width: 479px) {
+    .apps-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-6) var(--space-3);
+    }
   }
   .grid-note {
     max-width: 640px;

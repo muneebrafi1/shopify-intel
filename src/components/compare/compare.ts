@@ -101,7 +101,8 @@ export function summary(cmp: ComparisonDetail): string {
         ? `Both are ${ca} apps.`
         : `${a.name} is ${ca ? `a ${ca} app` : 'an app'}; ${b.name} is ${cb ? `a ${cb} app` : 'an app'}.`;
     const both = cmp.shared_stores.total;
-    const tail = both > 0 ? `; ${pluralStores(both)} run both.` : '; no store in the scan runs both.';
+    const tail =
+      both > 0 ? `; ${pluralStores(both)} run both.` : '; no store in the scan runs both.';
     return `${what} ${usage}${tail}`;
   }
   const ta = cmp.themes!.a.theme;
@@ -112,7 +113,10 @@ export function summary(cmp: ComparisonDetail): string {
       : `${a.name} is by ${ta.vendor ?? 'an unknown vendor'}, ${b.name} by ${tb.vendor ?? 'an unknown vendor'}`;
   const pa = priceWords(ta.price.label, ta.price.is_free);
   const pb = priceWords(tb.price.label, tb.price.is_free);
-  const price = pa === pb ? `, ${pa === 'free' ? 'both free' : `both ${pa}`}.` : `; ${a.name} is ${pa}, ${b.name} ${pb}.`;
+  const price =
+    pa === pb
+      ? `, ${pa === 'free' ? 'both free' : `both ${pa}`}.`
+      : `; ${a.name} is ${pa}, ${b.name} ${pb}.`;
   return `${maker}${price} ${usage}.`;
 }
 
@@ -124,7 +128,8 @@ export const pluralStores = (n: number) => `${formatCount(n)} ${n === 1 ? 'store
 // ---------------------------------------------------------------------------------------------
 // Fact matrix
 // ---------------------------------------------------------------------------------------------
-export type Cell = { mark: 'yes' | 'no' | 'none'; text: string } | { mark?: undefined; text: string };
+export type Cell =
+  { mark: 'yes' | 'no' | 'none'; text: string } | { mark?: undefined; text: string };
 
 export function matrixCell(row: MatrixRow, side: Side, denominator: number): Cell {
   const v = row[side];
@@ -227,7 +232,12 @@ function cropFrame(app: AppDetail, s: SectionCard): Frame {
     device: s.device,
     pageType: s.page_type,
     title: `${app.app.short_name} on ${s.store.display_name}`,
-    facts: [s.type.name, `${pageTypeName(s.page_type)} page`, s.device, s.theme?.name ?? 'Custom theme'],
+    facts: [
+      s.type.name,
+      `${pageTypeName(s.page_type)} page`,
+      s.device,
+      s.theme?.name ?? 'Custom theme',
+    ],
     isPlaceholder: s.is_placeholder,
     alt: `${s.type.name} section rendered by ${app.app.short_name} on ${s.store.display_name}, ${pageTypeName(s.page_type).toLowerCase()} page, ${s.device}`,
   };
@@ -238,7 +248,9 @@ export function appStage(a: AppDetail, b: AppDetail): StageModel {
   const secs = { a: a.seen_on.sections, b: b.seen_on.sections };
   if (secs.a.length + secs.b.length === 0) return appStoresStage(a, b);
 
-  const pages = CORE_PAGE_TYPES.filter((p) => [...secs.a, ...secs.b].some((s) => s.page_type === p));
+  const pages = CORE_PAGE_TYPES.filter((p) =>
+    [...secs.a, ...secs.b].some((s) => s.page_type === p),
+  );
   const frames: StageModel['frames'] = new Map();
   let best: { key: string; score: number } | null = null;
   for (const page of pages) {
@@ -281,11 +293,12 @@ function appStoresStage(a: AppDetail, b: AppDetail): StageModel {
   const first = (d: AppDetail): Frame | null => {
     const s = d.seen_on.stores.find((x) => x.preview);
     if (!s?.preview) return null;
+    const img = s.preview.image;
     return {
       kind: 'page',
-      src: s.preview.image.src,
-      width: s.preview.image.width,
-      height: s.preview.image.height,
+      src: img.src,
+      width: img.width,
+      height: Math.min(img.height, Math.round(img.width * PAGE_CROP.desktop)),
       href: s.store.href,
       device: 'desktop',
       pageType: 'home',
@@ -351,12 +364,16 @@ export function themeStage(a: ThemeDetail, b: ThemeDetail): StageModel {
     }
   }
   const has = frames.size > 0;
-  const def = frames.has(frameKey('home', 'desktop')) ? frameKey('home', 'desktop') : ([...frames.keys()][0] ?? frameKey('home', 'desktop'));
+  const def = frames.has(frameKey('home', 'desktop'))
+    ? frameKey('home', 'desktop')
+    : ([...frames.keys()][0] ?? frameKey('home', 'desktop'));
   if (!has) frames.set(def, { a: null, b: null, sectionType: null });
   return {
     mode: has ? 'pages' : 'empty',
     pageTypes: has ? pages : ['home'],
-    devices: has ? DEVICES.filter((d) => [...frames.keys()].some((k) => k.endsWith(`:${d}`))) : ['desktop'],
+    devices: has
+      ? DEVICES.filter((d) => [...frames.keys()].some((k) => k.endsWith(`:${d}`)))
+      : ['desktop'],
     frames,
     defaultKey: def,
     note: has

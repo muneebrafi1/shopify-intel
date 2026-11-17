@@ -20,50 +20,69 @@ const curated = items.filter((s) => s.store.is_curated && s.store.preview);
 const detected = items.filter((s) => !(s.store.is_curated && s.store.preview));
 ---
 
-{
-  curated.length > 0 && (
-    <div class="grid grid--shots similar__grid">
-      {curated.map((s) => (
-        <StoreCard
-          domain={s.store.domain}
-          name={s.store.name}
-          href={s.store.href}
-          shot={s.store.preview ? { ...s.store.preview.image, device: s.store.preview.device } : null}
-          meta={`${s.store.theme.label} · ${why(s)}`}
-          n={s.store.position}
-        />
-      ))}
-    </div>
-  )
-}
-{
-  detected.length > 0 && (
-    <IndexList
-      label="Similar detected stores"
-      columns="64px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 96px"
-      head={['N°', 'Store', 'Theme', 'Why similar', 'Apps']}
-      class:list={['similar__index', { 'similar__index--after': curated.length > 0 }]}
-    >
-      {detected.map((s) => (
-        <IndexRow
-          n={s.store.position ?? 0}
-          href={s.store.href}
-          title={s.store.domain}
-          subtitle={`${s.store.theme.label} · ${why(s)}`}
-          preview={s.store.preview ? { ...s.store.preview.image, device: s.store.preview.device } : null}
-          cells={[
-            { value: s.store.theme.label, muted: !s.store.theme.name },
-            { value: why(s), mono: true },
-            { value: `${s.store.app_count} apps`, mono: true, mobile: true },
-          ]}
-        />
-      ))}
-    </IndexList>
-  )
-}
+<div class:list={['similar', { 'similar--split': curated.length > 0 && curated.length <= 2 && detected.length > 0 }]}>
+  {
+    curated.length > 0 && (
+      <div class="grid grid--shots similar__cards">
+        {curated.map((s) => (
+          <StoreCard
+            domain={s.store.domain}
+            name={s.store.name}
+            href={s.store.href}
+            shot={s.store.preview ? { ...s.store.preview.image, device: s.store.preview.device } : null}
+            meta={`${s.store.theme.label} · ${why(s)}`}
+            n={s.store.position}
+          />
+        ))}
+      </div>
+    )
+  }
+  {
+    detected.length > 0 && (
+      <IndexList
+        label="Similar detected stores"
+        columns="64px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 80px"
+        head={['N°', 'Store', 'Theme', 'Why similar', 'Apps']}
+        class="similar__index"
+      >
+        {detected.map((s) => (
+          <IndexRow
+            n={s.store.position ?? 0}
+            href={s.store.href}
+            title={s.store.domain}
+            subtitle={`${s.store.theme.label} · ${why(s)}`}
+            preview={s.store.preview ? { ...s.store.preview.image, device: s.store.preview.device } : null}
+            cells={[
+              { value: s.store.theme.label, muted: !s.store.theme.name },
+              { value: why(s), mono: true },
+              { value: `${s.store.app_count} apps`, mono: true, mobile: true },
+            ]}
+          />
+        ))}
+      </IndexList>
+    )
+  }
+</div>
 
 <style>
-  :global(.similar__index--after) {
-    margin-top: var(--space-10);
+  .similar {
+    display: grid;
+    gap: var(--space-10);
+  }
+  /* One or two captures: they sit beside the index instead of leaving a half-empty grid. */
+  @media (min-width: 1024px) {
+    .similar--split {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: var(--space-8);
+      align-items: start;
+    }
+    .similar--split .similar__cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .similar--split .similar__cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 </style>

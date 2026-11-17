@@ -22,7 +22,9 @@ const MAX = 6;
 <div class="tspec">
   <p class="tspec__who">
     <span class="tspec__name display">{t.name}</span>
-    <MonoLabel bullet={false} class="tspec__vendor">{t.vendor ?? 'Vendor not listed'}</MonoLabel>
+    <MonoLabel bullet={false} class="tspec__vendor">
+      {t.vendor ?? 'Vendor not listed'}
+    </MonoLabel>
   </p>
   <dl class="tspec__rows">
     <div class="tspec__row">
@@ -33,32 +35,34 @@ const MAX = 6;
       <dt>Sold on</dt>
       <dd>{t.marketplace ?? '—'}</dd>
     </div>
-    {
-      detail.presets.length > 0 && (
-        <div class="tspec__row">
-          <dt>Presets</dt>
-          <dd>{detail.presets.map((p) => p.name).join(', ')}</dd>
-        </div>
-      )
-    }
+    {detail.presets.length > 0 && (
+      <div class="tspec__row">
+        <dt>Presets</dt>
+        <dd>{detail.presets.map((p) => p.name).join(', ')}</dd>
+      </div>
+    )}
   </dl>
-  <MonoLabel as="p" class="tspec__label">Versions seen · {versions.length}</MonoLabel>
+  <MonoLabel as="p" class="tspec__label">
+    Versions seen · {versions.length}
+  </MonoLabel>
   <ol class="tspec__versions">
-    {
-      versions.slice(0, MAX).map((v) => (
-        <li>
-          <span class="mono">{v.version ?? 'Version not exposed'}</span>
-          <span class="num">{pluralStores(v.stores)}</span>
-        </li>
-      ))
-    }
+    {versions.slice(0, MAX).map((v) => (
+      <li>
+        <span class="mono">{v.version ?? 'Version not exposed'}</span>
+        <span class="num">{pluralStores(v.stores)}</span>
+      </li>
+    ))}
     {versions.length > MAX && <li class="tspec__more">+{versions.length - MAX} more</li>}
   </ol>
-  {
-    t.cta && (
-      <AffiliateCta href={t.cta.href} label={t.cta.label} isAffiliate={t.cta.is_affiliate} size="md" class="tspec__cta" />
-    )
-  }
+  {t.cta && (
+    <AffiliateCta
+      href={t.cta.href}
+      label={t.cta.label}
+      isAffiliate={t.cta.is_affiliate}
+      size="md"
+      class="tspec__cta"
+    />
+  )}
 </div>
 
 <style>
