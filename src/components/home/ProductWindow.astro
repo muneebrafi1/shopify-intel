@@ -326,8 +326,11 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
     overflow: hidden;
     mask-image: linear-gradient(to bottom, #000 calc(100% - 120px), transparent);
   }
-  .pw__phone :global(.fp__canvas) {
-    max-width: 300px;
+  /* Phone-sized, so several tagged sections fit (gallery, buy box, details, reviews) rather
+     than one product photo filling the frame. */
+  .pw__phone :global(.fp) {
+    width: 216px;
+    margin-inline: auto;
   }
 
   @media (min-width: 640px) {

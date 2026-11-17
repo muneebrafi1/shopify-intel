@@ -762,9 +762,8 @@ const cellText = (c: Cell) => (c === true ? 'Included' : c === false ? 'Not incl
       color-mix(in srgb, var(--accent) 9%, transparent),
       transparent 70%
     );
-    box-shadow:
-      inset 0 0 0 1px var(--line),
-      var(--shadow-md);
+    /* Flat like the home Pro band: a dark band sits in the page, it doesn't float above it. */
+    box-shadow: inset 0 0 0 1px var(--line);
   }
   .lifetime__eyebrow {
     display: flex;

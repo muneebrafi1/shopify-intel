@@ -43,6 +43,9 @@ test.describe('compare routing', () => {
 
   test('a valid pair that is not curated is a 404', async ({ page, request }) => {
     await expectHealthyPage(page, '/compare/judgeme-vs-klaviyo', { status: 404 });
+    // The direct URL explains itself like the picker does, with links to both apps.
+    await expect(page.getByText(/no comparison page for/i)).toBeVisible();
+    await expect(page.locator('main a[href="/apps/klaviyo"]').first()).toBeVisible();
     // Reversed, it is still a 404 (no redirect to a page that doesn't exist).
     const res = await request.get('/compare/klaviyo-vs-judgeme', { maxRedirects: 0 });
     expect(res.status()).toBe(404);

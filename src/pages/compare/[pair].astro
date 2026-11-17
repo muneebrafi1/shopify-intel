@@ -48,8 +48,18 @@ let meta: ResponseMeta;
 try {
   ({ data: cmp, meta } = await api.getComparison({ pair }));
 } catch (err) {
-  // Non-curated pairs and unknown slugs (404), mixed kinds or the same item twice (400) and
-  // malformed pairs are all "no such page" for a visitor.
+  // Two real items without a curated page: answer like the picker does ("there's no comparison
+  // page for these two", links to both), still with a 404 status.
+  if (
+    isApiError(err) &&
+    err.code === 'not_found' &&
+    err.details?.some((d) => d.message === 'not_curated')
+  ) {
+    const [pa = '', pb = ''] = pair.split('-vs-');
+    return Astro.rewrite(`/compare?a=${encodeURIComponent(pa)}&b=${encodeURIComponent(pb)}`);
+  }
+  // Unknown slugs (404), mixed kinds or the same item twice (400) and malformed pairs are all
+  // "no such page" for a visitor.
   if (isApiError(err) && err.status < 500) return Astro.rewrite('/404');
   throw err;
 }
@@ -291,7 +301,6 @@ const sections: Array<[string, string]> = [
     <section class="cmp__block" id="facts" aria-labelledby="facts-title">
       <SectionHeader
         id="facts-title"
-        eyebrow="Fact by fact"
         title="The listing and our scan, row by row"
         description="Check marks are facts, not points. Nothing here is scored or added up."
       />
@@ -301,7 +310,6 @@ const sections: Array<[string, string]> = [
     <section class="cmp__block" id="overlap" aria-labelledby="overlap-title">
       <SectionHeader
         id="overlap-title"
-        eyebrow="Overlap"
         title={isApp ? 'Stores running both' : 'Stores that ran both'}
         count={cmp.shared_stores.total}
         description={
@@ -323,7 +331,6 @@ const sections: Array<[string, string]> = [
       <section class="cmp__block" id="stacks" aria-labelledby="stacks-title">
         <SectionHeader
           id="stacks-title"
-          eyebrow="Stacks"
           title="Apps used on both themes"
           count={cmp.shared_apps.length}
           description={`What stores add on top of ${a.name} or ${b.name}, by number of stores on each.`}
@@ -367,7 +374,6 @@ const sections: Array<[string, string]> = [
     <section class="cmp__block" id="pricing" aria-labelledby="pricing-title">
       <SectionHeader
         id="pricing-title"
-        eyebrow={isApp ? 'Plans' : 'Price'}
         title={isApp ? 'Plans side by side' : 'Price and versions'}
         description={
           isApp
@@ -392,7 +398,6 @@ const sections: Array<[string, string]> = [
       <div class="cmp__summary-main">
         <SectionHeader
           id="summary-title"
-          eyebrow="In short"
           title="What the data says"
           description="The facts above in plain sentences. Which one fits depends on your store; we don’t pick."
         />
@@ -431,7 +436,6 @@ const sections: Array<[string, string]> = [
     <section class="cmp__block" aria-labelledby="next-title">
       <SectionHeader
         id="next-title"
-        eyebrow="Keep comparing"
         title={related.length > 0 ? 'Related comparisons' : 'More comparisons'}
         href="/compare"
         linkLabel="All comparisons"

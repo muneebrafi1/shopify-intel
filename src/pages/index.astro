@@ -581,6 +581,11 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
   .home__block--last {
     padding-bottom: var(--section-y);
   }
+  /* The last block already ends with a full section of space, so the footer sits directly
+     under it and the guide lines run into the footer's top border instead of stopping short. */
+  :global(main:has(.home) + .footer) {
+    margin-top: 0;
+  }
   @media (min-width: 1024px) {
     .home__window {
       margin-top: var(--space-16);

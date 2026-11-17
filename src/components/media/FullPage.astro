@@ -73,7 +73,9 @@ const regionStyle = (s: FullPageSection) => {
   return `${base};left:${pctX(s.x)};width:${pctX(s.w)};right:auto`;
 };
 const pad = (i: number) => String(i + 1).padStart(2, '0');
-const isSmall = (s: FullPageSection) => s.height / width < 0.06;
+// Sections too short to carry a pinned tag without colliding with the next one (they still get
+// it on hover/target). Phone pages are narrow, so the same tag covers far more of a section.
+const isSmall = (s: FullPageSection) => s.height / width < (device === 'mobile' ? 0.1 : 0.06);
 ---
 
 <div
@@ -482,6 +484,19 @@ const isSmall = (s: FullPageSection) => s.height / width < 0.06;
   .fp__region.is-hover :is(.fp__tag-n, .fp__tag-app),
   .fp__region:target :is(.fp__tag-n, .fp__tag-app) {
     color: color-mix(in srgb, var(--accent-fg) 72%, transparent);
+  }
+  /* Captures drawn small (a phone page in a card or hero window): compact tags. */
+  .fp__canvas {
+    container-type: inline-size;
+  }
+  @container (max-width: 280px) {
+    .fp__tag {
+      left: 5px;
+      top: 5px;
+      height: 16px;
+      padding: 0 5px;
+      font-size: 9px;
+    }
   }
   /* Narrow captures (a desktop page at 390px): smaller tags. */
   @media (max-width: 639px) {
