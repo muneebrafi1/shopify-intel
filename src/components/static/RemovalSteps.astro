@@ -1,0 +1,73 @@
+---
+/** "What happens next" — the short numbered sequence after a removal request. */
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import { REMOVAL_SLA } from './content';
+
+interface Props {
+  title?: string;
+  class?: string;
+}
+const { title = 'What happens next', class: className } = Astro.props;
+const STEPS = [
+  {
+    title: 'We check it',
+    body: 'We reply to the email you gave. An address at the store’s domain lets us confirm ownership without more questions.',
+  },
+  {
+    title: 'We remove it',
+    body: `The store or its screenshots disappear from the site and the API. We aim to do this ${REMOVAL_SLA}.`,
+  },
+  {
+    title: 'We confirm',
+    body: 'You get an email with your reference once it’s done. The domain stays on our block list so the crawler never adds it back.',
+  },
+];
+---
+
+<section class:list={['steps', className]} aria-labelledby="steps-title">
+  <MonoLabel as="h2" tone="ink" id="steps-title" class="steps__title">
+    {title}
+  </MonoLabel>
+  <ol class="steps__list">
+    {STEPS.map((s, i) => (
+      <li class="steps__item">
+        <span class="steps__n">{String(i + 1).padStart(2, '0')}</span>
+        <div>
+          <h3 class="steps__h">{s.title}</h3>
+          <p class="steps__p">{s.body}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .steps :global(.steps__title) {
+    display: flex;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--ink);
+  }
+  .steps__item {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .steps__n {
+    padding-top: 2px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .steps__h {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+  }
+  .steps__p {
+    margin-top: 2px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+</style>

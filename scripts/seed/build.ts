@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Deterministic seed builder: data/seed/*.json + data/curation/* → one SQL file.
  * Same inputs always produce byte-identical output (no clocks, no Math.random).
@@ -220,7 +221,8 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   }
   const autoShort = new Map(apps.map((r) => [r.slug, shortAppName(displayName(r.input))]));
   const shortCounts = new Map<string, number>();
-  for (const v of autoShort.values()) shortCounts.set(v.toLowerCase(), (shortCounts.get(v.toLowerCase()) ?? 0) + 1);
+  for (const v of autoShort.values())
+    shortCounts.set(v.toLowerCase(), (shortCounts.get(v.toLowerCase()) ?? 0) + 1);
   const shortName = (r: AppRecord): string => {
     const override = overrides[r.slug];
     if (override) return override;
@@ -325,9 +327,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
     if (!curatedByDomain.has(domain)) warn(`curation for unknown curated store ${domain}`);
   }
   const storeCategories = [
-    ...new Set(
-      inputs.storeCuration.stores.map((s) => s.category).filter((c): c is string => !!c),
-    ),
+    ...new Set(inputs.storeCuration.stores.map((s) => s.category).filter((c): c is string => !!c)),
   ].sort((a, b) => a.localeCompare(b));
   w.comment('store_categories');
   w.insert(
@@ -588,9 +588,13 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       updated_at: CATALOG_TS,
     });
     for (const note of fm.notes) {
-      const hit = sectionIndex.get(domain)?.get(`${note.page_type}|${note.device}|${note.section_type}`);
+      const hit = sectionIndex
+        .get(domain)
+        ?.get(`${note.page_type}|${note.device}|${note.section_type}`);
       if (!hit) {
-        warn(`${file.file}: note ${note.n} (${note.page_type}/${note.device}/${note.section_type}) has no matching section`);
+        warn(
+          `${file.file}: note ${note.n} (${note.page_type}/${note.device}/${note.section_type}) has no matching section`,
+        );
       }
       noteRows.push({
         id: noteRows.length + 1,
@@ -615,7 +619,12 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   // ------------------------------------------------------------------------------------------
   const comparisonRows: Row[] = [];
   const seenPairs = new Set<string>();
-  const addPair = (kind: 'app' | 'theme', a: { id: number; slug: string }, b: { id: number; slug: string }, reason: string) => {
+  const addPair = (
+    kind: 'app' | 'theme',
+    a: { id: number; slug: string },
+    b: { id: number; slug: string },
+    reason: string,
+  ) => {
     const [x, y] = a.slug < b.slug ? [a, b] : [b, a];
     const slug = `${x.slug}-vs-${y.slug}`;
     if (seenPairs.has(slug)) return;
@@ -707,8 +716,11 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
         targetName = l.target_name ?? theme.name;
       }
     }
-    if (l.target_slug && targetId === null) warn(`affiliate link ${i + 1}: unknown target ${l.target_slug}`);
-    const program = l.program ? programs.find((p) => p.key === programKey(l.program ?? '')) : undefined;
+    if (l.target_slug && targetId === null)
+      warn(`affiliate link ${i + 1}: unknown target ${l.target_slug}`);
+    const program = l.program
+      ? programs.find((p) => p.key === programKey(l.program ?? ''))
+      : undefined;
     if (l.program && !program) warn(`affiliate link ${i + 1}: unknown program '${l.program}'`);
     return {
       id: i + 1,
@@ -764,6 +776,9 @@ function checkCoInstalls(
     const cutoff = ranked[expected.length - 1]?.[1] ?? 0;
     const qualifying = new Set(ranked.filter(([, n]) => n >= cutoff).map(([s]) => s));
     const missing = expected.filter((s) => !qualifying.has(s));
-    if (missing.length) warn(`co-installs for ${a.slug}: export lists ${missing.join(', ')} outside our top ${expected.length}`);
+    if (missing.length)
+      warn(
+        `co-installs for ${a.slug}: export lists ${missing.join(', ')} outside our top ${expected.length}`,
+      );
   }
 }

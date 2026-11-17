@@ -96,7 +96,9 @@ export const SearchHitSchema = named(
 export const SearchOutput = z.object({
   q: z.string(),
   is_suggestion: z.boolean().describe('True when q was empty and these are popular picks.'),
-  groups: z.array(z.object({ kind: SearchKindEnum, label: z.string(), items: z.array(SearchHitSchema) })),
+  groups: z.array(
+    z.object({ kind: SearchKindEnum, label: z.string(), items: z.array(SearchHitSchema) }),
+  ),
 });
 
 // ---------------------------------------------------------------------------------------------

@@ -44,7 +44,9 @@ const toc = [
   >
     <Fragment slot="summary">
       <ul>
-        <li>Detections are automated observations of public pages on a given date. They can be wrong.</li>
+        <li>
+          Detections are automated observations of public pages on a given date. They can be wrong.
+        </li>
         <li>Screenshots show public pages, link back to the store, and come down on request.</li>
         <li>Quote and link freely with credit. Don’t copy the whole data set or resell it.</li>
         <li>Pro will be sold through Whop. Nothing is for sale yet.</li>
@@ -58,123 +60,132 @@ const toc = [
     </p>
     <p>Please don’t:</p>
     <ul>
-      <li>crawl the site or the API faster than a person reasonably would, or get around rate limits;</li>
+      <li>
+        crawl the site or the API faster than a person reasonably would, or get around rate limits;
+      </li>
       <li>try to reach the admin area, other people’s accounts or data that isn’t public;</li>
       <li>use the site to harass a store owner or anyone else.</li>
     </ul>
 
     <h2 id="our-data">What our data is</h2>
     <p>
-      Theme and app detections are automated observations of a store’s public pages on the date shown
-      next to them. Stores change, and our rules can miss or misread things. Treat every detection as
-      “seen on this date”, and check anything important at the source before you rely on it. The
-      <a href="/methodology">methodology</a> explains how it works and where it is weak.
+      Theme and app detections are automated observations of a store’s public pages on the date
+      shown next to them. Stores change, and our rules can miss or misread things. Treat every
+      detection as “seen on this date”, and check anything important at the source before you rely
+      on it. The <a href="/methodology">methodology</a> explains how it works and where it is weak.
     </p>
     <p>
-      App ratings, review counts and prices are copied from public Shopify App Store listings on the date
-      we show. They belong to those listings, not to us.
+      App ratings, review counts and prices are copied from public Shopify App Store listings on the
+      date we show. They belong to those listings, not to us.
     </p>
     <p>
-      We are independent and not affiliated with or endorsed by Shopify Inc. Store, theme and app names
-      and logos belong to their owners. We use them only to say what we observed.
+      We are independent and not affiliated with or endorsed by Shopify Inc. Store, theme and app
+      names and logos belong to their owners. We use them only to say what we observed.
     </p>
 
     <h2 id="screenshots">Screenshots</h2>
     <p>
-      We capture public pages that anyone can open in a browser, for reference, comparison and commentary.
-      Every screenshot names the store and links back to it. We don’t capture pages behind a login, a
-      password or a checkout.
+      We capture public pages that anyone can open in a browser, for reference, comparison and
+      commentary. Every screenshot names the store and links back to it. We don’t capture pages
+      behind a login, a password or a checkout.
     </p>
     <p>
-      Store owners can ask us to remove screenshots or the whole store with the <a href="/opt-out"
-        >removal form</a
-      >. We act on those requests even when we don’t have to.
+      Store owners can ask us to remove screenshots or the whole store with the{' '}
+      <a href="/opt-out">removal form</a>. We act on those requests even when we don’t have to.
     </p>
 
     <h2 id="reusing-data">Reusing our data</h2>
     <p>
-      You may quote facts, link to pages and use screenshots in your own work, such as a client pitch,
-      an article or a design review, as long as you credit {SITE_NAME} with a link to the page you used.
+      You may quote facts, link to pages and use screenshots in your own work, such as a client
+      pitch, an article or a design review, as long as you credit {SITE_NAME} with a link to the
+      page you used.
     </p>
     <p>
-      You may not copy the data set in bulk, republish it as your own database or directory, or resell it.
-      If you need data at scale, <a href={`mailto:${CONTACT.hello}`}>talk to us</a>.
+      You may not copy the data set in bulk, republish it as your own database or directory, or
+      resell it. If you need data at scale, <a href={`mailto:${CONTACT.hello}`}>talk to us</a>.
     </p>
 
     <h2 id="api">API and MCP</h2>
     <p>
-      The JSON API at <code>/api/v1</code> is free to use within fair limits. The upcoming MCP server is
-      built on it and follows the same rules. Details are on the <a href="/developers">developer page</a>.
+      The JSON API at <code>/api/v1</code> is free to use within fair limits. The upcoming MCP
+      server is built on it and follows the same rules. Details are on the{' '}
+      <a href="/developers">developer page</a>.
     </p>
     <ul>
-      <li>Cache responses. They change when our data changes, and every response says when that was.</li>
+      <li>
+        Cache responses. They change when our data changes, and every response says when that was.
+      </li>
       <li>Keep your request rate modest. We may slow down or block clients that don’t.</li>
       <li>
-        Show attribution: our name and a link to the page a result came from must travel with the data you
-        show to people.
+        Show attribution: our name and a link to the page a result came from must travel with the
+        data you show to people.
       </li>
       <li>
-        Versions are stable: we don’t make breaking changes to <code>v1</code>. There is no uptime guarantee
-        on the free API.
+        Versions are stable: we don’t make breaking changes to <code>v1</code>. There is no uptime
+        guarantee on the free API.
       </li>
     </ul>
 
     <h2 id="affiliate-links">Affiliate links</h2>
     <p>
-      Some links to apps and themes are affiliate links, and we may earn a commission when you buy through
-      them. Each one is labelled where it appears. Partnerships never change what we detect or how we rank.
-      See the <a href="/affiliate-disclosure">affiliate disclosure</a>.
+      Some links to apps and themes are affiliate links, and we may earn a commission when you buy
+      through them. Each one is labelled where it appears. Partnerships never change what we detect
+      or how we rank. See the <a href="/affiliate-disclosure">affiliate disclosure</a>.
     </p>
 
     <h2 id="pro">Accounts and Pro</h2>
     <p>
-      Accounts and the paid plans (Pro and Team) are not open yet. When they are, checkout, billing and
-      memberships will run on Whop, and Whop’s own terms will apply to the payment. Plans will renew until
-      you cancel, and you will be able to cancel at any time before the next renewal. We will publish the
-      refund policy with the prices before anything is for sale.
+      Accounts and the paid plans (Pro and Team) are not open yet. When they are, checkout, billing
+      and memberships will run on Whop, and Whop’s own terms will apply to the payment. Plans will
+      renew until you cancel, and you will be able to cancel at any time before the next renewal. We
+      will publish the refund policy with the prices before anything is for sale.
     </p>
     <p>
-      Boards you create are yours. Keep your sign-in safe; you are responsible for activity on your account.
-      We may suspend accounts that break these terms.
+      Boards you create are yours. Keep your sign-in safe; you are responsible for activity on your
+      account. We may suspend accounts that break these terms.
     </p>
 
     <h2 id="no-warranty">No warranty</h2>
     <p>
       The site, the data and the API are provided “as is”, without warranties of any kind, including
-      accuracy, completeness and fitness for a particular purpose. Decisions you make with our data, such as
-      buying a theme or installing an app, are yours.
+      accuracy, completeness and fitness for a particular purpose. Decisions you make with our data,
+      such as buying a theme or installing an app, are yours.
     </p>
 
     <h2 id="liability">Limits on liability</h2>
     <p>
-      To the extent the law allows, we are not liable for indirect or consequential losses, or for lost
-      profits, revenue or data, arising from your use of the site. Our total liability to you for any claim
-      is limited to what you paid us in the twelve months before it, or USD 50 if you paid nothing.
-      Nothing here limits liability that can’t be limited by law.
+      To the extent the law allows, we are not liable for indirect or consequential losses, or for
+      lost profits, revenue or data, arising from your use of the site. Our total liability to you
+      for any claim is limited to what you paid us in the twelve months before it, or USD 50 if you
+      paid nothing. Nothing here limits liability that can’t be limited by law.
     </p>
 
     <h2 id="changes">Changes</h2>
     <p>
-      We may change or stop parts of the site as it grows, and we will update these terms when we do. The
-      date at the top shows the latest version. Material changes for people with accounts will be emailed in
-      advance. The governing law and place for disputes will be set before launch.
+      We may change or stop parts of the site as it grows, and we will update these terms when we
+      do. The date at the top shows the latest version. Material changes for people with accounts
+      will be emailed in advance. The governing law and place for disputes will be set before
+      launch.
     </p>
 
     <h2 id="contact">Contact</h2>
     <p>
-      General questions: <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. Removals:
-      <a href={`mailto:${CONTACT.removals}`}>{CONTACT.removals}</a> or the <a href="/opt-out"
-        >removal form</a
-      >.
+      General questions: <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. Removals:{' '}
+      <a href={`mailto:${CONTACT.removals}`}>{CONTACT.removals}</a> or the{' '}
+      <a href="/opt-out">removal form</a>.
     </p>
 
     <Fragment slot="aside">
       <AsideCard title="Own a store we list?">
         <p>Hide it everywhere and delete its screenshots. No account needed.</p>
-        <Button href="/opt-out" variant="secondary" size="sm">Request removal</Button>
+        <Button href="/opt-out" variant="secondary" size="sm">
+          Request removal
+        </Button>
       </AsideCard>
       <AsideCard title="Building on our data?">
-        <p>Endpoints, caching and attribution are on the <a href="/developers">developer page</a>.</p>
+        <p>
+          Endpoints, caching and attribution are on the <a href="/developers">developer page</a>.
+        </p>
       </AsideCard>
     </Fragment>
   </DocShell>

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import type { Db, RunResult, SqlValue, Statement } from './types.ts';
 

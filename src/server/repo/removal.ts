@@ -76,7 +76,10 @@ export async function createRemovalRequest(
       [domain, dayAgo],
     ),
   ]);
-  if ((byIp?.n ?? 0) >= RATE_LIMITS.perIpPerHour || (byDomain?.n ?? 0) >= RATE_LIMITS.perDomainPerDay) {
+  if (
+    (byIp?.n ?? 0) >= RATE_LIMITS.perIpPerHour ||
+    (byDomain?.n ?? 0) >= RATE_LIMITS.perDomainPerDay
+  ) {
     throw new ApiError('rate_limited', 'Too many requests. Please try again later.', {
       headers: { 'Retry-After': '3600' },
     });

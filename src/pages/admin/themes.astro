@@ -1,0 +1,184 @@
+---
+import AdminLayout from '~/layouts/AdminLayout.astro';
+import AdminHeader from '~/components/admin/AdminHeader.astro';
+import FlashNotice from '~/components/admin/FlashNotice.astro';
+import StatusPill from '~/components/admin/StatusPill.astro';
+import Button from '~/components/ui/Button.astro';
+import Field from '~/components/ui/Field.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Input from '~/components/ui/Input.astro';
+import { adminDb } from '~/server/admin/env';
+import { updateTheme } from '~/server/admin/actions';
+import { int, oneOf, optionalText, text } from '~/server/admin/forms';
+import { idParam, runAction } from '~/server/admin/page';
+import { listThemes } from '~/server/admin/queries';
+import { hrefWith } from '~/server/admin/format';
+
+const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
+const editId = idParam(Astro.url.searchParams.get('edit'));
+const back = hrefWith('/admin/themes', { q });
+
+if (Astro.request.method === 'POST') {
+  return runAction(Astro, async (form, ctx) => {
+    const id = int(form, 'id');
+    if (id === null) return { ok: false, flash: 'bad_request' };
+    const intent = text(form, 'intent', 20);
+    if (intent === 'status') {
+      const status = oneOf(form, 'status', ['active', 'hidden'] as const);
+      if (!status) return { ok: false, flash: 'bad_request' };
+      return { ...(await updateTheme(ctx, id, { status })), redirect: back };
+    }
+    const result = await updateTheme(ctx, id, {
+      name: text(form, 'name', 80),
+      priceLabel: optionalText(form, 'price_label', 40),
+      marketplace: optionalText(form, 'marketplace', 80),
+    });
+    return { ...result, redirect: result.ok ? back : `${back}${back.includes('?') ? '&' : '?'}edit=${id}` };
+  });
+}
+
+const rows = await listThemes(adminDb(), q);
+const editing = editId !== null ? rows.find((t) => t.id === editId) : undefined;
+const visible = rows.filter((t) => t.status === 'active').length;
+---
+
+<AdminLayout title="Themes" section="themes">
+  <AdminHeader
+    title="Themes"
+    count={rows.length}
+    countLabel="themes"
+    trail={[{ label: 'Themes' }]}
+    description={`${visible} visible on the site. Hiding a theme removes its public page and its counts; detections are kept.`}
+  />
+  <FlashNotice />
+
+  {
+    editing && (
+      <section class="edit a-panel" id="edit" aria-labelledby="edit-title">
+        <div class="a-block__head">
+          <h2 class="a-h2" id="edit-title">
+            Edit {editing.name}
+          </h2>
+          <a class="a-link" href={back}>
+            Close
+          </a>
+        </div>
+        <form method="post" class="a-form">
+          <input type="hidden" name="id" value={editing.id} />
+          <input type="hidden" name="intent" value="update" />
+          <div class="a-form__row three">
+            <Field label="Name" for="t-name">
+              <Input id="t-name" name="name" value={editing.name} required maxlength={80} />
+            </Field>
+            <Field label="Price label" for="t-price" optional hint="As published, e.g. $400 or Free.">
+              <Input id="t-price" name="price_label" value={editing.price_label ?? ''} maxlength={40} />
+            </Field>
+            <Field label="Marketplace" for="t-market" optional>
+              <Input id="t-market" name="marketplace" value={editing.marketplace ?? ''} maxlength={80} />
+            </Field>
+          </div>
+          <div class="a-form__actions">
+            <Button type="submit" variant="primary" size="sm">
+              Save theme
+            </Button>
+            <Button href={back} variant="ghost" size="sm">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </section>
+    )
+  }
+
+  <form method="get" action="/admin/themes" class="a-filters" role="search" aria-label="Filter themes">
+    <div class="a-filters__search">
+      <label for="t-q" class="visually-hidden">Search themes</label>
+      <Icon name="magnifying-glass" size={16} />
+      <Input id="t-q" name="q" type="search" value={q} placeholder="Search name or vendor" autocomplete="off" />
+    </div>
+    {q && <Button href="/admin/themes" size="sm" variant="ghost" icon="x">Clear</Button>}
+  </form>
+
+  <div class="table-wrap">
+    <table class="table a-table">
+      <thead>
+        <tr>
+          <th scope="col">Theme</th>
+          <th scope="col">Vendor</th>
+          <th scope="col">Price</th>
+          <th scope="col">Marketplace</th>
+          <th scope="col" class="is-num">Stores</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="is-actions"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.length === 0 ? (
+            <tr>
+              <td colspan="7" class="a-empty-cell">
+                No themes match “{q}”.
+              </td>
+            </tr>
+          ) : (
+            rows.map((t) => (
+              <tr class:list={{ 'is-editing': t.id === editId }}>
+                <td>
+                  <a class="a-row-link" href={hrefWith('/admin/themes', { q, edit: t.id }) + '#edit'}>
+                    {t.name}
+                  </a>
+                  <span class="a-sub a-mono">{t.slug}</span>
+                </td>
+                <td class="a-muted">{t.vendor ?? '—'}</td>
+                <td class="a-nowrap">{t.price_label ?? <span class="a-muted">—</span>}</td>
+                <td class="a-muted">{t.marketplace ?? '—'}</td>
+                <td class="is-num">
+                  {t.store_count ?? 0}
+                  {t.curated_store_count ? <span class="a-sub">{t.curated_store_count} curated</span> : null}
+                </td>
+                <td>
+                  <StatusPill status={t.status} variant="dot" />
+                </td>
+                <td class="is-actions">
+                  <Button href={hrefWith('/admin/themes', { q, edit: t.id }) + '#edit'} size="sm" variant="ghost" icon="pencil-simple" label={`Edit ${t.name}`} />
+                  {t.status !== 'retired' && (
+                    <form method="post" data-confirm={t.status === 'active' ? `Hide ${t.name} from the public site?` : undefined}>
+                      <input type="hidden" name="id" value={t.id} />
+                      <input type="hidden" name="intent" value="status" />
+                      <input type="hidden" name="status" value={t.status === 'active' ? 'hidden' : 'active'} />
+                      <Button type="submit" size="sm" variant="secondary">
+                        {t.status === 'active' ? 'Hide' : 'Unhide'}
+                      </Button>
+                    </form>
+                  )}
+                </td>
+              </tr>
+            ))
+          )
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="a-result a-mono a-muted foot">Store counts from the summary tables, rebuilt at ingest and after admin changes.</p>
+</AdminLayout>
+
+<style>
+  .edit {
+    margin-bottom: var(--space-8);
+  }
+  @media (min-width: 900px) {
+    .three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .is-editing {
+    background: var(--accent-wash);
+  }
+  .foot {
+    margin-top: var(--space-4);
+    border-top: 0;
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+</style>

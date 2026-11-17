@@ -48,7 +48,8 @@ const toc = [
   jsonLd={{
     '@type': 'TechArticle',
     headline: 'Methodology',
-    description: 'How themes and apps are detected on public Shopify storefronts, and what the numbers mean.',
+    description:
+      'How themes and apps are detected on public Shopify storefronts, and what the numbers mean.',
     ...(meta ? { dateModified: meta.data_as_of } : {}),
   }}
 >
@@ -60,29 +61,37 @@ const toc = [
     current="/methodology"
   >
     <Fragment slot="head">
-      {
-        meta && (
-          <div class="method-strip marks">
-            <StatList columns={3}>
-              <Stat value={formatCount(meta.counts.stores_scanned)} label="Stores scanned" size="sm" />
-              <Stat value={asOf ?? '—'} label="Data as of" size="sm" />
-              <Stat value={rules ?? 'Not recorded'} label="Detection rules" size="sm" />
-            </StatList>
-            <MonoLabel as="p" class="method-strip__source">
-              Source: {meta.source.label} · {asOf}
-            </MonoLabel>
-          </div>
-        )
-      }
+      {meta && (
+        <div class="method-strip marks">
+          <StatList columns={3}>
+            <Stat
+              value={formatCount(meta.counts.stores_scanned)}
+              label="Stores scanned"
+              size="sm"
+              display
+            />
+            <Stat value={asOf ?? '—'} label="Data as of" size="sm" display />
+            <Stat value={rules ?? 'Not recorded'} label="Detection rules" size="sm" display />
+          </StatList>
+          <MonoLabel as="p" class="method-strip__source">
+            Source: {meta.source.label}
+          </MonoLabel>
+        </div>
+      )}
     </Fragment>
 
     <Fragment slot="summary">
       <ul>
-        <li>We read public storefront pages only, slowly, and we respect <code>robots.txt</code>.</li>
-        <li>Themes come from the theme metadata a storefront publishes; apps from the scripts and assets they load.</li>
         <li>
-          Shares are of <strong>{scannedPhrase}</strong>, not of all Shopify stores. That set is biased
-          towards Theme Store examples.
+          We read public storefront pages only, slowly, and we respect <code>robots.txt</code>.
+        </li>
+        <li>
+          Themes come from the theme metadata a storefront publishes; apps from the scripts and
+          assets they load.
+        </li>
+        <li>
+          Shares are of <strong>{scannedPhrase}</strong>, not of all Shopify stores. That set is
+          biased towards Theme Store examples.
         </li>
         <li>We never estimate revenue, traffic or sales.</li>
       </ul>
@@ -90,52 +99,60 @@ const toc = [
 
     <h2 id="what-we-look-at">What we look at</h2>
     <p>
-      Our crawler opens the same pages any shopper can: the home page, a collection, a product and the
-      cart, in a real browser. It never signs in, never enters a password-protected store, never goes
-      through checkout and never touches a store’s admin.
+      Our crawler opens the same pages any shopper can: the home page, a collection, a product and
+      the cart, in a real browser. It never signs in, never enters a password-protected store, never
+      goes through checkout and never touches a store’s admin.
     </p>
     <ul>
-      <li>It reads and respects each store’s <code>robots.txt</code>.</li>
-      <li>It works through stores one at a time with pauses between requests, so a scan is a light load.</li>
-      <li>Stores that block automated visits are left alone; we don’t work around bot protection.</li>
+      <li>
+        It reads and respects each store’s <code>robots.txt</code>.
+      </li>
+      <li>
+        It works through stores one at a time with pauses between requests, so a scan is a light
+        load.
+      </li>
+      <li>
+        Stores that block automated visits are left alone; we don’t work around bot protection.
+      </li>
     </ul>
     <p>
-      The list of stores to scan started from the example stores that the Shopify Theme Store shows for
-      each theme, plus notable stores we chose by hand. It is not a random sample of Shopify.
+      The list of stores to scan started from the example stores that the Shopify Theme Store shows
+      for each theme, plus notable stores we chose by hand. It is not a random sample of Shopify.
     </p>
 
     <h2 id="detection">How detection works</h2>
     <p>
-      Detection uses the rule set from StorePeek, our Chrome extension for inspecting Shopify stores. The
-      rules run on the HTML and network requests of each page.
+      Detection uses the rule set from StorePeek, our Chrome extension for inspecting Shopify
+      stores. The rules run on the HTML and network requests of each page.
     </p>
     <h3>Themes</h3>
     <p>
-      Every Shopify storefront publishes metadata about its live theme: a name, a Theme Store ID when it
-      came from the Theme Store, and usually a version. We match the ID and name against the Theme Store
-      catalogue. Themes renamed by the merchant are still matched by ID. Themes without an ID that we can’t
-      match are shown as <em>Custom theme</em> with the name the store gave it.
+      Every Shopify storefront publishes metadata about its live theme: a name, a Theme Store ID
+      when it came from the Theme Store, and usually a version. We match the ID and name against the
+      Theme Store catalogue. Themes renamed by the merchant are still matched by ID. Themes without
+      an ID that we can’t match are shown as <em>Custom theme</em> with the name the store gave it.
     </p>
     <h3>Apps</h3>
     <p>
       Apps leave signatures on the storefront: script and stylesheet URLs, app embed blocks, element
-      classes and global JavaScript objects. Each app in the rule set has one or more of these signatures.
-      An app counts as detected when at least one matches.
+      classes and global JavaScript objects. Each app in the rule set has one or more of these
+      signatures. An app counts as detected when at least one matches.
     </p>
     <h3>Confidence</h3>
     <p>
       Signatures differ in strength. A script served from an app’s own domain is strong evidence; a
-      generic class name is weaker. Newer rules record a confidence level per detection.
-      {
-        rules ? (
-          <>
-            The current data comes from a scan run with <strong>{rules}</strong> rules, which did not
-            record confidence, so detections are shown without a confidence label.
-          </>
-        ) : (
-          <>The current data comes from an older scan that did not record confidence, so detections are shown without a confidence label.</>
-        )
-      }
+      generic class name is weaker. Newer rules record a confidence level per detection.{' '}
+      {rules ? (
+        <>
+          The current data comes from a scan run with <strong>{rules}</strong> rules, which did not
+          record confidence, so detections are shown without a confidence label.
+        </>
+      ) : (
+        <>
+          The current data comes from an older scan that did not record confidence, so detections
+          are shown without a confidence label.
+        </>
+      )}
     </p>
     <h3>What detection can’t see</h3>
     <ul>
@@ -146,9 +163,7 @@ const toc = [
     <p>So “not detected” means “we saw no signature”, not “not installed”.</p>
 
     <h2 id="numbers">What the numbers mean</h2>
-    <p>
-      Every number on the site has a source and a date next to it. This is what they mean.
-    </p>
+    <p>Every number on the site has a source and a date next to it. This is what they mean.</p>
     <div class="table-wrap method-table">
       <table class="table">
         <thead>
@@ -164,7 +179,10 @@ const toc = [
           </tr>
           <tr>
             <td>Share</td>
-            <td>Those stores divided by all active stores we scanned{scanned ? ` (${formatCount(scanned)})` : ''}.</td>
+            <td>
+              Those stores divided by all active stores we scanned
+              {scanned ? ` (${formatCount(scanned)})` : ''}.
+            </td>
           </tr>
           <tr>
             <td>Rank and N° numbers</td>
@@ -172,7 +190,10 @@ const toc = [
           </tr>
           <tr>
             <td>Rating, reviews, price</td>
-            <td>Copied from the public App Store listing or Theme Store page, with the date we checked.</td>
+            <td>
+              Copied from the public App Store listing or Theme Store page, with the date we
+              checked.
+            </td>
           </tr>
           <tr>
             <td>First seen, last seen</td>
@@ -182,53 +203,53 @@ const toc = [
       </table>
     </div>
     <p>
-      <strong>Scan share is not market share.</strong> Because our list started from Theme Store example
-      stores, themes with long example lists show up more, and so do the apps their merchants like. Read
-      “Seen on 221 of 930 scanned stores” as exactly that.
+      <strong>Scan share is not market share.</strong> Because our list started from Theme Store
+      example stores, themes with long example lists show up more, and so do the apps their
+      merchants like. Read “Seen on 221 of 930 scanned stores” as exactly that.
     </p>
 
     <h2 id="dates">Dates and history</h2>
     <p>
-      Nothing is overwritten. Each detection has a <strong>first seen</strong> and a <strong>last seen</strong>
-      date. When a store changes theme or drops an app, we close the old record and open a new one. That
-      history is what will power “recently switched” views and trends.
+      Nothing is overwritten. Each detection has a <strong>first seen</strong> and a{' '}
+      <strong>last seen</strong> date. When a store changes theme or drops an app, we close the old
+      record and open a new one. That history is what will power “recently switched” views and
+      trends.
     </p>
     <p>
-      {
-        asOf ? (
-          <>
-            The current data set is dated <strong>{asOf}</strong>. Pages show the date of the data they use.
-          </>
-        ) : (
-          <>Pages show the date of the data they use.</>
-        )
-      }
+      {asOf ? (
+        <>
+          The current data set is dated <strong>{asOf}</strong>. Pages show the date of the data
+          they use.
+        </>
+      ) : (
+        <>Pages show the date of the data they use.</>
+      )}
     </p>
 
     <h2 id="screenshots">Screenshots</h2>
     <p>
       For curated stores we capture full pages, top to bottom, for each page type (home, collection,
-      product, cart and more) on desktop at 1440px wide and on mobile at 390px wide. Each capture is then
-      sliced into sections such as the header, hero, buy box, reviews and footer. Each section is tagged with
-      its type and, when we can tell, the app that renders it.
+      product, cart and more) on desktop at 1440px wide and on mobile at 390px wide. Each capture is
+      then sliced into sections such as the header, hero, buy box, reviews and footer. Each section
+      is tagged with its type and, when we can tell, the app that renders it.
     </p>
     <SlicedPlate />
     <p>
-      <strong>Today these are layout previews.</strong> Until our first capture run, every “screenshot” is
-      drawn from the sections we detected on that page, in the store’s colours, and labelled as a preview.
-      The detection data under them is real. When real captures land, the previews are replaced and every
-      capture shows the date it was taken.
+      <strong>Today these are layout previews.</strong> Until our first capture run, every
+      “screenshot” is drawn from the sections we detected on that page, in the store’s colours, and
+      labelled as a preview. The detection data under them is real. When real captures land, the
+      previews are replaced and every capture shows the date it was taken.
     </p>
     <p>
-      Screenshots only show public pages, always name the store and link back to it. Store owners can ask
-      us to take them down.
+      Screenshots only show public pages, always name the store and link back to it. Store owners
+      can ask us to take them down.
     </p>
 
     <h2 id="app-store">App Store facts</h2>
     <p>
-      An app’s rating, review count, pricing, developer and Built for Shopify status are copied from its
-      public Shopify App Store listing{checkedRange ? `, read between ${checkedRange}` : ''}. Each app page
-      shows the date its listing was checked. We don’t adjust or reweight them.
+      An app’s rating, review count, pricing, developer and Built for Shopify status are copied from
+      its public Shopify App Store listing{checkedRange ? `, read between ${checkedRange}` : ''}.
+      Each app page shows the date its listing was checked. We don’t adjust or reweight them.
     </p>
 
     <h2 id="never">What we never do</h2>
@@ -236,24 +257,32 @@ const toc = [
       <li>Estimate a store’s revenue, orders, traffic or ad spend.</li>
       <li>Guess best sellers or copy other tools’ estimates.</li>
       <li>Collect anything about a store’s shoppers.</li>
-      <li>Let an affiliate partnership change what we detect or how we rank. See the <a href="/affiliate-disclosure">affiliate disclosure</a>.</li>
+      <li>
+        Let an affiliate partnership change what we detect or how we rank. See the{' '}
+        <a href="/affiliate-disclosure">affiliate disclosure</a>.
+      </li>
     </ul>
 
     <h2 id="corrections">Corrections and removal</h2>
     <p>
-      If we got something wrong, such as a theme, an app or a name, use the <a href="/opt-out">removal form</a>
-      and choose “Correct a detail”, or write to <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. If
-      you own a store and want it gone, the same form removes it from the site and deletes its screenshots.
-      We keep only the domain on a block list so the crawler never adds it back.
+      If we got something wrong, such as a theme, an app or a name, use the{' '}
+      <a href="/opt-out">removal form</a> and choose “Correct a detail”, or write to{' '}
+      <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. If you own a store and want it gone,
+      the same form removes it from the site and deletes its screenshots. We keep only the domain on
+      a block list so the crawler never adds it back.
     </p>
 
     <Fragment slot="aside">
       <AsideCard title="Spotted a mistake?">
         <p>Tell us what’s wrong and we’ll fix it in the next scan.</p>
-        <p><a href="/opt-out">Correct a detail</a></p>
+        <p>
+          <a href="/opt-out">Correct a detail</a>
+        </p>
       </AsideCard>
       <AsideCard title="Use the data">
-        <p>The same data is available as JSON. <a href="/developers">API & MCP</a></p>
+        <p>
+          The same data is available as JSON. <a href="/developers">API & MCP</a>
+        </p>
       </AsideCard>
     </Fragment>
   </DocShell>

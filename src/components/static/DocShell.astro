@@ -35,52 +35,44 @@ const hasAside = Astro.slots.has('aside');
     <div class="doc__rail-inner">
       <p class="doc__rail-title">On this page</p>
       <ol class="doc__toc" data-toc>
-        {
-          toc.map((item) => (
-            <li>
-              <a href={`#${item.id}`} data-toc-link={item.id}>
-                {item.label}
-              </a>
-            </li>
-          ))
-        }
+        {toc.map((item) => (
+          <li>
+            <a href={`#${item.id}`} data-toc-link={item.id}>
+              {item.label}
+            </a>
+          </li>
+        ))}
       </ol>
       <p class="doc__rail-title doc__rail-title--related">Related</p>
       <ul class="doc__related">
-        {
-          related.map((d) => (
-            <li>
-              <a href={d.href}>{d.label}</a>
-            </li>
-          ))
-        }
+        {related.map((d) => (
+          <li>
+            <a href={d.href}>{d.label}</a>
+          </li>
+        ))}
       </ul>
     </div>
   </aside>
 
   <article class="doc__main">
     <header class="doc__head">
-      {
-        eyebrow && (
-          <MonoLabel as="p" class="doc__eyebrow">
-            {eyebrow}
-          </MonoLabel>
-        )
-      }
+      {eyebrow && (
+        <MonoLabel as="p" class="doc__eyebrow">
+          {eyebrow}
+        </MonoLabel>
+      )}
       <h1 class="doc__title display">{title}</h1>
-      {
-        (updated || draft) && (
-          <MonoLabel as="p" class="doc__meta">
-            {draft && <span class="doc__draft">Draft</span>}
-            {draft && updated && <span aria-hidden="true">·</span>}
-            {updated && (
-              <span>
-                Last updated <time datetime={updated}>{formatDate(updated)}</time>
-              </span>
-            )}
-          </MonoLabel>
-        )
-      }
+      {(updated || draft) && (
+        <MonoLabel as="p" class="doc__meta">
+          {draft && <span class="doc__draft">Draft</span>}
+          {draft && updated && <span aria-hidden="true">·</span>}
+          {updated && (
+            <span>
+              Last updated <time datetime={updated}>{formatDate(updated)}</time>
+            </span>
+          )}
+        </MonoLabel>
+      )}
       {lede && <p class="doc__lede">{lede}</p>}
       <slot name="head" />
     </header>
@@ -88,26 +80,22 @@ const hasAside = Astro.slots.has('aside');
     <details class="doc__contents">
       <summary>On this page</summary>
       <ol class="doc__toc doc__toc--mobile">
-        {
-          toc.map((item) => (
-            <li>
-              <a href={`#${item.id}`}>{item.label}</a>
-            </li>
-          ))
-        }
+        {toc.map((item) => (
+          <li>
+            <a href={`#${item.id}`}>{item.label}</a>
+          </li>
+        ))}
       </ol>
     </details>
 
-    {
-      Astro.slots.has('summary') && (
-        <section class="doc__summary" aria-labelledby="doc-summary-title">
-          <MonoLabel as="h2" tone="ink" class="doc__summary-title" id="doc-summary-title">
-            In short
-          </MonoLabel>
-          <slot name="summary" />
-        </section>
-      )
-    }
+    {Astro.slots.has('summary') && (
+      <section class="doc__summary" aria-labelledby="doc-summary-title">
+        <MonoLabel as="h2" tone="ink" class="doc__summary-title" id="doc-summary-title">
+          In short
+        </MonoLabel>
+        <slot name="summary" />
+      </section>
+    )}
 
     <div class="prose doc__body">
       <slot />
@@ -116,33 +104,31 @@ const hasAside = Astro.slots.has('aside');
     <nav class="doc__more" aria-label="Related documents">
       <p class="doc__more-title">Related</p>
       <ul>
-        {
-          related.map((d) => (
-            <li>
-              <a href={d.href}>
-                {d.label}
-                <span aria-hidden="true">→</span>
-              </a>
-            </li>
-          ))
-        }
+        {related.map((d) => (
+          <li>
+            <a href={d.href}>
+              {d.label}
+              <span aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))}
       </ul>
     </nav>
   </article>
 
-  {
-    hasAside && (
-      <div class="doc__aside">
-        <div class="doc__aside-inner">
-          <slot name="aside" />
-        </div>
+  {hasAside && (
+    <div class="doc__aside">
+      <div class="doc__aside-inner">
+        <slot name="aside" />
       </div>
-    )
-  }
+    </div>
+  )}
 </div>
 
 <script>
-  // Scroll-spy: mark the TOC entry for the section currently being read.
+  // Scroll-spy: mark the TOC entry for the section being read (the last heading that has
+  // crossed the top third of the viewport). A rAF-throttled scroll handler stays correct after
+  // jumps (anchor links, Home/End) where intersection events can be missed.
   const links = new Map<string, HTMLAnchorElement>();
   document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((a) => {
     links.set(a.dataset.tocLink ?? '', a);
@@ -151,34 +137,39 @@ const hasAside = Astro.slots.has('aside');
     .map((id) => document.getElementById(id))
     .filter((el): el is HTMLElement => !!el);
 
-  if (headings.length && 'IntersectionObserver' in window) {
-    const setActive = (id: string) => {
-      links.forEach((a, key) => {
-        if (key === id) a.setAttribute('aria-current', 'true');
-        else a.removeAttribute('aria-current');
-      });
-    };
-    const visible = new Set<string>();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) visible.add(entry.target.id);
-          else visible.delete(entry.target.id);
+  let current = '';
+  let queued = false;
+  const update = () => {
+    queued = false;
+    const line = window.innerHeight * 0.33;
+    let id = '';
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top <= line) id = h.id;
+      else break;
+    }
+    // At the very bottom, the last section is the one being read even if its heading is low.
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+      id = headings[headings.length - 1]?.id ?? id;
+    }
+    if (id === current) return;
+    current = id;
+    links.forEach((a, key) => {
+      if (key === id) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  };
+  if (headings.length) {
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!queued) {
+          queued = true;
+          requestAnimationFrame(update);
         }
-        // The first heading in document order that is in the reading band wins; when none is,
-        // keep the last one above the band.
-        const first = headings.find((h) => visible.has(h.id));
-        if (first) {
-          setActive(first.id);
-          return;
-        }
-        const above = headings.filter((h) => h.getBoundingClientRect().top < window.innerHeight * 0.3);
-        const last = above[above.length - 1];
-        setActive(last ? last.id : '');
       },
-      { rootMargin: '-10% 0px -65% 0px' },
+      { passive: true },
     );
-    headings.forEach((h) => observer.observe(h));
+    update();
   }
 </script>
 
@@ -338,7 +329,6 @@ const hasAside = Astro.slots.has('aside');
     margin-bottom: var(--space-4);
     padding: var(--space-5) 0 var(--space-6);
     border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--line);
     color: var(--ink-2);
     font-size: var(--text-md);
     line-height: var(--leading-relaxed);

@@ -34,52 +34,70 @@ const toc = [
     <Fragment slot="summary">
       <ul>
         <li>Affiliate links say “Affiliate link” right under the button.</li>
-        <li>They pass through <code>/go/…</code>, which counts clicks per day and stores nothing about you.</li>
-        <li>Detections, counts, rankings and comparisons are the same whether an app pays us or not.</li>
+        <li>
+          They pass through <code>/go/…</code>, which counts clicks per day and stores nothing about
+          you.
+        </li>
+        <li>
+          Detections, counts, rankings and comparisons are the same whether an app pays us or not.
+        </li>
       </ul>
     </Fragment>
 
     <h2 id="money">How we make money</h2>
     <p>
-      Today, {SITE_NAME} earns money in one way: affiliate commissions. When you follow one of our links
-      to an app or a theme and then pay for it, the developer may pay us a share. The price you pay is the
-      same.
+      Today, {SITE_NAME} earns money in one way: affiliate commissions. When you follow one of our
+      links to an app or a theme and then pay for it, the developer may pay us a share. The price
+      you pay is the same.
     </p>
     <p>
-      Later we will add <a href="/pro">Pro</a>, a paid plan for designers and agencies. We don’t sell data,
-      and we don’t sell placements in our lists.
+      Later we will add <a href="/pro">Pro</a>, a paid plan for designers and agencies. We don’t
+      sell data, and we don’t sell placements in our lists.
     </p>
 
     <h2 id="labels">Which links are affiliate</h2>
     <p>
-      Affiliate links only appear on outbound buttons to an app listing, a theme page or a developer’s
-      site. Each one carries the label right under it, and the link is marked <code>rel="sponsored"</code>
-      for search engines. Links without a partnership say so too.
+      Affiliate links only appear on outbound buttons to an app listing, a theme page or a
+      developer’s site. Each one carries the label right under it, and the link is marked{' '}
+      <code>rel="sponsored"</code> for search engines. Links without a partnership say so too.
     </p>
     <figure class="label-plate">
       <div class="label-plate__row" inert aria-hidden="true">
         <div class="label-plate__cell">
-          <AffiliateCta href="/affiliate-disclosure" label="View on App Store" isAffiliate size="md" />
+          <AffiliateCta
+            href="/affiliate-disclosure"
+            label="View on App Store"
+            isAffiliate
+            size="md"
+          />
         </div>
         <div class="label-plate__cell">
-          <AffiliateCta href="/affiliate-disclosure" label="View on App Store" isAffiliate={false} size="md" />
+          <AffiliateCta
+            href="/affiliate-disclosure"
+            label="View on App Store"
+            isAffiliate={false}
+            size="md"
+          />
         </div>
       </div>
       <figcaption>
-        <span>Left: an affiliate link. Right: an ordinary link. Both as they appear on app and theme pages.</span>
+        <span>
+          Left: an affiliate link. Right: an ordinary link. Both as they appear on app and theme
+          pages.
+        </span>
       </figcaption>
     </figure>
 
     <h2 id="clicks">How clicks are counted</h2>
     <p>
-      Affiliate links point to a short address on our site, <code>/go/</code> followed by a number. When you
-      click one, we add one to that link’s total for the day and send you straight on to the partner. We
-      store the link, the date and the count, and nothing that identifies you: no IP address, no cookie, no
-      account.
+      Affiliate links point to a short address on our site, <code>/go/</code> followed by a number.
+      When you click one, we add one to that link’s total for the day and send you straight on to
+      the partner. We store the link, the date and the count, and nothing that identifies you: no IP
+      address, no cookie, no account.
     </p>
     <p>
-      The partner’s site may set its own cookie to credit the referral. That happens on their site, under
-      their privacy policy.
+      The partner’s site may set its own cookie to credit the referral. That happens on their site,
+      under their privacy policy.
     </p>
 
     <h2 id="independence">What partnerships never change</h2>
@@ -90,31 +108,33 @@ const toc = [
       <li>App Store ratings, reviews and prices, which we copy as published.</li>
     </ul>
     <p>
-      Partners can’t pay to be listed, ranked higher or described differently, and they don’t see our
-      editorial copy before it’s published.
+      Partners can’t pay to be listed, ranked higher or described differently, and they don’t see
+      our editorial copy before it’s published.
     </p>
 
     <h2 id="non-paying">Apps that pay us nothing</h2>
     <p>
-      Many of the most-used apps, such as Klaviyo and Judge.me, have no affiliate program with us. They
-      appear exactly as they would if they did: same counts, same rank, same screenshots, with an ordinary
-      link to their listing. If an app is on a store, we show it.
+      Many of the most-used apps, such as Klaviyo and Judge.me, have no affiliate program with us.
+      They appear exactly as they would if they did: same counts, same rank, same screenshots, with
+      an ordinary link to their listing. If an app is on a store, we show it.
     </p>
     <p>
-      Partnerships change over time. The label next to each link is always the current truth for that
-      link.
+      Partnerships change over time. The label next to each link is always the current truth for
+      that link.
     </p>
 
     <h2 id="questions">Questions</h2>
     <p>
-      If something looks like it was influenced by a partnership, tell us at
-      <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. The <a href="/methodology">methodology</a>
-      explains how every number is made.
+      If something looks like it was influenced by a partnership, tell us at{' '}
+      <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. The{' '}
+      <a href="/methodology">methodology</a> explains how every number is made.
     </p>
 
     <Fragment slot="aside">
       <AsideCard title="How numbers are made">
-        <p>Detection, shares and dates, in plain words. <a href="/methodology">Methodology</a></p>
+        <p>
+          Detection, shares and dates, in plain words. <a href="/methodology">Methodology</a>
+        </p>
       </AsideCard>
     </Fragment>
   </DocShell>

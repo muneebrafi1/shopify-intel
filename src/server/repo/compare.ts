@@ -19,9 +19,7 @@ import { findTheme, getThemeDetail, hydrateThemes, similarThemes } from './theme
 /** Canonical pair slug: alphabetical order. */
 export const canonicalPair = (a: string, b: string) => (a < b ? `${a}-vs-${b}` : `${b}-vs-${a}`);
 
-type Resolved =
-  | { kind: 'app'; a: string; b: string }
-  | { kind: 'theme'; a: string; b: string };
+type Resolved = { kind: 'app'; a: string; b: string } | { kind: 'theme'; a: string; b: string };
 
 /** Tries every '-vs-' split point (slugs may contain hyphens) and resolves both sides. */
 async function resolvePair(ctx: Ctx, pair: string): Promise<Resolved> {
@@ -101,7 +99,10 @@ function appMatrix(ctx: Ctx, a: AppDetail, b: AppDetail): MatrixRow[] {
   return [
     row('category', 'Category', x.category?.name ?? null, y.category?.name ?? null, store),
     row('developer', 'Developer', x.developer, y.developer, store),
-    row('rating', 'Rating', x.rating, y.rating, store, { better: 'higher', fmt: (n: number) => n.toFixed(1) }),
+    row('rating', 'Rating', x.rating, y.rating, store, {
+      better: 'higher',
+      fmt: (n: number) => n.toFixed(1),
+    }),
     row('reviews', 'Reviews', x.reviews, y.reviews, store, { better: 'higher' }),
     row('free_plan', 'Free plan', x.pricing.free_plan, y.pricing.free_plan, store),
     row('from_price', 'Paid plans from', x.pricing.from_cents, y.pricing.from_cents, store, {
@@ -119,7 +120,13 @@ function appMatrix(ctx: Ctx, a: AppDetail, b: AppDetail): MatrixRow[] {
       better: 'higher',
       fmt: fmtPct,
     }),
-    row('sections', 'Sections in the library', a.seen_on.section_total, b.seen_on.section_total, SOURCE_IDS.capturePlan),
+    row(
+      'sections',
+      'Sections in the library',
+      a.seen_on.section_total,
+      b.seen_on.section_total,
+      SOURCE_IDS.capturePlan,
+    ),
   ];
 }
 
@@ -143,7 +150,13 @@ function themeMatrix(ctx: Ctx, a: ThemeDetail, b: ThemeDetail): MatrixRow[] {
     }),
     row('versions', 'Versions seen', a.versions.length, b.versions.length, scan),
     row('curated', 'Curated example stores', x.curated_store_count, y.curated_store_count, scan),
-    row('sections', 'Sections in the library', a.sections.total, b.sections.total, SOURCE_IDS.capturePlan),
+    row(
+      'sections',
+      'Sections in the library',
+      a.sections.total,
+      b.sections.total,
+      SOURCE_IDS.capturePlan,
+    ),
   ];
 }
 
@@ -153,7 +166,8 @@ function themeMatrix(ctx: Ctx, a: ThemeDetail, b: ThemeDetail): MatrixRow[] {
 export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonDetail> {
   const resolved = await resolvePair(ctx, pair);
   const canonical = canonicalPair(resolved.a, resolved.b);
-  const [first, second] = resolved.a < resolved.b ? [resolved.a, resolved.b] : [resolved.b, resolved.a];
+  const [first, second] =
+    resolved.a < resolved.b ? [resolved.a, resolved.b] : [resolved.b, resolved.a];
   const base = {
     kind: resolved.kind,
     slug: pair,
@@ -164,7 +178,10 @@ export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonD
   const opts = { storesLimit: 12, sectionsLimit: 8 };
 
   if (resolved.kind === 'app') {
-    const [a, b] = await Promise.all([getAppDetail(ctx, first, opts), getAppDetail(ctx, second, opts)]);
+    const [a, b] = await Promise.all([
+      getAppDetail(ctx, first, opts),
+      getAppDetail(ctx, second, opts),
+    ]);
     const shared = await ctx.db.all<{ store_id: number }>(
       `SELECT x.store_id FROM store_apps x
        JOIN store_apps y ON y.store_id = x.store_id AND y.removed_at IS NULL
@@ -182,7 +199,10 @@ export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonD
       themes: null,
       shared_stores: {
         total: shared.length,
-        items: await storeRefsByIds(ctx, shared.slice(0, 12).map((s) => s.store_id)),
+        items: await storeRefsByIds(
+          ctx,
+          shared.slice(0, 12).map((s) => s.store_id),
+        ),
       },
       shared_apps: [],
       matrix: appMatrix(ctx, a, b),
@@ -190,7 +210,10 @@ export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonD
     };
   }
 
-  const [a, b] = await Promise.all([getThemeDetail(ctx, first, opts), getThemeDetail(ctx, second, opts)]);
+  const [a, b] = await Promise.all([
+    getThemeDetail(ctx, first, opts),
+    getThemeDetail(ctx, second, opts),
+  ]);
   const [shared, sharedApps] = await Promise.all([
     // Stores that ran both themes at some point (detection history).
     ctx.db.all<{ store_id: number }>(
@@ -218,9 +241,16 @@ export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonD
     themes: { a, b },
     shared_stores: {
       total: shared.length,
-      items: await storeRefsByIds(ctx, shared.slice(0, 12).map((s) => s.store_id)),
+      items: await storeRefsByIds(
+        ctx,
+        shared.slice(0, 12).map((s) => s.store_id),
+      ),
     },
-    shared_apps: sharedApps.map((r) => ({ app: appRef(r), a_stores: r.a_stores, b_stores: r.b_stores })),
+    shared_apps: sharedApps.map((r) => ({
+      app: appRef(r),
+      a_stores: r.a_stores,
+      b_stores: r.b_stores,
+    })),
     matrix: themeMatrix(ctx, a, b),
     related: await relatedLinks(ctx, 'theme', [a.theme.slug, b.theme.slug], canonical),
   };
@@ -325,7 +355,12 @@ export async function listAlternatives(ctx: Ctx): Promise<ListAlternativesOutput
   return {
     apps: apps
       .filter((a) => a.alternatives > 0)
-      .map((a) => ({ app: appRef(a), href: hrefs.alternatives(a.app_slug), alternatives: a.alternatives, stores: a.stores })),
+      .map((a) => ({
+        app: appRef(a),
+        href: hrefs.alternatives(a.app_slug),
+        alternatives: a.alternatives,
+        stores: a.stores,
+      })),
     themes: themes
       .filter((t) => t.alternatives > 0)
       .map((t) => ({
@@ -336,4 +371,3 @@ export async function listAlternatives(ctx: Ctx): Promise<ListAlternativesOutput
       })),
   };
 }
-

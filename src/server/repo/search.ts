@@ -44,7 +44,14 @@ async function visuals(ctx: Ctx, rows: IndexRow[]) {
   const icons = new Map<string, string | null>();
   const thumbs = new Map<string, Image>();
   const key = (kind: string, ref: string) => `${kind}:${ref}`;
-  type Shot = { ref: string; id: number; r2_key: string | null; width: number; height: number; is_placeholder: number };
+  type Shot = {
+    ref: string;
+    id: number;
+    r2_key: string | null;
+    width: number;
+    height: number;
+    is_placeholder: number;
+  };
   const shotSql = (refCol: string, join: string) =>
     `SELECT ${refCol} AS ref, sh.id, sh.r2_key, sh.width, sh.height, sh.is_placeholder
      FROM screenshots sh JOIN stores st ON st.id = sh.store_id AND st.status = 'active' ${join}
@@ -69,19 +76,32 @@ async function visuals(ctx: Ctx, rows: IndexRow[]) {
     tasks.push(
       ctx.db.all<Shot>(sql, [jsonIds(ids)]).then((r) =>
         r.forEach((s) => {
-          if (!thumbs.has(key(kind, s.ref))) thumbs.set(key(kind, s.ref), screenshotImage(s, ctx.media));
+          if (!thumbs.has(key(kind, s.ref)))
+            thumbs.set(key(kind, s.ref), screenshotImage(s, ctx.media));
         }),
       ),
     );
   };
   addShots('store', shotSql('st.domain', ''), refs('store'));
   addShots('theme', shotSql('t.slug', 'JOIN themes t ON t.id = sh.theme_id'), refs('theme'));
-  addShots('teardown', shotSql('td.slug', 'JOIN teardowns td ON td.store_id = st.id'), refs('teardown'));
+  addShots(
+    'teardown',
+    shotSql('td.slug', 'JOIN teardowns td ON td.store_id = st.id'),
+    refs('teardown'),
+  );
   const types = refs('section-type');
   if (types.length) {
     tasks.push(
       ctx.db
-        .all<{ section_type: string; id: number; r2_key_crop: string | null; height: number; w: number | null; is_placeholder: number; width: number }>(
+        .all<{
+          section_type: string;
+          id: number;
+          r2_key_crop: string | null;
+          height: number;
+          w: number | null;
+          is_placeholder: number;
+          width: number;
+        }>(
           `SELECT * FROM (
              SELECT s.section_type, s.id, s.r2_key_crop, s.height, s.w, s.is_placeholder, sh.width,
                ROW_NUMBER() OVER (PARTITION BY s.section_type ORDER BY s.is_placeholder, s.device, s.id) AS rn
@@ -92,7 +112,12 @@ async function visuals(ctx: Ctx, rows: IndexRow[]) {
           [jsonIds(types)],
         )
         .then((r) =>
-          r.forEach((s) => thumbs.set(key('section-type', s.section_type), sectionCropImage(s, s.width, ctx.media))),
+          r.forEach((s) =>
+            thumbs.set(
+              key('section-type', s.section_type),
+              sectionCropImage(s, s.width, ctx.media),
+            ),
+          ),
         ),
     );
   }
@@ -126,7 +151,9 @@ export async function search(
     params.push(JSON.stringify(kinds), fts);
   } else {
     // Suggestions: popular themes, apps, curated stores and teardowns (unless kinds says otherwise).
-    params.push(JSON.stringify(input.kinds?.length ? kinds : ['theme', 'app', 'store', 'teardown']));
+    params.push(
+      JSON.stringify(input.kinds?.length ? kinds : ['theme', 'app', 'store', 'teardown']),
+    );
   }
   const rows = await ctx.db.all<IndexRow>(
     `SELECT kind, ref, title, subtitle FROM (
@@ -139,16 +166,14 @@ export async function search(
   const groups = SEARCH_KINDS.filter((k) => kinds.includes(k.kind)).flatMap((k) => {
     const items = rows
       .filter((r) => r.kind === k.kind)
-      .map(
-        (r): SearchHit => ({
-          kind: r.kind,
-          ref: r.ref,
-          title: r.title,
-          subtitle: r.subtitle,
-          href: HREF[r.kind](r.ref),
-          ...visual(r),
-        }),
-      );
+      .map((r): SearchHit => ({
+        kind: r.kind,
+        ref: r.ref,
+        title: r.title,
+        subtitle: r.subtitle,
+        href: HREF[r.kind](r.ref),
+        ...visual(r),
+      }));
     return items.length ? [{ kind: k.kind, label: k.label, items }] : [];
   });
   return { q, is_suggestion: isSuggestion, groups };

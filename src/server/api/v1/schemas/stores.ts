@@ -120,7 +120,9 @@ export const StoreDetailSchema = named(
         count: int(),
         slugs: z.array(z.string()).describe('Detector slugs we have no app profile for yet.'),
       }),
-      groups: z.array(z.object({ category: CategoryRefSchema.nullable(), apps: z.array(StoreAppSchema) })),
+      groups: z.array(
+        z.object({ category: CategoryRefSchema.nullable(), apps: z.array(StoreAppSchema) }),
+      ),
     }),
     pixels: z.array(z.object({ slug: z.string(), name: z.string() })),
     pages: z.array(StorePageSchema),

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Typed, validated loading of the seed inputs in data/seed and data/curation.
  * Validation catches shape drift in exports early (the seed is the contract with the crawler).

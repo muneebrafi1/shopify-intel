@@ -118,6 +118,9 @@ export const APP_CATEGORY_SURFACES: Record<string, SectionType[]> = {
   'Affiliate & Referral': [],
   'Ads & Channels': [],
   'Testing & Personalization': [],
+  'Search & Merchandising': ['filters'],
+  'Store Design': [],
+  Analytics: [],
 };
 
 /** Display names for tracking pixels / analytics tags detected on stores. */

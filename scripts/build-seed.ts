@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * npm run db:build-seed
  * Builds .data/seed.sql from data/seed/*.json and data/curation/* (deterministic).
@@ -19,13 +20,17 @@ const heights = (device: string) =>
   report.shotHeights.filter((h) => h.device === device).map((h) => h.height);
 const range = (xs: number[]) => (xs.length ? `${Math.min(...xs)}–${Math.max(...xs)} px` : 'n/a');
 
-console.log(`Wrote ${out} (${(sql.length / 1024).toFixed(0)} KB), data_version=${report.dataVersion}`);
+console.log(
+  `Wrote ${out} (${(sql.length / 1024).toFixed(0)} KB), data_version=${report.dataVersion}`,
+);
 console.log(
   Object.entries(report.counts)
     .map(([table, n]) => `  ${table.padEnd(24)} ${n}`)
     .join('\n'),
 );
-console.log(`  placeholder heights: desktop ${range(heights('desktop'))}, mobile ${range(heights('mobile'))}`);
+console.log(
+  `  placeholder heights: desktop ${range(heights('desktop'))}, mobile ${range(heights('mobile'))}`,
+);
 if (report.warnings.length) {
   console.log(`\n${report.warnings.length} warning(s):`);
   for (const w of report.warnings) console.log(`  - ${w}`);

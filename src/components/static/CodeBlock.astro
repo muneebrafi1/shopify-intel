@@ -1,0 +1,148 @@
+---
+/**
+ * Mono code block with a copy button. `variant="line"` is a compact one-line command (curl
+ * examples under endpoint rows); `block` is a multi-line sample (JSON responses).
+ */
+import Icon from '~/components/ui/Icon.astro';
+
+interface Props {
+  code: string;
+  /** Small mono caption above the block, e.g. "Response" or "bash". */
+  label?: string;
+  variant?: 'block' | 'line';
+  /** Show a "$" prompt before a one-line command (not copied). */
+  prompt?: boolean;
+  class?: string;
+}
+const { code, label, variant = 'block', prompt = false, class: className } = Astro.props;
+---
+
+<div class:list={['code', `code--${variant}`, className]} data-code>
+  {label && <p class="code__label">{label}</p>}
+  <div class="code__body">
+    <pre
+      class="code__pre"
+      tabindex="0"
+    ><code>{prompt && <span class="code__prompt" aria-hidden="true">$ </span>}<span data-code-text>{code}</span></code></pre>
+    <button type="button" class="code__copy" data-copy aria-label="Copy to clipboard" title="Copy">
+      <Icon name="copy" size={15} class="code__icon code__icon--copy" />
+      <Icon name="check" size={15} class="code__icon code__icon--done" />
+    </button>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-code]').forEach((block) => {
+    const button = block.querySelector<HTMLButtonElement>('[data-copy]');
+    const text = block.querySelector<HTMLElement>('[data-code-text]')?.textContent ?? '';
+    if (!button) return;
+    if (!navigator.clipboard) {
+      button.hidden = true;
+      return;
+    }
+    let timer: number | undefined;
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+        button.dataset.copied = 'true';
+        button.setAttribute('aria-label', 'Copied');
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          delete button.dataset.copied;
+          button.setAttribute('aria-label', 'Copy to clipboard');
+        }, 1600);
+      } catch {
+        // Clipboard blocked (permissions); the text is still selectable.
+      }
+    });
+  });
+</script>
+
+<style>
+  .code {
+    min-width: 0;
+  }
+  .code__label {
+    margin-bottom: var(--space-2);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .code__body {
+    position: relative;
+  }
+  .code__pre {
+    overflow-x: auto;
+    margin: 0;
+    padding: var(--space-4) 52px var(--space-4) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--fill);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.65;
+    tab-size: 2;
+  }
+  .code__pre:focus-visible {
+    border-radius: var(--radius-md);
+  }
+  .code__pre code {
+    font: inherit;
+    white-space: pre;
+  }
+  .code__prompt {
+    color: var(--ink-3);
+    user-select: none;
+  }
+  .code--line .code__pre {
+    padding-block: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--fill);
+    color: var(--ink);
+    font-size: var(--text-xs);
+    line-height: 1.6;
+  }
+  .code--line .code__prompt {
+    color: var(--ink-3);
+  }
+  .code__copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    background: var(--fill);
+    color: var(--ink-3);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .code__copy:hover {
+    background: var(--fill-hover);
+    color: var(--ink);
+  }
+  .code--line .code__copy {
+    top: 50%;
+    right: 4px;
+    width: 28px;
+    height: 28px;
+    transform: translateY(-50%);
+    box-shadow: -12px 0 10px -2px var(--fill);
+  }
+  .code__copy :global(.code__icon--done) {
+    display: none;
+  }
+  .code__copy[data-copied] :global(.code__icon--copy) {
+    display: none;
+  }
+  .code__copy[data-copied] :global(.code__icon--done) {
+    display: inline-flex;
+    color: var(--positive);
+  }
+</style>

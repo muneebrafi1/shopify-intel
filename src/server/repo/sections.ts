@@ -60,14 +60,25 @@ async function sectionFacets(ctx: Ctx, f: SectionFilters): Promise<ListSectionsO
   };
   type Count = { value: string; count: number };
   const [types, groups, pages, devices, themes, apps] = await Promise.all([
-    run<Count>(['type', 'group'], (w) => `SELECT s.section_type AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.section_type`),
+    run<Count>(
+      ['type', 'group'],
+      (w) =>
+        `SELECT s.section_type AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.section_type`,
+    ),
     run<Count>(
       ['type', 'group'],
       (w) => `SELECT ty.group_slug AS value, COUNT(*) AS count ${FROM}
         JOIN section_types ty ON ty.slug = s.section_type WHERE ${w} GROUP BY ty.group_slug`,
     ),
-    run<Count>(['page_type'], (w) => `SELECT s.page_type AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.page_type`),
-    run<Count>(['device'], (w) => `SELECT s.device AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.device`),
+    run<Count>(
+      ['page_type'],
+      (w) =>
+        `SELECT s.page_type AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.page_type`,
+    ),
+    run<Count>(
+      ['device'],
+      (w) => `SELECT s.device AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.device`,
+    ),
     run<Facet>(
       ['themeId'],
       (w) => `SELECT t.slug AS value, t.name AS label, COUNT(*) AS count ${FROM}
@@ -90,10 +101,16 @@ async function sectionFacets(ctx: Ctx, f: SectionFilters): Promise<ListSectionsO
   return {
     types: ordered(SECTION_TYPES, types),
     groups: ordered(SECTION_GROUPS, groups),
-    page_types: pages.map((p) => ({ value: p.value, label: pageTypeRef(p.value).name, count: p.count })),
+    page_types: pages.map((p) => ({
+      value: p.value,
+      label: pageTypeRef(p.value).name,
+      count: p.count,
+    })),
     devices: ['desktop', 'mobile'].flatMap((d) => {
       const hit = devices.find((x) => x.value === d);
-      return hit ? [{ value: d, label: d === 'desktop' ? 'Desktop' : 'Mobile', count: hit.count }] : [];
+      return hit
+        ? [{ value: d, label: d === 'desktop' ? 'Desktop' : 'Mobile', count: hit.count }]
+        : [];
     }),
     themes,
     apps,
@@ -113,21 +130,32 @@ export interface ListSectionsParams {
 }
 
 export async function listSections(ctx: Ctx, p: ListSectionsParams) {
-  const f: SectionFilters = { type: p.type, group: p.group, page_type: p.page_type, device: p.device };
+  const f: SectionFilters = {
+    type: p.type,
+    group: p.group,
+    page_type: p.page_type,
+    device: p.device,
+  };
   if (p.theme) {
-    const t = await ctx.db.first<{ id: number }>("SELECT id FROM themes WHERE slug = ? AND status = 'active'", [p.theme]);
+    const t = await ctx.db.first<{ id: number }>(
+      "SELECT id FROM themes WHERE slug = ? AND status = 'active'",
+      [p.theme],
+    );
     f.themeId = t?.id ?? null;
   }
   if (p.app) f.appId = await resolveAppId(ctx, p.app);
   if (p.store) {
     const domain = normalizeDomain(p.store);
     const s = domain
-      ? await ctx.db.first<{ id: number }>("SELECT id FROM stores WHERE domain = ? AND status = 'active'", [domain])
+      ? await ctx.db.first<{ id: number }>(
+          "SELECT id FROM stores WHERE domain = ? AND status = 'active'",
+          [domain],
+        )
       : null;
     f.storeId = s?.id ?? null;
   }
   const w = sectionWhere(f);
-  const seek = p.cursor ? decodeCursor(p.cursor, 1)[0] : null;
+  const seek = p.cursor ? (decodeCursor(p.cursor, 1)[0] ?? null) : null;
   const [items, total, facets, typeInfo] = await Promise.all([
     sectionCards(
       ctx,
@@ -215,17 +243,25 @@ export async function getScreenshot(ctx: Ctx, id: number): Promise<ScreenshotDet
 export async function getSectionDetail(ctx: Ctx, id: number): Promise<SectionDetail> {
   const [card] = await sectionCards(ctx, 's.id = ?', [id]);
   if (!card) throw notFound(`Section ${id}`);
-  const raw = await ctx.db.first<{ store_id: number; theme_id: number | null; app_id: number | null }>(
-    'SELECT store_id, theme_id, app_id FROM sections WHERE id = ?',
-    [id],
-  );
+  const raw = await ctx.db.first<{
+    store_id: number;
+    theme_id: number | null;
+    app_id: number | null;
+  }>('SELECT store_id, theme_id, app_id FROM sections WHERE id = ?', [id]);
   const [screenshot, more] = await Promise.all([
     getScreenshot(ctx, card.screenshot.id),
     sectionCards(
       ctx,
       's.section_type = ? AND s.id <> ? AND s.is_current = 1 AND s.store_id <> ?',
       // Placeholders in the ORDER BY bind after the WHERE ones (positional).
-      [card.type.slug, id, raw?.store_id ?? 0, raw?.app_id ?? null, raw?.theme_id ?? null, card.device],
+      [
+        card.type.slug,
+        id,
+        raw?.store_id ?? 0,
+        raw?.app_id ?? null,
+        raw?.theme_id ?? null,
+        card.device,
+      ],
       `ORDER BY (s.app_id IS ?) DESC, (s.theme_id IS ?) DESC, (s.device = ?) DESC,
         st.list_position, s.id LIMIT 12`,
     ),

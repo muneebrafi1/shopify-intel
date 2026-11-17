@@ -348,7 +348,9 @@ const drawers: Record<string, Drawer> = {
     const gap = ctx.mobile ? 10 : 24;
     const avail = h - top - (ctx.mobile ? 60 : 100);
     const rows = ctx.mobile ? 2 : 1;
-    const cardH = (avail - gap * (rows - 1)) / rows;
+    const cardW = (ctx.cw - gap * (cols - 1)) / cols;
+    // Product cards keep a believable portrait ratio; extra height becomes whitespace.
+    const cardH = Math.min((avail - gap * (rows - 1)) / rows, cardW * 1.55);
     grid(ctx, y + top + (ctx.mobile ? 40 : 64), cols, rows, cardH, gap);
   },
 
@@ -414,7 +416,8 @@ const drawers: Record<string, Drawer> = {
     heading(ctx, ctx.cx, y + top, ctx.cw, { size: ctx.mobile ? 'sm' : 'md' });
     const cols = ctx.mobile ? 2 : 4;
     const gap = ctx.mobile ? 10 : 20;
-    const cardH = h - top - (ctx.mobile ? 60 : 96);
+    const cardW = (ctx.cw - gap * (cols - 1)) / cols;
+    const cardH = Math.min(h - top - (ctx.mobile ? 60 : 96), cardW * 1.55);
     grid(ctx, y + top + (ctx.mobile ? 34 : 56), cols, 1, cardH, gap);
   },
 

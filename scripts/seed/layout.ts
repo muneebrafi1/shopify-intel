@@ -148,7 +148,9 @@ function homeRows(domain: string, style: StoreStyle, apps: readonly LayoutApp[])
   const hasBuilder = attributionFor('image-with-text', apps) !== null;
   if (rng.chance(0.6)) middle.push(single('collection-list', { tiles: rng.pick([3, 4, 6]) }));
   if (hasBuilder || rng.chance(0.65)) {
-    middle.push(single('image-with-text', { image_position: rng.pick(['left', 'right'] as const) }));
+    middle.push(
+      single('image-with-text', { image_position: rng.pick(['left', 'right'] as const) }),
+    );
   }
   if (rng.chance(0.4)) middle.push(single('rich-text', { text_align: 'center' }));
   if (rng.chance(0.3)) middle.push(single('logo-list', { logos: rng.int(4, 6) }));
@@ -187,7 +189,11 @@ function collectionRows(domain: string, style: StoreStyle): Row[] {
     hints: { products: rng.pick([24, 24, 32, 48]) },
   };
   if (style.filtersLayout === 'sidebar') {
-    rows.push({ kind: 'columns', left: { type: 'filters', hints: { layout: 'sidebar' } }, right: grid });
+    rows.push({
+      kind: 'columns',
+      left: { type: 'filters', hints: { layout: 'sidebar' } },
+      right: grid,
+    });
   } else {
     rows.push(single('filters', { layout: 'toolbar' }), { kind: 'single', block: grid });
   }
@@ -202,8 +208,17 @@ function productRows(domain: string, style: StoreStyle, apps: readonly LayoutApp
   if (style.breadcrumbs) rows.push(single('breadcrumbs'));
   rows.push({
     kind: 'columns',
-    left: { type: 'product-gallery', hints: { layout: style.galleryLayout, images: rng.int(4, 8) } },
-    right: { type: 'buy-box', hints: { sticky: rng.chance(0.5), variants: rng.pick(['buttons', 'dropdown', 'swatches'] as const) } },
+    left: {
+      type: 'product-gallery',
+      hints: { layout: style.galleryLayout, images: rng.int(4, 8) },
+    },
+    right: {
+      type: 'buy-box',
+      hints: {
+        sticky: rng.chance(0.5),
+        variants: rng.pick(['buttons', 'dropdown', 'swatches'] as const),
+      },
+    },
   });
   rows.push(single('product-details', { layout: style.detailsLayout }));
   if (rng.chance(0.3)) rows.push(single('trust-badges', { badges: rng.int(3, 4) }));
@@ -212,7 +227,9 @@ function productRows(domain: string, style: StoreStyle, apps: readonly LayoutApp
   }
   if (rng.chance(0.2)) rows.push(single('faq', { questions: rng.int(4, 6) }));
   if (attributionFor('reviews', apps)) {
-    rows.push(single('reviews', { layout: rng.pick(['list', 'grid'] as const), photos: rng.chance(0.6) }));
+    rows.push(
+      single('reviews', { layout: rng.pick(['list', 'grid'] as const), photos: rng.chance(0.6) }),
+    );
   }
   if (attributionFor('ugc-gallery', apps) && rng.chance(0.5)) {
     rows.push(single('ugc-gallery', { layout: 'carousel' }));

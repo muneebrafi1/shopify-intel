@@ -294,7 +294,11 @@ export async function screenshotDetails(
       is_current: bool(r.is_current),
       captured_at: r.captured_at,
       image: screenshotImage(r, ctx.media),
-      store: storeRef({ domain: r.store_domain, name: r.store_name, is_curated: r.store_is_curated }),
+      store: storeRef({
+        domain: r.store_domain,
+        name: r.store_name,
+        is_curated: r.store_is_curated,
+      }),
       theme:
         r.theme_slug && r.theme_name
           ? themeRef({ slug: r.theme_slug, name: r.theme_name, vendor: r.theme_vendor })

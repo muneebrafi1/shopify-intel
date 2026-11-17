@@ -1,0 +1,567 @@
+---
+/**
+ * The store removal form. Works as a plain HTML POST to /opt-out (the page validates, calls the
+ * API in-process and redirects to the confirmation). With JS: inline validation, a character
+ * counter, and submission with fetch to POST /api/v1/removal-requests.
+ */
+import Button from '~/components/ui/Button.astro';
+import Checkbox from '~/components/ui/Checkbox.astro';
+import Field from '~/components/ui/Field.astro';
+import Input from '~/components/ui/Input.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Notice from '~/components/ui/Notice.astro';
+import TextArea from './TextArea.astro';
+import { CONTACT } from '~/config/site';
+import { FIELD_ORDER, REASON_MAX, SCOPES, type RemovalErrors, type RemovalValues } from './removal';
+
+interface Props {
+  values: RemovalValues;
+  errors: RemovalErrors;
+  formError?: string | null;
+}
+const { values, errors, formError = null } = Astro.props;
+const errorList = FIELD_ORDER.filter((f) => errors[f]).map((f) => ({
+  field: f,
+  message: errors[f] as string,
+}));
+const described = (field: string, hint = true) =>
+  [hint ? `${field}-hint` : '', errors[field as keyof RemovalErrors] ? `${field}-error` : '']
+    .filter(Boolean)
+    .join(' ') || undefined;
+const fieldId = (f: string) => (f === 'scope' ? 'scope-store' : f);
+---
+
+<form class="rform" method="post" action="/opt-out" novalidate data-removal-form>
+  <div class="rform__alerts" data-form-alerts>
+    {errorList.length > 0 && (
+      <Notice tone="critical" title="A few details need a look">
+        <ul class="rform__errlist">
+          {errorList.map((e) => (
+            <li>
+              <a href={`#${fieldId(e.field)}`}>{e.message}</a>
+            </li>
+          ))}
+        </ul>
+      </Notice>
+    )}
+    {formError && (
+      <Notice tone="critical" title="We couldn’t send that">
+        {formError}
+      </Notice>
+    )}
+  </div>
+
+  <fieldset class="rform__group">
+    <legend>
+      <MonoLabel tone="ink">01 The store</MonoLabel>
+    </legend>
+    <Field
+      label="Store domain"
+      for="domain"
+      hint="The address shoppers visit, like example.com or shop.example.com."
+      class={errors.domain ? 'field--error' : undefined}
+    >
+      <Input
+        id="domain"
+        name="domain"
+        type="text"
+        inputmode="url"
+        autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
+        placeholder="example.com"
+        value={values.domain}
+        required
+        aria-invalid={errors.domain ? 'true' : undefined}
+        aria-describedby={described('domain')}
+      />
+      <p class="rform__error" id="domain-error" data-error-for="domain" hidden={!errors.domain}>
+        {errors.domain}
+      </p>
+    </Field>
+  </fieldset>
+
+  <fieldset class="rform__group">
+    <legend>
+      <MonoLabel tone="ink">02 You</MonoLabel>
+    </legend>
+    <div class="rform__pair">
+      <Field
+        label="Your email"
+        for="email"
+        hint="An address at the store’s domain is the quickest way to confirm ownership."
+        class={errors.email ? 'field--error' : undefined}
+      >
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          autocapitalize="none"
+          spellcheck="false"
+          placeholder="you@example.com"
+          value={values.email}
+          required
+          aria-invalid={errors.email ? 'true' : undefined}
+          aria-describedby={described('email')}
+        />
+        <p class="rform__error" id="email-error" data-error-for="email" hidden={!errors.email}>
+          {errors.email}
+        </p>
+        <p class="rform__soft" data-email-note hidden></p>
+      </Field>
+      <Field label="Your name" for="name" optional class={errors.name ? 'field--error' : undefined}>
+        <Input
+          id="name"
+          name="name"
+          type="text"
+          autocomplete="name"
+          maxlength={120}
+          value={values.name}
+          aria-invalid={errors.name ? 'true' : undefined}
+          aria-describedby={errors.name ? 'name-error' : undefined}
+        />
+        <p class="rform__error" id="name-error" data-error-for="name" hidden={!errors.name}>
+          {errors.name}
+        </p>
+      </Field>
+    </div>
+  </fieldset>
+
+  <fieldset class="rform__group" aria-describedby={errors.scope ? 'scope-error' : undefined}>
+    <legend>
+      <MonoLabel tone="ink">03 What to remove</MonoLabel>
+    </legend>
+    <div class="rform__options" role="radiogroup" aria-label="What to remove">
+      {SCOPES.map((s) => (
+        <Checkbox
+          type="radio"
+          name="scope"
+          value={s.value}
+          id={`scope-${s.value}`}
+          label={s.label}
+          hint={s.hint}
+          checked={values.scope === s.value}
+          class="rform__option"
+        />
+      ))}
+    </div>
+    <p class="rform__error" id="scope-error" data-error-for="scope" hidden={!errors.scope}>
+      {errors.scope}
+    </p>
+  </fieldset>
+
+  <fieldset class="rform__group">
+    <legend>
+      <MonoLabel tone="ink">04 Why</MonoLabel>
+    </legend>
+    <Field label="Reason" for="reason" class={errors.reason ? 'field--error' : undefined}>
+      <TextArea
+        id="reason"
+        name="reason"
+        rows={4}
+        maxlength={REASON_MAX}
+        value={values.reason}
+        required
+        aria-invalid={errors.reason ? 'true' : undefined}
+        aria-describedby={described('reason')}
+      />
+      <div class="rform__under">
+        <p class="rform__hint" id="reason-hint">
+          A sentence is enough. For a correction, tell us what’s wrong.
+        </p>
+        <p class="rform__error" id="reason-error" data-error-for="reason" hidden={!errors.reason}>
+          {errors.reason}
+        </p>
+        <p class="rform__count num" aria-live="polite" data-reason-count>
+          {values.reason.length.toLocaleString('en-US')} / {REASON_MAX.toLocaleString('en-US')}
+        </p>
+      </div>
+    </Field>
+  </fieldset>
+
+  <div class:list={['rform__confirm', { 'is-invalid': !!errors.owner }]} data-confirm>
+    <Checkbox
+      name="owner"
+      value="yes"
+      id="owner"
+      label="I own or manage this store, or I’m authorised to act for it."
+      hint="We may ask for proof before removing anything."
+      checked={values.owner}
+      required
+      aria-invalid={errors.owner ? 'true' : undefined}
+      aria-describedby={errors.owner ? 'owner-error' : undefined}
+    />
+    <p class="rform__error" id="owner-error" data-error-for="owner" hidden={!errors.owner}>
+      {errors.owner}
+    </p>
+  </div>
+
+  <!-- Honeypot: people never see or fill this; bots that fill every field are ignored. -->
+  <div class="rform__hp" aria-hidden="true">
+    <label for="website">Website</label>
+    <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" value="" />
+  </div>
+
+  <div class="rform__actions">
+    <Button type="submit" variant="primary" size="lg" data-submit>
+      <span data-submit-label>Send request</span>
+    </Button>
+    <p class="rform__privacy">
+      We use your email only to handle this request. Prefer email?{' '}
+      <a href={`mailto:${CONTACT.removals}`}>{CONTACT.removals}</a>
+    </p>
+  </div>
+</form>
+
+<script>
+  import {
+    FIELD_ORDER,
+    REASON_MAX,
+    normalizeDomain,
+    sentPath,
+    validateField,
+    valuesFromForm,
+    type RemovalField,
+    type Scope,
+  } from './removal';
+
+  const form = document.querySelector<HTMLFormElement>('[data-removal-form]');
+  if (form) enhance(form);
+
+  function enhance(form: HTMLFormElement) {
+    const touched = new Set<RemovalField>();
+    const alerts = form.querySelector<HTMLElement>('[data-form-alerts]');
+    const submit = form.querySelector<HTMLButtonElement>('[data-submit]');
+    const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]');
+    const counter = form.querySelector<HTMLElement>('[data-reason-count]');
+    const reason = form.querySelector<HTMLTextAreaElement>('#reason');
+    const emailNote = form.querySelector<HTMLElement>('[data-email-note]');
+
+    const controlFor = (field: RemovalField): HTMLElement | null =>
+      field === 'scope'
+        ? (form.querySelector<HTMLElement>('input[name="scope"]:checked') ??
+          form.querySelector<HTMLElement>('input[name="scope"]'))
+        : form.querySelector<HTMLElement>(`#${field}`);
+
+    function setError(field: RemovalField, message: string | null) {
+      const el = form.querySelector<HTMLElement>(`[data-error-for="${field}"]`);
+      const control = controlFor(field);
+      if (el) {
+        el.textContent = message ?? '';
+        el.hidden = !message;
+      }
+      if (control && field !== 'scope') {
+        if (message) control.setAttribute('aria-invalid', 'true');
+        else control.removeAttribute('aria-invalid');
+        const ids = new Set(
+          (control.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean),
+        );
+        if (message) ids.add(`${field}-error`);
+        else ids.delete(`${field}-error`);
+        if (ids.size) control.setAttribute('aria-describedby', [...ids].join(' '));
+        else control.removeAttribute('aria-describedby');
+      }
+      control?.closest('.field')?.classList.toggle('field--error', !!message);
+      if (field === 'owner')
+        form.querySelector('[data-confirm]')?.classList.toggle('is-invalid', !!message);
+    }
+
+    function check(field: RemovalField): boolean {
+      const message = validateField(field, valuesFromForm(new FormData(form)));
+      setError(field, message);
+      return !message;
+    }
+
+    function updateCount() {
+      if (counter && reason) {
+        counter.textContent = `${reason.value.length.toLocaleString('en-US')} / ${REASON_MAX.toLocaleString('en-US')}`;
+      }
+    }
+
+    function updateEmailNote() {
+      if (!emailNote) return;
+      const v = valuesFromForm(new FormData(form));
+      const domain = normalizeDomain(v.domain);
+      const at = v.email.trim().toLowerCase().split('@')[1] ?? '';
+      const matches =
+        !domain || !at || at === domain || at.endsWith(`.${domain}`) || domain.endsWith(`.${at}`);
+      emailNote.hidden = matches || !!validateField('email', v);
+      emailNote.textContent = matches
+        ? ''
+        : `Not an address at ${domain}? That’s fine. We may ask you to confirm another way.`;
+    }
+
+    form.addEventListener('focusout', (event) => {
+      const target = event.target as HTMLElement;
+      const field = (target.getAttribute('name') ?? '') as RemovalField;
+      if (!FIELD_ORDER.includes(field) || field === 'scope' || field === 'owner') return;
+      const value = (target as HTMLInputElement).value;
+      if (!value && !touched.has(field)) return; // don't scold an untouched empty field
+      touched.add(field);
+      check(field);
+      if (field === 'email' || field === 'domain') updateEmailNote();
+    });
+
+    form.addEventListener('input', (event) => {
+      const target = event.target as HTMLElement;
+      const field = (target.getAttribute('name') ?? '') as RemovalField;
+      if (field === 'reason') updateCount();
+      if (!FIELD_ORDER.includes(field)) return;
+      const shown = form.querySelector<HTMLElement>(`[data-error-for="${field}"]`);
+      if (shown && !shown.hidden) check(field); // clear errors as soon as they're fixed
+    });
+
+    form.addEventListener('change', (event) => {
+      const field = ((event.target as HTMLElement).getAttribute('name') ?? '') as RemovalField;
+      if (field === 'owner' || field === 'scope') check(field);
+    });
+
+    function showFormError(title: string, message: string) {
+      if (!alerts) return;
+      alerts.innerHTML = '';
+      const box = document.createElement('div');
+      box.className = 'rform__js-alert';
+      box.setAttribute('role', 'alert');
+      const strong = document.createElement('p');
+      strong.className = 'rform__js-alert-title';
+      strong.textContent = title;
+      const p = document.createElement('p');
+      p.textContent = message;
+      box.append(strong, p);
+      alerts.append(box);
+    }
+
+    function setBusy(busy: boolean) {
+      if (!submit) return;
+      submit.disabled = busy;
+      submit.setAttribute('aria-busy', String(busy));
+      if (submitLabel) submitLabel.textContent = busy ? 'Sending…' : 'Send request';
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (alerts) alerts.innerHTML = '';
+      let first: RemovalField | null = null;
+      for (const field of FIELD_ORDER) {
+        touched.add(field);
+        if (!check(field) && !first) first = field;
+      }
+      if (first) {
+        controlFor(first)?.focus();
+        return;
+      }
+
+      const v = valuesFromForm(new FormData(form));
+      setBusy(true);
+      let res: Response;
+      try {
+        res = await fetch('/api/v1/removal-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            domain: v.domain.trim(),
+            email: v.email.trim(),
+            name: v.name.trim() || undefined,
+            scope: v.scope,
+            reason: v.reason.trim(),
+            website: v.website,
+          }),
+        });
+      } catch {
+        form.submit(); // network trouble: let the server-side handler take it
+        return;
+      }
+
+      if (res.status === 201 || res.status === 200) {
+        const body = (await res.json().catch(() => null)) as {
+          data?: { reference: string; domain: string; scope: Scope };
+        } | null;
+        if (body?.data?.reference) {
+          window.location.assign(sentPath(body.data.reference, body.data.domain, body.data.scope));
+          return;
+        }
+      }
+
+      const body = (await res.json().catch(() => null)) as {
+        error?: { code?: string; message?: string; details?: { path: string; message: string }[] };
+      } | null;
+      const error = body?.error;
+      if (!error) {
+        // No JSON API answer (route missing, proxy error): fall back to the plain form post.
+        form.submit();
+        return;
+      }
+      setBusy(false);
+      if (error.code === 'validation_error' && error.details?.length) {
+        let firstField: RemovalField | null = null;
+        for (const d of error.details) {
+          const field = d.path.split('.')[0] as RemovalField;
+          if (FIELD_ORDER.includes(field)) {
+            setError(field, d.message);
+            firstField ??= field;
+          }
+        }
+        if (firstField) {
+          controlFor(firstField)?.focus();
+          return;
+        }
+      }
+      if (error.code === 'rate_limited') {
+        showFormError('Too many requests', 'Please try again in an hour, or email us instead.');
+      } else {
+        showFormError(
+          'We couldn’t send that',
+          error.message ?? 'Something went wrong. Please try again, or email us instead.',
+        );
+      }
+    });
+  }
+</script>
+
+<style>
+  .rform {
+    position: relative;
+  }
+  .rform__alerts:not(:empty) {
+    margin-bottom: var(--space-6);
+  }
+  .rform__errlist li + li {
+    margin-top: 2px;
+  }
+  .rform :global(.rform__js-alert) {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--critical-soft);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .rform :global(.rform__js-alert-title) {
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+  }
+
+  .rform__group {
+    min-width: 0;
+    margin: 0;
+    padding: 0 0 var(--space-8);
+    border: 0;
+  }
+  .rform__group + .rform__group {
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+  }
+  .rform__group legend {
+    float: left;
+    width: 100%;
+    margin-bottom: var(--space-4);
+    padding: 0;
+  }
+  .rform__group legend + :global(*) {
+    clear: both;
+  }
+  .rform__pair {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .rform__options {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .rform__options :global(.rform__option) {
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .rform__options :global(.check__label) {
+    font-weight: var(--weight-medium);
+  }
+  .rform__options :global(.check__hint) {
+    font-size: var(--text-sm);
+    color: var(--ink-3);
+  }
+
+  .rform__error {
+    color: var(--critical);
+    font-size: var(--text-xs);
+  }
+  .rform__group > .rform__error {
+    margin-top: var(--space-2);
+  }
+  .rform :global(.field--error .field__hint) {
+    display: none;
+  }
+  .rform__hint {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .rform :global(.field--error) .rform__hint {
+    display: none;
+  }
+  .rform__soft {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .rform__under {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .rform__count {
+    flex: none;
+    margin-left: auto;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+
+  .rform__confirm {
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--ink);
+  }
+  .rform__confirm .rform__error {
+    margin: var(--space-2) 0 0 24px;
+  }
+  .rform__confirm.is-invalid :global(.check__label) {
+    color: var(--critical);
+  }
+
+  .rform__hp {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  .rform__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+  .rform__privacy {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+  }
+  .rform__privacy a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  @media (min-width: 640px) {
+    .rform__pair {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    }
+    .rform__actions {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-5);
+    }
+  }
+</style>

@@ -1,0 +1,469 @@
+---
+/**
+ * Shared filter bar for every collection page. Filters are URL state (links), so they work
+ * without JavaScript, can be shared, and are crawlable with rel="nofollow".
+ *
+ * Desktop: outlined dropdown pills (native <details>) + active-filter chips + result count +
+ * sort + grid/index toggle. Mobile: one "Filters" button opens a bottom sheet with every group
+ * as chip rows and a sticky "Show N results" footer. Both render from the same `groups` data.
+ */
+import Icon from './Icon.astro';
+import Chip from './Chip.astro';
+import Segmented from './Segmented.astro';
+
+export interface FilterOption {
+  label: string;
+  href: string;
+  selected?: boolean;
+  count?: number | null;
+}
+export interface FilterGroup {
+  key: string;
+  label: string;
+  options: FilterOption[];
+}
+export interface SortOption {
+  label: string;
+  href: string;
+  selected?: boolean;
+}
+
+interface Props {
+  groups: FilterGroup[];
+  /** Number of results for the current filters. */
+  total: number;
+  noun: string;
+  sort?: SortOption[];
+  /** Grid ↔ index toggle hrefs. Omit to hide the toggle. */
+  view?: { current: 'grid' | 'index'; gridHref: string; indexHref: string };
+  /** Link that clears every filter. */
+  clearHref?: string;
+  class?: string;
+}
+const { groups, total, noun, sort, view, clearHref, class: className } = Astro.props;
+const active = groups.flatMap((g) =>
+  g.options.filter((o) => o.selected && !/^(all|any)\b/i.test(o.label)).map((o) => ({ group: g, option: o })),
+);
+// Removing an active filter = following the group's "All" option if present.
+const allHref = (g: FilterGroup) => g.options.find((o) => /^(all|any)\b/i.test(o.label))?.href ?? clearHref ?? '?';
+// One filter bar per page.
+const sheetId = 'filter-sheet';
+const currentSort = sort?.find((s) => s.selected) ?? sort?.[0];
+---
+
+<div class:list={['fbar', className]} data-filterbar>
+  <div class="fbar__row">
+    <div class="fbar__groups">
+      <button type="button" class="fbar__mobile" data-dialog-open={sheetId}>
+        <Icon name="sliders-horizontal" size={16} />
+        Filters
+        {active.length > 0 && <span class="fbar__badge num">{active.length}</span>}
+      </button>
+      {
+        groups.map((g) => {
+          const selected = g.options.find((o) => o.selected && !/^(all|any)\b/i.test(o.label));
+          return (
+            <details class:list={['fpill', { 'fpill--on': !!selected }]} data-fpill>
+              <summary>
+                <span class="fpill__label">{g.label}</span>
+                {selected && <span class="fpill__value">{selected.label}</span>}
+                <Icon name="caret-down" size={12} />
+              </summary>
+              <div class="fpill__menu" role="list">
+                {g.options.map((o) => (
+                  <a href={o.href} role="listitem" rel="nofollow" aria-current={o.selected ? 'true' : undefined}>
+                    <span>{o.label}</span>
+                    {typeof o.count === 'number' && <span class="fpill__count num">{o.count.toLocaleString('en-US')}</span>}
+                  </a>
+                ))}
+              </div>
+            </details>
+          );
+        })
+      }
+    </div>
+    <div class="fbar__right">
+      <p class="fbar__total mlabel" aria-live="polite">
+        <span class="num">{total.toLocaleString('en-US')}</span>&nbsp;{noun}
+      </p>
+      {
+        sort && sort.length > 1 && (
+          <details class="fpill fpill--sort" data-fpill>
+            <summary>
+              <Icon name="arrows-down-up" size={14} />
+              <span class="fpill__value">{currentSort?.label}</span>
+            </summary>
+            <div class="fpill__menu fpill__menu--end" role="list">
+              {sort.map((s) => (
+                <a href={s.href} role="listitem" rel="nofollow" aria-current={s.selected ? 'true' : undefined}>
+                  {s.label}
+                </a>
+              ))}
+            </div>
+          </details>
+        )
+      }
+      {
+        view && (
+          <Segmented
+            label="View"
+            size="sm"
+            items={[
+              { label: 'Grid', value: 'grid', icon: 'squares-four', iconOnly: true, href: view.gridHref, selected: view.current === 'grid' },
+              { label: 'Index', value: 'index', icon: 'rows', iconOnly: true, href: view.indexHref, selected: view.current === 'index' },
+            ]}
+          />
+        )
+      }
+    </div>
+  </div>
+
+  {
+    active.length > 0 && (
+      <div class="fbar__active">
+        {active.map(({ group, option }) => (
+          <Chip href={allHref(group)} size="sm" selected removable>
+            {group.label}: {option.label}
+          </Chip>
+        ))}
+        {clearHref && active.length > 1 && (
+          <a class="fbar__clear" href={clearHref} rel="nofollow">
+            Clear all
+          </a>
+        )}
+      </div>
+    )
+  }
+
+  <dialog id={sheetId} class="fsheet" aria-label="Filters">
+    <div class="fsheet__head">
+      <p class="fsheet__title">Filters</p>
+      <button type="button" class="fsheet__close" data-dialog-close aria-label="Close filters">
+        <Icon name="x" size={18} />
+      </button>
+    </div>
+    <div class="fsheet__body">
+      {
+        groups.map((g) => (
+          <section class="fsheet__group">
+            <h3 class="mlabel mlabel--bullet">{g.label}</h3>
+            <div class="fsheet__chips">
+              {g.options.map((o) => (
+                <Chip href={o.href} size="sm" selected={o.selected} count={o.count ?? undefined}>
+                  {o.label}
+                </Chip>
+              ))}
+            </div>
+          </section>
+        ))
+      }
+      {
+        sort && sort.length > 1 && (
+          <section class="fsheet__group">
+            <h3 class="mlabel mlabel--bullet">Sort</h3>
+            <div class="fsheet__chips">
+              {sort.map((s) => (
+                <Chip href={s.href} size="sm" selected={s.selected}>
+                  {s.label}
+                </Chip>
+              ))}
+            </div>
+          </section>
+        )
+      }
+    </div>
+    <div class="fsheet__foot">
+      {clearHref && <a class="fsheet__clear" href={clearHref} rel="nofollow">Clear all</a>}
+      <button type="button" class="fsheet__show" data-dialog-close>
+        Show {total.toLocaleString('en-US')} {noun}
+      </button>
+    </div>
+  </dialog>
+</div>
+
+<script>
+  // Only one dropdown open at a time; close on outside click and Escape.
+  const pills = () => Array.from(document.querySelectorAll<HTMLDetailsElement>('[data-fpill]'));
+  document.addEventListener('toggle', (event) => {
+    const el = event.target as HTMLElement;
+    if (!(el instanceof HTMLDetailsElement) || !el.matches('[data-fpill]') || !el.open) return;
+    pills().forEach((p) => p !== el && (p.open = false));
+  }, true);
+  document.addEventListener('click', (event) => {
+    if (!(event.target as HTMLElement).closest('[data-fpill]')) pills().forEach((p) => (p.open = false));
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') pills().forEach((p) => (p.open = false));
+  });
+  // Dialog open/close for the mobile sheet (same convention as <Dialog>).
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const opener = target.closest<HTMLElement>('.fbar [data-dialog-open]');
+    if (opener) {
+      (document.getElementById(opener.dataset.dialogOpen ?? '') as HTMLDialogElement | null)?.showModal();
+      return;
+    }
+    if (target.closest('.fsheet [data-dialog-close]')) target.closest('dialog')?.close();
+    if (target instanceof HTMLDialogElement && target.classList.contains('fsheet')) target.close();
+  });
+</script>
+
+<style>
+  .fbar {
+    padding-block: var(--space-3);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--line);
+  }
+  .fbar__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .fbar__groups {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .fbar__right {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .fbar__total {
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .fbar__mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .fbar__badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    font-size: var(--text-2xs);
+  }
+
+  /* Dropdown pills */
+  .fpill {
+    position: relative;
+    display: none;
+  }
+  .fpill summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    cursor: pointer;
+    list-style: none;
+    transition:
+      box-shadow var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .fpill summary::-webkit-details-marker {
+    display: none;
+  }
+  .fpill summary:hover,
+  .fpill[open] summary {
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink-3);
+  }
+  .fpill summary:focus-visible {
+    border-radius: var(--radius-pill);
+  }
+  .fpill--on summary {
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+    color: var(--ink);
+  }
+  .fpill__value {
+    color: var(--ink);
+  }
+  .fpill--on .fpill__label::after {
+    content: ':';
+  }
+  .fpill__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: var(--z-overlay);
+    min-width: 220px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 6px;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow-float);
+  }
+  .fpill__menu--end {
+    left: auto;
+    right: 0;
+  }
+  .fpill__menu a {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--ink-2);
+  }
+  .fpill__menu a:hover {
+    background: var(--fill);
+    color: var(--ink);
+  }
+  .fpill__menu a[aria-current='true'] {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .fpill__count {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .fpill--sort {
+    display: inline-block;
+  }
+  .fpill--sort summary {
+    box-shadow: none;
+    padding: 0 8px;
+  }
+
+  .fbar__active {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .fbar__clear {
+    margin-left: var(--space-1);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  @media (min-width: 900px) {
+    .fbar__mobile {
+      display: none;
+    }
+    .fpill {
+      display: inline-block;
+    }
+  }
+  @media (max-width: 899px) {
+    .fbar__right :global(.seg),
+    .fpill--sort {
+      display: none;
+    }
+  }
+
+  /* Mobile bottom sheet */
+  .fsheet {
+    width: 100%;
+    max-width: 640px;
+    max-height: 86dvh;
+    margin: auto auto 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-float);
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .fsheet[open] {
+    display: flex;
+    animation: sheet-in var(--dur-slow) var(--ease-out);
+  }
+  .fsheet::backdrop {
+    background: rgb(25 24 22 / 0.4);
+  }
+  @keyframes sheet-in {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+  }
+  .fsheet__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-4) var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .fsheet__title {
+    font-weight: var(--weight-semibold);
+  }
+  .fsheet__close {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-pill);
+  }
+  .fsheet__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-5);
+  }
+  .fsheet__group + .fsheet__group {
+    margin-top: var(--space-6);
+  }
+  .fsheet__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .fsheet__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+  }
+  .fsheet__clear {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .fsheet__show {
+    flex: 1;
+    max-width: 260px;
+    height: 44px;
+    margin-left: auto;
+    border-radius: var(--radius-pill);
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    font-weight: var(--weight-medium);
+  }
+</style>

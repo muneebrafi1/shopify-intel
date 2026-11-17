@@ -118,7 +118,9 @@ export const EntityRefSchema = named(
 export const CtaSchema = named(
   'Cta',
   z.object({
-    href: z.string().describe('/go/<id> for affiliate links (click is logged), else the official URL.'),
+    href: z
+      .string()
+      .describe('/go/<id> for affiliate links (click is logged), else the official URL.'),
     label: z.string(),
     is_affiliate: z.boolean(),
     rel: z.string().describe('Use as the anchor rel attribute.'),

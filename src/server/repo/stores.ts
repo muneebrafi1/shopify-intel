@@ -3,13 +3,7 @@ import { PIXELS } from '../../lib/taxonomy.ts';
 import type { Ctx } from '../api/v1/context.ts';
 import { hrefs } from '../api/v1/hrefs.ts';
 import { notFound } from '../api/v1/errors.ts';
-import {
-  decodeCursor,
-  keysetWhere,
-  orderBy,
-  pageOf,
-  type SortKey,
-} from '../api/v1/pagination.ts';
+import { decodeCursor, keysetWhere, orderBy, pageOf, type SortKey } from '../api/v1/pagination.ts';
 import type { AppRef, Facet, StoreRef } from '../api/v1/schemas/common.ts';
 import type {
   StoreApp,
@@ -102,7 +96,11 @@ export async function hydrateStoreItems(ctx: Ctx, rows: StoreRow[]): Promise<Sto
     currency: r.currency,
     category:
       r.category_slug && r.category_name
-        ? { slug: r.category_slug, name: r.category_name, href: hrefs.storeCategory(r.category_slug) }
+        ? {
+            slug: r.category_slug,
+            name: r.category_name,
+            href: hrefs.storeCategory(r.category_slug),
+          }
         : null,
     tranco_rank: r.tranco_rank,
     is_captured: bool(r.is_captured),
@@ -419,10 +417,14 @@ async function storeApps(ctx: Ctx, storeId: number): Promise<StoreDetail['apps']
 }
 
 async function storePages(ctx: Ctx, storeId: number): Promise<StorePage[]> {
-  const pages = await ctx.db.all<{ id: number; page_type: string; url: string | null; is_placeholder: number }>(
-    'SELECT id, page_type, url, is_placeholder FROM pages WHERE store_id = ? ORDER BY id',
-    [storeId],
-  );
+  const pages = await ctx.db.all<{
+    id: number;
+    page_type: string;
+    url: string | null;
+    is_placeholder: number;
+  }>('SELECT id, page_type, url, is_placeholder FROM pages WHERE store_id = ? ORDER BY id', [
+    storeId,
+  ]);
   const shots = await ctx.db.all<{ id: number; page_id: number; device: string }>(
     `SELECT id, page_id, device FROM screenshots
      WHERE store_id = ? AND is_current = 1 ORDER BY is_placeholder, id`,
@@ -467,7 +469,9 @@ export async function getStoreDetail(ctx: Ctx, domain: string): Promise<StoreDet
   if (!item) throw notFound(`Store '${domain}'`);
 
   const [history, apps, pixels, pages, similar, teardown, scan] = await Promise.all([
-    ctx.db.all<StoreThemeRow & { first_seen: string; last_seen: string; replaced_at: string | null }>(
+    ctx.db.all<
+      StoreThemeRow & { first_seen: string; last_seen: string; replaced_at: string | null }
+    >(
       `SELECT t.slug AS theme_slug, t.name AS theme_name, t.vendor AS theme_vendor,
          st.raw_name AS theme_raw_name, st.version AS theme_version, st.is_custom AS theme_is_custom,
          st.first_seen, st.last_seen, st.replaced_at
@@ -531,7 +535,12 @@ export async function getStoreDetail(ctx: Ctx, domain: string): Promise<StoreDet
 /** StoreRef by id list (keeps order), active stores only. */
 export async function storeRefsByIds(ctx: Ctx, ids: readonly number[]): Promise<StoreRef[]> {
   if (ids.length === 0) return [];
-  const rows = await ctx.db.all<{ id: number; domain: string; name: string | null; is_curated: number }>(
+  const rows = await ctx.db.all<{
+    id: number;
+    domain: string;
+    name: string | null;
+    is_curated: number;
+  }>(
     `SELECT id, domain, name, is_curated FROM stores
      WHERE id IN (SELECT value FROM json_each(?)) AND status = 'active'`,
     [jsonIds(ids)],
@@ -542,4 +551,3 @@ export async function storeRefsByIds(ctx: Ctx, ids: readonly number[]): Promise<
     return r ? [storeRef(r)] : [];
   });
 }
-

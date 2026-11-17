@@ -1,0 +1,124 @@
+---
+import AdminLayout from '~/layouts/AdminLayout.astro';
+import AdminHeader from '~/components/admin/AdminHeader.astro';
+import FlashNotice from '~/components/admin/FlashNotice.astro';
+import StatusPill from '~/components/admin/StatusPill.astro';
+import Button from '~/components/ui/Button.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import { adminDb } from '~/server/admin/env';
+import { setTeardownPublished } from '~/server/admin/actions';
+import { int, text } from '~/server/admin/forms';
+import { runAction } from '~/server/admin/page';
+import { listTeardowns } from '~/server/admin/queries';
+import { fullTime, shortDate, timeAgo } from '~/server/admin/format';
+
+if (Astro.request.method === 'POST') {
+  return runAction(Astro, async (form, ctx) => {
+    const id = int(form, 'id');
+    const intent = text(form, 'intent', 20);
+    if (id === null || (intent !== 'publish' && intent !== 'unpublish')) return { ok: false, flash: 'bad_request' };
+    return setTeardownPublished(ctx, id, intent === 'publish');
+  });
+}
+
+const rows = await listTeardowns(adminDb());
+const published = rows.filter((r) => r.published_at).length;
+const now = new Date();
+---
+
+<AdminLayout title="Teardowns" section="teardowns">
+  <AdminHeader
+    title="Teardowns"
+    count={rows.length}
+    countLabel="teardowns"
+    trail={[{ label: 'Teardowns' }]}
+    description={`${published} published, ${rows.length - published} ${rows.length - published === 1 ? 'draft' : 'drafts'}. Teardowns are written in data/curation/teardowns and seeded; publishing here only changes visibility.`}
+  />
+  <FlashNotice />
+
+  <div class="table-wrap">
+    <table class="table a-table">
+      <thead>
+        <tr>
+          <th scope="col">Teardown</th>
+          <th scope="col">Store</th>
+          <th scope="col" class="is-num">Notes</th>
+          <th scope="col">Status</th>
+          <th scope="col">Edited</th>
+          <th scope="col" class="is-actions"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.length === 0 ? (
+            <tr>
+              <td colspan="6" class="a-empty-cell">
+                No teardowns yet. Add one under data/curation/teardowns and reseed.
+              </td>
+            </tr>
+          ) : (
+            rows.map((t) => (
+              <tr>
+                <td class="title">
+                  <span class="a-strong">{t.title}</span>
+                  <span class="a-sub a-mono">
+                    /teardowns/{t.slug}
+                    {t.is_sample ? ' · format sample' : ''}
+                  </span>
+                </td>
+                <td>
+                  <span class="a-cell-main">
+                    <StoreMark domain={t.domain} name={t.store_name} size={20} />
+                    <a class="a-row-link" href={`/admin/stores/${t.domain}`}>
+                      {t.store_name ?? t.domain}
+                    </a>
+                  </span>
+                </td>
+                <td class="is-num">{t.notes}</td>
+                <td>
+                  {t.published_at ? (
+                    <StatusPill status="published" label={`Published ${shortDate(t.published_at)}`} />
+                  ) : (
+                    <StatusPill status="draft" label="Draft" />
+                  )}
+                  {t.store_status !== 'active' && <span class="a-sub">Store is {t.store_status.replace('_', ' ')}</span>}
+                </td>
+                <td class="a-nowrap a-muted" title={fullTime(t.updated_at)}>
+                  {timeAgo(t.updated_at, now)}
+                </td>
+                <td class="is-actions">
+                  {t.published_at && (
+                    <Button href={`/teardowns/${t.slug}`} size="sm" variant="ghost" iconRight="arrow-up-right">
+                      View
+                    </Button>
+                  )}
+                  <form
+                    method="post"
+                    data-confirm={t.published_at ? `Unpublish “${t.title}”? Its public page will return 404.` : undefined}
+                  >
+                    <input type="hidden" name="id" value={t.id} />
+                    <input type="hidden" name="intent" value={t.published_at ? 'unpublish' : 'publish'} />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      variant={t.published_at ? 'secondary' : 'primary'}
+                      disabled={!t.published_at && t.store_status !== 'active'}
+                    >
+                      {t.published_at ? 'Unpublish' : 'Publish'}
+                    </Button>
+                  </form>
+                </td>
+              </tr>
+            ))
+          )
+        }
+      </tbody>
+    </table>
+  </div>
+</AdminLayout>
+
+<style>
+  .title {
+    min-width: 260px;
+  }
+</style>

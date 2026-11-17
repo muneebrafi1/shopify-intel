@@ -28,7 +28,10 @@ export const MatrixRowSchema = named(
     b: CellValue,
     a_display: z.string(),
     b_display: z.string(),
-    better: z.enum(['higher', 'lower']).nullable().describe('Direction that is objectively better.'),
+    better: z
+      .enum(['higher', 'lower'])
+      .nullable()
+      .describe('Direction that is objectively better.'),
     winner: z.enum(['a', 'b', 'tie']).nullable(),
     source: z.string().describe('Key into meta.sources.'),
   }),
@@ -41,7 +44,9 @@ export const ComparisonDetailSchema = named(
     slug: z.string(),
     canonical_slug: z.string(),
     is_canonical: z.boolean().describe('False when a/b were requested in non-canonical order.'),
-    href: z.string().describe('Canonical page path; redirect (301) there when is_canonical is false.'),
+    href: z
+      .string()
+      .describe('Canonical page path; redirect (301) there when is_canonical is false.'),
     title: z.string(),
     apps: z.object({ a: AppDetailSchema, b: AppDetailSchema }).nullable(),
     themes: z.object({ a: ThemeDetailSchema, b: ThemeDetailSchema }).nullable(),
@@ -64,7 +69,10 @@ export const ListComparisonsOutput = z.object({ items: z.array(ComparisonLinkSch
 
 export const GetAlternativesInput = z.object({
   slug: z.string(),
-  kind: z.enum(['app', 'theme']).optional().describe('Disambiguates when an app and theme share a slug.'),
+  kind: z
+    .enum(['app', 'theme'])
+    .optional()
+    .describe('Disambiguates when an app and theme share a slug.'),
 });
 
 export const AlternativesSchema = named(

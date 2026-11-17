@@ -31,6 +31,7 @@ import MonoLabel from '~/components/ui/MonoLabel.astro';
 import Count from '~/components/ui/Count.astro';
 import IndexList from '~/components/ui/IndexList.astro';
 import IndexRow from '~/components/ui/IndexRow.astro';
+import FilterBar from '~/components/ui/FilterBar.astro';
 import Shot from '~/components/media/Shot.astro';
 import FullPage from '~/components/media/FullPage.astro';
 import StoreCard from '~/components/domain/StoreCard.astro';
@@ -129,6 +130,20 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
           <Stat display value={160} label="Plates queued" source="20 stores × 8" />
         </StatList>
       </div>
+      <FilterBar
+        class="ds-fbar"
+        total={20}
+        noun="stores"
+        clearHref="#"
+        groups={[
+          { key: 'theme', label: 'Theme', options: [{ label: 'All themes', href: '#' }, { label: 'Prestige', href: '#', selected: true, count: 13 }, { label: 'Dawn', href: '#', count: 20 }] },
+          { key: 'app', label: 'App', options: [{ label: 'All apps', href: '#', selected: true }, { label: 'Judge.me', href: '#', count: 221 }, { label: 'Klaviyo', href: '#', count: 383 }] },
+          { key: 'category', label: 'Category', options: [{ label: 'All categories', href: '#', selected: true }, { label: 'Apparel', href: '#', count: 4 }] },
+          { key: 'currency', label: 'Currency', options: [{ label: 'Any currency', href: '#', selected: true }, { label: 'USD', href: '#', count: 570 }] },
+        ]}
+        sort={[{ label: 'Most apps', href: '#', selected: true }, { label: 'Tranco rank', href: '#' }, { label: 'Domain A–Z', href: '#' }]}
+        view={{ current: 'index', gridHref: '#', indexHref: '#' }}
+      />
       <div class="ds-index">
         <IndexList columns="56px minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,0.8fr) 110px" head={['N°', 'Store', 'Theme', 'Category', 'Market', 'Apps']} label="Stores">
           {STORES.map(([d, n, meta], i) => (
@@ -430,6 +445,9 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
   .ds-stats-marks {
     margin-block: var(--space-10) var(--space-12);
     padding: var(--space-6);
+  }
+  :global(.ds-fbar) {
+    margin-top: var(--space-10);
   }
   .ds-index {
     margin-top: var(--space-6);

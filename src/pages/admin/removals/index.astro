@@ -1,0 +1,137 @@
+---
+import AdminLayout from '~/layouts/AdminLayout.astro';
+import AdminHeader from '~/components/admin/AdminHeader.astro';
+import FlashNotice from '~/components/admin/FlashNotice.astro';
+import StatusPill from '~/components/admin/StatusPill.astro';
+import Button from '~/components/ui/Button.astro';
+import Pagination from '~/components/ui/Pagination.astro';
+import Tabs from '~/components/ui/Tabs.astro';
+import { adminDb } from '~/server/admin/env';
+import { getRemovalCounts, listRemovals, PAGE_SIZE, type RemovalTab } from '~/server/admin/queries';
+import { fullTime, hrefWith, timeAgo } from '~/server/admin/format';
+
+const raw = Astro.url.searchParams.get('status');
+const tab: RemovalTab = raw === 'approved' || raw === 'rejected' ? raw : 'pending';
+const page = Math.max(1, Number.parseInt(Astro.url.searchParams.get('p') ?? '1', 10) || 1);
+const db = adminDb();
+const [counts, { rows, total, page: current }] = await Promise.all([
+  getRemovalCounts(db),
+  listRemovals(db, tab, page),
+]);
+const now = new Date();
+const SCOPE: Record<string, string> = { store: 'Whole store', screenshots: 'Screenshots', details: 'Details' };
+const tabs = (['pending', 'approved', 'rejected'] as const).map((key) => ({
+  label: key[0]!.toUpperCase() + key.slice(1),
+  href: key === 'pending' ? '/admin/removals' : `/admin/removals?status=${key}`,
+  selected: key === tab,
+  count: counts[key],
+}));
+const EMPTY: Record<RemovalTab, string> = {
+  pending: 'Nothing waiting. New requests from the opt-out page appear here, oldest first.',
+  approved: 'No approved requests yet.',
+  rejected: 'No rejected requests.',
+};
+---
+
+<AdminLayout title="Removals" section="removals">
+  <AdminHeader
+    title="Removal requests"
+    trail={[{ label: 'Removals' }]}
+    description="Store owners ask to be removed from the opt-out page. Review each request; approving one is permanent."
+  />
+  <FlashNotice />
+  <Tabs items={tabs} label="Request status" />
+
+  <div class="table-wrap">
+    <table class="table a-table removals">
+      <thead>
+        <tr>
+          <th scope="col">Reference</th>
+          <th scope="col">Store</th>
+          <th scope="col">Scope</th>
+          <th scope="col">Requested by</th>
+          <th scope="col">Reason</th>
+          <th scope="col">{tab === 'pending' ? 'Received' : 'Handled'}</th>
+          {tab !== 'pending' && <th scope="col">Status</th>}
+          <th scope="col" class="is-actions"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.length === 0 ? (
+            <tr>
+              <td colspan="8" class="a-empty-cell">{EMPTY[tab]}</td>
+            </tr>
+          ) : (
+            rows.map((r) => {
+              const when = tab === 'pending' ? r.created_at : (r.handled_at ?? r.created_at);
+              return (
+                <tr>
+                  <td class="a-mono a-nowrap">
+                    <a href={`/admin/removals/${r.id}`} class="a-row-link">
+                      {r.reference}
+                    </a>
+                  </td>
+                  <td>
+                    <span class="a-strong">{r.domain}</span>
+                    <span class="a-sub">
+                      {r.store_id ? `In library · ${(r.store_status ?? '').replace('_', ' ')}` : 'Not in library'}
+                    </span>
+                  </td>
+                  <td class="a-nowrap">{SCOPE[r.scope] ?? r.scope}</td>
+                  <td class="who">
+                    <span class="a-truncate">{r.name ?? '—'}</span>
+                    <span class="a-sub a-truncate">{r.email}</span>
+                  </td>
+                  <td class="reason">
+                    <span class="reason__text">{r.reason}</span>
+                  </td>
+                  <td class="a-nowrap" title={fullTime(when)}>
+                    {timeAgo(when, now)}
+                  </td>
+                  {tab !== 'pending' && (
+                    <td>
+                      <StatusPill status={r.status} label={r.status === 'approved' ? 'Media pending' : undefined} />
+                    </td>
+                  )}
+                  <td class="is-actions">
+                    <Button href={`/admin/removals/${r.id}`} size="sm" variant={tab === 'pending' ? 'primary' : 'secondary'}>
+                      {tab === 'pending' ? 'Review' : 'Open'}
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })
+          )
+        }
+      </tbody>
+    </table>
+  </div>
+  <Pagination
+    page={current}
+    pageSize={PAGE_SIZE}
+    total={total}
+    hrefFor={(p) => hrefWith('/admin/removals', { status: tab === 'pending' ? undefined : tab, p: p > 1 ? p : undefined })}
+    noun="requests"
+  />
+</AdminLayout>
+
+<style>
+  .removals {
+    margin-top: var(--space-2);
+  }
+  .who {
+    max-width: 200px;
+  }
+  .reason {
+    min-width: 220px;
+    max-width: 360px;
+  }
+  .reason__text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--ink-2);
+  }
+</style>

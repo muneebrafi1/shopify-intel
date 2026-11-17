@@ -34,7 +34,10 @@ export async function getDataMeta(ctx: Ctx): Promise<DataMeta> {
   return {
     data_version: d.dataVersion,
     data_as_of: d.dataAsOf,
-    source: { id: d.scanSourceId, ...(d.sources[d.scanSourceId] ?? { label: d.scanSourceLabel, as_of: d.dataAsOf, url: null }) },
+    source: {
+      id: d.scanSourceId,
+      ...(d.sources[d.scanSourceId] ?? { label: d.scanSourceLabel, as_of: d.dataAsOf, url: null }),
+    },
     rules_version: d.rulesVersion,
     app_store_checked: { from: d.appStoreCheckedFrom, to: d.appStoreCheckedTo },
     counts: c ?? {

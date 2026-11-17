@@ -26,7 +26,10 @@ export interface ScreenshotMediaRow {
 export function screenshotImage(row: ScreenshotMediaRow, opts: MediaOptions = {}): Image {
   const captured = row.r2_key !== null && row.is_placeholder === 0;
   return {
-    src: captured && row.r2_key ? mediaPath(row.r2_key, opts) : `/media/placeholder/shot/${row.id}.svg`,
+    src:
+      captured && row.r2_key
+        ? mediaPath(row.r2_key, opts)
+        : `/media/placeholder/shot/${row.id}.svg`,
     width: row.width,
     height: row.height,
     is_placeholder: !captured,

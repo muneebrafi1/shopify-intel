@@ -1,0 +1,21 @@
+---
+/** Shows the flash message carried by `?ok=` / `?err=` after a form post. */
+import Notice from '~/components/ui/Notice.astro';
+import { readFlash } from '~/server/admin/flash';
+
+const flash = readFlash(Astro.url);
+---
+
+{
+  flash && (
+    <div class="flash" role="status">
+      <Notice tone={flash.tone}>{flash.text}</Notice>
+    </div>
+  )
+}
+
+<style>
+  .flash {
+    margin-bottom: var(--space-6);
+  }
+</style>

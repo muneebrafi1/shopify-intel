@@ -1,0 +1,155 @@
+---
+/**
+ * Account area frame: a quiet side nav (desktop) / tab row (mobile) and a preview notice.
+ * Accounts open with Pro; every page here is a designed placeholder (noindex).
+ */
+import Button from '~/components/ui/Button.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+
+interface Props {
+  current: 'overview' | 'boards';
+  /** Hide the "not signed in" strip (e.g. when the page shows its own notice). */
+  hideNotice?: boolean;
+}
+const { current, hideNotice = false } = Astro.props;
+const NAV = [
+  { id: 'overview', href: '/account', label: 'Overview' },
+  { id: 'boards', href: '/account/boards', label: 'Boards' },
+] as const;
+const next = Astro.url.pathname + Astro.url.search;
+---
+
+<div class="acct container">
+  <nav class="acct__nav" aria-label="Account">
+    <MonoLabel as="p" class="acct__nav-title">
+      Account
+    </MonoLabel>
+    <ul>
+      {NAV.map((item) => (
+        <li>
+          <a href={item.href} aria-current={item.id === current ? 'page' : undefined}>
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+  <div class="acct__main">
+    {!hideNotice && (
+      <div class="acct__notice" role="note">
+        <p>
+          <strong>You’re not signed in.</strong> This is a preview of your account. It opens with
+          Pro.
+        </p>
+        <div class="acct__notice-actions">
+          <Button
+            href={`/sign-in?next=${encodeURIComponent(next)}`}
+            variant="secondary"
+            size="sm"
+            rel="nofollow"
+          >
+            Sign in
+          </Button>
+          <Button href="/pro" variant="ghost" size="sm">
+            See Pro
+          </Button>
+        </div>
+      </div>
+    )}
+    <slot />
+  </div>
+</div>
+
+<style>
+  .acct {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: var(--space-6);
+  }
+  .acct__nav :global(.acct__nav-title) {
+    display: none;
+  }
+  .acct__nav ul {
+    display: flex;
+    gap: var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .acct__nav a {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    color: var(--ink-3);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .acct__nav a:hover {
+    color: var(--ink);
+  }
+  .acct__nav a[aria-current='page'] {
+    border-bottom-color: var(--ink);
+    color: var(--ink);
+  }
+  .acct__main {
+    min-width: 0;
+  }
+  .acct__notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-6);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .acct__notice strong {
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+  }
+  .acct__notice-actions {
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  @media (min-width: 1024px) {
+    .acct {
+      grid-template-columns: 180px minmax(0, 1fr);
+      column-gap: var(--space-12);
+      padding-top: var(--space-12);
+    }
+    .acct__nav {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-8));
+      align-self: start;
+    }
+    .acct__nav :global(.acct__nav-title) {
+      display: flex;
+      margin-bottom: var(--space-4);
+    }
+    .acct__nav ul {
+      flex-direction: column;
+      gap: 2px;
+      border-bottom: 0;
+    }
+    .acct__nav a {
+      width: 100%;
+      height: 34px;
+      margin: 0;
+      padding: 0 var(--space-3);
+      border: 0;
+      border-radius: var(--radius-sm);
+    }
+    .acct__nav a[aria-current='page'] {
+      background: var(--fill);
+    }
+    .acct__notice {
+      margin-top: 0;
+    }
+  }
+</style>

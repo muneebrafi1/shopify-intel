@@ -27,7 +27,15 @@ const sections: PlaceholderSection[] = LAYOUT.map(([type, height]) => {
 });
 const height = y;
 const svg = renderPlaceholderSvg(
-  { seed: 'methodology-example', label: 'Example store', device: 'desktop', pageType: 'home', width: WIDTH, height, sections },
+  {
+    seed: 'methodology-example',
+    label: 'Example store',
+    device: 'desktop',
+    pageType: 'home',
+    width: WIDTH,
+    height,
+    sections,
+  },
   { outputWidth: 480 },
 );
 const src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -39,33 +47,42 @@ const pad = (n: number) => String(n).padStart(2, '0');
   <div class="plate__grid">
     <div class="plate__stage marks">
       <div class="plate__page">
-        <img src={src} width={480} height={Math.round((height / WIDTH) * 480)} alt="" loading="lazy" decoding="async" />
-        {
-          sections.map((s, i) => (
-            <span class="plate__slice" style={`top:${pct(s.y)};height:${pct(s.height)}`} aria-hidden="true">
-              {s.height >= 300 && <span class="plate__tag">{pad(i + 1)}</span>}
-            </span>
-          ))
-        }
+        <img
+          src={src}
+          width={480}
+          height={Math.round((height / WIDTH) * 480)}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+        {sections.map((s, i) => (
+          <span
+            class="plate__slice"
+            style={`top:${pct(s.y)};height:${pct(s.height)}`}
+            aria-hidden="true"
+          >
+            {s.height >= 300 && <span class="plate__tag">{pad(i + 1)}</span>}
+          </span>
+        ))}
       </div>
     </div>
     <ol class="plate__legend">
-      {
-        sections.map((s, i) => (
-          <li>
-            <span class="plate__n">{pad(i + 1)}</span>
-            <span class="plate__name">{sectionTypeName(s.type)}</span>
-            <span class="plate__px">
-              {s.y}–{s.y + s.height}
-            </span>
-          </li>
-        ))
-      }
+      {sections.map((s, i) => (
+        <li>
+          <span class="plate__n">{pad(i + 1)}</span>
+          <span class="plate__name">{sectionTypeName(s.type)}</span>
+          <span class="plate__px">
+            {s.y}–{s.y + s.height}
+          </span>
+        </li>
+      ))}
     </ol>
   </div>
   <figcaption class="plate__caption">
     <span>Home page, desktop, sliced into {sections.length} sections.</span>
-    <span class="plate__mono">Diagram · drawn layout, not a capture · positions in CSS px at 1440 wide</span>
+    <span class="plate__mono">
+      Diagram · drawn layout, not a capture · positions in CSS px at 1440 wide
+    </span>
   </figcaption>
 </figure>
 

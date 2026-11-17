@@ -69,3 +69,35 @@ export async function recordClick(db: Db, linkId: number, day: string): Promise<
     [linkId, day],
   );
 }
+
+const BOT_UA = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|headless/i;
+
+/**
+ * /go/<id>: logs one anonymous click for today (GET only, not for obvious bots or link
+ * previews) and 302s to the affiliate URL. Unknown or inactive links 404. Never indexed.
+ */
+export async function affiliateRedirect(
+  db: Db,
+  idParam: string | undefined,
+  request: Request,
+  now: Date = new Date(),
+): Promise<Response> {
+  const headers = { 'X-Robots-Tag': 'noindex, nofollow', 'Cache-Control': 'no-store' };
+  const id = Number(idParam);
+  const url = Number.isInteger(id) && id > 0 ? await linkTarget(db, id) : null;
+  if (!url) {
+    return new Response('Link not found', {
+      status: 404,
+      headers: { ...headers, 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
+  if (request.method === 'GET' && !BOT_UA.test(request.headers.get('user-agent') ?? '')) {
+    try {
+      await recordClick(db, id, now.toISOString().slice(0, 10));
+    } catch (err) {
+      // Counting must never block the visitor.
+      console.error('[go] click not recorded', err);
+    }
+  }
+  return new Response(null, { status: 302, headers: { ...headers, Location: url } });
+}

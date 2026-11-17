@@ -6,12 +6,17 @@
  * numbers match what /api/v1 returns. Returns null when it can't be read; pages then fall back
  * to wording without numbers rather than inventing any.
  */
+import { api } from '~/server/api';
 import type { DataMeta } from '~/server/api/v1/schemas/misc';
 
 export type { DataMeta };
 
 export async function loadMeta(): Promise<DataMeta | null> {
-  // TODO(api): wire to the in-process client once src/server/api/v1 exposes it, e.g.
-  //   const api = await getApi(); return (await api.getMeta()).data;
-  return null;
+  try {
+    const { data } = await api.getMeta();
+    return data;
+  } catch (err) {
+    console.error('loadMeta failed', err);
+    return null;
+  }
 }

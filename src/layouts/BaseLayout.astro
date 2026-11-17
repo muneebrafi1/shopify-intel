@@ -7,6 +7,8 @@ import '~/styles/base.css';
 import fontUrl from '@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url';
 import { SITE_NAME, SITE_TAGLINE, SHOW_CAPTURE_PREVIEW_NOTICE } from '~/config/site';
 import PreviewNotice from '~/components/site/PreviewNotice.astro';
+import { api } from '~/server/api';
+import { formatDate } from '~/lib/format';
 import Header from '~/components/site/Header.astro';
 import Footer from '~/components/site/Footer.astro';
 
@@ -38,9 +40,28 @@ const {
   jsonLd,
   chrome = 'full',
   bodyClass,
-  navCounts,
-  dataNote,
 } = Astro.props;
+
+// Live chrome data (nav superscript counts, footer data line) from the same API the pages use.
+// Cached per isolate by the API layer; failures (e.g. prerender without D1) degrade silently.
+let navCounts = Astro.props.navCounts;
+let dataNote = Astro.props.dataNote;
+if (chrome === 'full' && (!navCounts || !dataNote)) {
+  try {
+    const { data: meta } = await api.getMeta({});
+    const c = meta.counts;
+    navCounts ??= {
+      '/stores': c.stores_scanned,
+      '/themes': c.themes,
+      '/apps': c.apps,
+      '/sections': c.sections,
+      '/teardowns': c.teardowns,
+    };
+    dataNote ??= `${c.stores_scanned.toLocaleString('en-US')} stores scanned · ${c.stores_curated} curated · data as of ${formatDate(meta.data_as_of)}`;
+  } catch {
+    /* chrome renders without live numbers */
+  }
+}
 
 const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} — ${SITE_TAGLINE}`;
 const canonicalUrl = new URL(canonical ?? Astro.url.pathname, Astro.site ?? Astro.url).href;

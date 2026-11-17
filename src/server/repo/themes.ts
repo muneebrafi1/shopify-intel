@@ -154,7 +154,9 @@ function themeWhere(p: ListThemesParams, omit: ReadonlyArray<'vendor' | 'price_b
     const fts = ftsPrefixQuery(p.q);
     if (!fts) where.push('0');
     else {
-      where.push("t.slug IN (SELECT ref FROM search_index WHERE search_index MATCH ? AND kind = 'theme')");
+      where.push(
+        "t.slug IN (SELECT ref FROM search_index WHERE search_index MATCH ? AND kind = 'theme')",
+      );
       params.push(fts);
     }
   }
@@ -280,7 +282,8 @@ export async function similarThemes(
     ),
   ]);
   const topApps = new Map<number, Set<number>>();
-  for (const u of usage) topApps.set(u.theme_id, (topApps.get(u.theme_id) ?? new Set()).add(u.app_id));
+  for (const u of usage)
+    topApps.set(u.theme_id, (topApps.get(u.theme_id) ?? new Set()).add(u.app_id));
   const mine = topApps.get(theme.id) ?? new Set<number>();
   type Reason = ThemeDetail['similar'][number]['reasons'][number];
   const scored = all
@@ -293,7 +296,11 @@ export async function similarThemes(
       }
       const a = theme.price_cents;
       const b = t.price_cents;
-      if (a !== null && b !== null && (a === b || (a > 0 && b > 0 && Math.abs(a - b) <= 0.2 * Math.max(a, b)))) {
+      if (
+        a !== null &&
+        b !== null &&
+        (a === b || (a > 0 && b > 0 && Math.abs(a - b) <= 0.2 * Math.max(a, b)))
+      ) {
         reasons.push('similar-price');
         score += 2;
       }
@@ -360,54 +367,65 @@ export async function getThemeDetail(
 ): Promise<ThemeDetail> {
   const row = await findTheme(ctx, slug);
   if (!row) throw notFound(`Theme '${slug}'`);
-  const [[item], versions, curated, stores, topApps, byType, samples, similar, presets, tags, comparisons] =
-    await Promise.all([
-      hydrateThemes(ctx, [row]),
-      ctx.db.all<{ version: string | null; stores: number }>(
-        `SELECT current_theme_version AS version, COUNT(*) AS stores FROM stores
+  const [
+    [item],
+    versions,
+    curated,
+    stores,
+    topApps,
+    byType,
+    samples,
+    similar,
+    presets,
+    tags,
+    comparisons,
+  ] = await Promise.all([
+    hydrateThemes(ctx, [row]),
+    ctx.db.all<{ version: string | null; stores: number }>(
+      `SELECT current_theme_version AS version, COUNT(*) AS stores FROM stores
          WHERE current_theme_id = ? AND status = 'active'
          GROUP BY current_theme_version ORDER BY stores DESC, version DESC`,
-        [row.id],
-      ),
-      curatedShots(ctx, row.id),
-      themeStores(ctx, row.id, opts.storesLimit),
-      ctx.db.all<AppRefRow & { stores: number }>(
-        `SELECT u.store_count AS stores, ${APP_REF_COLS}
+      [row.id],
+    ),
+    curatedShots(ctx, row.id),
+    themeStores(ctx, row.id, opts.storesLimit),
+    ctx.db.all<AppRefRow & { stores: number }>(
+      `SELECT u.store_count AS stores, ${APP_REF_COLS}
          FROM theme_app_usage u
          JOIN apps a ON a.id = u.app_id AND a.status = 'active'
          LEFT JOIN app_categories ac ON ac.id = a.category_id
          WHERE u.theme_id = ? ORDER BY u.store_count DESC, a.slug LIMIT 12`,
-        [row.id],
-      ),
-      ctx.db.all<{ section_type: string; count: number }>(
-        `SELECT s.section_type, COUNT(*) AS count FROM sections s
+      [row.id],
+    ),
+    ctx.db.all<{ section_type: string; count: number }>(
+      `SELECT s.section_type, COUNT(*) AS count FROM sections s
          JOIN stores st ON st.id = s.store_id AND st.status = 'active'
          JOIN section_types ty ON ty.slug = s.section_type
          WHERE s.theme_id = ? AND s.is_current = 1
          GROUP BY s.section_type ORDER BY MIN(ty.position)`,
-        [row.id],
-      ),
-      sectionCards(
-        ctx,
-        `s.id IN (SELECT id FROM (
+      [row.id],
+    ),
+    sectionCards(
+      ctx,
+      `s.id IN (SELECT id FROM (
            SELECT x.id, ROW_NUMBER() OVER (PARTITION BY x.section_type ORDER BY x.device, x.id) AS rn
            FROM sections x WHERE x.theme_id = ? AND x.is_current = 1
              AND x.section_type NOT IN ('announcement-bar', 'breadcrumbs')
          ) WHERE rn = 1)`,
-        [row.id],
-        `ORDER BY (SELECT position FROM section_types WHERE slug = s.section_type) LIMIT ${Math.max(0, Math.floor(opts.sectionsLimit ?? 12))}`,
-      ),
-      similarThemes(ctx, row),
-      ctx.db.all<{ slug: string; name: string }>(
-        'SELECT slug, name FROM theme_presets WHERE theme_id = ? ORDER BY name',
-        [row.id],
-      ),
-      ctx.db.all<{ kind: 'style' | 'industry'; tag: string }>(
-        'SELECT kind, tag FROM theme_tags WHERE theme_id = ? ORDER BY tag',
-        [row.id],
-      ),
-      comparisonLinks(ctx, { kind: 'theme', entityId: row.id, limit: 12 }),
-    ]);
+      [row.id],
+      `ORDER BY (SELECT position FROM section_types WHERE slug = s.section_type) LIMIT ${Math.max(0, Math.floor(opts.sectionsLimit ?? 12))}`,
+    ),
+    similarThemes(ctx, row),
+    ctx.db.all<{ slug: string; name: string }>(
+      'SELECT slug, name FROM theme_presets WHERE theme_id = ? ORDER BY name',
+      [row.id],
+    ),
+    ctx.db.all<{ kind: 'style' | 'industry'; tag: string }>(
+      'SELECT kind, tag FROM theme_tags WHERE theme_id = ? ORDER BY tag',
+      [row.id],
+    ),
+    comparisonLinks(ctx, { kind: 'theme', entityId: row.id, limit: 12 }),
+  ]);
   if (!item) throw notFound(`Theme '${slug}'`);
   return {
     theme: item,

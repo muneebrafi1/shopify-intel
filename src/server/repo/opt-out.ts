@@ -50,5 +50,7 @@ export async function optOutStore(
 export async function isTombstoned(db: Db, domainInput: string): Promise<boolean> {
   const domain = normalizeDomain(domainInput);
   if (!domain) return false;
-  return (await db.first('SELECT 1 AS x FROM store_tombstones WHERE domain = ?', [domain])) !== null;
+  return (
+    (await db.first('SELECT 1 AS x FROM store_tombstones WHERE domain = ?', [domain])) !== null
+  );
 }

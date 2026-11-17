@@ -41,4 +41,6 @@ _(see the end of the session summary; mirrored here when the session ends)_
 ## Gotchas
 - Astro ≥6 removed `Astro.locals.runtime`; use `import { env } from 'cloudflare:workers'`.
 - Lazy images need a definite box before load (see `SectionCrop`), or they never load.
-- `npm run setup` resets the local D1; restart the dev server afterwards.
+- `npm run setup` resets the local D1; restart the dev server afterwards (otherwise D1 queries
+  fail with SQLITE_CANTOPEN). Astro 7 runs `astro dev` as a managed background process:
+  use `npx astro dev status` / `npx astro dev stop` (killing by command line doesn't work).
