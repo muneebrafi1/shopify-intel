@@ -1,0 +1,296 @@
+---
+import AdminLayout from '~/layouts/AdminLayout.astro';
+import { requireAdmin } from '~/server/admin/page';
+import AdminHeader from '~/components/admin/AdminHeader.astro';
+import FlashNotice from '~/components/admin/FlashNotice.astro';
+import StatusPill from '~/components/admin/StatusPill.astro';
+import Button from '~/components/ui/Button.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Input from '~/components/ui/Input.astro';
+import Pagination from '~/components/ui/Pagination.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import { adminDb } from '~/server/admin/env';
+import {
+  getMeta,
+  getStoreFilterOptions,
+  listStores,
+  PAGE_SIZE,
+  STORE_SORTS,
+  type StoreFilters,
+  type StoreSort,
+} from '~/server/admin/queries';
+import { hrefWith, shortDate } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
+
+const sp = Astro.url.searchParams;
+const pick = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined =>
+  value && (allowed as readonly string[]).includes(value) ? (value as T) : undefined;
+
+const params = {
+  q: (sp.get('q') ?? '').trim().slice(0, 100),
+  status: pick(sp.get('status'), ['active', 'hidden', 'opted_out'] as const),
+  curated: pick(sp.get('curated'), ['yes', 'no'] as const),
+  captured: pick(sp.get('captured'), ['yes', 'placeholder', 'no'] as const),
+  theme: (sp.get('theme') ?? '').slice(0, 80),
+  app: (sp.get('app') ?? '').slice(0, 80),
+  sort: pick(sp.get('sort'), Object.keys(STORE_SORTS) as StoreSort[]),
+};
+const page = Math.max(1, Number.parseInt(sp.get('p') ?? '1', 10) || 1);
+const filters: StoreFilters = {
+  q: params.q || undefined,
+  status: params.status,
+  curated: params.curated ? params.curated === 'yes' : undefined,
+  captured: params.captured,
+  theme: params.theme || undefined,
+  app: params.app || undefined,
+  sort: params.sort,
+  page,
+};
+
+const db = adminDb();
+const [{ rows, total, page: current }, options, meta] = await Promise.all([
+  listStores(db, filters),
+  getStoreFilterOptions(db),
+  getMeta(db),
+]);
+const query = { ...params, curated: params.curated, sort: params.sort };
+const hrefFor = (p: number) => hrefWith('/admin/stores', { ...query, p: p > 1 ? p : undefined });
+const filtered = Object.entries(params).some(([k, v]) => k !== 'sort' && !!v);
+
+const SORT_LABELS: Record<StoreSort, string> = {
+  rank: 'Rank',
+  recent: 'Last seen',
+  apps: 'Most apps',
+  domain: 'Domain A–Z',
+  updated: 'Recently edited',
+};
+const captureLabel = (r: (typeof rows)[number]) =>
+  r.is_captured
+    ? 'Captured'
+    : r.placeholder_shots > 0
+      ? `Preview · ${r.placeholder_shots}`
+      : 'None';
+---
+
+<AdminLayout title="Stores" section="stores">
+  <AdminHeader
+    title="Stores"
+    count={total}
+    countLabel="stores"
+    trail={[{ label: 'Stores' }]}
+    description="Every store in the database, including hidden and opted-out ones."
+  />
+  <FlashNotice />
+
+  <form
+    method="get"
+    action="/admin/stores"
+    id="store-filters"
+    class="a-filters"
+    role="search"
+    aria-label="Filter stores"
+  >
+    <div class="a-filters__search">
+      <label for="f-q" class="visually-hidden">
+        Search domain or name
+      </label>
+      <Icon name="magnifying-glass" size={16} />
+      <Input
+        id="f-q"
+        name="q"
+        type="search"
+        value={params.q}
+        placeholder="Search domain or name"
+        autocomplete="off"
+      />
+    </div>
+    <label class="a-filters__field">
+      <span class="visually-hidden">Status</span>
+      <Input as="select" name="status" data-autosubmit class={params.status ? 'is-set' : undefined}>
+        <option value="">Status</option>
+        <option value="active" selected={params.status === 'active'}>
+          Active
+        </option>
+        <option value="hidden" selected={params.status === 'hidden'}>
+          Hidden
+        </option>
+        <option value="opted_out" selected={params.status === 'opted_out'}>
+          Opted out
+        </option>
+      </Input>
+    </label>
+    <label class="a-filters__field">
+      <span class="visually-hidden">Curated</span>
+      <Input
+        as="select"
+        name="curated"
+        data-autosubmit
+        class={params.curated ? 'is-set' : undefined}
+      >
+        <option value="">Curated</option>
+        <option value="yes" selected={params.curated === 'yes'}>
+          Curated only
+        </option>
+        <option value="no" selected={params.curated === 'no'}>
+          Not curated
+        </option>
+      </Input>
+    </label>
+    <label class="a-filters__field">
+      <span class="visually-hidden">Captures</span>
+      <Input
+        as="select"
+        name="captured"
+        data-autosubmit
+        class={params.captured ? 'is-set' : undefined}
+      >
+        <option value="">Captures</option>
+        <option value="yes" selected={params.captured === 'yes'}>
+          Captured
+        </option>
+        <option value="placeholder" selected={params.captured === 'placeholder'}>
+          Preview only
+        </option>
+        <option value="no" selected={params.captured === 'no'}>
+          No captures
+        </option>
+      </Input>
+    </label>
+    <label class="a-filters__field">
+      <span class="visually-hidden">Theme</span>
+      <Input as="select" name="theme" data-autosubmit class={params.theme ? 'is-set' : undefined}>
+        <option value="">Theme</option>
+        {options.themes.map((t) => (
+          <option value={t.value} selected={params.theme === t.value}>
+            {t.label} ({t.count})
+          </option>
+        ))}
+      </Input>
+    </label>
+    <label class="a-filters__field">
+      <span class="visually-hidden">App</span>
+      <Input as="select" name="app" data-autosubmit class={params.app ? 'is-set' : undefined}>
+        <option value="">App</option>
+        {options.apps.map((a) => (
+          <option value={a.value} selected={params.app === a.value}>
+            {a.label} ({a.count})
+          </option>
+        ))}
+      </Input>
+    </label>
+    <div class="a-filters__actions">
+      <Button type="submit" size="sm" variant="primary" class="a-filters__apply">
+        Apply
+      </Button>
+      {filtered && (
+        <Button href="/admin/stores" size="sm" variant="ghost" icon="x">
+          Clear
+        </Button>
+      )}
+    </div>
+  </form>
+
+  <div class="a-result">
+    <p class="a-mono a-muted">
+      {total.toLocaleString('en-US')} {total === 1 ? 'store' : 'stores'}
+      {filtered ? ' match' : ''} · data as of {shortDate(meta.dataAsOf)}
+    </p>
+    <label class="a-sort">
+      <span class="a-mono a-muted">Sort</span>
+      <Input as="select" name="sort" form="store-filters" data-autosubmit>
+        {(Object.keys(SORT_LABELS) as StoreSort[]).map((key) => (
+          <option value={key} selected={(params.sort ?? 'rank') === key}>
+            {SORT_LABELS[key]}
+          </option>
+        ))}
+      </Input>
+    </label>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table a-table stores">
+      <thead>
+        <tr>
+          <th scope="col">Store</th>
+          <th scope="col">Theme</th>
+          <th scope="col" class="is-num">
+            Apps
+          </th>
+          <th scope="col">Captures</th>
+          <th scope="col">Status</th>
+          <th scope="col">Last seen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.length === 0 ? (
+          <tr>
+            <td colspan="6" class="a-empty-cell">
+              No stores match these filters.{' '}
+              <a class="a-link" href="/admin/stores">
+                Clear filters
+              </a>
+            </td>
+          </tr>
+        ) : (
+          rows.map((r) => (
+            <tr>
+              <td>
+                <span class="a-cell-main">
+                  <StoreMark domain={r.domain} name={r.name} size={24} />
+                  <span>
+                    <a href={`/admin/stores/${r.domain}`} class="a-row-link">
+                      {r.name ?? r.domain}
+                    </a>
+                    {r.is_curated ? <span class="tag">Curated</span> : null}
+                    {r.name && <span class="a-sub">{r.domain}</span>}
+                  </span>
+                </span>
+              </td>
+              <td>
+                {r.theme_name ?? r.current_theme_name ?? <span class="a-muted">—</span>}
+                {r.current_theme_version && (
+                  <span class="a-sub a-mono">{r.current_theme_version}</span>
+                )}
+              </td>
+              <td class="is-num">{r.app_count}</td>
+              <td
+                class:list={[
+                  'a-nowrap',
+                  { 'a-muted': !r.is_captured && r.placeholder_shots === 0 },
+                ]}
+              >
+                {captureLabel(r)}
+              </td>
+              <td>
+                <StatusPill status={r.status} variant="dot" />
+              </td>
+              <td class="a-nowrap a-muted">{shortDate(r.last_seen)}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </div>
+  <Pagination page={current} pageSize={PAGE_SIZE} total={total} hrefFor={hrefFor} noun="stores" />
+</AdminLayout>
+
+<style>
+  .stores td:first-child {
+    min-width: 220px;
+  }
+  .tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: var(--radius-xs);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    line-height: 16px;
+    text-transform: uppercase;
+  }
+</style>

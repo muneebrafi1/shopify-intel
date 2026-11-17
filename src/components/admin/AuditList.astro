@@ -1,0 +1,163 @@
+---
+/** Recent admin activity: what changed, by whom, when (reads `admin_audit`). */
+import type { AuditRow } from '~/server/admin/queries';
+import { AUDIT_LABELS } from '~/server/admin/audit';
+import { fullTime, timeAgo } from '~/server/admin/format';
+
+interface Props {
+  rows: AuditRow[];
+  /** Hide the target column (e.g. on a store page, where every row is that store). */
+  hideTarget?: boolean;
+  empty?: string;
+}
+const { rows, hideTarget = false, empty = 'No admin activity yet.' } = Astro.props;
+const now = new Date();
+
+const FIELD_LABELS: Record<string, string> = {
+  is_curated: 'curated',
+  category_slug: 'category',
+  category_id: 'category',
+  price_label: 'price',
+  program_id: 'program',
+};
+const show = (v: unknown) => (v === null || v === undefined || v === '' ? '—' : String(v));
+
+function summary(row: AuditRow): string {
+  if (!row.detail_json) return '';
+  let detail: Record<string, unknown>;
+  try {
+    detail = JSON.parse(row.detail_json) as Record<string, unknown>;
+  } catch {
+    return '';
+  }
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(detail)) {
+    const label = FIELD_LABELS[key] ?? key.replace(/_/g, ' ');
+    if (Array.isArray(value) && value.length === 2)
+      parts.push(`${label} ${show(value[0])} → ${show(value[1])}`);
+    else if (['kind', 'scope', 'objects', 'note', 'reference'].includes(key) && value !== null) {
+      parts.push(`${label} ${show(value)}`);
+    }
+  }
+  return parts.slice(0, 3).join(' · ');
+}
+
+function target(row: AuditRow): { text: string; href?: string } | null {
+  const id = row.target_id;
+  if (!id) return null;
+  switch (row.target_type) {
+    case 'store':
+      return { text: id, href: `/admin/stores/${encodeURIComponent(id)}` };
+    case 'removal':
+      return { text: `Request #${id}`, href: `/admin/removals/${encodeURIComponent(id)}` };
+    case 'theme':
+      return { text: id, href: `/admin/themes?q=${encodeURIComponent(id)}` };
+    case 'app':
+      return { text: id, href: `/admin/apps?q=${encodeURIComponent(id)}` };
+    case 'teardown':
+      return { text: id, href: '/admin/teardowns' };
+    case 'affiliate_link':
+      return { text: `Link #${id}`, href: `/admin/affiliates?edit=${encodeURIComponent(id)}#edit` };
+    case 'affiliate_program':
+      return { text: `Program #${id}`, href: '/admin/affiliates' };
+    case 'client':
+      // Salted IP hash for sign-in attempts: not useful to show.
+      return null;
+    default:
+      return { text: id };
+  }
+}
+---
+
+{rows.length === 0 ? (
+  <p class="audit-empty">{empty}</p>
+) : (
+  <ol class="audit">
+    {rows.map((row) => {
+      const t = hideTarget ? null : target(row);
+      const s = summary(row);
+      return (
+        <li class:list={['audit__row', { 'audit__row--warn': row.action.endsWith('_failed') }]}>
+          <time class="audit__time" datetime={row.created_at} title={fullTime(row.created_at)}>
+            {timeAgo(row.created_at, now)}
+          </time>
+          <div class="audit__body">
+            <p class="audit__what">
+              <span class="audit__action">{AUDIT_LABELS[row.action] ?? row.action}</span>
+              {t &&
+                (t.href ? (
+                  <a href={t.href}>{t.text}</a>
+                ) : (
+                  <span class="audit__target">{t.text}</span>
+                ))}
+            </p>
+            <p class="audit__meta">
+              {row.actor}
+              {s && <> · {s}</>}
+            </p>
+          </div>
+        </li>
+      );
+    })}
+  </ol>
+)}
+
+<style>
+  .audit {
+    border-top: 1px solid var(--line);
+  }
+  .audit__row {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .audit__time {
+    padding-top: 2px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .audit__what {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 6px;
+    font-size: var(--text-sm);
+  }
+  .audit__action {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .audit__what a,
+  .audit__target {
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+  .audit__what a {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .audit__what a:hover {
+    color: var(--ink);
+  }
+  .audit__meta {
+    margin-top: 1px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+  .audit__row--warn .audit__action {
+    color: var(--critical);
+  }
+  .audit-empty {
+    padding: var(--space-6) 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+</style>

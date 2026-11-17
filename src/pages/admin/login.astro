@@ -1,0 +1,283 @@
+---
+/**
+ * Admin sign-in. Three states, decided by env (see src/server/auth/config.ts):
+ *   password → the form below (local/dev); Access → explanation (production);
+ *   locked → "Admin is not configured" (503), never open by default.
+ * The middleware already ran the Origin check for the POST and set the auth state.
+ */
+import AdminLayout from '~/layouts/AdminLayout.astro';
+import Logo from '~/components/site/Logo.astro';
+import Button from '~/components/ui/Button.astro';
+import Field from '~/components/ui/Field.astro';
+import Input from '~/components/ui/Input.astro';
+import Notice from '~/components/ui/Notice.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Icon from '~/components/ui/Icon.astro';
+import { adminAuthConfig, adminDb, adminEnv } from '~/server/admin/env';
+import { readForm } from '~/server/admin/forms';
+import { readFlash } from '~/server/admin/flash';
+import { secretsEqual } from '~/server/auth/crypto';
+import { safeNextPath, sessionCookieName, sessionCookieOptions } from '~/server/auth/guard';
+import { SESSION_TTL_SECONDS, signSession } from '~/server/auth/session';
+import { hashClientIp, loginAttemptStatement, loginRateLimit } from '~/server/auth/rate-limit';
+
+const url = Astro.url;
+const next = safeNextPath(url.searchParams.get('next'), url.origin);
+const isPost = Astro.request.method === 'POST';
+
+// Already signed in: go where they were heading.
+if (Astro.locals.admin) return Astro.redirect(next, isPost ? 303 : 302);
+
+const config = adminAuthConfig();
+let status = 200;
+let error: string | null = null;
+
+if (config.mode === 'locked') {
+  status = 503;
+} else if (config.mode === 'access') {
+  // Reaching this page means the request carried no valid Access token.
+  status = 403;
+} else if (isPost) {
+  const db = adminDb();
+  const now = new Date();
+  const ipHash = await hashClientIp(
+    Astro.request.headers.get('cf-connecting-ip'),
+    adminEnv().IP_HASH_SALT || config.secret,
+  );
+  const limit = await loginRateLimit(db, ipHash, now);
+  if (limit.blocked) {
+    status = 429;
+    const minutes = Math.max(1, Math.ceil(limit.retryAfter / 60));
+    error = `Too many attempts. Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`;
+    Astro.response.headers.set('Retry-After', String(limit.retryAfter));
+  } else {
+    let password = '';
+    try {
+      const value = (await readForm(Astro.request, 4096)).get('password');
+      password = typeof value === 'string' ? value.slice(0, 256) : '';
+    } catch {
+      password = '';
+    }
+    if (password && (await secretsEqual(password, config.password))) {
+      const { token } = await signSession(
+        { secret: config.secret, password: config.password },
+        now,
+      );
+      Astro.cookies.set(
+        sessionCookieName(url),
+        token,
+        sessionCookieOptions(url, SESSION_TTL_SECONDS),
+      );
+      await db.batch([loginAttemptStatement(true, ipHash, now)]);
+      return Astro.redirect(next, 303);
+    }
+    await db.batch([loginAttemptStatement(false, ipHash, now)]);
+    status = 401;
+    error = 'That password is not correct.';
+  }
+}
+
+Astro.response.status = status;
+const flash = readFlash(url);
+const state =
+  config.mode === 'locked' ? 'not-configured' : config.mode === 'access' ? 'access' : 'password';
+---
+
+<AdminLayout title={config.mode === 'locked' ? 'Admin is not configured' : 'Sign in'} bare>
+  <section class="login" data-admin-state={state}>
+    <a href="/" class="login__brand" aria-label="Back to the public site">
+      <Logo size="sm" />
+      <span class="admin-brand__tag">Admin</span>
+    </a>
+
+    {state === 'password' && (
+      <>
+        <MonoLabel as="p" class="login__label">
+          Restricted area
+        </MonoLabel>
+        <h1 class="login__title display">Sign in to the admin</h1>
+        <p class="login__lede">
+          Stores, removals, scans and affiliate links. Sessions last 12 hours.
+        </p>
+
+        {error && (
+          <Notice tone="critical" class="login__notice">
+            {error}
+          </Notice>
+        )}
+        {!error && flash && (
+          <Notice tone={flash.tone} class="login__notice">
+            {flash.text}
+          </Notice>
+        )}
+
+        <form method="post" class="login__form" novalidate={false}>
+          <input type="text" name="username" value="admin" autocomplete="username" hidden />
+          <Field label="Password" for="admin-password">
+            <Input
+              id="admin-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              maxlength={256}
+              autofocus
+              aria-invalid={error ? 'true' : undefined}
+            />
+          </Field>
+          <Button type="submit" variant="primary" size="lg" full>
+            Sign in
+          </Button>
+        </form>
+        <p class="login__foot">In production this page is replaced by Cloudflare Access.</p>
+      </>
+    )}
+
+    {state === 'access' && (
+      <>
+        <MonoLabel as="p" class="login__label">
+          Cloudflare Access
+        </MonoLabel>
+        <h1 class="login__title display">Sign in through Access</h1>
+        <p class="login__lede">
+          This admin is protected by Cloudflare Access. Your request did not carry a valid Access
+          sign-in, so it was refused here.
+        </p>
+        <ul class="login__steps">
+          <li>Open the admin on the production domain, where Access asks you to sign in.</li>
+          <li>
+            If you just signed in, your Access session may have expired. Reload to sign in again.
+          </li>
+        </ul>
+        <Button href="/admin" variant="primary" size="lg" full>
+          Open the admin
+        </Button>
+      </>
+    )}
+
+    {state === 'not-configured' && (
+      <>
+        <MonoLabel as="p" class="login__label" tone="accent">
+          Locked
+        </MonoLabel>
+        <h1 class="login__title display">Admin is not configured</h1>
+        <p class="login__lede">
+          No sign-in method is set up, so the admin stays locked. It is never open by default.
+        </p>
+        {config.mode === 'locked' && (
+          <Notice tone="caution" class="login__notice">
+            {config.reason}
+          </Notice>
+        )}
+        <dl class="login__env">
+          <div>
+            <dt>Production</dt>
+            <dd>
+              <code>CF_ACCESS_TEAM_DOMAIN</code> and <code>CF_ACCESS_AUD</code> as Wrangler secrets
+            </dd>
+          </div>
+          <div>
+            <dt>Local</dt>
+            <dd>
+              <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code> in{' '}
+              <code>.dev.vars</code>, then restart the dev server
+            </dd>
+          </div>
+        </dl>
+      </>
+    )}
+
+    <a href="/" class="login__back">
+      <Icon name="arrow-left" size={14} /> Back to the site
+    </a>
+  </section>
+</AdminLayout>
+
+<style>
+  .login {
+    width: 100%;
+    max-width: 380px;
+  }
+  .login__brand {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-12);
+  }
+  .login__label {
+    margin-bottom: var(--space-3);
+  }
+  .login__title {
+    font-size: var(--text-4xl);
+    line-height: 1.05;
+  }
+  .login__lede {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+  }
+  :global(.login__notice) {
+    margin-top: var(--space-6);
+  }
+  .login__form {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+  }
+  .login__foot {
+    margin-top: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .login__steps {
+    margin: var(--space-5) 0 var(--space-6);
+    padding-left: 1.1em;
+    list-style: disc;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .login__steps li + li {
+    margin-top: var(--space-1-5);
+  }
+  .login__env {
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .login__env > div {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .login__env dt {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: 2px;
+  }
+  .login__env dd {
+    color: var(--ink-2);
+  }
+  .login__env code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .login__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: var(--space-10);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .login__back:hover {
+    color: var(--ink);
+  }
+</style>

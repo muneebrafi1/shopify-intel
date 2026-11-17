@@ -1,0 +1,346 @@
+---
+import AdminLayout from '~/layouts/AdminLayout.astro';
+import { requireAdmin } from '~/server/admin/page';
+import AdminHeader from '~/components/admin/AdminHeader.astro';
+import AuditList from '~/components/admin/AuditList.astro';
+import FlashNotice from '~/components/admin/FlashNotice.astro';
+import Metrics from '~/components/admin/Metrics.astro';
+import Button from '~/components/ui/Button.astro';
+import Count from '~/components/ui/Count.astro';
+import { adminDb } from '~/server/admin/env';
+import {
+  getJobStatusCounts,
+  getMeta,
+  getOverviewCounts,
+  getPendingRemovals,
+  getAuthSummary,
+  getRecentAudit,
+} from '~/server/admin/queries';
+import { fullTime, shortDate, timeAgo } from '~/server/admin/format';
+
+const denied = requireAdmin(Astro);
+if (denied) return denied;
+
+const db = adminDb();
+const [c, meta, jobs, pending, audit] = await Promise.all([
+  getOverviewCounts(db),
+  getMeta(db),
+  getJobStatusCounts(db),
+  getPendingRemovals(db, 6),
+  getRecentAudit(db, { limit: 12, excludeAuth: true }),
+]);
+const auth = await getAuthSummary(db, new Date());
+const pendingTotal =
+  (
+    await db.first<{ n: number }>(
+      "SELECT COUNT(*) AS n FROM removal_requests WHERE status = 'pending'",
+    )
+  )?.n ?? 0;
+const now = new Date();
+const asOf = shortDate(meta.dataAsOf);
+
+const metrics = [
+  {
+    label: 'Stores',
+    value: c.stores,
+    note: `${c.storesActive.toLocaleString('en-US')} active · ${c.storesHidden} hidden · ${c.storesOptedOut} opted out`,
+    href: '/admin/stores',
+  },
+  {
+    label: 'Curated',
+    value: c.curated,
+    note: 'Hand-picked for the library',
+    href: '/admin/stores?curated=yes',
+  },
+  {
+    label: 'Captured',
+    value: c.captured,
+    note: `${c.realShots.toLocaleString('en-US')} real screenshots in storage`,
+    href: '/admin/stores?captured=yes',
+  },
+  {
+    label: 'Captures pending',
+    value: c.placeholderShots,
+    note: `Layout previews on ${c.placeholderStores} ${c.placeholderStores === 1 ? 'store' : 'stores'}`,
+    href: '/admin/stores?captured=placeholder',
+  },
+  {
+    label: 'Themes',
+    value: c.themes,
+    note: `${c.themesActive} visible on the site`,
+    href: '/admin/themes',
+  },
+  {
+    label: 'Apps',
+    value: c.apps,
+    note: `${c.appsFull} full profiles · ${c.appsActive} visible`,
+    href: '/admin/apps',
+  },
+];
+const jobCells = [
+  { status: 'queued', label: 'Queued', n: jobs.queued },
+  { status: 'running', label: 'Running', n: jobs.running },
+  { status: 'failed', label: 'Failed', n: jobs.failed },
+  { status: 'done', label: 'Done', n: jobs.done },
+] as const;
+const dataRows = [
+  { label: 'Data as of', value: asOf },
+  { label: 'Data version', value: meta.dataVersion ?? '—', mono: true },
+  { label: 'Detection rules', value: meta.rulesVersion ?? '—', mono: true },
+  { label: 'Stores scanned', value: (meta.scannedTotal ?? 0).toLocaleString('en-US') },
+  { label: 'Opt-out tombstones', value: c.tombstones.toLocaleString('en-US') },
+  { label: 'Teardowns', value: `${c.teardownsPublished} published of ${c.teardowns}` },
+  { label: 'Affiliate links', value: `${c.linksActive} active` },
+];
+const SCOPE: Record<string, string> = {
+  store: 'Whole store',
+  screenshots: 'Screenshots',
+  details: 'Details',
+};
+---
+
+<AdminLayout title="Overview" section="overview">
+  <AdminHeader title="Overview" description={meta.sourceLabel ? `${meta.sourceLabel}.` : undefined}>
+    {pendingTotal > 0 && (
+      <Fragment slot="actions">
+        <Button href="/admin/removals" variant="primary" size="sm" icon="flag">
+          {`Review ${pendingTotal} ${pendingTotal === 1 ? 'removal' : 'removals'}`}
+        </Button>
+      </Fragment>
+    )}
+  </AdminHeader>
+  <FlashNotice />
+
+  <Metrics
+    items={metrics}
+    source={`Source: database · data as of ${asOf}${meta.dataVersion ? ` · version ${meta.dataVersion}` : ''}`}
+  />
+
+  <div class="a-split a-block">
+    <div>
+      <section aria-labelledby="queue-removals">
+        <div class="a-block__head">
+          <div>
+            <h2 class="a-h2" id="queue-removals">
+              Removal requests
+              <Count value={pendingTotal} label="pending" />
+            </h2>
+            <p class="a-block__desc">
+              Oldest first. Store owners file these from the opt-out page.
+            </p>
+          </div>
+          <a href="/admin/removals" class="a-link a-nowrap">
+            All requests
+          </a>
+        </div>
+        {pending.length === 0 ? (
+          <p class="quiet-empty">
+            Nothing waiting. New requests from the opt-out page appear here.
+          </p>
+        ) : (
+          <div class="table-wrap">
+            <table class="table a-table">
+              <thead>
+                <tr>
+                  <th scope="col">Reference</th>
+                  <th scope="col">Store</th>
+                  <th scope="col">Scope</th>
+                  <th scope="col">Received</th>
+                  <th scope="col" class="is-actions">
+                    <span class="visually-hidden">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pending.map((r) => (
+                  <tr>
+                    <td class="a-mono a-nowrap">{r.reference}</td>
+                    <td>
+                      <span class="a-strong a-nowrap">{r.domain}</span>
+                      <span class="a-sub">
+                        {r.store_id ? (r.store_name ?? 'In the library') : 'Not in the library'}
+                      </span>
+                    </td>
+                    <td class="a-nowrap">{SCOPE[r.scope] ?? r.scope}</td>
+                    <td class="a-nowrap" title={fullTime(r.created_at)}>
+                      {timeAgo(r.created_at, now)}
+                    </td>
+                    <td class="is-actions">
+                      <Button href={`/admin/removals/${r.id}`} size="sm" variant="secondary">
+                        Review
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section class="a-block" aria-labelledby="queue-scans">
+        <div class="a-block__head">
+          <div>
+            <h2 class="a-h2" id="queue-scans">
+              Scan and capture queue
+            </h2>
+            <p class="a-block__desc">Jobs wait here until the external crawler picks them up.</p>
+          </div>
+          <a href="/admin/scans" class="a-link a-nowrap">
+            Open queue
+          </a>
+        </div>
+        <ul class="jobs">
+          {jobCells.map((j) => (
+            <li>
+              <a
+                href={`/admin/scans?status=${j.status}`}
+                class:list={['jobs__cell', `jobs__cell--${j.status}`, { 'is-zero': j.n === 0 }]}
+              >
+                <span class="jobs__label">{j.label}</span>
+                <span class="jobs__n num">{j.n.toLocaleString('en-US')}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="a-block" aria-labelledby="data-info">
+        <div class="a-block__head">
+          <h2 class="a-h2" id="data-info">
+            Data
+          </h2>
+        </div>
+        <dl class="a-spec">
+          {dataRows.map((row) => (
+            <div class="a-spec__row">
+              <dt>{row.label}</dt>
+              <dd class:list={[{ 'a-mono': row.mono }]}>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    </div>
+
+    <section aria-labelledby="activity">
+      <div class="a-block__head">
+        <h2 class="a-h2" id="activity">
+          Recent activity
+        </h2>
+      </div>
+      <AuditList
+        rows={audit}
+        empty="No changes yet. Edits, queued jobs and removal decisions appear here."
+      />
+      <p class="security">
+        <span class="security__label">Sign-ins</span>
+        <span>
+          {auth.lastSignIn ? (
+            <span title={fullTime(auth.lastSignIn)}>Last {timeAgo(auth.lastSignIn, now)}</span>
+          ) : (
+            'None yet'
+          )}
+          {' · '}
+          {auth.signIns24h} in 24 h{' · '}
+          <span class:list={{ security__warn: auth.failed24h > 0 }}>{auth.failed24h} failed</span>
+        </span>
+      </p>
+    </section>
+  </div>
+</AdminLayout>
+
+<style>
+  .jobs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 640px) {
+    .jobs {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .jobs li {
+    border-bottom: 1px solid var(--line);
+  }
+  .jobs li + li {
+    border-left: 1px solid var(--line);
+  }
+  @media (max-width: 639px) {
+    .jobs li:nth-child(3) {
+      border-left: 0;
+    }
+  }
+  .jobs__cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .jobs__cell:hover {
+    background: color-mix(in srgb, var(--fill) 60%, transparent);
+  }
+  .jobs__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .jobs__label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--ink-4);
+  }
+  .jobs__cell--queued:not(.is-zero) .jobs__label::before {
+    background: var(--caution);
+  }
+  .jobs__cell--running:not(.is-zero) .jobs__label::before {
+    background: var(--ink);
+  }
+  .jobs__cell--failed:not(.is-zero) .jobs__label::before {
+    background: var(--critical);
+  }
+  .jobs__cell--done:not(.is-zero) .jobs__label::before {
+    background: var(--positive);
+  }
+  .jobs__n {
+    font-size: var(--text-2xl);
+    line-height: 1;
+    letter-spacing: var(--tracking-tight);
+  }
+  .is-zero .jobs__n {
+    color: var(--ink-3);
+  }
+  .security {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-3);
+    margin-top: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .security__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .security__warn {
+    color: var(--critical);
+  }
+  .quiet-empty {
+    padding: var(--space-5) 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+</style>

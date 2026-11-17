@@ -1,0 +1,169 @@
+---
+/** The admin navigation list. Rendered in the desktop sidebar and in the mobile menu. */
+import Icon from '~/components/ui/Icon.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import type { IconName } from '~/components/ui/icons';
+
+export type AdminSection =
+  'overview' | 'stores' | 'themes' | 'apps' | 'removals' | 'scans' | 'teardowns' | 'affiliates';
+
+interface Item {
+  key: AdminSection;
+  href: string;
+  label: string;
+  icon: IconName;
+  count?: number;
+  /** Count needs someone's attention (shown in the accent colour). */
+  attention?: boolean;
+}
+
+interface Props {
+  current: AdminSection;
+  pendingRemovals: number;
+  openJobs: number;
+  /** Distinguishes the two instances (sidebar / mobile menu) for ids. */
+  variant: 'side' | 'menu';
+}
+const { current, pendingRemovals, openJobs, variant } = Astro.props;
+
+const groups: Array<{ label: string | null; items: Item[] }> = [
+  { label: null, items: [{ key: 'overview', href: '/admin', label: 'Overview', icon: 'house' }] },
+  {
+    label: 'Library',
+    items: [
+      { key: 'stores', href: '/admin/stores', label: 'Stores', icon: 'storefront' },
+      { key: 'themes', href: '/admin/themes', label: 'Themes', icon: 'paint-brush' },
+      { key: 'apps', href: '/admin/apps', label: 'Apps', icon: 'puzzle-piece' },
+    ],
+  },
+  {
+    label: 'Queues',
+    items: [
+      {
+        key: 'removals',
+        href: '/admin/removals',
+        label: 'Removals',
+        icon: 'flag',
+        count: pendingRemovals,
+        attention: pendingRemovals > 0,
+      },
+      {
+        key: 'scans',
+        href: '/admin/scans',
+        label: 'Scan jobs',
+        icon: 'arrow-clockwise',
+        count: openJobs,
+      },
+    ],
+  },
+  {
+    label: 'Content',
+    items: [
+      { key: 'teardowns', href: '/admin/teardowns', label: 'Teardowns', icon: 'article' },
+      { key: 'affiliates', href: '/admin/affiliates', label: 'Affiliates', icon: 'link-simple' },
+    ],
+  },
+];
+---
+
+<div class:list={['anav', `anav--${variant}`]}>
+  {groups.map((group, gi) => (
+    <div class="anav__group">
+      {group.label && (
+        <MonoLabel as="p" bullet={false} class="anav__label" id={`anav-${variant}-${gi}`}>
+          {group.label}
+        </MonoLabel>
+      )}
+      <ul aria-labelledby={group.label ? `anav-${variant}-${gi}` : undefined}>
+        {group.items.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              class="anav__link"
+              aria-current={item.key === current ? 'page' : undefined}
+            >
+              <Icon name={item.icon} size={16} />
+              <span class="anav__text">{item.label}</span>
+              {typeof item.count === 'number' && item.count > 0 && (
+                <span
+                  class:list={['anav__count', { 'anav__count--attention': item.attention }]}
+                  aria-label={`${item.count} open`}
+                >
+                  {item.count.toLocaleString('en-US')}
+                </span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</div>
+
+<style>
+  .anav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .anav__label {
+    padding: 0 var(--space-2) var(--space-1-5);
+  }
+  .anav__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 34px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .anav__link :global(.icon) {
+    color: var(--ink-3);
+  }
+  .anav__link:hover {
+    background: var(--fill);
+    color: var(--ink);
+  }
+  .anav__link[aria-current='page'] {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow:
+      0 0 0 1px var(--line),
+      0 1px 2px rgb(25 24 22 / 0.04);
+  }
+  .anav__link[aria-current='page'] :global(.icon) {
+    color: var(--ink);
+  }
+  .anav__text {
+    flex: 1;
+    min-width: 0;
+  }
+  .anav__count {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .anav__count--attention {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--accent-text);
+  }
+  .anav__count--attention::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+  }
+  .anav--menu .anav__link {
+    height: 44px;
+    font-size: var(--text-md);
+  }
+</style>

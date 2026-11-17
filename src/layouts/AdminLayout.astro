@@ -1,0 +1,719 @@
+---
+/**
+ * Shell for the protected admin: compact left navigation on desktop, a top bar with a menu on
+ * mobile. Same tokens and components as the public site, denser and quieter (Linear-like).
+ * Always noindex; the middleware also sends X-Robots-Tag and Cache-Control: no-store.
+ */
+import '~/styles/base.css';
+import fontUrl from '@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url';
+import { SITE_NAME } from '~/config/site';
+import Logo from '~/components/site/Logo.astro';
+import Icon from '~/components/ui/Icon.astro';
+import AdminNav, { type AdminSection } from '~/components/admin/AdminNav.astro';
+import { adminDb } from '~/server/admin/env';
+import { getNavCounts } from '~/server/admin/queries';
+import { fullTime } from '~/server/admin/format';
+
+interface Props {
+  /** Page title (without "Admin" or the brand). */
+  title: string;
+  section?: AdminSection;
+  /** Bare shell for the sign-in page (no navigation). */
+  bare?: boolean;
+}
+const { title, section = 'overview', bare = false } = Astro.props;
+const session = Astro.locals.admin;
+const counts =
+  !bare && session ? await getNavCounts(adminDb()) : { pendingRemovals: 0, openJobs: 0 };
+const sectionLabel: Record<AdminSection, string> = {
+  overview: 'Overview',
+  stores: 'Stores',
+  themes: 'Themes',
+  apps: 'Apps',
+  removals: 'Removals',
+  scans: 'Scan jobs',
+  teardowns: 'Teardowns',
+  affiliates: 'Affiliates',
+};
+const sessionNote = session
+  ? session.method === 'access'
+    ? `Cloudflare Access · until ${fullTime(new Date(session.expiresAt * 1000).toISOString())}`
+    : `Password session · until ${fullTime(new Date(session.expiresAt * 1000).toISOString())}`
+  : '';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{`${title} · Admin · ${SITE_NAME}`}</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="same-origin" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
+    <meta name="theme-color" content="#fcfbf9" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      // App icons come from the App Store CDN and can fail: drop them so the monogram shows.
+      document.addEventListener(
+        'error',
+        (event) => {
+          const el = event.target;
+          if (el instanceof HTMLImageElement && el.closest('.app-icon')) el.remove();
+        },
+        true,
+      );
+    </script>
+  </head>
+  <body class:list={['admin', { 'admin--bare': bare }]}>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
+    {bare ? (
+      <main id="main" tabindex="-1" class="admin-bare">
+        <slot />
+      </main>
+    ) : (
+      <div class="admin-shell">
+        <aside class="admin-side" aria-label="Admin">
+          <div class="admin-side__inner">
+            <a href="/admin" class="admin-brand" aria-label="Admin overview">
+              <Logo size="sm" />
+              <span class="admin-brand__tag">Admin</span>
+            </a>
+            <nav class="admin-side__nav" aria-label="Admin sections">
+              <AdminNav
+                current={section}
+                pendingRemovals={counts.pendingRemovals}
+                openJobs={counts.openJobs}
+                variant="side"
+              />
+            </nav>
+            <div class="admin-side__foot">
+              <a href="/" class="admin-side__site">
+                View public site <Icon name="arrow-up-right" size={14} />
+              </a>
+              {session && (
+                <div class="admin-session">
+                  <p class="admin-session__who" title={session.actor}>
+                    {session.actor}
+                  </p>
+                  <p class="admin-session__note">{sessionNote}</p>
+                  <form method="post" action="/admin/logout">
+                    <button type="submit" class="admin-signout">
+                      <Icon name="sign-out" size={14} /> Sign out
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        <header class="admin-top">
+          <a href="/admin" class="admin-brand" aria-label="Admin overview">
+            <Logo size="sm" wordmark={false} />
+            <span class="admin-brand__tag">Admin</span>
+          </a>
+          <span class="admin-top__section" aria-hidden="true">
+            {sectionLabel[section]}
+          </span>
+          <details class="admin-menu" data-admin-menu>
+            <summary class="admin-menu__button" aria-label="Open admin menu">
+              <Icon name="list" size={20} />
+              {counts.pendingRemovals > 0 && <span class="admin-menu__dot" aria-hidden="true" />}
+            </summary>
+            <div class="admin-menu__panel">
+              <nav aria-label="Admin sections">
+                <AdminNav
+                  current={section}
+                  pendingRemovals={counts.pendingRemovals}
+                  openJobs={counts.openJobs}
+                  variant="menu"
+                />
+              </nav>
+              <div class="admin-menu__foot">
+                <a href="/" class="admin-side__site">
+                  View public site <Icon name="arrow-up-right" size={14} />
+                </a>
+                {session && (
+                  <form method="post" action="/admin/logout">
+                    <button type="submit" class="admin-signout">
+                      <Icon name="sign-out" size={14} /> Sign out
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+          </details>
+        </header>
+
+        <main id="main" tabindex="-1" class="admin-main">
+          <div class="admin-content">
+            <slot />
+          </div>
+        </main>
+      </div>
+    )}
+
+    <script>
+      // Progressive enhancements only; every form works without JS.
+      document.addEventListener('submit', (event) => {
+        const form = event.target as HTMLFormElement;
+        const message = form.dataset.confirm;
+        if (message && !window.confirm(message)) event.preventDefault();
+      });
+      document.addEventListener('change', (event) => {
+        const el = event.target as HTMLElement;
+        if (el instanceof HTMLSelectElement && el.dataset.autosubmit !== undefined)
+          el.form?.requestSubmit();
+      });
+      // Close the mobile menu with Escape or a click outside it.
+      const menu = document.querySelector<HTMLDetailsElement>('[data-admin-menu]');
+      if (menu) {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && menu.open) {
+            menu.open = false;
+            menu.querySelector('summary')?.focus();
+          }
+        });
+        document.addEventListener('click', (e) => {
+          if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+        });
+      }
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  /* ---------- Shell ---------- */
+  body.admin {
+    --admin-side-w: 240px;
+    --admin-top-h: 52px;
+    background: var(--bg);
+  }
+  .admin-shell {
+    min-height: 100dvh;
+  }
+  .admin-side {
+    display: none;
+  }
+  .admin-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .admin-brand__tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 2px 6px;
+    border-radius: var(--radius-xs);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+
+  /* Mobile top bar */
+  .admin-top {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: var(--admin-top-h);
+    padding: 0 var(--page-gutter);
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    backdrop-filter: saturate(1.2) blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .admin-top__section {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-2);
+    font-weight: var(--weight-medium);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line);
+  }
+  .admin-menu {
+    margin-left: auto;
+  }
+  .admin-menu__button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-right: -8px;
+    border-radius: var(--radius-pill);
+    list-style: none;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .admin-menu__button::-webkit-details-marker {
+    display: none;
+  }
+  .admin-menu__button:hover,
+  .admin-menu[open] .admin-menu__button {
+    background: var(--fill);
+  }
+  .admin-menu__dot {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+  }
+  .admin-menu:not([open]) .admin-menu__panel {
+    display: none;
+  }
+  .admin-menu__panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--admin-top-h);
+    max-height: calc(100dvh - var(--admin-top-h));
+    overflow-y: auto;
+    padding: var(--space-4) var(--page-gutter) var(--space-6);
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 16px 32px rgb(25 24 22 / 0.08);
+  }
+  .admin-menu__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+
+  .admin-side__site {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .admin-side__site:hover {
+    color: var(--ink);
+  }
+  .admin-signout {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    background: var(--surface);
+  }
+  .admin-signout:hover {
+    background: var(--fill);
+    color: var(--ink);
+  }
+
+  .admin-main:focus {
+    outline: none;
+  }
+  .admin-content {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding: var(--space-6) var(--page-gutter) var(--space-16);
+  }
+
+  @media (min-width: 1024px) {
+    .admin-shell {
+      display: grid;
+      grid-template-columns: var(--admin-side-w) minmax(0, 1fr);
+    }
+    .admin-top {
+      display: none;
+    }
+    .admin-side {
+      display: block;
+      border-right: 1px solid var(--line);
+      background: color-mix(in srgb, var(--fill) 45%, var(--bg));
+    }
+    .admin-side__inner {
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+      height: 100dvh;
+      padding: var(--space-4) var(--space-3);
+      overflow-y: auto;
+    }
+    .admin-side__inner > .admin-brand {
+      height: 36px;
+      padding: 0 var(--space-2);
+    }
+    .admin-side__nav {
+      flex: 1;
+    }
+    .admin-side__foot {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-2) var(--space-1);
+      border-top: 1px solid var(--line);
+    }
+    .admin-session {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .admin-session__who {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .admin-session__note {
+      color: var(--ink-3);
+      font-size: var(--text-xs);
+      margin-bottom: var(--space-2);
+    }
+    .admin-session form {
+      align-self: flex-start;
+    }
+    .admin-content {
+      padding: var(--space-8) var(--space-10) var(--space-20);
+    }
+  }
+
+  /* Bare shell (sign-in) */
+  .admin-bare {
+    display: grid;
+    min-height: 100dvh;
+    place-items: center;
+    padding: var(--space-10) var(--page-gutter);
+  }
+
+  /* ---------- Building blocks shared by admin pages ---------- */
+  .a-block {
+    margin-top: var(--space-10);
+  }
+  .a-block:first-child {
+    margin-top: 0;
+  }
+  .a-h2 {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+  }
+  .a-block__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+  .a-block__desc {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .a-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10) var(--space-10);
+  }
+  @media (min-width: 1180px) {
+    .a-split {
+      grid-template-columns: minmax(0, 1fr) 320px;
+    }
+    .a-split--even {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    }
+  }
+
+  /* Filter bar: search + compact select pills, all URL state (GET form). */
+  .a-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+    padding-bottom: var(--space-4);
+  }
+  .a-filters__search {
+    position: relative;
+    flex: 1 1 100%;
+  }
+  .a-filters__search .icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .a-filters .a-filters__search input.input {
+    height: 36px;
+    padding-left: 34px;
+    font-size: var(--text-sm);
+  }
+  .a-filters select.input {
+    width: auto;
+    max-width: 168px;
+    height: 32px;
+    padding-left: 12px;
+    padding-right: 30px;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface);
+    background-position: right 10px center;
+    background-size: 12px;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--ink-2);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .a-filters select.input.is-set {
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .a-filters__field {
+    display: contents;
+  }
+  .a-filters__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  @media (min-width: 768px) {
+    .a-filters__search {
+      flex: 0 1 280px;
+    }
+  }
+  /* With JS the selects submit on change, so the Apply button is only a fallback. */
+  html.js .a-filters .a-filters__apply,
+  html.js .a-nojs-only {
+    display: none;
+  }
+  .a-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .a-sort select.input {
+    width: auto;
+    height: 28px;
+    padding: 0 26px 0 0;
+    background-color: transparent;
+    background-position: right 4px center;
+    background-size: 12px;
+    box-shadow: none;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .a-result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--line);
+  }
+
+  /* Dense admin tables (on top of the shared .table). The wrapper is positioned so that
+     visually-hidden header labels (absolute) stay inside its scroll box on small screens. */
+  body.admin .table-wrap {
+    position: relative;
+  }
+  .a-table {
+    font-size: var(--text-sm);
+  }
+  .a-table th {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: 450;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding-top: var(--space-2);
+  }
+  .a-table td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .a-table th:last-child,
+  .a-table td:last-child {
+    padding-right: 0;
+  }
+  .a-table .is-actions {
+    text-align: right;
+    white-space: nowrap;
+  }
+  .a-table .is-actions > * + * {
+    margin-left: var(--space-1);
+  }
+  .a-table .is-actions form {
+    display: inline-block;
+  }
+  .a-cell-main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2-5, 10px);
+    min-width: 0;
+  }
+  .a-cell-main > span:last-child {
+    min-width: 0;
+  }
+  .a-strong {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .a-sub {
+    display: block;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .a-mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: -0.01em;
+  }
+  .a-muted {
+    color: var(--ink-3);
+  }
+  .a-nowrap {
+    white-space: nowrap;
+  }
+  @media (max-width: 639px) {
+    .a-hide-sm {
+      display: none;
+    }
+  }
+  .a-truncate {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.a-link {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  a.a-link:hover {
+    text-decoration-color: currentColor;
+  }
+  a.a-row-link {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  a.a-row-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .a-empty-cell {
+    padding: var(--space-8) 0 !important;
+    color: var(--ink-3);
+    text-align: center;
+  }
+
+  /* Forms */
+  .a-form {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .a-form__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  @media (min-width: 640px) {
+    .a-form__row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .a-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding-top: var(--space-1);
+  }
+  /* Spec rows: mono label left, value right (replaces key/value cards). */
+  .a-spec {
+    border-top: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .a-spec__row {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .a-spec__row dt {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: 3px;
+  }
+  .a-spec__row dd {
+    min-width: 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  textarea.input.input--short {
+    min-height: 72px;
+  }
+  .a-panel {
+    padding: var(--space-5);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .a-inline-form {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+  }
+  .a-inline-form select.input {
+    width: auto;
+    height: 30px;
+    padding: 0 30px 0 12px;
+    border-radius: var(--radius-pill);
+    background-position: right 10px center;
+    background-size: 12px;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  /* The row being edited in a table (paired with an edit panel above it). */
+  .a-table tr.is-editing {
+    background: var(--fill);
+  }
+  .a-table tr.is-editing > td:first-child {
+    box-shadow: inset 2px 0 0 var(--accent);
+    padding-left: var(--space-3);
+  }
+  .a-quiet-empty {
+    padding: var(--space-6) 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+</style>
