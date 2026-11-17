@@ -1,0 +1,327 @@
+---
+/**
+ * Affiliate programs and links. Links are public referral URLs (data, not secrets): the public
+ * site only ever exposes /go/<id>, which counts the click per day and redirects.
+ */
+import AdminLayout from '~/layouts/AdminLayout.astro';
+import AdminHeader from '~/components/admin/AdminHeader.astro';
+import FlashNotice from '~/components/admin/FlashNotice.astro';
+import StatusPill from '~/components/admin/StatusPill.astro';
+import Button from '~/components/ui/Button.astro';
+import Checkbox from '~/components/ui/Checkbox.astro';
+import Count from '~/components/ui/Count.astro';
+import Field from '~/components/ui/Field.astro';
+import Input from '~/components/ui/Input.astro';
+import { adminDb } from '~/server/admin/env';
+import { createLink, PROGRAM_STATUSES, updateLink, updateProgramStatus } from '~/server/admin/actions';
+import { checkbox, httpsUrl, int, optionalText, text } from '~/server/admin/forms';
+import { idParam, runAction } from '~/server/admin/page';
+import { getLink, getLinkTargetOptions, listLinks, listPrograms } from '~/server/admin/queries';
+import { fullTime, timeAgo } from '~/server/admin/format';
+
+const editId = idParam(Astro.url.searchParams.get('edit'));
+const creating = Astro.url.searchParams.get('new') === '1';
+
+if (Astro.request.method === 'POST') {
+  return runAction(Astro, async (form, ctx) => {
+    const intent = text(form, 'intent', 20);
+    if (intent === 'program') {
+      const id = int(form, 'id');
+      return id === null ? { ok: false, flash: 'bad_request' } : { ...(await updateProgramStatus(ctx, id, text(form, 'status', 40))), redirect: '/admin/affiliates#programs' };
+    }
+    const input = {
+      url: httpsUrl(form, 'url'),
+      label: optionalText(form, 'label', 80),
+      programId: int(form, 'program_id'),
+      active: checkbox(form, 'active'),
+    };
+    if (intent === 'update') {
+      const id = int(form, 'id');
+      if (id === null) return { ok: false, flash: 'bad_request' };
+      const result = await updateLink(ctx, id, input);
+      return { ...result, redirect: result.ok ? '/admin/affiliates' : `/admin/affiliates?edit=${id}#edit` };
+    }
+    if (intent === 'create') {
+      const result = await createLink(ctx, { ...input, target: text(form, 'target', 100) });
+      return { ...result, redirect: result.ok ? '/admin/affiliates' : '/admin/affiliates?new=1#edit' };
+    }
+    return { ok: false, flash: 'bad_request' };
+  });
+}
+
+const db = adminDb();
+const now = new Date();
+const [links, programs] = await Promise.all([listLinks(db, now), listPrograms(db)]);
+const editing = editId !== null ? await getLink(db, editId) : null;
+const options = editing || creating ? await getLinkTargetOptions(db) : null;
+const activeLinks = links.filter((l) => l.active).length;
+const clicks30 = links.reduce((sum, l) => sum + l.clicks_30d, 0);
+const statusOptions = (current: string) =>
+  (PROGRAM_STATUSES as readonly string[]).includes(current) ? PROGRAM_STATUSES : [current, ...PROGRAM_STATUSES];
+const humanize = (s: string) => s.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+const TYPE: Record<string, string> = { app: 'App', theme: 'Theme', vendor: 'Vendor' };
+const targetHref = (l: (typeof links)[number]) =>
+  l.target_type === 'app' && l.target_slug
+    ? `/admin/apps?q=${encodeURIComponent(l.target_slug)}`
+    : l.target_type === 'theme' && l.target_slug
+      ? `/admin/themes?q=${encodeURIComponent(l.target_slug)}`
+      : null;
+---
+
+<AdminLayout title="Affiliates" section="affiliates">
+  <AdminHeader
+    title="Affiliates"
+    trail={[{ label: 'Affiliates' }]}
+    description={`${activeLinks} active links, ${clicks30.toLocaleString('en-US')} clicks in the last 30 days. The site only shows /go/<id>; clicks are counted per day with no visitor data.`}
+  >
+    <Fragment slot="actions">
+      <Button href="/admin/affiliates?new=1#edit" variant="primary" size="sm" icon="plus">
+        Add link
+      </Button>
+    </Fragment>
+  </AdminHeader>
+  <FlashNotice />
+
+  {
+    (editing || creating) && options && (
+      <section class="edit a-panel" id="edit" aria-labelledby="edit-title">
+        <div class="a-block__head">
+          <div>
+            <h2 class="a-h2" id="edit-title">
+              {editing ? `Edit link for ${editing.target_name}` : 'Add an affiliate link'}
+            </h2>
+            <p class="a-block__desc">
+              {editing ? (
+                <>
+                  Served at <span class="a-mono">/go/{editing.id}</span>. Changing the URL takes effect on the next click.
+                </>
+              ) : (
+                'The link appears on the target’s page with an affiliate label next to the button.'
+              )}
+            </p>
+          </div>
+          <a class="a-link" href="/admin/affiliates">
+            Close
+          </a>
+        </div>
+        <form method="post" class="a-form">
+          <input type="hidden" name="intent" value={editing ? 'update' : 'create'} />
+          {editing && <input type="hidden" name="id" value={editing.id} />}
+          {!editing && (
+            <Field label="Target" for="l-target" hint="The app, theme or theme vendor the link points to.">
+              <Input as="select" id="l-target" name="target" required>
+                <option value="">Choose…</option>
+                <optgroup label="Apps">
+                  {options.apps.map((o) => (
+                    <option value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Themes">
+                  {options.themes.map((o) => (
+                    <option value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Theme vendors">
+                  {options.vendors.map((o) => (
+                    <option value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+              </Input>
+            </Field>
+          )}
+          <Field label="Referral URL" for="l-url" hint="Full https:// URL from the affiliate network.">
+            <Input id="l-url" name="url" type="url" required maxlength={2000} value={editing?.url ?? ''} class="mono-input" />
+          </Field>
+          <div class="a-form__row">
+            <Field label="Disclosure label" for="l-label" optional hint="Shown under the button. Defaults to “Affiliate link”.">
+              <Input id="l-label" name="label" maxlength={80} value={editing?.label ?? 'Affiliate link'} />
+            </Field>
+            <Field label="Program" for="l-program" optional>
+              <Input as="select" id="l-program" name="program_id">
+                <option value="">No program</option>
+                {options.programs.map((o) => (
+                  <option value={o.value} selected={editing?.program_id !== null && String(editing?.program_id) === o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </Input>
+            </Field>
+          </div>
+          <Checkbox name="active" checked={editing ? !!editing.active : true} label="Active" hint="Inactive links fall back to the plain official link." />
+          <div class="a-form__actions">
+            <Button type="submit" variant="primary" size="sm">
+              {editing ? 'Save link' : 'Add link'}
+            </Button>
+            <Button href="/admin/affiliates" variant="ghost" size="sm">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </section>
+    )
+  }
+
+  <section aria-labelledby="links">
+    <div class="a-block__head">
+      <h2 class="a-h2" id="links">Links<Count value={links.length} /></h2>
+    </div>
+    <div class="table-wrap">
+      <table class="table a-table">
+        <thead>
+          <tr>
+            <th scope="col">Target</th>
+            <th scope="col">Program</th>
+            <th scope="col">URL</th>
+            <th scope="col" class="is-num">30 days</th>
+            <th scope="col" class="is-num">All time</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="is-actions"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            links.length === 0 ? (
+              <tr>
+                <td colspan="7" class="a-empty-cell">
+                  No affiliate links yet.
+                </td>
+              </tr>
+            ) : (
+              links.map((l) => {
+                const href = targetHref(l);
+                return (
+                  <tr class:list={{ 'is-editing': l.id === editId }}>
+                    <td class="target">
+                      <span class="type">{TYPE[l.target_type]}</span>
+                      {href ? (
+                        <a class="a-row-link" href={href}>
+                          {l.target_name}
+                        </a>
+                      ) : (
+                        <span class="a-strong">{l.target_name}</span>
+                      )}
+                      {!l.target_id && l.target_type !== 'vendor' && <span class="a-sub">No profile yet</span>}
+                    </td>
+                    <td class="a-muted">{l.program_name ?? '—'}</td>
+                    <td class="url">
+                      <span class="a-mono a-truncate" title={l.url}>
+                        {l.url.replace(/^https:\/\//, '')}
+                      </span>
+                      <span class="a-sub" title={fullTime(l.updated_at)}>
+                        /go/{l.id} · edited {timeAgo(l.updated_at, now)}
+                      </span>
+                    </td>
+                    <td class="is-num">{l.clicks_30d.toLocaleString('en-US')}</td>
+                    <td class="is-num a-muted">{l.clicks_total.toLocaleString('en-US')}</td>
+                    <td>
+                      <StatusPill status={l.active ? 'active' : 'off'} label={l.active ? 'Active' : 'Off'} variant="dot" />
+                    </td>
+                    <td class="is-actions">
+                      <Button href={`/admin/affiliates?edit=${l.id}#edit`} size="sm" variant="ghost" icon="pencil-simple" label={`Edit link for ${l.target_name}`} />
+                    </td>
+                  </tr>
+                );
+              })
+            )
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="a-block" aria-labelledby="programs">
+    <div class="a-block__head">
+      <div>
+        <h2 class="a-h2" id="programs">Programs<Count value={programs.length} /></h2>
+        <p class="a-block__desc">Application status per partner program. Approved first.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table a-table">
+        <thead>
+          <tr>
+            <th scope="col">Program</th>
+            <th scope="col">Network</th>
+            <th scope="col" class="is-num">Links</th>
+            <th scope="col" class="is-num">Clicks</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            programs.map((p) => (
+              <tr>
+                <td class="a-strong">{p.name}</td>
+                <td class="a-muted">{p.network ?? '—'}</td>
+                <td class="is-num">
+                  {p.active_links}
+                  {p.links !== p.active_links && <span class="a-muted"> / {p.links}</span>}
+                </td>
+                <td class="is-num">{p.clicks.toLocaleString('en-US')}</td>
+                <td>
+                  <form method="post" class="a-inline-form">
+                    <input type="hidden" name="intent" value="program" />
+                    <input type="hidden" name="id" value={p.id} />
+                    <label class="visually-hidden" for={`p-${p.id}`}>
+                      Status for {p.name}
+                    </label>
+                    <Input as="select" id={`p-${p.id}`} name="status" data-autosubmit class:list={['program-status', `is-${p.status}`]}>
+                      {statusOptions(p.status).map((s) => (
+                        <option value={s} selected={s === p.status}>
+                          {humanize(s)}
+                        </option>
+                      ))}
+                    </Input>
+                    <Button type="submit" size="sm" variant="secondary" class="a-nojs-only">
+                      Save
+                    </Button>
+                  </form>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</AdminLayout>
+
+<style>
+  .edit {
+    margin-bottom: var(--space-10);
+  }
+  :global(.mono-input) {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm) !important;
+  }
+  .target {
+    min-width: 220px;
+  }
+  .type {
+    display: inline-block;
+    min-width: 46px;
+    margin-right: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .target .a-sub {
+    padding-left: 52px;
+  }
+  .url {
+    max-width: 320px;
+    min-width: 200px;
+  }
+  .is-editing {
+    background: var(--accent-wash);
+  }
+  :global(select.program-status) {
+    min-width: 170px;
+  }
+  :global(select.program-status.is-approved) {
+    color: var(--positive);
+    font-weight: var(--weight-medium);
+  }
+</style>

@@ -818,6 +818,16 @@ export async function listApps(
   return { rows, total, page };
 }
 
+export async function getApp(db: Db, id: number): Promise<AppRow | null> {
+  return db.first<AppRow>(
+    `SELECT a.id, a.slug, a.name, a.developer, a.tagline, a.category_id, c.name AS category_name,
+       a.profile, a.status, st.store_count, a.updated_at
+     FROM apps a LEFT JOIN app_categories c ON c.id = a.category_id
+     LEFT JOIN app_stats st ON st.app_id = a.id WHERE a.id = ?`,
+    [id],
+  );
+}
+
 export async function getAppCategories(db: Db): Promise<Array<Option & { id: number }>> {
   const rows = await db.all<{ id: number; slug: string; name: string }>(
     'SELECT id, slug, name FROM app_categories ORDER BY position, name',
