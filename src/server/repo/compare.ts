@@ -1,4 +1,12 @@
-/** On-demand comparisons (any valid pair) and alternatives. */
+/**
+ * Comparisons and alternatives.
+ *
+ * Owner decision (draft): /compare pages exist only for the curated popular pairs in the
+ * `comparisons` table (top apps per category, top themes, same-vendor themes; built by the seed
+ * and the future ingest), so the site never renders thin long-tail pair pages. Any other pair,
+ * even of two valid apps or themes, is a 404 (`not_curated`). Alternatives still list every
+ * alternative but say whether a comparison page exists (`compare_available`).
+ */
 import { SOURCE_IDS, type Ctx } from '../api/v1/context.ts';
 import { ApiError, notFound } from '../api/v1/errors.ts';
 import { hrefs } from '../api/v1/hrefs.ts';
@@ -18,6 +26,29 @@ import { findTheme, getThemeDetail, hydrateThemes, similarThemes } from './theme
 
 /** Canonical pair slug: alphabetical order. */
 export const canonicalPair = (a: string, b: string) => (a < b ? `${a}-vs-${b}` : `${b}-vs-${a}`);
+
+/** Canonical slugs among `slugs` that are curated comparisons of `kind` (one query). */
+export async function curatedPairs(
+  ctx: Ctx,
+  kind: 'app' | 'theme',
+  slugs: readonly string[],
+): Promise<Set<string>> {
+  if (slugs.length === 0) return new Set();
+  const rows = await ctx.db.all<{ slug: string }>(
+    'SELECT slug FROM comparisons WHERE kind = ? AND slug IN (SELECT value FROM json_each(?))',
+    [kind, jsonIds(slugs)],
+  );
+  return new Set(rows.map((r) => r.slug));
+}
+
+/** True when the canonical pair has a /compare page (it is a curated popular pair). */
+export async function isCuratedComparison(
+  ctx: Ctx,
+  kind: 'app' | 'theme',
+  canonicalSlug: string,
+): Promise<boolean> {
+  return (await curatedPairs(ctx, kind, [canonicalSlug])).has(canonicalSlug);
+}
 
 type Resolved = { kind: 'app'; a: string; b: string } | { kind: 'theme'; a: string; b: string };
 
@@ -166,6 +197,13 @@ function themeMatrix(ctx: Ctx, a: ThemeDetail, b: ThemeDetail): MatrixRow[] {
 export async function getComparison(ctx: Ctx, pair: string): Promise<ComparisonDetail> {
   const resolved = await resolvePair(ctx, pair);
   const canonical = canonicalPair(resolved.a, resolved.b);
+  if (!(await isCuratedComparison(ctx, resolved.kind, canonical))) {
+    throw new ApiError(
+      'not_found',
+      `No comparison page for '${canonical}': only curated popular pairs have one`,
+      { details: [{ path: 'pair', message: 'not_curated' }] },
+    );
+  }
   const [first, second] =
     resolved.a < resolved.b ? [resolved.a, resolved.b] : [resolved.b, resolved.a];
   const base = {
@@ -278,7 +316,14 @@ export async function getAlternatives(
       alternativeApps(ctx, app, 12),
       comparisonLinks(ctx, { kind: 'app', entityId: app.id, limit: 12 }),
     ]);
-    const shared = await coInstallCounts(ctx, app.id, alts);
+    const [shared, curated] = await Promise.all([
+      coInstallCounts(ctx, app.id, alts),
+      curatedPairs(
+        ctx,
+        'app',
+        alts.map((alt) => canonicalPair(app.app_slug, alt.slug)),
+      ),
+    ]);
     return {
       kind: 'app',
       slug: app.app_slug,
@@ -291,6 +336,7 @@ export async function getAlternatives(
         theme: null,
         shared_stores: shared.get(alt.slug) ?? 0,
         compare_href: hrefs.compare(canonicalPair(app.app_slug, alt.slug)),
+        compare_available: curated.has(canonicalPair(app.app_slug, alt.slug)),
         reasons: ['same-category'],
       })),
       comparisons: links,
@@ -303,6 +349,11 @@ export async function getAlternatives(
     similarThemes(ctx, theme, 12),
     comparisonLinks(ctx, { kind: 'theme', entityId: theme.id, limit: 12 }),
   ]);
+  const curated = await curatedPairs(
+    ctx,
+    'theme',
+    similar.map((x) => canonicalPair(theme.slug, x.theme.slug)),
+  );
   return {
     kind: 'theme',
     slug: theme.slug,
@@ -315,6 +366,7 @@ export async function getAlternatives(
       theme: s.theme,
       shared_stores: 0,
       compare_href: hrefs.compare(canonicalPair(theme.slug, s.theme.slug)),
+      compare_available: curated.has(canonicalPair(theme.slug, s.theme.slug)),
       reasons: s.reasons,
     })),
     comparisons: links,

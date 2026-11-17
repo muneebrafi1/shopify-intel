@@ -14,7 +14,9 @@ export const GetComparisonInput = z.object({
   pair: z
     .string()
     .regex(/^[a-z0-9][a-z0-9.-]*-vs-[a-z0-9][a-z0-9.-]*$/)
-    .describe("'<a>-vs-<b>': two app slugs or two theme slugs."),
+    .describe(
+      "'<a>-vs-<b>': two app slugs or two theme slugs. Only curated popular pairs (listComparisons) have a page; others 404.",
+    ),
 });
 
 const CellValue = z.union([z.string(), z.number(), z.boolean(), z.null()]);
@@ -89,7 +91,14 @@ export const AlternativesSchema = named(
         app: AppListItemSchema.nullable(),
         theme: ThemeListItemSchema.nullable(),
         shared_stores: int().describe('Stores running both (apps) or 0 (themes).'),
-        compare_href: z.string(),
+        compare_href: z
+          .string()
+          .describe('Canonical /compare path of the pair. Link it only when compare_available.'),
+        compare_available: z
+          .boolean()
+          .describe(
+            'True when the pair is a curated comparison with a page; other pairs 404 (no thin pages).',
+          ),
         reasons: z.array(z.string()),
       }),
     ),

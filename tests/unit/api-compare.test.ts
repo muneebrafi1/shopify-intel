@@ -5,7 +5,7 @@ const { db, api } = setup();
 afterAll(() => db.close());
 
 describe('compare', () => {
-  it('renders any app pair and canonicalises the order', async () => {
+  it('renders curated pairs and canonicalises the order', async () => {
     const canonical = await api.getComparison({ pair: 'judgeme-vs-loox' });
     expect(canonical.data.is_canonical).toBe(true);
     expect(canonical.data.title).toBe('Judge.me vs Loox');
@@ -64,6 +64,32 @@ describe('compare', () => {
     });
   });
 
+  it('404s valid pairs that are not curated (no thin long-tail pages)', async () => {
+    // Different categories, and a same-category pair outside the top 3 (Bazaarvoice is 5th).
+    for (const pair of ['judgeme-vs-klaviyo', 'bazaarvoice-vs-judgeme', 'judgeme-vs-bazaarvoice']) {
+      await expect(api.getComparison({ pair })).rejects.toMatchObject({
+        status: 404,
+        details: [{ path: 'pair', message: 'not_curated' }],
+      });
+    }
+    // Themes: Dawn and Bespoke are both real themes, but not a curated pair.
+    await expect(api.getComparison({ pair: 'bespoke-vs-dawn' })).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+
+  it('every curated pair renders, in either order', async () => {
+    const { data } = await api.listComparisons({ limit: 200 });
+    expect(data.items.length).toBeGreaterThan(20);
+    for (const c of data.items) {
+      const { data: cmp } = await api.getComparison({ pair: c.slug });
+      expect(cmp.canonical_slug).toBe(c.slug);
+    }
+    const [a, b] = (data.items[0]?.slug ?? '').split('-vs-');
+    const reversed = await api.getComparison({ pair: `${b}-vs-${a}` });
+    expect(reversed.data.is_canonical).toBe(false);
+  });
+
   it('lists popular comparisons: top apps per category and top theme pairs', async () => {
     const { data } = await api.listComparisons();
     const slugs = data.items.map((c) => c.slug);
@@ -90,6 +116,13 @@ describe('alternatives', () => {
     const usage = data.items.map((i) => i.app?.usage.stores ?? 0);
     expect([...usage].sort((a, b) => b - a)).toEqual(usage);
     expect(data.items[0]?.compare_href).toMatch(/^\/compare\/klaviyo-vs-|-vs-klaviyo$/);
+    // Only curated pairs have a page: the flag says which compare links to show.
+    const curated = new Set(
+      (await api.listComparisons({ kind: 'app', limit: 200 })).data.items.map((c) => c.href),
+    );
+    for (const i of data.items) expect(i.compare_available).toBe(curated.has(i.compare_href));
+    expect(data.items.some((i) => i.compare_available)).toBe(true);
+    expect(data.items.some((i) => !i.compare_available)).toBe(true);
   });
 
   it('works for themes', async () => {
@@ -98,6 +131,12 @@ describe('alternatives', () => {
     expect(data.items.map((i) => i.theme?.slug)).toEqual(
       expect.arrayContaining(['impact', 'stretch']),
     );
+    // Impact vs Prestige is a curated pair (top themes).
+    const impact = data.items.find((i) => i.theme?.slug === 'impact');
+    expect(impact).toMatchObject({
+      compare_href: '/compare/impact-vs-prestige',
+      compare_available: true,
+    });
   });
 
   it('has an index', async () => {

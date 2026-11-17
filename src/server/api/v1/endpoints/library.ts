@@ -129,7 +129,7 @@ export const getComparisonEndpoint = defineEndpoint({
   path: '/compare/{pair}',
   summary: 'Compare two apps or two themes',
   description:
-    'Any valid pair renders on demand. When the pair is not in canonical (alphabetical) order, data.is_canonical is false and meta.canonical holds the path to 301 to.',
+    'Curated popular pairs only (the ones listComparisons returns); any other pair is a 404 with details[0].message = "not_curated", so the site has no thin long-tail pages. When the pair is not in canonical (alphabetical) order, data.is_canonical is false and meta.canonical holds the path to 301 to.',
   tags: ['Compare'],
   cache: 'public',
   input: GetComparisonInput,
