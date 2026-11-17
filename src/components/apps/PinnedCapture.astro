@@ -1,0 +1,194 @@
+---
+/**
+ * One section pinned on its real page: the store's full-page capture, framed around the
+ * section an app renders, with that section outlined in accent and a pinned label ("Reviews ·
+ * Judge.me"). The rest of the page stays visible but washed out, so the eye lands on the app.
+ * This is the apps area's core visual (app detail "Seen on", category "Where they show up",
+ * the grid view of the apps index).
+ *
+ * The frame has a fixed aspect ratio (`ratio`, width / height). The capture is scaled to the
+ * frame width and shifted up (negative margin-top, a percentage of the width) so the section
+ * sits in view with some page above and below it. Overlays are positioned in percentages of
+ * the image, so drawn placeholders and real captures behave the same. The capture area always
+ * uses the light tokens (store pages are light; the label must read the same in both themes).
+ */
+import type { SectionCard } from '~/server/api/v1/types';
+import { thumbUrl } from '~/lib/media';
+
+interface Props {
+  section: Pick<SectionCard, 'rect' | 'screenshot' | 'device'>;
+  /** Pinned label, e.g. "Reviews · Judge.me". */
+  label: string;
+  /** Muted second half of the label (usually the app name). */
+  labelMuted?: string | null;
+  alt: string;
+  /** Frame aspect ratio as width / height (e.g. 1.6 for 16:10). */
+  ratio: number;
+  href?: string;
+  eager?: boolean;
+  /** Tag size: md (lead frames), sm (cards). */
+  size?: 'sm' | 'md';
+  class?: string;
+}
+const {
+  section,
+  label,
+  labelMuted,
+  alt,
+  ratio,
+  href,
+  eager = false,
+  size = 'md',
+  class: className,
+} = Astro.props;
+
+const shot = section.screenshot;
+const imgW = shot.width;
+const imgH = shot.height;
+const { x, y, w, h } = section.rect;
+const frameH = imgW / ratio;
+// Context above the section: centre it when it fits, else show its top with some page above it
+// (where on the page it sits matters more than its last pixels).
+const ctx = Math.max(imgW * (section.device === 'mobile' ? 0.14 : 0.1), (frameH - h) / 2);
+const offset = Math.round(Math.max(0, Math.min(y - ctx, imgH - frameH)));
+// Only the slice down to the bottom of the frame is requested (placeholders render just that).
+const served = Math.min(imgH, Math.ceil(offset + frameH + 2));
+const src = thumbUrl(shot.image.src, {
+  cropHeight: served,
+  width: section.device === 'mobile' ? 480 : 1200,
+});
+const pct = (n: number, of: number) => `${((n / of) * 100).toFixed(4)}%`;
+const full = x <= 0 && w >= imgW - 1;
+// Narrow side-by-side slices (a buy box beside the gallery): let the label run past the slice,
+// anchored to the side of the frame it sits on, so it stays readable.
+const narrow = !full && w < imgW * 0.6;
+const atEnd = narrow && x + w / 2 > imgW / 2;
+const regionStyle = [
+  `top:${pct(y, served)}`,
+  `height:${pct(Math.min(h, served - y), served)}`,
+  full ? 'left:0;right:0' : `left:${pct(x, imgW)};width:${pct(w, imgW)}`,
+].join(';');
+const Tag = href ? 'a' : 'div';
+---
+
+<Tag
+  href={href}
+  class:list={['pin', `pin--${section.device}`, `pin--${size}`, className]}
+  style={`aspect-ratio:${ratio.toFixed(4)}`}
+  data-theme="light"
+>
+  <div
+    class="pin__canvas"
+    style={`margin-top:-${pct(offset, imgW)};aspect-ratio:${imgW} / ${served}`}
+  >
+    <img
+      src={src}
+      alt={alt}
+      width={imgW}
+      height={served}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      fetchpriority={eager ? 'high' : undefined}
+    />
+    <span
+      class:list={['pin__region', { 'pin__region--narrow': narrow, 'pin__region--end': atEnd }]}
+      style={regionStyle}
+    >
+      <span class="pin__tag">
+        {label}
+        {labelMuted && <span class="pin__tag-muted">· {labelMuted}</span>}
+      </span>
+    </span>
+  </div>
+</Tag>
+
+<style>
+  .pin {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    container-type: inline-size;
+    background: var(--capture-bg);
+    isolation: isolate;
+  }
+  .pin__canvas {
+    position: relative;
+    width: 100%;
+  }
+  .pin__canvas img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  /* The section: accent outline; everything around it is washed out by a spread shadow, which
+     the frame clips. */
+  .pin__region {
+    position: absolute;
+    border-radius: 4px;
+    box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 55%, transparent);
+    pointer-events: none;
+  }
+  /* The outline sits just inside the section, so it stays visible at the frame edges. */
+  .pin__region::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1.5px solid var(--accent);
+    border-radius: 4px;
+  }
+  .pin__tag {
+    position: absolute;
+    z-index: 1;
+    left: 10px;
+    top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: calc(100% - 20px);
+    height: 22px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .pin__region--narrow .pin__tag {
+    max-width: calc(100cqw - 20px);
+  }
+  .pin__region--end .pin__tag {
+    left: auto;
+    right: 10px;
+  }
+  .pin__tag-muted {
+    color: var(--btn-fg-2);
+  }
+  .pin--sm .pin__region--end .pin__tag {
+    left: auto;
+    right: 7px;
+  }
+  .pin--sm .pin__tag {
+    left: 7px;
+    top: 7px;
+    height: 18px;
+    padding: 0 6px;
+    font-size: 10px;
+  }
+  a.pin:hover .pin__tag,
+  a.pin:focus-visible .pin__tag {
+    background: var(--accent-btn);
+    color: var(--accent-fg);
+  }
+  a.pin:hover .pin__tag-muted,
+  a.pin:focus-visible .pin__tag-muted {
+    color: color-mix(in srgb, var(--accent-fg) 72%, transparent);
+  }
+</style>

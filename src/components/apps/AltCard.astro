@@ -1,0 +1,195 @@
+---
+/**
+ * An alternative app as a card: icon, name, developer and category rank, then rating, stores
+ * and price, and a footer with how many stores run both. "Compare" links to the head-to-head
+ * page only when the pair is a curated comparison (`compare_available`); otherwise the card
+ * just opens the app's own page.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Card from '~/components/ui/Card.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Rating from '~/components/ui/Rating.astro';
+import type { AppListItem } from '~/server/api/v1/types';
+import { priceFrom, rankLabel, sharePct } from './helpers';
+
+interface Props {
+  app: AppListItem;
+  /** Curated /compare page for this pair, or null when there is none. */
+  compareHref?: string | null;
+  /** Name of the app on this page (for the compare label). */
+  versus: string;
+  /** Stores running both apps (null when unknown). */
+  sharedStores?: number | null;
+  ratingSource?: string;
+  class?: string;
+}
+const { app, compareHref, versus, sharedStores, ratingSource, class: className } = Astro.props;
+const price = priceFrom(app.pricing);
+const rankLine =
+  app.category_rank && app.category
+    ? `${rankLabel(app.category_rank)} in ${app.category.name}`
+    : app.category?.name;
+---
+
+<Card as="article" interactive padding="none" class:list={['alt', className]}>
+  <div class="alt__body">
+    <div class="alt__id">
+      <AppIcon src={app.icon_url} name={app.short_name} size={40} />
+      <div class="alt__names">
+        <h3 class="alt__name">
+          <a href={app.href} class="stretched-link">
+            {app.short_name}
+          </a>
+        </h3>
+        <p class="alt__sub">{[app.developer, rankLine].filter(Boolean).join(' · ')}</p>
+      </div>
+    </div>
+    <dl class="alt__stats">
+      <div>
+        <dt>Rating</dt>
+        <dd>
+          <Rating rating={app.rating} reviews={app.reviews} size="sm" source={ratingSource} />
+        </dd>
+      </div>
+      <div>
+        <dt>Stores</dt>
+        <dd class="num">
+          {app.usage.stores.toLocaleString('en-US')}
+          <span class="alt__muted">{sharePct(app.usage.share)}</span>
+        </dd>
+      </div>
+      <div>
+        <dt>Price from</dt>
+        <dd class:list={[{ alt__muted: !price }]}>{price ?? 'Not listed'}</dd>
+      </div>
+    </dl>
+  </div>
+  <div class="alt__foot">
+    <span class="alt__both">
+      {typeof sharedStores === 'number'
+        ? sharedStores > 0
+          ? `${sharedStores} ${sharedStores === 1 ? 'store runs' : 'stores run'} both`
+          : 'No store runs both'
+        : (app.category?.name ?? '')}
+    </span>
+    {compareHref ? (
+      <a href={compareHref} class="alt__compare">
+        Compare with {versus}
+        <Icon name="arrow-right" size={14} />
+      </a>
+    ) : (
+      <Icon name="arrow-right" size={14} class="alt__arrow" />
+    )}
+  </div>
+</Card>
+
+<style>
+  .alt__body {
+    padding: var(--space-4) var(--space-5);
+  }
+  .alt__id {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .alt__names {
+    min-width: 0;
+  }
+  .alt__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-h4);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  .alt__name a:focus-visible {
+    outline: none;
+  }
+  .alt__name a:focus-visible::after {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .alt__sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .alt__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+  .alt__stats dt {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .alt__stats dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 6px;
+    margin-top: 2px;
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .alt__muted {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-regular);
+  }
+  .alt__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: auto;
+    min-height: 44px;
+    padding: var(--space-2) var(--space-5);
+    border-top: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .alt__both {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .alt__compare {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+  .alt__compare :global(svg),
+  .alt__foot :global(.alt__arrow) {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .alt__compare:hover :global(svg) {
+    transform: translateX(2px);
+  }
+  .alt__compare:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .alt__foot :global(.alt__arrow) {
+    flex: none;
+    color: var(--ink-3);
+  }
+  :global(.alt.card--interactive:hover) :global(.alt__arrow) {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+</style>

@@ -1,0 +1,357 @@
+---
+/**
+ * The apps ranking: one row per app with its rank, icon, name, category, App Store rating,
+ * price, a usage bar (scaled to the most used app in the list) with its share of scanned
+ * stores, and the store count. Ranks come from the API (`usage.rank` or `category_rank`,
+ * competition ranking: equal usage shares a number), never from the row position.
+ *
+ * ≥1024: a full table row. 640–1023: rank, app, rating, usage, stores. <640: a two-line row
+ * (name + stores, category · rating + share) with the usage bar underneath.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Badge from '~/components/ui/Badge.astro';
+import Rating from '~/components/ui/Rating.astro';
+import type { AppListItem } from '~/server/api/v1/types';
+import { priceFrom, rankLabel, sharePct } from './helpers';
+
+export interface RankItem {
+  app: AppListItem;
+  /** Rank to show (from the API). */
+  rank: number | null;
+  /** Second line under the name; defaults to the developer. */
+  sub?: string | null;
+}
+interface Props {
+  items: RankItem[];
+  /** Store count of the most used app in this list (100% of the bar). */
+  max: number;
+  /** Accessible name of the list, e.g. "Apps ranked by stores running them". */
+  label: string;
+  /** Column title for the rank, e.g. "Rank" or "Rank in Reviews". */
+  rankTitle?: string;
+  showCategory?: boolean;
+  /** Rating tooltip, e.g. "Shopify App Store, checked 17 Nov 2026". */
+  ratingSource?: string;
+  class?: string;
+}
+const {
+  items,
+  max,
+  label,
+  rankTitle = 'Rank',
+  showCategory = true,
+  ratingSource,
+  class: className,
+} = Astro.props;
+// Small screens show one meta line: the category (or the developer when every row shares it).
+const metaLead = (app: AppListItem) =>
+  (showCategory ? app.category?.name : app.developer) ?? app.developer ?? null;
+const width = (stores: number) =>
+  `${max > 0 ? Math.max(1.5, Math.min(100, (stores / max) * 100)).toFixed(1) : 0}%`;
+---
+
+<div class:list={['rtable', { 'rtable--cat': showCategory }, className]}>
+  <div class="rtable__head" aria-hidden="true">
+    <span class="rtable__h-rank" title={rankTitle}>
+      #
+    </span>
+    <span>App</span>
+    {showCategory && <span class="rtable__h-cat">Category</span>}
+    <span class="rtable__h-rating">Rating</span>
+    <span class="rtable__h-price">Price from</span>
+    <span class="rtable__h-usage">Share of stores</span>
+    <span class="rtable__h-stores">Stores</span>
+  </div>
+  <ol class="rtable__list" aria-label={label}>
+    {items.map(({ app, rank, sub }) => {
+      const category = app.category?.name ?? null;
+      const price = priceFrom(app.pricing);
+      return (
+        <li class="rrow">
+          <a class="rrow__link" href={app.href}>
+            <span class="rrow__rank num" title={rank ? `${rankTitle}: ${rank}` : undefined}>
+              {rankLabel(rank)}
+            </span>
+            <span class="rrow__app">
+              <AppIcon src={app.icon_url} name={app.short_name} size={36} />
+              <span class="rrow__id">
+                <span class="rrow__name">
+                  <span class="rrow__name-text">{app.short_name}</span>
+                  {app.built_for_shopify && (
+                    <Badge
+                      tone="outline"
+                      size="sm"
+                      title="Built for Shopify badge on the App Store"
+                    >
+                      BFS
+                    </Badge>
+                  )}
+                </span>
+                <span class="rrow__sub">{sub ?? app.developer ?? category ?? ''}</span>
+                <span class="rrow__meta">
+                  {metaLead(app) && <span class="rrow__meta-lead">{metaLead(app)}</span>}
+                  <Rating rating={app.rating} reviews={null} size="sm" />
+                </span>
+              </span>
+            </span>
+            {showCategory && <span class="rrow__cat">{category ?? '—'}</span>}
+            <span class="rrow__rating">
+              <Rating rating={app.rating} reviews={app.reviews} size="sm" source={ratingSource} />
+            </span>
+            <span class:list={['rrow__price', { 'rrow__price--none': !price }]}>
+              {price ?? '—'}
+            </span>
+            <span class="rrow__usage">
+              <span class="rrow__bar" aria-hidden="true">
+                <span style={`width:${width(app.usage.stores)}`} />
+              </span>
+              <span class="rrow__share num">
+                {sharePct(app.usage.share)}
+                <span class="visually-hidden"> of scanned stores</span>
+              </span>
+            </span>
+            <span class="rrow__stores num">
+              {app.usage.stores.toLocaleString('en-US')}
+              <span class="visually-hidden"> stores</span>
+            </span>
+          </a>
+        </li>
+      );
+    })}
+  </ol>
+</div>
+
+<style>
+  .rtable {
+    --cols: 40px minmax(0, 1fr) auto;
+    font-size: var(--text-ui);
+  }
+  .rtable__head {
+    display: none;
+  }
+  .rtable__list {
+    border-top: 1px solid var(--line);
+  }
+  .rrow {
+    border-bottom: 1px solid var(--line);
+  }
+  .rrow__link {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-areas:
+      'rank app stores'
+      'rank app share'
+      '. bar bar';
+    align-items: center;
+    column-gap: var(--space-2);
+    row-gap: 2px;
+    padding: var(--space-3) var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    border-radius: var(--radius-control);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .rrow__link:hover {
+    background: var(--surface-2);
+  }
+  .rrow__rank {
+    grid-area: rank;
+    align-self: start;
+    padding-top: 9px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .rrow__app {
+    grid-area: app;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .rrow__id {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .rrow__name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+  }
+  .rrow__name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rrow__sub,
+  .rrow__meta {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rrow__sub {
+    display: none;
+  }
+  .rrow__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rrow__meta-lead {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rrow__meta-lead::after {
+    content: '·';
+    margin-left: 6px;
+  }
+  .rrow__meta > :global(.rating) {
+    flex: none;
+  }
+  .rrow__cat,
+  .rrow__rating,
+  .rrow__price {
+    display: none;
+  }
+  .rrow__usage {
+    display: contents;
+  }
+  .rrow__bar {
+    grid-area: bar;
+    position: relative;
+    height: 3px;
+    margin-top: var(--space-2);
+    border-radius: 2px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .rrow__bar > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--ink) 62%, transparent);
+  }
+  .rrow__share {
+    grid-area: share;
+    justify-self: end;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .rrow__stores {
+    grid-area: stores;
+    justify-self: end;
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+
+  /* Tablet: one line per app, rating and usage as columns. */
+  @media (min-width: 640px) {
+    .rtable {
+      --cols: 44px minmax(0, 1fr) 132px minmax(140px, 200px) 64px;
+    }
+    .rtable__head,
+    .rrow__link {
+      display: grid;
+      grid-template-columns: var(--cols);
+      grid-template-areas: none;
+      column-gap: var(--space-4);
+      align-items: center;
+    }
+    .rtable__head {
+      padding: 0 0 var(--space-2);
+      color: var(--ink-3);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+    }
+    .rrow__link {
+      min-height: 64px;
+      padding-block: var(--space-2);
+    }
+    .rrow__rank {
+      grid-area: auto;
+      align-self: center;
+      padding-top: 0;
+      text-align: right;
+    }
+    .rtable__h-rank,
+    .rtable__h-stores {
+      text-align: right;
+    }
+    .rrow__app {
+      grid-area: auto;
+    }
+    .rrow__sub {
+      display: block;
+    }
+    .rrow__meta {
+      display: none;
+    }
+    .rrow__rating {
+      display: block;
+    }
+    .rtable__h-cat,
+    .rtable__h-price,
+    .rrow__cat,
+    .rrow__price {
+      display: none;
+    }
+    .rrow__usage {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .rrow__bar {
+      grid-area: auto;
+      flex: 1 1 auto;
+      height: 6px;
+      margin-top: 0;
+      border-radius: 3px;
+    }
+    .rrow__share {
+      grid-area: auto;
+      flex: none;
+      width: 42px;
+      text-align: right;
+    }
+    .rrow__stores {
+      grid-area: auto;
+      text-align: right;
+    }
+  }
+
+  /* Desktop: the full table. */
+  @media (min-width: 1024px) {
+    .rtable {
+      --cols: 44px minmax(0, 1fr) 132px 128px minmax(160px, 220px) 64px;
+    }
+    .rtable--cat {
+      --cols: 44px minmax(0, 1fr) 156px 132px 120px minmax(160px, 200px) 64px;
+    }
+    .rtable__h-price,
+    .rrow__price {
+      display: block;
+    }
+    .rtable--cat .rtable__h-cat,
+    .rtable--cat .rrow__cat {
+      display: block;
+    }
+    .rrow__cat,
+    .rrow__price {
+      color: var(--ink-2);
+      font-size: var(--text-sm);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rrow__price--none {
+      color: var(--ink-4);
+    }
+  }
+</style>

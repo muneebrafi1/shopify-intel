@@ -1,0 +1,160 @@
+---
+/**
+ * A pinned capture as a card: the section on its page (PinnedCapture) inset in a --surface-2
+ * well, then a caption (app icon or store mark, a title and a meta line). The whole card links
+ * into the store viewer, anchored at the section. Used by "Seen on" (app detail), "Where they
+ * show up" (category) and the grid view of the apps index.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import type { SectionCard } from '~/server/api/v1/types';
+import PinnedCapture from './PinnedCapture.astro';
+
+interface Props {
+  section: Pick<SectionCard, 'rect' | 'screenshot' | 'device'>;
+  href: string;
+  label: string;
+  labelMuted?: string | null;
+  alt: string;
+  title: string;
+  meta?: string | null;
+  /** Leading mark: an app icon, or the store's mark. */
+  icon?:
+    | { kind: 'app'; src: string | null; name: string }
+    | { kind: 'store'; domain: string; name?: string | null };
+  eager?: boolean;
+  class?: string;
+}
+const {
+  section,
+  href,
+  label,
+  labelMuted,
+  alt,
+  title,
+  meta,
+  icon,
+  eager,
+  class: className,
+} = Astro.props;
+// The inset frame reaches the bottom of a 4:3 well: desktop 86% wide from 4.5% down, mobile
+// 42% wide from 5% down (see the CSS below). Ratio = frame width / frame height.
+const mobile = section.device === 'mobile';
+const ratio = mobile ? 0.42 / (0.75 - 0.0375) : 0.86 / (0.75 - 0.03375);
+---
+
+<a href={href} class:list={['capcard', `capcard--${section.device}`, className]}>
+  <span class="capcard__well">
+    <PinnedCapture
+      section={section}
+      label={label}
+      labelMuted={labelMuted}
+      alt={alt}
+      ratio={ratio}
+      eager={eager}
+      size="sm"
+      class="capcard__pin"
+    />
+  </span>
+  <span class="capcard__cap">
+    {icon?.kind === 'app' && <AppIcon src={icon.src} name={icon.name} size={24} />}
+    {icon?.kind === 'store' && <StoreMark domain={icon.domain} name={icon.name} size={24} />}
+    <span class="capcard__text">
+      <span class="capcard__title">{title}</span>
+      {meta && <span class="capcard__meta">{meta}</span>}
+    </span>
+  </span>
+</a>
+
+<style>
+  .capcard {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+    color: var(--ink);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .capcard:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+    transform: translateY(-2px);
+  }
+  .capcard:active {
+    transform: translateY(-1px);
+  }
+  .capcard:focus-visible {
+    outline-offset: 3px;
+  }
+  .capcard__well {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    background: var(--surface-2);
+    box-shadow: inset 0 -1px 0 var(--line);
+  }
+  .capcard__well :global(.capcard__pin) {
+    position: absolute;
+    left: 50%;
+    top: 4.5%;
+    width: 86%;
+    transform: translateX(-50%);
+    border-radius: 6px 6px 0 0;
+    box-shadow: var(--shadow-shot);
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .capcard--mobile .capcard__well :global(.capcard__pin) {
+    top: 5%;
+    width: 42%;
+    border-radius: 14px 14px 0 0;
+  }
+  .capcard:hover .capcard__well :global(.capcard__pin) {
+    transform: translateX(-50%) translateY(-3px);
+  }
+  .capcard:hover :global(.pin__tag) {
+    background: var(--accent-btn);
+    color: var(--accent-fg);
+  }
+  .capcard:hover :global(.pin__tag-muted) {
+    color: color-mix(in srgb, var(--accent-fg) 72%, transparent);
+  }
+  .capcard__cap {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+  .capcard__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .capcard__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.005em;
+  }
+  .capcard__meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+</style>

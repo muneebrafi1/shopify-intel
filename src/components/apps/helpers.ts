@@ -2,11 +2,15 @@
  * Small, pure helpers shared by the apps pages (index, categories, detail). Formatting lives in
  * `~/lib/format`; this file only adds apps-specific wording and URL building.
  */
-import type { AppPricing, SectionCard, UsageStat } from '~/server/api/v1/types';
+import type { AppPlan, AppPricing, SectionCard, UsageStat } from '~/server/api/v1/types';
 import { formatDate, formatPrice } from '~/lib/format';
 
-/** Specimen number label: 2 → "N°002". */
-export const specimen = (n: number, pad = 3) => `N°${String(n).padStart(pad, '0')}`;
+/**
+ * Rank label: 2 → "#2". Ranks come from the API (`usage.rank`, `category_rank`), which uses
+ * competition ranking, so equal usage shows the same number (1, 2, 2, 4). Never a row index.
+ */
+export const rankLabel = (n: number | null | undefined) =>
+  typeof n === 'number' && n > 0 ? `#${n}` : '—';
 
 /** Share 0..1 → "23.8%" (one decimal, "<0.1%" for tiny shares). */
 export function sharePct(share: number): string {
@@ -25,6 +29,29 @@ export function priceFrom(p: AppPricing): string | null {
     return p.free_plan ? `Free · ${paid}` : paid;
   }
   if (p.free_plan) return 'Free';
+  return null;
+}
+
+/**
+ * Price range from the listed plans: "Free – $15/mo", "$15 – $99/mo", "From $149/mo", "Free".
+ * Falls back to the summary pricing when no plans are listed; null when nothing is known.
+ */
+export function priceRange(pricing: AppPricing, plans: readonly AppPlan[] = []): string | null {
+  const monthly = plans
+    .filter((p) => typeof p.price_cents === 'number' && p.price_cents > 0 && p.period === 'month')
+    .map((p) => p.price_cents as number);
+  const free = pricing.free_plan === true || plans.some((p) => p.price_cents === 0);
+  if (monthly.length) {
+    const lo = Math.min(...monthly);
+    const hi = Math.max(...monthly);
+    const paid = lo === hi ? `${formatPrice(lo)}/mo` : `${formatPrice(lo)} – ${formatPrice(hi)}/mo`;
+    return free ? `Free – ${hi === lo ? paid : `${formatPrice(hi)}/mo`}` : paid;
+  }
+  if (typeof pricing.from_cents === 'number' && pricing.from_cents > 0)
+    return free
+      ? `Free – ${formatPrice(pricing.from_cents)}/mo`
+      : `From ${formatPrice(pricing.from_cents)}/mo`;
+  if (free) return 'Free';
   return null;
 }
 

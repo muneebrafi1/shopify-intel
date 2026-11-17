@@ -1,0 +1,203 @@
+---
+/**
+ * An app category as a card: name, reach (share of scanned stores running at least one of its
+ * apps) with a bar, where on the page it shows up, and its most used apps with their real
+ * icons and store counts. The title is the card's main link; the app rows link to each app.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Card from '~/components/ui/Card.astro';
+import Icon from '~/components/ui/Icon.astro';
+import type { AppCategory } from '~/server/api/v1/types';
+import { sharePct } from './helpers';
+
+export interface CategoryTopApp {
+  name: string;
+  href: string;
+  iconUrl: string | null;
+  /** Stores running it (null when not known). */
+  stores: number | null;
+}
+interface Props {
+  category: AppCategory;
+  /** Scanned stores the reach is measured against. */
+  denominator: number;
+  /** Highest reach among the categories shown (100% of the bar). */
+  maxShare: number;
+  apps: CategoryTopApp[];
+  /** Heading level of the category name. */
+  level?: 2 | 3;
+  class?: string;
+}
+const { category: c, denominator, maxShare, apps, level = 3, class: className } = Astro.props;
+const H = `h${level}` as 'h2' | 'h3';
+const bar = `${maxShare > 0 ? Math.max(2, Math.min(100, (c.share / maxShare) * 100)).toFixed(1) : 0}%`;
+const surface = c.surfaces.map((s) => s.name).join(', ');
+---
+
+<Card as="article" interactive padding="none" class:list={['ccard', className]}>
+  <div class="ccard__head">
+    <div class="ccard__title-row">
+      <H class="ccard__title">
+        <a href={c.href} class="stretched-link">
+          {c.name}
+        </a>
+      </H>
+      <span class="ccard__reach num" title={`${c.store_count} of ${denominator} scanned stores`}>
+        {sharePct(c.share)}
+      </span>
+    </div>
+    <p class="ccard__meta">
+      <span class="num">{c.app_count}</span>
+      {c.app_count === 1 ? ' app' : ' apps'} ·{' '}
+      <span class="num">{c.store_count.toLocaleString('en-US')}</span> of{' '}
+      <span class="num">{denominator.toLocaleString('en-US')}</span> stores run one
+    </p>
+    <span class="ccard__bar" aria-hidden="true">
+      <span style={`width:${bar}`}></span>
+    </span>
+  </div>
+  {apps.length > 0 && (
+    <ol class="ccard__apps" aria-label={`Most used ${c.name} apps`}>
+      {apps.map((a) => (
+        <li>
+          <a href={a.href} class="ccard__app">
+            <AppIcon src={a.iconUrl} name={a.name} size={24} />
+            <span class="ccard__app-name">{a.name}</span>
+            {typeof a.stores === 'number' && (
+              <span class="ccard__app-stores num">
+                {a.stores.toLocaleString('en-US')}
+                <span class="visually-hidden"> stores</span>
+              </span>
+            )}
+          </a>
+        </li>
+      ))}
+    </ol>
+  )}
+  <div class="ccard__foot">
+    {surface ? (
+      <span class="ccard__surface">
+        <Icon name="browser" size={14} />
+        Renders as {surface}
+      </span>
+    ) : (
+      <span class="ccard__surface ccard__surface--none">
+        <Icon name="gear" size={14} />
+        Runs in the background
+      </span>
+    )}
+    <Icon name="arrow-right" size={14} class="ccard__arrow" />
+  </div>
+</Card>
+
+<style>
+  .ccard__head {
+    padding: var(--space-4) var(--space-5) var(--space-4);
+  }
+  .ccard__title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .ccard__title {
+    min-width: 0;
+    font-size: var(--text-h4);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+  .ccard__title a:focus-visible {
+    outline: none;
+  }
+  .ccard__title a:focus-visible::after {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .ccard__reach {
+    flex: none;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .ccard__meta {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .ccard__bar {
+    position: relative;
+    display: block;
+    height: 4px;
+    margin-top: var(--space-3);
+    border-radius: 2px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .ccard__bar > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--ink) 62%, transparent);
+  }
+  .ccard__apps {
+    padding: var(--space-1) var(--space-3);
+    border-top: 1px solid var(--line);
+  }
+  .ccard__app {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 40px;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-control);
+    font-size: var(--text-sm);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .ccard__app:hover {
+    background: var(--surface-2);
+  }
+  .ccard__app-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .ccard__app-stores {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .ccard__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: auto;
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+  .ccard__surface {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .ccard__surface--none {
+    color: var(--ink-3);
+  }
+  .ccard__foot :global(.ccard__arrow) {
+    flex: none;
+    color: var(--ink-3);
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  :global(.ccard.card--interactive:hover) :global(.ccard__arrow) {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+</style>

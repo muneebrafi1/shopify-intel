@@ -1,0 +1,138 @@
+---
+/**
+ * A short list of related apps or themes with how often they appear next to this one:
+ * co-installed apps ("41% of Judge.me stores also run Klaviyo") and the themes those stores
+ * use. Each row: icon (apps), name + sub line, a share bar and the store count. Bars are
+ * scaled to the first row (the list is ordered by share).
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+
+export interface ShareItem {
+  href: string;
+  name: string;
+  sub?: string | null;
+  iconUrl?: string | null;
+  stores: number;
+  share: number;
+}
+interface Props {
+  items: ShareItem[];
+  kind: 'app' | 'theme';
+  /** Screen-reader description of the share, e.g. "of Judge.me stores". */
+  shareOf: string;
+  label: string;
+  class?: string;
+}
+const { items, kind, shareOf, label, class: className } = Astro.props;
+const max = Math.max(...items.map((i) => i.share), 0);
+const pct = (share: number) => {
+  const p = share * 100;
+  return `${p.toFixed(p >= 10 || p === 0 ? 0 : 1)}%`;
+};
+---
+
+<ol class:list={['shares', `shares--${kind}`, className]} aria-label={label}>
+  {items.map((item) => (
+    <li>
+      <a href={item.href} class="shares__row">
+        {kind === 'app' && <AppIcon src={item.iconUrl} name={item.name} size={28} />}
+        <span class="shares__main">
+          <span class="shares__name">{item.name}</span>
+          {item.sub && <span class="shares__sub">{item.sub}</span>}
+        </span>
+        <span class="shares__bar" aria-hidden="true">
+          <span
+            style={`width:${max > 0 ? Math.max(3, (item.share / max) * 100).toFixed(1) : 0}%`}
+          />
+        </span>
+        <span class="shares__pct num">
+          {pct(item.share)}
+          <span class="visually-hidden"> {shareOf}</span>
+        </span>
+        <span class="shares__stores num">
+          {item.stores.toLocaleString('en-US')}
+          <span class="visually-hidden"> stores</span>
+        </span>
+      </a>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .shares__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px 40px;
+    grid-template-areas: 'main bar pct' 'main bar stores';
+    align-items: center;
+    column-gap: var(--space-3);
+    min-height: 52px;
+    padding: var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    border-radius: var(--radius-control);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .shares--app .shares__row {
+    grid-template-columns: 28px minmax(0, 1fr) 64px 40px;
+    grid-template-areas: 'icon main bar pct' 'icon main bar stores';
+  }
+  .shares__row:hover {
+    background: var(--surface-2);
+  }
+  .shares__row > :global(.app-icon) {
+    grid-area: icon;
+  }
+  .shares li + li {
+    border-top: 1px solid var(--line);
+  }
+  .shares__main {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .shares__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+  }
+  .shares__sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .shares__bar {
+    grid-area: bar;
+    position: relative;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .shares__row:hover .shares__bar {
+    background: var(--surface-3);
+  }
+  .shares__bar > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--ink) 62%, transparent);
+  }
+  .shares__pct {
+    grid-area: pct;
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-align: right;
+  }
+  .shares__stores {
+    grid-area: stores;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    text-align: right;
+  }
+</style>

@@ -1,0 +1,113 @@
+---
+/**
+ * Curated head-to-head comparisons (`/compare/a-vs-b` hrefs come from the API, which only
+ * returns pairs that have a page): both icons, "A vs B" and a short fact, as a row of cards.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Icon from '~/components/ui/Icon.astro';
+
+export interface Pair {
+  href: string;
+  a: { name: string; iconUrl?: string | null };
+  b: { name: string; iconUrl?: string | null };
+  note?: string | null;
+}
+interface Props {
+  items: Pair[];
+  label: string;
+  class?: string;
+}
+const { items, label, class: className } = Astro.props;
+---
+
+<ul class:list={['pairs', className]} aria-label={label}>
+  {items.map((p) => (
+    <li>
+      <a href={p.href} class="pair">
+        <span class="pair__icons" aria-hidden="true">
+          <AppIcon src={p.a.iconUrl} name={p.a.name} size={28} />
+          <AppIcon src={p.b.iconUrl} name={p.b.name} size={28} />
+        </span>
+        <span class="pair__text">
+          <span class="pair__title">
+            {p.a.name} <span class="pair__vs">vs</span> {p.b.name}
+          </span>
+          {p.note && <span class="pair__note">{p.note}</span>}
+        </span>
+        <Icon name="arrow-right" size={16} class="pair__arrow" />
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .pairs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: var(--space-3);
+  }
+  .pair {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 64px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .pair:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-md),
+      var(--highlight);
+    transform: translateY(-2px);
+  }
+  .pair__icons {
+    display: inline-flex;
+    flex: none;
+  }
+  .pair__icons :global(.app-icon + .app-icon) {
+    margin-left: -8px;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+  .pair__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .pair__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .pair__vs {
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+  }
+  .pair__note {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .pair :global(.pair__arrow) {
+    flex: none;
+    color: var(--ink-3);
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .pair:hover :global(.pair__arrow) {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+</style>

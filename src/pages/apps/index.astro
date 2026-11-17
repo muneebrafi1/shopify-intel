@@ -1,34 +1,39 @@
 ---
 /**
- * /apps — every tracked app, ranked by how many scanned stores run it. Default view is the
- * dense ranked index (AppTable/AppRow); the grid view shows each app where it renders (its own
- * section on a curated store). Filters are URL state: category, price, bfs, rating, sort, view, p.
+ * /apps — every tracked app, ranked by how many scanned stores run it (Base44 browse pattern):
+ * page header → browse bar (search, category pills, price/BFS/rating filters, sort, view) →
+ * the ranking table (index view) or pinned captures of each app's own section (grid view) →
+ * pagination → the categories as cards.
+ *
+ * URL state: q, category, price, bfs, rating, sort, view, p. Ranks are the API's competition
+ * ranks (`usage.rank`; `category_rank` while a category is selected), never the row index.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import PageHeader from '~/components/ui/PageHeader.astro';
-import FilterBar, { type FilterGroup } from '~/components/ui/FilterBar.astro';
+import BrowseBar, { type FilterGroup } from '~/components/ui/BrowseBar.astro';
 import Pagination from '~/components/ui/Pagination.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Card from '~/components/ui/Card.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
-import AppTable from '~/components/domain/AppTable.astro';
-import AppRow from '~/components/domain/AppRow.astro';
-import AppTile from '~/components/apps/AppTile.astro';
-import CategoryRail from '~/components/apps/CategoryRail.astro';
-import PlainList from '~/components/apps/PlainList.astro';
+import RankTable from '~/components/apps/RankTable.astro';
+import CaptureCard from '~/components/apps/CaptureCard.astro';
+import CategoryCard from '~/components/apps/CategoryCard.astro';
 import { api } from '~/server/api';
-import type { AppListItem, SectionCard } from '~/server/api/v1/types';
+import type { AppListItem } from '~/server/api/v1/types';
 import { formatDate } from '~/lib/format';
+import { allApps, sectionPerApp } from '~/components/apps/data';
 import {
   appStoreSource,
   intParam,
-  priceFrom,
+  pageName,
+  sharePct,
   sliceFromCursorList,
   urlWith,
 } from '~/components/apps/helpers';
 
-const PAGE_SIZE = 60;
 const SORTS = [
   { value: 'usage', label: 'Most used' },
   { value: 'rating', label: 'Rating' },
@@ -40,6 +45,7 @@ const RATINGS = ['4.8', '4.5', '4'] as const;
 
 const url = Astro.url;
 const sp = url.searchParams;
+const q = (sp.get('q') ?? '').trim().slice(0, 100);
 const category = sp.get('category') || undefined;
 const price =
   sp.get('price') === 'free' || sp.get('price') === 'paid'
@@ -50,8 +56,11 @@ const ratingParam = RATINGS.find((r) => r === sp.get('rating'));
 const sort: Sort = SORTS.find((s) => s.value === sp.get('sort'))?.value ?? 'usage';
 const view = sp.get('view') === 'grid' ? 'grid' : 'index';
 const page = intParam(sp.get('p'));
+// The grid asks for one section per app, so it pages in smaller steps than the table.
+const PAGE_SIZE = view === 'grid' ? 24 : 60;
 
 const filters = {
+  q: q || undefined,
   category,
   price,
   built_for_shopify: bfs ? true : undefined,
@@ -59,8 +68,12 @@ const filters = {
   sort,
 };
 
-// First page (facets + totals), then the requested slice.
-const first = await api.listApps({ ...filters, limit: PAGE_SIZE });
+// First page (facets + totals), the catalogue meta and the categories, together.
+const [first, { data: siteMeta }, { data: cats }] = await Promise.all([
+  api.listApps({ ...filters, limit: PAGE_SIZE }),
+  api.getMeta({}),
+  api.listAppCategories({}),
+]);
 const facets = first.data.facets.categories;
 const total = first.meta.pagination?.total ?? first.data.items.length;
 const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -88,48 +101,47 @@ const scan =
   sources[items[0]?.usage.source ?? 'storepeek-scan-2026-11-17'] ?? Object.values(sources)[0];
 const appStore = sources['shopify-app-store'];
 const ratingSource = appStoreSource(appStore?.as_of);
-const denominator = items[0]?.usage.denominator ?? first.data.items[0]?.usage.denominator ?? 0;
+const denominator = siteMeta.counts.stores_scanned;
+const catalogue = siteMeta.counts.apps;
 
-// Grid view: one section per app, from the section type its category renders.
-const sectionsByApp = new Map<string, SectionCard | null>();
-const surfaceByCategory = new Map<string, string | null>();
-if (view === 'grid') {
-  const cats = await api.listAppCategories({});
-  const surfaceSlug = new Map<string, string | undefined>();
-  for (const c of cats.data.items) {
-    surfaceByCategory.set(c.slug, c.surfaces[0]?.name ?? null);
-    surfaceSlug.set(c.slug, c.surfaces[0]?.slug);
-  }
-  await Promise.all(
-    items.map(async (app) => {
-      const type = app.category ? surfaceSlug.get(app.category.slug) : undefined;
-      if (!type) return sectionsByApp.set(app.slug, null);
-      const r = await api.listSections({
-        app: app.slug,
-        type: type as never,
-        device: 'desktop',
-        limit: 1,
-      });
-      let s = r.data.items[0] ?? null;
-      if (!s) s = (await api.listSections({ app: app.slug, limit: 1 })).data.items[0] ?? null;
-      sectionsByApp.set(app.slug, s);
-    }),
-  );
-}
+// Usage bars are scaled to the most used app matching the current filters.
+const leader =
+  sort === 'usage' && page === 1
+    ? (items[0]?.usage.stores ?? 0)
+    : total > 0
+      ? ((await api.listApps({ ...filters, sort: 'usage', limit: 1 })).data.items[0]?.usage
+          .stores ?? 0)
+      : 0;
 
-const surfaceOf = (app: AppListItem) =>
-  app.category ? (surfaceByCategory.get(app.category.slug) ?? null) : null;
-const plated = items.filter((a) => sectionsByApp.get(a.slug));
-const unseen = items.filter((a) => !sectionsByApp.get(a.slug) && surfaceOf(a));
-const background = items.filter((a) => !sectionsByApp.get(a.slug) && !surfaceOf(a));
-
-const allCount = facets.reduce((n, f) => n + f.count, 0);
-// Catalogue size for the title count (independent of filters).
-const catalogue = (await api.getMeta({})).data.counts.apps;
+const catBySlug = new Map(cats.items.map((c) => [c.slug, c]));
+const selectedCat = category ? catBySlug.get(category) : undefined;
 const selectedFacet = facets.find((f) => f.value === category);
-const categoryLabel = selectedFacet?.label ?? (category ? category : undefined);
-const railItems = [...facets];
-if (category && !selectedFacet) railItems.push({ value: category, label: category, count: 0 });
+const categoryLabel = selectedCat?.name ?? selectedFacet?.label ?? category;
+const allCount = facets.reduce((n, f) => n + f.count, 0);
+// The selected category leads the pill row, so it is in view on phones too.
+const pillItems = [
+  ...facets.filter((f) => f.value === category),
+  ...facets.filter((f) => f.value !== category),
+];
+if (category && !selectedFacet)
+  pillItems.unshift({ value: category, label: categoryLabel!, count: 0 });
+
+// Grid view: one pinned section per app, from the section type its category renders.
+const surfaceOf = (app: AppListItem) =>
+  app.category ? (catBySlug.get(app.category.slug)?.surfaces[0]?.slug ?? null) : null;
+const surfaceName = (app: AppListItem) =>
+  app.category ? (catBySlug.get(app.category.slug)?.surfaces[0]?.name ?? null) : null;
+const sectionByApp = view === 'grid' ? await sectionPerApp(items, 'desktop', surfaceOf) : new Map();
+const pinned = items.filter((a) => sectionByApp.has(a.slug));
+const unpinned = items.filter((a) => !sectionByApp.has(a.slug));
+
+// Categories as cards under the ranking (unfiltered browsing only).
+const showCategories = !category && !q && view === 'index';
+const topCats = showCategories
+  ? [...cats.items].sort((a, b) => b.store_count - a.store_count).slice(0, 6)
+  : [];
+const usage = showCategories ? await allApps() : new Map<string, AppListItem>();
+const maxShare = Math.max(...cats.items.map((c) => c.share), 0);
 
 const groups: FilterGroup[] = [
   {
@@ -137,12 +149,12 @@ const groups: FilterGroup[] = [
     label: 'Category',
     options: [
       {
-        label: 'All categories',
+        label: 'All',
         href: urlWith(url, { category: null }),
         selected: !category,
         count: allCount,
       },
-      ...railItems.map((f) => ({
+      ...pillItems.map((f) => ({
         label: f.label,
         href: urlWith(url, { category: f.value }),
         selected: f.value === category,
@@ -189,13 +201,13 @@ const sortOptions = SORTS.map((s) => ({
   href: urlWith(url, { sort: s.value === 'usage' ? null : s.value }),
   selected: s.value === sort,
 }));
-const clearHref = urlWith(url, { category: null, price: null, bfs: null, rating: null });
+const clearHref = urlWith(url, { q: null, category: null, price: null, bfs: null, rating: null });
 
 const hasParams = [...sp.keys()].length > 0;
 const title = categoryLabel ? `${categoryLabel} apps` : 'Shopify apps on real stores';
 const description = categoryLabel
   ? `${categoryLabel} apps for Shopify, ranked by how many of ${denominator} scanned stores run them, with App Store ratings and prices.`
-  : `${total} Shopify apps ranked by how many of ${denominator} scanned stores run them — with App Store ratings, prices, and where each app shows up on real store pages.`;
+  : `${catalogue} Shopify apps ranked by how many of ${denominator} scanned stores run them, with App Store ratings, prices, and where each app shows up on real store pages.`;
 
 const jsonLd = {
   '@type': 'ItemList',
@@ -219,217 +231,440 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   noindex={hasParams}
   jsonLd={jsonLd}
 >
-  <div class="container">
-    <PageHeader title="Apps" count={catalogue} eyebrow="Index — ranked by use">
-      <Fragment slot="meta">
-        <p class="statement display">
-          The apps live Shopify stores actually run, ranked by how many of{' '}
-          {denominator.toLocaleString('en-US')} scanned stores we found them on.
-        </p>
-        <div class="specline">
-          <MonoLabel>Scanned {formatDate(scan?.as_of)}</MonoLabel>
-          <MonoLabel>App Store checked {formatDate(appStore?.as_of)}</MonoLabel>
-          <MonoLabel>{facets.length} categories</MonoLabel>
-        </div>
-      </Fragment>
+  <div class="container apps">
+    <PageHeader
+      eyebrow="Apps"
+      title="Shopify apps, ranked by use"
+      count={catalogue}
+      description={`Every app we detect, ranked by how many of ${denominator.toLocaleString('en-US')} scanned stores run it, with App Store ratings and prices.`}
+    >
+      <p slot="meta" class="apps__asof">
+        <span>Scan {formatDate(scan?.as_of)}</span>
+        <span>App Store checked {formatDate(appStore?.as_of)}</span>
+      </p>
       <Fragment slot="actions">
-        <Button href="/apps/categories" size="sm" iconRight="arrow-right">
-          Browse by category
+        <Button href="/apps/categories" iconRight="arrow-right">
+          Categories
         </Button>
-        <Button href="/compare" size="sm" variant="quiet">
+        <Button href="/compare" variant="ghost" icon="scales">
           Compare apps
         </Button>
       </Fragment>
     </PageHeader>
 
-    <div class="apps-layout">
-      <aside class="apps-layout__rail">
-        <CategoryRail
-          all={{
-            label: 'All apps',
-            href: urlWith(url, { category: null }),
-            count: allCount,
-            selected: !category,
-          }}
-          items={railItems.map((f) => ({
-            label: f.label,
-            href: urlWith(url, { category: f.value }),
-            count: f.count,
-            selected: f.value === category,
-          }))}
-        />
-      </aside>
+    <BrowseBar
+      class="apps__bar"
+      groups={groups}
+      pills="category"
+      total={total}
+      noun={total === 1 ? 'app' : 'apps'}
+      sort={sortOptions}
+      clearHref={clearHref}
+      search={{
+        value: q,
+        placeholder: 'Search apps',
+        hidden: {
+          category,
+          price,
+          bfs: bfs ? '1' : null,
+          rating: ratingParam,
+          sort: sort === 'usage' ? null : sort,
+          view: view === 'grid' ? 'grid' : null,
+        },
+      }}
+      view={{
+        current: view,
+        gridHref: urlWith(url, { view: 'grid' }),
+        indexHref: urlWith(url, { view: null }),
+      }}
+    />
 
-      <div class="apps-layout__main">
-        <FilterBar
-          groups={groups}
-          total={total}
-          noun={total === 1 ? 'app' : 'apps'}
-          sort={sortOptions}
-          clearHref={clearHref}
-          view={{
-            current: view,
-            gridHref: urlWith(url, { view: 'grid' }, true),
-            indexHref: urlWith(url, { view: null }, true),
-          }}
-        />
-
-        {items.length === 0 ? (
-          <EmptyState
-            class="apps-empty"
-            title="No apps match these filters"
-            body={`Try removing a filter, or browse all ${allCount} apps.`}
-          >
-            <Button href={clearHref} size="sm">
-              Clear filters
-            </Button>
-          </EmptyState>
-        ) : view === 'grid' ? (
-          <>
-            <p class="grid-note">
-              Each plate is the app’s own section on a curated store — a layout preview drawn from
-              detected sections until captures land.
+    {selectedCat && (
+      <Card padding="none" class="catctx">
+        <div class="catctx__body">
+          <div class="catctx__text">
+            <p class="catctx__name">{selectedCat.name}</p>
+            <p class="catctx__meta">
+              <span class="num">{selectedCat.store_count.toLocaleString('en-US')}</span> of{' '}
+              <span class="num">{denominator.toLocaleString('en-US')}</span> stores run one (
+              {sharePct(selectedCat.share)}) ·{' '}
+              {selectedCat.surfaces.length
+                ? `renders as ${selectedCat.surfaces.map((s) => s.name).join(', ')}`
+                : 'runs in the background'}
             </p>
-            {plated.length > 0 ? (
-              <div class="grid grid--sections apps-grid">
-                {plated.map((app, i) => (
-                  <AppTile
-                    app={app}
-                    section={sectionsByApp.get(app.slug) ?? null}
-                    surface={surfaceOf(app)}
-                    eager={i < 4}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p class="grid-none">
-                None of the apps on this page has been seen rendering a section yet.
-              </p>
-            )}
-            <PlainList
-              class="apps-plain"
-              title="Not on a curated store yet"
-              note="They render a section, but none of our curated stores runs them."
-              apps={unseen}
-              reason={(app) => (surfaceOf(app) ? `Renders as ${surfaceOf(app)}` : null)}
-            />
-            <PlainList
-              class="apps-plain"
-              title="Works in the background"
-              note="No storefront section to show: scripts, back office, chat widgets."
-              apps={background}
-              reason={(app) => app.category?.name ?? null}
-            />
-          </>
-        ) : (
-          <AppTable class="apps-table" usageLabel="Stores">
-            {items.map((app) => (
-              <AppRow
-                slug={app.slug}
-                href={app.href}
-                name={app.short_name}
-                iconUrl={app.icon_url}
-                developer={app.developer}
-                category={app.category?.name}
-                rating={app.rating}
-                reviews={app.reviews}
-                priceLabel={priceFrom(app.pricing)}
-                storesCount={app.usage.stores}
-                sharePct={app.usage.share * 100}
-                rank={app.usage.rank ?? undefined}
-                builtForShopify={app.built_for_shopify}
-                ratingSource={app.rating ? ratingSource : undefined}
-              />
+          </div>
+          <div class="catctx__icons" aria-hidden="true">
+            {selectedCat.top_apps.slice(0, 4).map((a) => (
+              <AppIcon src={a.icon_url} name={a.short_name} size={28} />
             ))}
-          </AppTable>
-        )}
-
-        <Pagination
-          class="apps-pager"
-          page={page}
-          pageSize={PAGE_SIZE}
-          total={total}
-          noun="apps"
-          hrefFor={(n) => urlWith(url, { p: n > 1 ? String(n) : null })}
-        />
-
-        <div class="apps-sources">
-          <SourceNote source={`${scan?.label ?? 'StorePeek scan'}: stores and share`} />
-          <SourceNote
-            source="Shopify App Store listing: rating, reviews, prices, Built for Shopify"
-            asOf={`checked ${formatDate(appStore?.as_of)}`}
-            href=""
-          />
+          </div>
+          <Button href={selectedCat.href} size="sm" iconRight="arrow-right" class="catctx__link">
+            Category page
+          </Button>
         </div>
-      </div>
+      </Card>
+    )}
+
+    {items.length === 0 ? (
+      <EmptyState
+        class="apps__empty"
+        title={q ? `No apps match “${q}”` : 'No apps match these filters'}
+        body={`Try another search or remove a filter. ${catalogue} apps are tracked in all.`}
+      >
+        <Button href={clearHref} size="sm">
+          Clear filters
+        </Button>
+      </EmptyState>
+    ) : view === 'grid' ? (
+      <>
+        {pinned.length > 0 ? (
+          <ul class="apps__grid" aria-label="Apps where they render">
+            {pinned.map((app, i) => {
+              const s = sectionByApp.get(app.slug)!;
+              return (
+                <li>
+                  <CaptureCard
+                    section={s}
+                    href={app.href}
+                    label={s.type.name}
+                    labelMuted={app.short_name}
+                    alt={`${app.short_name}: ${s.type.name.toLowerCase()} section on ${s.store.display_name}, ${pageName(s.page_type).toLowerCase()} page (layout preview)`}
+                    title={app.short_name}
+                    meta={`${app.usage.stores.toLocaleString('en-US')} stores · on ${s.store.display_name}`}
+                    icon={{ kind: 'app', src: app.icon_url, name: app.short_name }}
+                    eager={i < 3}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p class="apps__none">
+            None of the apps on this page has been seen rendering a section yet.
+          </p>
+        )}
+        {unpinned.length > 0 && (
+          <section class="apps__plain" aria-labelledby="plain-title">
+            <h2 class="apps__plain-title" id="plain-title">
+              No section to show <span class="num">{unpinned.length}</span>
+            </h2>
+            <p class="apps__plain-note">
+              Apps that work in the background (scripts, back office, chat widgets), or that no
+              curated store runs yet.
+            </p>
+            <ul class="plain">
+              {unpinned.map((app) => (
+                <li>
+                  <a href={app.href} class="plain__row">
+                    <AppIcon src={app.icon_url} name={app.short_name} size={28} />
+                    <span class="plain__text">
+                      <span class="plain__name">{app.short_name}</span>
+                      <span class="plain__why">
+                        {surfaceName(app)
+                          ? `${surfaceName(app)} · not on a curated store yet`
+                          : `${app.category?.name ?? 'Background'} · no page section`}
+                      </span>
+                    </span>
+                    <span class="plain__stores num">
+                      {app.usage.stores.toLocaleString('en-US')}
+                      <span class="visually-hidden"> stores</span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </>
+    ) : (
+      <RankTable
+        class="apps__table"
+        items={items.map((app) => ({
+          app,
+          rank: category ? app.category_rank : app.usage.rank,
+        }))}
+        max={leader}
+        label={
+          categoryLabel ? `${categoryLabel} apps, ranked` : 'Apps ranked by stores running them'
+        }
+        rankTitle={categoryLabel ? `Rank in ${categoryLabel}` : 'Rank by stores running it'}
+        ratingSource={ratingSource}
+      />
+    )}
+
+    <Pagination
+      class="apps__pager"
+      page={page}
+      pageSize={PAGE_SIZE}
+      total={total}
+      noun="apps"
+      hrefFor={(n) => urlWith(url, { p: n > 1 ? String(n) : null })}
+    />
+
+    {topCats.length > 0 && (
+      <section class="apps__cats" aria-labelledby="cats-title">
+        <SectionHeader
+          title="Browse by category"
+          id="cats-title"
+          description={`${cats.items.length} kinds of app, by how many stores run at least one.`}
+          href="/apps/categories"
+          linkLabel={`All ${cats.items.length} categories`}
+        />
+        <ul class="apps__cat-grid">
+          {topCats.map((c) => (
+            <li>
+              <CategoryCard
+                category={c}
+                denominator={denominator}
+                maxShare={maxShare}
+                apps={c.top_apps.slice(0, 3).map((a) => ({
+                  name: a.short_name,
+                  href: a.href,
+                  iconUrl: a.icon_url,
+                  stores: usage.get(a.slug)?.usage.stores ?? null,
+                }))}
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <div class="apps__sources">
+      <SourceNote source={`${scan?.label ?? 'Our scan'}: stores, share and rank`} />
+      <SourceNote
+        source="Shopify App Store listing: rating, reviews, prices, Built for Shopify"
+        asOf={`checked ${formatDate(appStore?.as_of)}`}
+        href=""
+      />
     </div>
   </div>
 </BaseLayout>
 
 <style>
-  .statement {
-    max-width: 36ch;
-    margin-top: var(--space-5);
-    color: var(--ink-2);
-    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
-    line-height: 1.25;
-    letter-spacing: -0.01em;
+  .apps {
+    padding-bottom: var(--space-16);
   }
-  .specline {
+  .apps__asof {
     display: flex;
+    margin-top: var(--space-3);
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-5);
-    margin-top: var(--space-5);
+    gap: var(--space-1) var(--space-4);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
   }
-  .apps-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-10);
+
+  /* Selected category: a slim context card above the ranking. */
+  :global(.catctx) {
     margin-top: var(--space-4);
   }
-  .apps-layout__rail {
-    display: none;
+  .catctx__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    padding: var(--space-3) var(--space-4);
   }
-  @media (min-width: 1200px) {
-    .apps-layout {
-      grid-template-columns: 228px minmax(0, 1fr);
-      gap: var(--space-12);
-    }
-    .apps-layout__rail {
-      display: block;
-    }
+  .catctx__text {
+    flex: 1 1 260px;
+    min-width: 0;
   }
-  .apps-grid,
-  :global(.apps-table),
-  :global(.apps-empty) {
-    margin-top: var(--space-6);
+  .catctx__name {
+    font-weight: var(--weight-semibold);
   }
-  :global(.apps-plain) {
-    margin-top: var(--space-12);
-  }
-  .grid-none {
-    margin-top: var(--space-6);
-    color: var(--ink-3);
-  }
-  @media (max-width: 479px) {
-    .apps-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-6) var(--space-3);
-    }
-  }
-  .grid-note {
-    max-width: 640px;
-    margin-top: var(--space-5);
+  .catctx__meta {
     color: var(--ink-3);
     font-size: var(--text-sm);
   }
-  :global(.apps-pager) {
+  .catctx__icons {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .catctx__icons {
+      display: inline-flex;
+    }
+    .catctx__icons :global(.app-icon + .app-icon) {
+      margin-left: -6px;
+      box-shadow: 0 0 0 2px var(--surface);
+    }
+  }
+
+  :global(.apps__table),
+  :global(.apps__empty) {
+    margin-top: var(--space-4);
+  }
+  :global(.apps__pager) {
     margin-top: var(--space-8);
   }
-  .apps-sources {
+
+  /* Grid view */
+  .apps__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+  @media (min-width: 480px) {
+    .apps__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+  }
+  @media (min-width: 1024px) {
+    .apps__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+  }
+  @media (min-width: 1200px) {
+    .apps__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .apps__grid > li {
+    display: flex;
+    min-width: 0;
+  }
+  .apps__grid > li > :global(.capcard) {
+    flex: 1;
+  }
+  .apps__none {
+    margin-top: var(--space-6);
+    color: var(--ink-3);
+  }
+  .apps__plain {
+    margin-top: var(--section-y-app);
+  }
+  .apps__plain-title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-size: var(--text-h3);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.015em;
+  }
+  .apps__plain-title .num {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-regular);
+  }
+  .apps__plain-note {
+    margin-top: var(--space-1);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .plain {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: var(--space-8);
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 768px) {
+    .plain {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1200px) {
+    .plain {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .plain li {
+    min-width: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .plain__row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 56px;
+    padding: var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    border-radius: var(--radius-control);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .plain__row:hover {
+    background: var(--surface-2);
+  }
+  .plain__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .plain__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: var(--weight-medium);
+  }
+  .plain__why {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .plain__stores {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+
+  /* Categories */
+  .apps__cats {
+    margin-top: var(--space-16);
+    padding-top: var(--section-y-app);
+    border-top: 1px solid var(--line);
+  }
+  /* Phones: a sideways row of category cards (snap), the next one peeking in. */
+  .apps__cat-grid {
+    display: grid;
+    grid-auto-columns: 82%;
+    grid-auto-flow: column;
+    gap: var(--space-3);
+    margin-inline: calc(var(--page-gutter) * -1);
+    padding: 2px var(--page-gutter) var(--space-3);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--page-gutter);
+    scrollbar-width: none;
+  }
+  .apps__cat-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .apps__cat-grid > li {
+    scroll-snap-align: start;
+  }
+  @media (min-width: 640px) {
+    .apps__cat-grid {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+      margin-inline: 0;
+      padding: 0;
+      overflow: visible;
+    }
+  }
+  @media (min-width: 1024px) {
+    .apps__cat-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .apps__cat-grid > li {
+    display: flex;
+    min-width: 0;
+  }
+  .apps__cat-grid > li > :global(.ccard) {
+    flex: 1;
+  }
+
+  .apps__sources {
     display: grid;
     gap: var(--space-2);
-    margin-top: var(--space-8);
+    margin-top: var(--space-12);
     padding-top: var(--space-4);
     border-top: 1px solid var(--line);
   }
