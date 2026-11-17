@@ -534,29 +534,24 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
       top: 50%;
       transform: translate(-50%, -50%);
     }
-    /* [listing] [profile] on one row, the listing's affiliate label under both. */
+    /* [listing] [profile] on one row when they fit (the profile wraps under the listing in
+       narrow panels, e.g. 768px), the listing's affiliate label under both. */
     .ch__actions {
-      display: grid;
-      grid-template-columns: auto auto;
-      justify-content: start;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
       gap: var(--space-2);
     }
     .ch__actions :global(.ch__cta) {
       display: contents;
     }
     .ch__actions :global(.ch__cta .cta__note) {
-      grid-column: 1 / -1;
-      grid-row: 2;
+      order: 3;
+      flex-basis: 100%;
       max-width: none;
-      /* Wrap to the buttons' width instead of widening them. */
-      contain: inline-size;
     }
     .ch__actions :global(.ch__profile) {
-      grid-row: 1;
-      grid-column: 2;
-    }
-    .ch__actions--solo :global(.ch__profile) {
-      grid-column: 1;
+      order: 2;
     }
   }
   @media (min-width: 768px) {
