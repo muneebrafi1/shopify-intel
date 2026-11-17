@@ -114,10 +114,23 @@ describe('themes', () => {
   });
 
   it('uses the affiliate redirect for the CTA when a link exists', async () => {
-    const { data } = await api.getTheme({ slug: 'hyper' });
+    // The seed has no theme affiliate link any more (Hyper's was dropped by
+    // data/curation/overrides.json), so add one here to exercise the theme CTA path.
+    await db.run(
+      `INSERT INTO affiliate_links (target_type, target_id, target_name, program_id, url, label, active, created_at, updated_at)
+       SELECT 'theme', id, name, NULL, 'https://example.com/ref', 'Affiliate link', 1, '2026-11-17', '2026-11-17'
+       FROM themes WHERE slug = 'impulse'`,
+    );
+    const { data } = await api.getTheme({ slug: 'impulse' });
     expect(data.theme.cta?.is_affiliate).toBe(true);
     expect(data.theme.cta?.href).toMatch(/^\/go\/\d+$/);
     expect(data.theme.cta?.rel).toContain('sponsored');
+    await db.run("DELETE FROM affiliate_links WHERE url = 'https://example.com/ref'");
+    const hyper = await api.getTheme({ slug: 'hyper' });
+    expect(hyper.data.theme.cta).toMatchObject({
+      is_affiliate: false,
+      href: 'https://themes.shopify.com/themes/hyper',
+    });
     const dawn = await api.getTheme({ slug: 'dawn' });
     expect(dawn.data.theme.cta).toMatchObject({
       is_affiliate: false,
@@ -159,7 +172,8 @@ describe('apps', () => {
       rank: 1,
     });
     expect(meta.sources[data.items[0]?.usage.source ?? '']).toBeDefined();
-    expect(data.facets.categories.find((c) => c.value === 'reviews')?.count).toBe(8);
+    // 7 reviews apps: the export's 'trustpilot' record is a wrong match and is not created.
+    expect(data.facets.categories.find((c) => c.value === 'reviews')?.count).toBe(7);
     const reviews = await api.listApps({ category: 'reviews', sort: 'rating' });
     expect(reviews.data.items.every((a) => a.category?.slug === 'reviews')).toBe(true);
     const bfs = await api.listApps({ built_for_shopify: true, min_rating: 4.9 });

@@ -131,6 +131,33 @@ export const AppCurationInput = z.object({
 });
 export type AppCurationInput = z.infer<typeof AppCurationInput>;
 
+/**
+ * data/curation/overrides.json: corrections applied on top of the raw exports (which are
+ * re-exported and never edited by hand). Optional; a missing file means no overrides.
+ */
+export const OverridesInput = z.object({
+  _note: z.string(),
+  unmatchDetectionSlugs: z
+    .array(z.object({ slug: z.string().min(1), reason: z.string().min(3) }))
+    .default([]),
+  dropAffiliateLinks: z
+    .array(
+      z.object({
+        target_type: z.enum(['app', 'theme', 'vendor']),
+        target_slug: z.string().min(1),
+        reason: z.string().min(3),
+      }),
+    )
+    .default([]),
+});
+export type OverridesInput = z.infer<typeof OverridesInput>;
+
+const NO_OVERRIDES: OverridesInput = {
+  _note: 'none',
+  unmatchDetectionSlugs: [],
+  dropAffiliateLinks: [],
+};
+
 export interface TeardownFile {
   file: string;
   source: string;
@@ -147,6 +174,7 @@ export interface SeedInputs {
   categories: string[];
   storeCuration: StoreCurationInput;
   appCuration: AppCurationInput;
+  overrides: OverridesInput;
   teardowns: TeardownFile[];
   /** Raw bytes of every input, for the data_version hash. */
   rawFiles: Array<{ name: string; content: string }>;
@@ -186,6 +214,9 @@ export function loadSeedInputs(root: string): SeedInputs {
     categories: json('data/seed/categories.json', z.array(z.string())),
     storeCuration: json('data/curation/stores.json', StoreCurationInput),
     appCuration: json('data/curation/apps.json', AppCurationInput),
+    overrides: existsSync(join(root, 'data/curation/overrides.json'))
+      ? json('data/curation/overrides.json', OverridesInput)
+      : NO_OVERRIDES,
     teardowns,
     rawFiles,
   };

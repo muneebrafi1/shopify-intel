@@ -1,0 +1,16 @@
+{
+  "_note": "Corrections the seed build applies on top of the raw exports in data/seed (those files are re-exported by tools/export_seed.py and never edited by hand). Owner-approved drafts, 17 Nov 2026. unmatchDetectionSlugs: detection slugs whose App Store match is wrong; their detections stay unresolved (counted, attributed to no app) and the wrong app record is not created. dropAffiliateLinks: affiliate links that must not be used; the target falls back to its official URL and the link id is left unused, so /go/<id> 404s.",
+  "unmatchDetectionSlugs": [
+    {
+      "slug": "trustpilot",
+      "reason": "The export matched this detection rule to the App Store listing 'Trustgear: Review Widgets', a different app. Unresolved until a correct match is verified."
+    }
+  ],
+  "dropAffiliateLinks": [
+    {
+      "target_type": "theme",
+      "target_slug": "hyper",
+      "reason": "No affiliate program behind this link."
+    }
+  ]
+}

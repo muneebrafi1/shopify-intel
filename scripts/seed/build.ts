@@ -123,7 +123,17 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   // ------------------------------------------------------------------------------------------
   // Meta
   // ------------------------------------------------------------------------------------------
-  const allAppInputs = [...inputs.apps, ...inputs.appsExtra];
+  // Curation overrides (data/curation/overrides.json): wrong App Store matches are dropped, so
+  // their detections stay unresolved, and unwanted affiliate links are skipped.
+  const unmatched = new Set(inputs.overrides.unmatchDetectionSlugs.map((o) => o.slug));
+  const appInputsRaw = [...inputs.apps, ...inputs.appsExtra];
+  for (const slug of unmatched) {
+    const stores = detections.filter((d) => d.apps.includes(slug)).length;
+    if (!appInputsRaw.some((a) => a.slug === slug) && stores === 0)
+      warn(`override: unmatch '${slug}' matches no app record or detection (stale?)`);
+    else warn(`override: detection slug '${slug}' left unresolved (${stores} stores)`);
+  }
+  const allAppInputs = appInputsRaw.filter((a) => !unmatched.has(a.slug));
   const checkedDays = allAppInputs
     .map((a) => a.app_store_checked_on)
     .filter((d): d is string => typeof d === 'string')
@@ -209,7 +219,9 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
     appBySlug.set(rec.slug, rec);
   }
   const resolveApp = (detectionSlug: string): AppRecord | undefined =>
-    appBySlug.get(aliasOf.get(detectionSlug) ?? detectionSlug);
+    unmatched.has(detectionSlug)
+      ? undefined
+      : appBySlug.get(aliasOf.get(detectionSlug) ?? detectionSlug);
 
   // Display names: scraped search-page titles fall back to the developer; short names come from
   // editorial overrides, else the brand rule; collisions and very short results use the full name.
@@ -472,7 +484,12 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       warn(`MISMATCH theme ${t.slug}: detections=${ours} export=${t.scan.stores}`);
     }
   }
-  checkCoInstalls(inputs.apps, storeApps, (slug) => resolveApp(slug) !== undefined, warn);
+  checkCoInstalls(
+    inputs.apps.filter((a) => !unmatched.has(a.slug)),
+    storeApps,
+    (slug) => resolveApp(slug) !== undefined,
+    warn,
+  );
 
   // ------------------------------------------------------------------------------------------
   // Placeholder capture plan for curated stores
@@ -694,7 +711,23 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       status: p.status,
     })),
   );
-  const linkRows: Row[] = inputs.links.map((l, i) => {
+  // Dropped links keep their position-based id unused, so other /go/<id> URLs never shift.
+  const dropped = inputs.overrides.dropAffiliateLinks;
+  const isDropped = (l: (typeof inputs.links)[number]) =>
+    dropped.some((d) => d.target_type === l.target_type && d.target_slug === l.target_slug);
+  for (const d of dropped) {
+    if (
+      !inputs.links.some((l) => l.target_type === d.target_type && l.target_slug === d.target_slug)
+    )
+      warn(
+        `override: drop affiliate link ${d.target_type}:${d.target_slug} matches no link (stale?)`,
+      );
+  }
+  const linkRows: Row[] = inputs.links.flatMap((l, i) => {
+    if (isDropped(l)) {
+      warn(`override: affiliate link ${i + 1} (${l.target_type}:${l.target_slug}) dropped`);
+      return [];
+    }
     let targetId: number | null = null;
     let targetName = l.target_name ?? l.target_slug ?? '';
     if (l.target_type === 'app') {
@@ -722,18 +755,20 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       ? programs.find((p) => p.key === programKey(l.program ?? ''))
       : undefined;
     if (l.program && !program) warn(`affiliate link ${i + 1}: unknown program '${l.program}'`);
-    return {
-      id: i + 1,
-      target_type: l.target_type,
-      target_id: targetId,
-      target_name: targetName,
-      program_id: program?.id ?? null,
-      url: l.url,
-      label: 'Affiliate link',
-      active: 1,
-      created_at: CATALOG_TS,
-      updated_at: CATALOG_TS,
-    };
+    return [
+      {
+        id: i + 1,
+        target_type: l.target_type,
+        target_id: targetId,
+        target_name: targetName,
+        program_id: program?.id ?? null,
+        url: l.url,
+        label: 'Affiliate link',
+        active: 1,
+        created_at: CATALOG_TS,
+        updated_at: CATALOG_TS,
+      },
+    ];
   });
   w.insert('affiliate_links', linkRows);
 

@@ -125,6 +125,13 @@ npm test                # vitest on node:sqlite (migrations + generated seed in 
   `apps.json` (short display names), `teardowns/*.md` (format documented in
   `scripts/seed/teardowns.ts`; notes reference `page_type`/`device`/`section_type` and are resolved
   to section ids at build time).
+- Corrections to the raw exports live in `data/curation/overrides.json`, never in `data/seed/`
+  (those files are re-exported): `unmatchDetectionSlugs` drops a wrong App Store match so the
+  slug's detections stay unresolved (counted, attributed to no app; currently `trustpilot`, which
+  the export matched to the unrelated "Trustgear" listing), and `dropAffiliateLinks` skips a link
+  (currently theme `hyper`, which has no program). A dropped link's position-based id stays unused,
+  so `/go/<id>` 404s for it and every other link id is unchanged. The build prints a warning per
+  applied override and for stale ones. Owner-approved drafts.
 - Derived tables (`stores.current_*`, `list_position`, `app_stats`, `theme_stats`,
   `app_co_installs`, `theme_app_usage`, `store_similar`, `search_index`) are rebuilt by the same SQL
   at seed time and at runtime: `rebuildDerived(db)` in `src/server/repo/maintenance.ts`.

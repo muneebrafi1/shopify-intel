@@ -1,7 +1,7 @@
 ---
 slug: youngla
 store: youngla.com
-title: 'YoungLA: a Prestige store with eleven detected apps'
+title: 'YoungLA: a Prestige store with ten identified apps'
 dek: What our 17 Nov 2026 scan found on youngla.com (theme, apps, tracking) and where each app is expected to appear on the page.
 published_at: '2026-11-17'
 is_sample: true
@@ -29,7 +29,7 @@ notes:
     device: desktop
     section_type: reviews
     title: 'Product reviews: Loox'
-    body: Loox was detected alongside a second Reviews-category app (Trustgear). In the same scan Loox was found on 54 of 930 stores and Trustgear on 37, so the product-page reviews section is attributed to Loox.
+    body: Loox is the one reviews app we identified on this store; the same scan found it on 54 of 930 stores. Product-review apps usually render a reviews block on the product page, so that section is attributed to Loox. The capture will show the real placement.
   - n: 5
     page_type: cart
     device: mobile
@@ -49,17 +49,20 @@ Store. Prestige was detected on 13 of the 930 stores in the same scan.
 
 ## Apps
 
-The scan detected eleven apps, grouped here by category:
+The scan picked up eleven app signatures. Ten are identified apps, grouped here by category:
 
-- **Reviews:** Loox and Trustgear
+- **Reviews:** Loox
 - **Email & SMS:** Attentive and AfterShip Email Marketing
 - **Loyalty & Rewards:** Rise Gift Cards & Store Credit and Rivo
 - **Currency & Translation:** Global-e CrossBorder and EasyLocation
 - **Shipping & Returns:** Navidium Shipping Protection
 - **Privacy & Security:** Consentmo GDPR Compliance and NoFraud
 
-Four categories hold two apps each: reviews, email, loyalty and currency. The capture will show
+Four categories hold two apps each: email, loyalty, currency and privacy. The capture will show
 whether both apps in each pair render on the storefront or one works behind the scenes.
+
+The eleventh signature, `trustpilot`, is not attributed to any app. It was matched to an App Store
+listing that turned out to be a different app, so it stays unidentified until we can verify it.
 
 ## Tracking
 
@@ -71,3 +74,4 @@ One tracking tag was detected: **Northbeam**, a marketing attribution tool.
 2. Which loyalty app owns the on-page loyalty block, if there is one.
 3. How Loox reviews are laid out on the product page, and whether they also appear on the home page.
 4. Where the Navidium opt-in appears in the cart.
+5. Whether the unidentified `trustpilot` signature shows up as a visible widget anywhere.

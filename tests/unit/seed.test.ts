@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { buildSeedFromRoot } from '../../scripts/seed/build.ts';
-import { ROOT, seedResult, seededDb } from './helpers/db.ts';
+import { createApiClient } from '../../src/server/api/v1/client.ts';
+import { affiliateRedirect } from '../../src/server/repo/affiliate.ts';
+import { FIXED_NOW, ROOT, seedResult, seededDb, testDeps } from './helpers/db.ts';
 
 describe('seed builder', () => {
   it('is deterministic', () => {
@@ -73,6 +75,59 @@ describe('seed builder', () => {
     );
     expect(notes.length).toBeGreaterThan(0);
     expect(notes.every((n) => n.section_id !== null)).toBe(true);
+    db.close();
+  });
+});
+
+describe('curation overrides (data/curation/overrides.json)', () => {
+  it('leaves trustpilot detections unresolved instead of attributing them to Trustgear', async () => {
+    const db = seededDb();
+    const api = createApiClient(testDeps(db));
+    const app = await db.first(
+      "SELECT id FROM apps WHERE slug = 'trustpilot' OR name LIKE '%Trustgear%' OR developer = 'Trustgear'",
+    );
+    expect(app).toBeNull();
+    expect(await db.first("SELECT app_id FROM app_aliases WHERE slug = 'trustpilot'")).toBeNull();
+    const unresolved = await db.first<{ n: number }>(
+      "SELECT COUNT(*) AS n FROM store_unresolved_apps WHERE detection_slug = 'trustpilot'",
+    );
+    expect(unresolved?.n).toBe(37);
+    expect(seedResult().report.appStoreCounts.trustpilot).toBeUndefined();
+    await expect(api.getApp({ slug: 'trustpilot' })).rejects.toMatchObject({ status: 404 });
+
+    const { data: store } = await api.getStore({ domain: 'youngla.com' });
+    expect(store.apps.unresolved.slugs).toContain('trustpilot');
+    const names = store.apps.groups.flatMap((g) => g.apps.map((a) => a.name)).join(' ');
+    expect(names).not.toMatch(/trustgear/i);
+    db.close();
+  });
+
+  it('no teardown still claims Trustgear', async () => {
+    const db = seededDb();
+    const rows = await db.all<{ body: string }>(
+      `SELECT body_md AS body FROM teardowns
+       UNION ALL SELECT title || ' ' || body FROM teardown_notes`,
+    );
+    for (const r of rows) expect(r.body).not.toMatch(/trustgear/i);
+    db.close();
+  });
+
+  it('drops the Hyper affiliate link without renumbering the others', async () => {
+    const db = seededDb();
+    const api = createApiClient(testDeps(db));
+    const { data: hyper } = await api.getTheme({ slug: 'hyper' });
+    expect(hyper.theme.cta?.is_affiliate).toBe(false);
+    expect(hyper.theme.cta?.href).not.toMatch(/^\/go\//);
+    expect(
+      await db.first(
+        `SELECT id FROM affiliate_links l WHERE l.target_type = 'theme'
+           AND l.target_id = (SELECT id FROM themes WHERE slug = 'hyper')`,
+      ),
+    ).toBeNull();
+    // The dropped row was link 4; its id stays unused so /go/4 404s and /go/5 is unchanged.
+    const req = new Request('https://test.local/go/4');
+    expect((await affiliateRedirect(db, '4', req, FIXED_NOW)).status).toBe(404);
+    expect(await db.first('SELECT id FROM affiliate_links WHERE id = 5')).not.toBeNull();
     db.close();
   });
 });
