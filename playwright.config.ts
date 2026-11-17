@@ -29,7 +29,8 @@ export default defineConfig({
     ? undefined
     : {
         command: `npx astro preview --port ${PORT} --host 127.0.0.1`,
-        url: `${baseURL}/`,
+        // Probe a route that exists on every branch of the stack (the home page lands later).
+        url: `${baseURL}/robots.txt`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
         // Astro 7 backgrounds `astro preview` when it detects an AI agent; keep it in the

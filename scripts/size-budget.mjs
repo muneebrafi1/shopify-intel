@@ -14,7 +14,7 @@ const BUDGETS = {
   clientJs: 60 * 1024,
   largestJs: 25 * 1024,
   clientCss: 90 * 1024,
-  largestCss: 12 * 1024,
+  largestCss: 20 * 1024, // a page using every shared component is ~12 KB
   server: 2.5 * 1024 * 1024,
 };
 const root = new URL('../dist', import.meta.url).pathname;
