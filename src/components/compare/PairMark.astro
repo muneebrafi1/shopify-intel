@@ -1,0 +1,60 @@
+---
+/**
+ * Two marks facing each other with a small "vs" seam between them. Apps use their App Store
+ * icon (monogram fallback); themes use a monogram tile. Same size and weight on both sides so
+ * neither reads as the favourite. Decorative: the names are always written next to it.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+
+interface MarkSide {
+  name: string;
+  iconUrl?: string | null;
+}
+interface Props {
+  a: MarkSide;
+  b: MarkSide;
+  size?: number;
+  class?: string;
+}
+const { a, b, size = 36, class: className } = Astro.props;
+---
+
+<span class:list={['pmark', className]} style={`--pm:${size}px`} aria-hidden="true">
+  <AppIcon src={a.iconUrl ?? null} name={a.name} size={size} class="pmark__a" />
+  <span class="pmark__vs">vs</span>
+  <AppIcon src={b.iconUrl ?? null} name={b.name} size={size} class="pmark__b" />
+</span>
+
+<style>
+  .pmark {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: calc(var(--pm) * 0.34);
+  }
+  .pmark :global(.app-icon) {
+    box-shadow: var(--shadow-xs);
+  }
+  .pmark__vs {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: max(18px, calc(var(--pm) * 0.5));
+    height: max(18px, calc(var(--pm) * 0.5));
+    border-radius: 50%;
+    background: var(--pm-ring, var(--surface));
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      0 0 0 3px var(--pm-ring, var(--surface));
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: max(9px, calc(var(--pm) * 0.24));
+    letter-spacing: 0.02em;
+    line-height: 1;
+    transform: translate(-50%, -50%);
+  }
+</style>

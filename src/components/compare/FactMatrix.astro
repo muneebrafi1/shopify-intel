@@ -1,19 +1,23 @@
 ---
 /**
- * Narrow fact table. Rows come from the API matrix, grouped by source with numbered
- * footnotes. ✓ in ink, × and — in light gray. Never colours or marks a "winner".
+ * The fact matrix, Vercel-style: rows grouped under mono eyebrows by source (numbered for the
+ * footnotes), each with a label and a one-line explanation, then one value per side. Booleans
+ * are solid check marks or a dash; nothing is coloured or scored, and there is no "winner"
+ * column. The header row (both names) sticks under the compact bar at ≥640.
+ * Below 640 each row stacks: label + explanation, then the two values side by side, each with
+ * its side's name, so the pairing stays explicit.
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
 import Icon from '~/components/ui/Icon.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import { formatDate } from '~/lib/format';
 import type { MatrixRow, ResponseMeta } from '~/server/api/v1/types';
-import { matrixCell, matrixGroups, type SideInfo } from './compare';
+import { ROW_HELP, matrixCell, matrixGroups, type SideInfo } from './compare';
 
 export interface ExtraRow {
   /** Source key the row belongs with (it is appended to that group). */
   source: string;
   label: string;
+  help?: string;
   a?: string;
   b?: string;
   /** One value spanning both columns (e.g. "Run both"). */
@@ -53,25 +57,26 @@ const sourceText = (source: string) => {
     : source;
 };
 const sideOf = { a, b };
+const SIDES = ['a', 'b'] as const;
 ---
 
 <div class="fm">
-  <table class="fm__table">
+  <table class="fm__table" role="table">
     <caption class="visually-hidden">{`${a.name} and ${b.name}, fact by fact`}</caption>
     <colgroup>
       <col class="fm__col-label" />
       <col />
       <col />
     </colgroup>
-    <thead>
-      <tr>
-        <td></td>
-        {(['a', 'b'] as const).map((side) => (
-          <th scope="col" class="fm__head">
+    <thead class="fm__thead" role="rowgroup">
+      <tr role="row">
+        <td class="fm__corner" role="cell">
+          <span class="eyebrow">Fact</span>
+        </td>
+        {SIDES.map((side) => (
+          <th scope="col" role="columnheader" class="fm__head">
             <span class="fm__head-inner">
-              {sideOf[side].kind === 'app' && (
-                <AppIcon src={sideOf[side].iconUrl} name={sideOf[side].name} size={20} />
-              )}
+              <AppIcon src={sideOf[side].iconUrl} name={sideOf[side].name} size={24} />
               <span class="fm__head-name">{sideOf[side].name}</span>
             </span>
           </th>
@@ -79,61 +84,78 @@ const sideOf = { a, b };
       </tr>
     </thead>
     {groups.map((g) => (
-      <tbody>
-        <tr class="fm__group">
-          <th colspan="3" scope="colgroup">
-            <MonoLabel>
+      <tbody class="fm__group" role="rowgroup">
+        <tr class="fm__group-row" role="row">
+          <th colspan="3" scope="colgroup" role="columnheader">
+            <span class="eyebrow">
               {g.label}
               <sup class="fm__fn">{g.n}</sup>
-            </MonoLabel>
+            </span>
           </th>
         </tr>
         {g.rows.map((row) => (
-          <tr>
-            <th scope="row" class="fm__label">
-              {row.label}
+          <tr class="fm__row" role="row">
+            <th scope="row" role="rowheader" class="fm__label">
+              <span class="fm__label-name">{row.label}</span>
+              {ROW_HELP[row.key] && <span class="fm__help">{ROW_HELP[row.key]}</span>}
             </th>
-            {(['a', 'b'] as const).map((side) => {
+            {SIDES.map((side) => {
               const c = matrixCell(row, side, sideOf[side].denominator);
               return (
-                <td class:list={['fm__cell', c.mark && `fm__cell--${c.mark}`]}>
-                  {c.mark === 'yes' ? (
-                    <>
-                      <Icon name="check" size={16} />
-                      <span class="visually-hidden">{c.text}</span>
-                    </>
-                  ) : c.mark === 'no' ? (
-                    <>
-                      <Icon name="x" size={14} />
-                      <span class="visually-hidden">{c.text}</span>
-                    </>
-                  ) : c.mark === 'none' ? (
-                    <span title={c.text}>
-                      <span aria-hidden="true">—</span>
-                      <span class="visually-hidden">{c.text}</span>
-                    </span>
-                  ) : (
-                    c.text
-                  )}
+                <td class:list={['fm__cell', c.mark && `fm__cell--${c.mark}`]} role="cell">
+                  <span class="fm__side" aria-hidden="true">
+                    {sideOf[side].name}
+                  </span>
+                  <span class="fm__value">
+                    {c.mark === 'yes' ? (
+                      <>
+                        <span class="fm__check">
+                          <Icon name="check-bold" size={12} />
+                        </span>
+                        <span class="visually-hidden">{c.text}</span>
+                      </>
+                    ) : c.mark === 'no' ? (
+                      <>
+                        <span class="fm__no">
+                          <Icon name="minus-bold" size={12} />
+                        </span>
+                        <span class="visually-hidden">{c.text}</span>
+                      </>
+                    ) : c.mark === 'none' ? (
+                      <span class="fm__none">Not listed</span>
+                    ) : (
+                      c.text
+                    )}
+                  </span>
                 </td>
               );
             })}
           </tr>
         ))}
         {extraFor(g.source).map((e) => (
-          <tr>
-            <th scope="row" class="fm__label">
-              {e.label}
+          <tr class="fm__row" role="row">
+            <th scope="row" role="rowheader" class="fm__label">
+              <span class="fm__label-name">{e.label}</span>
+              {e.help && <span class="fm__help">{e.help}</span>}
             </th>
             {e.both !== undefined ? (
-              <td colspan="2" class="fm__cell fm__cell--span">
-                {e.both}
+              <td colspan="2" class="fm__cell fm__cell--span" role="cell">
+                <span class="fm__side" aria-hidden="true">
+                  Both
+                </span>
+                <span class="fm__value">{e.both}</span>
               </td>
             ) : (
-              <>
-                <td class:list={['fm__cell', { 'fm__cell--none': !e.a }]}>{e.a ?? '—'}</td>
-                <td class:list={['fm__cell', { 'fm__cell--none': !e.b }]}>{e.b ?? '—'}</td>
-              </>
+              SIDES.map((side) => (
+                <td class:list={['fm__cell', { 'fm__cell--none': !e[side] }]} role="cell">
+                  <span class="fm__side" aria-hidden="true">
+                    {sideOf[side].name}
+                  </span>
+                  <span class="fm__value">
+                    {e[side] ?? <span class="fm__none">None seen</span>}
+                  </span>
+                </td>
+              ))
             )}
           </tr>
         ))}
@@ -154,91 +176,107 @@ const sideOf = { a, b };
 <style>
   .fm {
     width: 100%;
-    max-width: 760px;
-    margin-inline: auto;
   }
   .fm__table {
     width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    font-size: var(--text-sm);
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--text-ui);
     font-variant-numeric: tabular-nums;
   }
-  .fm__col-label {
-    width: 34%;
+  .fm__thead {
+    display: none;
   }
-  thead td,
-  thead th {
-    padding: 0 var(--space-3) var(--space-3);
-    border-bottom: 1px solid var(--ink);
-    vertical-align: bottom;
-  }
-  .fm__head {
-    text-align: left;
-    font-weight: var(--weight-semibold);
-    font-size: var(--text-md);
-    letter-spacing: var(--tracking-snug);
-  }
-  .fm__head-inner {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    max-width: 100%;
-  }
-  .fm__head-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .fm__group th {
-    padding: var(--space-6) var(--space-3) var(--space-2);
+  .fm__group-row th {
+    padding: var(--space-8) 0 var(--space-3);
     text-align: left;
   }
-  tbody:first-of-type .fm__group th {
-    padding-top: var(--space-4);
+  .fm__group:first-of-type .fm__group-row th {
+    padding-top: 0;
   }
   .fm__fn {
-    margin-left: 2px;
+    margin-left: 3px;
     font-size: 0.85em;
     vertical-align: super;
     line-height: 0;
   }
-  .fm__label {
-    padding: 11px var(--space-3);
-    color: var(--ink-2);
-    font-weight: var(--weight-regular);
-    text-align: left;
-    vertical-align: top;
+
+  /* <640: each row stacks (label, then the two values side by side). */
+  .fm__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-4);
+    padding-block: var(--space-3) var(--space-4);
     border-top: 1px solid var(--line);
+  }
+  .fm__label {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    text-align: left;
+    font-weight: inherit;
+  }
+  .fm__label-name {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .fm__help {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.4;
   }
   .fm__cell {
-    padding: 11px var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
     color: var(--ink);
-    vertical-align: top;
-    border-top: 1px solid var(--line);
     overflow-wrap: anywhere;
   }
-  tbody tr:nth-child(2) > * {
-    border-top-color: var(--line-strong);
-  }
-  .fm__cell--yes {
-    color: var(--ink);
-  }
-  .fm__cell--no,
-  .fm__cell--none {
-    color: var(--ink-4);
-  }
-  .fm__cell :global(.icon) {
-    vertical-align: -3px;
-  }
   .fm__cell--span {
-    color: var(--ink);
+    grid-column: 1 / -1;
   }
+  .fm__side {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fm__value {
+    min-height: 22px;
+  }
+  .fm__check,
+  .fm__no {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    vertical-align: -5px;
+  }
+  .fm__check {
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+  }
+  .fm__no {
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-3);
+  }
+  .fm__none {
+    color: var(--ink-3);
+  }
+
   .fm__notes {
     display: grid;
     gap: 4px;
     margin-top: var(--space-6);
-    padding-top: var(--space-3);
+    padding-top: var(--space-4);
     border-top: 1px solid var(--line);
     color: var(--ink-3);
     font-size: var(--text-xs);
@@ -246,35 +284,78 @@ const sideOf = { a, b };
   }
   .fm__notes li {
     display: grid;
-    grid-template-columns: 16px minmax(0, 1fr);
+    grid-template-columns: 18px minmax(0, 1fr);
   }
   .fm__notes-n {
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
   }
-  @media (max-width: 639px) {
+
+  /* ≥640: a real three-column table with a sticky header row. */
+  @media (min-width: 640px) {
+    .fm__table {
+      table-layout: fixed;
+    }
     .fm__col-label {
-      width: 32%;
+      width: 40%;
+    }
+    .fm__thead {
+      display: table-header-group;
+    }
+    .fm__thead th,
+    .fm__thead td {
+      position: sticky;
+      z-index: 2;
+      top: calc(var(--header-h) + 48px);
+      padding: var(--space-3) var(--space-4) var(--space-3) 0;
+      background: var(--bg);
+      box-shadow: inset 0 -1px 0 var(--line-strong);
+      text-align: left;
+      vertical-align: middle;
+    }
+    .fm__head-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      max-width: 100%;
+    }
+    .fm__head-name {
+      overflow: hidden;
+      font-size: var(--text-md);
+      font-weight: var(--weight-semibold);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .fm__group-row th {
+      padding-top: var(--space-10);
+    }
+    .fm__group:first-of-type .fm__group-row th {
+      padding-top: var(--space-6);
+    }
+    .fm__row {
+      display: table-row;
+      padding: 0;
+      border: 0;
     }
     .fm__label,
-    .fm__cell,
-    thead td,
-    thead th,
-    .fm__group th {
-      padding-left: var(--space-2);
-      padding-right: var(--space-2);
+    .fm__cell {
+      display: table-cell;
+      padding: 14px var(--space-4) 14px 0;
+      border-top: 1px solid var(--line);
+      vertical-align: top;
     }
-    .fm__label {
-      padding-left: 0;
+    .fm__label-name,
+    .fm__help {
+      display: block;
     }
-    .fm__group th {
-      padding-left: 0;
+    .fm__help {
+      margin-top: 2px;
     }
-    .fm__head {
-      font-size: var(--text-sm);
-    }
-    .fm__head-inner :global(.app-icon) {
+    .fm__side {
       display: none;
+    }
+    .fm__row:hover > * {
+      background: var(--bg-subtle);
     }
   }
 </style>

@@ -1,0 +1,191 @@
+---
+/**
+ * One curated comparison as a card: both marks facing each other, the pair's name, one factual
+ * line that tells the two apart, and how many scanned stores run each (two neutral bars on the
+ * same scale, same colour). The title is the card's link (stretched over the card).
+ */
+import Card from '~/components/ui/Card.astro';
+import Icon from '~/components/ui/Icon.astro';
+import { formatCount } from '~/lib/format';
+import PairMark from './PairMark.astro';
+
+interface PairSide {
+  name: string;
+  iconUrl?: string | null;
+  stores?: number | null;
+}
+interface Props {
+  href: string;
+  a: PairSide;
+  b: PairSide;
+  line: string;
+  /** Stores running both (apps) or that ran both (themes). */
+  shared?: number | null;
+  sharedVerb?: 'run' | 'ran';
+  /** Small label above the title, e.g. the category in mixed groups. */
+  eyebrow?: string;
+  /** Show the two marks (off when the media slot already shows both sides). */
+  marks?: boolean;
+  /** Heading level for the title (cards in a grid under an h3 use 4). */
+  level?: 3 | 4;
+  class?: string;
+}
+const {
+  href,
+  a,
+  b,
+  line,
+  shared,
+  sharedVerb = 'run',
+  eyebrow,
+  marks = true,
+  level = 3,
+  class: className,
+} = Astro.props;
+const H = `h${level}` as 'h3' | 'h4';
+const max = Math.max(a.stores ?? 0, b.stores ?? 0, 1);
+const pct = (n?: number | null) => (n ? Math.max(2, Math.round((n / max) * 100)) : 0);
+const both =
+  typeof shared === 'number'
+    ? shared > 0
+      ? `${formatCount(shared)} ${shared === 1 ? 'store' : 'stores'} ${sharedVerb} both`
+      : sharedVerb === 'run'
+        ? 'No scanned store runs both'
+        : 'No store has run both'
+    : null;
+---
+
+<Card interactive padding="md" class:list={['pcard', className]}>
+  {Astro.slots.has('media') && (
+    <Fragment slot="media">
+      <slot name="media" />
+    </Fragment>
+  )}
+  {(marks || eyebrow) && (
+    <div class="pcard__top">
+      {marks && <PairMark a={a} b={b} size={36} />}
+      {eyebrow && <p class="pcard__eyebrow eyebrow">{eyebrow}</p>}
+    </div>
+  )}
+  <H class="pcard__title">
+    <a href={href} class="stretched-link">
+      {a.name} <span class="pcard__vs">vs</span> {b.name}
+    </a>
+  </H>
+  <p class="pcard__line">{line}</p>
+  <dl class="pcard__usage">
+    {[a, b].map((s) => (
+      <div class="pcard__row">
+        <dt>{s.name}</dt>
+        <dd>
+          <span class="pcard__bar" style={`--w:${pct(s.stores)}%`} aria-hidden="true" />
+          <span class="pcard__n num">
+            {typeof s.stores === 'number' ? formatCount(s.stores) : '—'}
+          </span>
+        </dd>
+      </div>
+    ))}
+  </dl>
+  <Fragment slot="footer">
+    <span class="pcard__both">{both ?? 'Stores in our scan'}</span>
+    <span class="pcard__go" aria-hidden="true">
+      <Icon name="arrow-right" size={14} />
+    </span>
+  </Fragment>
+</Card>
+
+<style>
+  .pcard {
+    height: 100%;
+  }
+  .pcard__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .pcard__eyebrow {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pcard__title {
+    font-size: var(--text-h4);
+    font-weight: var(--weight-strong);
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+  .pcard__title a {
+    color: var(--ink);
+  }
+  .pcard__vs {
+    color: var(--ink-3);
+    font-weight: 400;
+  }
+  .pcard__line {
+    margin-top: 4px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+  }
+  .pcard__usage {
+    display: grid;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: var(--space-4);
+  }
+  .pcard__row {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-xs);
+  }
+  .pcard__row dt {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--ink-2);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pcard__row dd {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .pcard__bar {
+    flex: 1;
+    height: 6px;
+    border-radius: var(--radius-pill);
+    background:
+      linear-gradient(to right, var(--ink-2) 0 var(--w), transparent var(--w)), var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .pcard__n {
+    flex: none;
+    min-width: 3ch;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    text-align: right;
+  }
+  .pcard__both {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-xs);
+  }
+  .pcard__go {
+    display: inline-flex;
+    color: var(--ink-3);
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .pcard:hover .pcard__go {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+</style>

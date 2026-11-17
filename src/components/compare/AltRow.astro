@@ -1,26 +1,30 @@
 ---
 /**
- * One ranked alternative: rank, identity, App Store facts, usage in our scan, a crop of where it
- * renders (apps) or a home-page plate (themes), and a link to the canonical comparison.
- * The rank is a position by usage, never a score.
+ * One ranked alternative as a rich row: position, identity, App Store facts (or why a theme is
+ * here), price, usage in our scan with a share meter, a crop of where it renders (apps) or its
+ * home page (themes), and one action. "Compare" appears only when the pair is a curated
+ * comparison with a page (`compareAvailable`); otherwise the action is the item's own page.
+ * The position is usage (apps) or closeness (themes), never a score.
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
 import Badge from '~/components/ui/Badge.astro';
+import Button from '~/components/ui/Button.astro';
 import Rating from '~/components/ui/Rating.astro';
 import SectionCrop from '~/components/media/SectionCrop.astro';
 import Shot from '~/components/media/Shot.astro';
 import { formatCount } from '~/lib/format';
 import type { AppListItem, SectionCard, ThemeListItem } from '~/server/api/v1/types';
-import { specimen } from './compare';
+import { sharePct } from './compare';
 
 interface Props {
   n: number;
   app?: AppListItem | null;
   theme?: ThemeListItem | null;
-  /** The item being replaced (for "used together" and the compare label). */
+  /** The item being replaced (for "with" and the compare label). */
   originalName: string;
   sharedStores: number;
   compareHref: string;
+  compareAvailable: boolean;
   reasons?: string[];
   crop?: SectionCard | null;
   ratingSource?: string;
@@ -32,6 +36,7 @@ const {
   originalName,
   sharedStores,
   compareHref,
+  compareAvailable,
   reasons = [],
   crop,
   ratingSource,
@@ -39,76 +44,89 @@ const {
 const REASON: Record<string, string> = {
   'same-vendor': 'Same vendor',
   'similar-price': 'Similar price',
-  'shared-apps': 'Stores run similar apps',
+  'shared-apps': 'Similar app stacks',
   'same-category': 'Same category',
 };
 const usage = app?.usage ?? theme!.usage;
 const name = app?.short_name ?? theme!.name;
 const href = app?.href ?? theme!.href;
 const preview = theme?.previews[0] ?? null;
+const sub = app
+  ? [app.developer && `by ${app.developer}`, app.tagline].filter(Boolean).join(' · ')
+  : [theme!.vendor && `by ${theme!.vendor}`, theme!.marketplace].filter(Boolean).join(' · ');
+const price = app
+  ? (app.pricing.label ?? 'Pricing not listed')
+  : (theme!.price.label ?? 'Price not listed');
 ---
 
 <li class:list={['alt', { 'alt--theme': !!theme }]}>
-  <span class="alt__n">{specimen(n)}</span>
+  <span class="alt__n num" aria-label={`Position ${n}`}>
+    {n}
+  </span>
 
   <div class="alt__id">
-    {app && <AppIcon src={app.icon_url} name={app.short_name} size={40} />}
+    <AppIcon src={app?.icon_url ?? null} name={name} size={40} />
     <div class="alt__id-text">
       <h3 class="alt__name">
         <a href={href}>{name}</a>
         {app?.built_for_shopify && (
-          <Badge tone="outline" title="Built for Shopify badge on the App Store">
-            BFS
+          <Badge tone="outline" size="sm" title="Built for Shopify badge on the App Store">
+            Built for Shopify
           </Badge>
         )}
       </h3>
-      <p class="alt__sub">
-        {app
-          ? [app.developer && `by ${app.developer}`, app.tagline].filter(Boolean).join(' · ')
-          : [theme!.vendor && `by ${theme!.vendor}`, theme!.marketplace]
-              .filter(Boolean)
-              .join(' · ')}
-      </p>
+      {sub && <p class="alt__sub">{sub}</p>}
     </div>
   </div>
 
   <dl class="alt__facts">
-    {app && (
-      <div class="alt__fact">
-        <dt class="visually-hidden">Rating</dt>
+    {app ? (
+      <div class="alt__fact alt__fact--rating">
+        <dt>Rating</dt>
         <dd>
           <Rating rating={app.rating} reviews={app.reviews} size="sm" source={ratingSource} />
         </dd>
       </div>
-    )}
-    <div class="alt__fact">
-      <dt class="visually-hidden">Price</dt>
-      <dd class="alt__price">
-        {app
-          ? (app.pricing.label ?? 'Pricing not listed')
-          : (theme!.price.label ?? 'Price not listed')}
-      </dd>
-    </div>
-    <div class="alt__fact alt__fact--mono">
-      <dt>Seen on</dt>
-      <dd class="num">
-        {formatCount(usage.stores)} of {formatCount(usage.denominator)}
-      </dd>
-    </div>
-    {sharedStores > 0 && (
-      <div class="alt__fact alt__fact--mono">
-        <dt>With {originalName}</dt>
-        <dd class="num">
-          {formatCount(sharedStores)} {sharedStores === 1 ? 'store' : 'stores'}
+    ) : (
+      <div class="alt__fact alt__fact--why">
+        <dt>Why it’s here</dt>
+        <dd class="alt__reasons">
+          {reasons.length ? (
+            reasons.map((r) => (
+              <Badge tone="neutral" size="sm">
+                {REASON[r] ?? r}
+              </Badge>
+            ))
+          ) : (
+            <span class="alt__muted">Close match</span>
+          )}
         </dd>
       </div>
     )}
-    {reasons.length > 0 && theme && (
-      <div class="alt__fact alt__fact--mono">
-        <dt class="visually-hidden">Why it’s here</dt>
-        <dd>{reasons.map((r) => REASON[r] ?? r).join(' · ')}</dd>
-      </div>
-    )}
+    <div class="alt__fact alt__fact--price">
+      <dt>Price</dt>
+      <dd>{price}</dd>
+    </div>
+    <div class="alt__fact alt__fact--usage">
+      <dt>Seen on</dt>
+      <dd>
+        <span class="alt__usage num">
+          <strong>{formatCount(usage.stores)}</strong> of {formatCount(usage.denominator)}
+          <span class="alt__share">{sharePct(usage.share)}</span>
+        </span>
+        <span
+          class="alt__meter"
+          style={`--w:${Math.max(1, Math.round(usage.share * 1000) / 10)}%`}
+          aria-hidden="true"
+        />
+        {sharedStores > 0 && (
+          <span class="alt__with">
+            {formatCount(sharedStores)} {sharedStores === 1 ? 'store runs' : 'stores run'} it with{' '}
+            {originalName}
+          </span>
+        )}
+      </dd>
+    </div>
   </dl>
 
   <div class:list={['alt__plate', { 'alt__plate--none': !crop && !preview }]}>
@@ -130,46 +148,54 @@ const preview = theme?.previews[0] ?? null;
         href={href}
         alt={`${name} on a curated store, home page, desktop`}
       />
-    ) : null}
+    ) : (
+      <span class="alt__noplate">No capture yet</span>
+    )}
   </div>
 
-  <a class="alt__cmp" href={compareHref}>
-    <span class="alt__cmp-k">Compare</span>
-    <span class="alt__cmp-v">
-      {originalName} vs {name}
-    </span>
-    <span class="alt__cmp-arrow" aria-hidden="true">
-      →
-    </span>
-  </a>
+  <div class="alt__action">
+    {compareAvailable ? (
+      <Button href={compareHref} variant="secondary" size="sm" iconRight="arrow-right">
+        Compare<span class="visually-hidden">{` ${originalName} and ${name}`}</span>
+      </Button>
+    ) : (
+      <Button href={href} variant="link" size="sm" iconRight="arrow-right">
+        {app ? 'App page' : 'Theme page'}
+        <span class="visually-hidden">{`: ${name}`}</span>
+      </Button>
+    )}
+  </div>
 </li>
 
 <style>
+  /* <1024: a compact card (identity, facts, then the crop beside the action). */
   .alt {
     display: grid;
-    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-columns: 20px minmax(0, 1fr) auto;
     grid-template-areas:
-      'n id'
-      '. facts'
-      '. plate'
-      '. cmp';
+      'n id id'
+      '. facts facts'
+      '. plate action';
+    align-items: end;
     gap: var(--space-3) var(--space-3);
-    padding-block: var(--space-5);
-    border-bottom: 1px solid var(--line);
+    padding: var(--space-4);
+  }
+  .alt + .alt {
+    border-top: 1px solid var(--line);
   }
   .alt__n {
     grid-area: n;
-    padding-top: 3px;
+    align-self: start;
+    padding-top: 11px;
     color: var(--ink-3);
     font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.02em;
+    font-size: var(--text-xs);
   }
   .alt__id {
     grid-area: id;
     display: flex;
     gap: var(--space-3);
-    align-items: flex-start;
+    align-items: center;
     min-width: 0;
   }
   .alt__id-text {
@@ -179,127 +205,171 @@ const preview = theme?.previews[0] ?? null;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2);
-    font-size: var(--text-lg);
+    gap: 4px var(--space-2);
+    font-size: var(--text-h4);
     font-weight: var(--weight-semibold);
-    letter-spacing: var(--tracking-snug);
-    line-height: 1.2;
-  }
-  .alt--theme .alt__name {
-    font-family: var(--font-serif);
-    font-weight: 400;
-    font-size: var(--text-2xl);
     letter-spacing: -0.01em;
+    line-height: 1.3;
   }
   .alt__name a {
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    text-underline-offset: 0.2em;
-    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+    color: var(--ink);
   }
   .alt__name a:hover {
+    text-decoration: underline;
     text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
   }
   .alt__sub {
+    display: -webkit-box;
     margin-top: 2px;
+    overflow: hidden;
     color: var(--ink-3);
     font-size: var(--text-sm);
     line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
-    overflow: hidden;
   }
   .alt__facts {
     grid-area: facts;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3) var(--space-5);
+    font-size: var(--text-sm);
+  }
+  .alt__fact {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    min-width: 0;
+  }
+  .alt__fact dt {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .alt__fact dd {
+    min-width: 0;
+    color: var(--ink);
+  }
+  .alt__fact--usage,
+  .alt__fact--why {
+    grid-column: 1 / -1;
+  }
+  .alt--theme .alt__fact--usage {
+    grid-column: auto;
+  }
+  .alt__reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .alt__muted {
+    color: var(--ink-3);
+  }
+  .alt__usage {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 4px var(--space-4);
-    font-size: var(--text-sm);
-  }
-  .alt__price {
+    gap: 0 6px;
     color: var(--ink-2);
   }
-  .alt__fact--mono {
-    display: flex;
-    gap: 6px;
+  .alt__usage strong {
+    color: var(--ink);
+    font-weight: var(--weight-semibold);
+  }
+  .alt__share {
+    color: var(--ink-3);
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
   }
-  .alt__fact--mono dt {
+  .alt__meter {
+    display: block;
+    max-width: 200px;
+    height: 6px;
+    margin-top: 6px;
+    border-radius: var(--radius-pill);
+    background:
+      linear-gradient(to right, var(--ink-2) 0 var(--w), transparent var(--w)), var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .alt__with {
+    display: block;
+    margin-top: 6px;
     color: var(--ink-3);
-  }
-  .alt__fact--mono dd {
-    color: var(--ink);
+    font-size: var(--text-xs);
   }
   .alt__plate {
     grid-area: plate;
-    max-width: 240px;
+    width: 148px;
   }
   .alt__plate--none {
     display: none;
   }
-  .alt__cmp {
-    grid-area: cmp;
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 2px var(--space-2);
+  .alt__noplate {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .alt__action {
+    grid-area: action;
+    justify-self: end;
+  }
+  .alt__plate--none + .alt__action {
+    grid-column: 2 / -1;
     justify-self: start;
-    font-size: var(--text-sm);
-  }
-  .alt__cmp-k {
-    font-weight: var(--weight-medium);
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.25em;
-  }
-  .alt__cmp:hover .alt__cmp-k {
-    text-decoration-color: currentColor;
-  }
-  .alt__cmp-v {
-    color: var(--ink-3);
-  }
-  .alt__cmp-arrow {
-    color: var(--ink-3);
-    transition: transform var(--dur-fast) var(--ease-out);
-  }
-  .alt__cmp:hover .alt__cmp-arrow {
-    transform: translateX(2px);
   }
 
+  /* ≥1024: one table-like row; the column heads live above the list (see --alt-cols). */
   @media (min-width: 1024px) {
     .alt {
-      grid-template-columns: 64px minmax(0, 2fr) minmax(0, 1.3fr) 200px 150px;
-      grid-template-areas: 'n id facts plate cmp';
-      align-items: start;
-      gap: var(--space-6);
-      padding-block: var(--space-6);
+      grid-template-columns: var(
+        --alt-cols,
+        28px minmax(0, 1.7fr) 132px minmax(0, 1fr) 176px 132px 120px
+      );
+      grid-template-areas: 'n id rating price usage plate action';
+      align-items: center;
+      gap: var(--space-5);
+      padding: var(--space-4) var(--space-6);
+      transition: background-color var(--dur-fast) var(--ease-out);
+    }
+    .alt:hover {
+      background: var(--bg-subtle);
+    }
+    .alt__n {
+      align-self: center;
+      padding-top: 0;
     }
     .alt__facts {
-      flex-direction: column;
-      gap: 6px;
-      align-items: flex-start;
+      display: contents;
+    }
+    .alt__fact dt {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+    .alt__fact--rating,
+    .alt__fact--why {
+      grid-area: rating;
+    }
+    .alt__fact--price {
+      grid-area: price;
+    }
+    .alt__fact--usage {
+      grid-area: usage;
     }
     .alt__plate {
-      max-width: none;
+      width: auto;
     }
     .alt__plate--none {
       display: block;
     }
-    .alt__cmp {
-      flex-direction: column;
+    .alt__plate--none + .alt__action {
+      grid-column: auto;
       justify-self: end;
-      align-items: flex-end;
-      text-align: right;
-      gap: 2px;
-    }
-    .alt__cmp-arrow {
-      display: none;
     }
   }
 </style>
