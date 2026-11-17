@@ -20,14 +20,56 @@ Plan (stacked on #11; no merge, no deploy):
    compare+alternatives, sections, static/legal/account/pro, admin), each checked at 390/1440.
 4. Full gate (lint, astro check, unit, build, size, e2e) → PR #12 with screenshots.
 
-Status: **paused at step 1 — waiting for Muneeb's approval.** He asked for the reference list
-first and no code changes until he approves. The proposed references (with Mobbin links) are in
-the chat reply of 17 Nov: Linear (dark theme, product-window hero, UI-fragment feature cards),
-Attio (light theme, centred hero, nav), Stripe (guide-line frame, two-tone headline, live
-counter), Vercel + Cloudflare plans (Pro pricing: plan cards + comparison table), Dovetail
-(step list driving a product visual), Base44 (gallery browse bar + cards), Twenty (labels pinned
-on product crops). Do not start steps 2–4 until he replies. CI was green on all 11 PRs at that
-point.
+Status (17 Nov, evening):
+
+- Muneeb approved the references, **light default + dark (system + toggle)**, and **keeping the
+  vermilion accent**. The direction is written up in `docs/design/direction.md` (v2).
+- **Done on this branch:**
+  - Step 1 (direction v2).
+  - Step 2 (design system: `14f2517`, `afda2d6`, `d20cadb`).
+  - Owner decisions in the data/server layer, cherry-picked from `wip/owner-decisions`
+    (`126b367`…`aba8de6`):
+    - trustpilot is unmatched from Trustgear;
+    - the Hyper affiliate link is dropped;
+    - competition ranks, so ties share a rank;
+    - `capture_blocks` (migration 0002);
+    - removal records kept 2 years, with a purge function;
+    - admin notify placeholder (`ADMIN_NOTIFY_EMAIL`);
+    - admin API `/api/v1/admin/*` (Access / break-glass password / `ADMIN_API_TOKEN`);
+    - curated-only `/compare` pairs;
+    - `/stores` curated by default (`scope=all`).
+
+  After pulling, run `npm run setup` and restart dev.
+
+- **In progress:** step 3. Eight page agents are redesigning the areas in the main checkout
+  (home+search, stores+teardowns, themes, apps, compare+alternatives, sections,
+  static/legal/pro/account, admin). The brief is in direction.md and DESIGN.md.
+- **Then:** step 4. Run the full gate, take screenshots (390/1440, plus dark for key pages), and
+  open PR #12 (base `feat/11-handoff`).
+
+Owner answers being applied as drafts (17 Nov):
+
+- **Legal:**
+  - entity Xovist (`LEGAL_ENTITY` in `src/config/site.ts`);
+  - governing law Pakistan;
+  - removal records kept 2 years;
+  - the "within 3 business days" removal promise stays;
+  - new removal requests notify the admin email (placeholder).
+- **Pro:**
+  - Free = home-page screenshots + basic data;
+  - Pro = all page types, full-page and section screenshots, exports;
+  - Team = 3 seats;
+  - yearly = 2 months free.
+- **Admin:**
+  - password sign-in is break-glass behind Access;
+  - a screenshots-only removal also blocks future captures;
+  - admin API endpoints are added.
+- **Product:**
+  - keep the home headline;
+  - equal usage = same rank;
+  - curated compare pairs only;
+  - teardown byline "Editorial team";
+  - `/stores` defaults to curated.
 
 ## Status
 
