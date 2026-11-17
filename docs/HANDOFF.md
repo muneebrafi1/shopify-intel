@@ -11,8 +11,21 @@ for any reason._
     via the system setting or the header toggle, vermilion accent.
   - Muneeb's answers of 17 Nov are applied as drafts (see the PR body and the table in
     `docs/ARCHITECTURE.md`).
-- **Gate (17 Nov):** lint, astro check, 163 unit tests, build, size budgets and 557 e2e passed;
+- **Gate (17 Nov):** lint, astro check, 163 unit tests, build, size budgets and 559 e2e passed;
   3 e2e are skipped by design.
+- **Self-review polish after opening #12** (390/1440, light and dark):
+  - Guide lines run into the footer, and the mobile hero is a phone-sized capture.
+  - Pinned tags no longer collide on small captures.
+  - Eyebrows that only repeated page titles are gone.
+  - A non-curated compare URL explains itself.
+  - The compare CTA row no longer overflows at 768.
+  - Focus rings are never clipped by scrollers.
+  - New designed `500` page.
+  - Audits passed:
+    - overflow at 768/1024/1180 on 35 routes
+    - contrast (AA, both themes)
+    - no-JS rendering
+    - focus rings on 20 routes
 - **D1 query budget:** ≤ 38 statements per request on every route.
 - Nothing is merged or deployed, and no cloud resources were created.
 - After pulling #12, run `npm run setup` (migration `0002_capture_block.sql` and a new seed),
@@ -65,7 +78,7 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
   - `npm run check` (astro check)
   - `npm test` (Vitest, 163 tests)
   - `npm run build && npm run size`
-  - `npm run test:e2e` (Playwright, 560 tests at 390px and 1440px against `astro preview`)
+  - `npm run test:e2e` (Playwright, 562 tests at 390px and 1440px against `astro preview`)
   - `npm run budget:queries` (dev server up: fails if any route goes over 45 D1 statements)
 - Screenshots of any routes: `npm run screens -- --base http://127.0.0.1:4321 / /themes`.
   Add `--theme dark` for dark mode.
