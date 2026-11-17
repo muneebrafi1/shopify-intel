@@ -1,0 +1,184 @@
+---
+/**
+ * Editorial pair: the lead teardown as a large card; beside it, its numbered annotations (the
+ * numbers match the teardown's sections rail) and the other teardowns as a short reading list.
+ */
+import TeardownCard from '~/components/domain/TeardownCard.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import type { TeardownListItem, TeardownNote } from '~/server/api/v1/types';
+import { pageTypeName } from '~/lib/taxonomy';
+
+interface Props {
+  teardown: TeardownListItem;
+  notes: TeardownNote[];
+  more?: TeardownListItem[];
+}
+const { teardown: t, notes, more = [] } = Astro.props;
+const cover = t.cover?.image ?? null;
+---
+
+<div class="tdf cols-12">
+  <div class="tdf__lead span-7">
+    <TeardownCard
+      slug={t.slug}
+      title={t.title}
+      dek={t.dek}
+      storeLabel={t.store.display_name}
+      publishedAt={t.published_at}
+      shot={cover ? { src: cover.src, width: cover.width, height: cover.height } : null}
+      size="lg"
+      isSample={t.is_sample}
+    />
+  </div>
+  {(notes.length > 0 || more.length > 0) && (
+    <aside class="tdf__notes start-9" aria-label="In this teardown, and more">
+      {notes.length > 0 && (
+        <>
+          <MonoLabel as="h3" tone="ink">
+            In this teardown · {notes.length} notes
+          </MonoLabel>
+          <ol class="tdf__list">
+            {notes.map((n) => (
+              <li>
+                <a href={t.href} class="tdf__note">
+                  <span class="tdf__n">{String(n.n).padStart(2, '0')}</span>
+                  <span class="tdf__text">
+                    <span class="tdf__title">{n.title}</span>
+                    <span class="tdf__meta">
+                      {pageTypeName(n.page_type)} · {n.device} · {n.section_type.name}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+      {notes.length > 0 && t.theme && (
+        <p class="tdf__foot">
+          Built on <a href={t.theme.href}>{t.theme.name}</a>
+          {t.theme.vendor && <> by {t.theme.vendor}</>}.
+        </p>
+      )}
+      {more.length > 0 && (
+        <section class="tdf__more" aria-labelledby="tdf-more">
+          <MonoLabel as="h3" id="tdf-more" tone="ink">
+            Also read
+          </MonoLabel>
+          <ul class="tdf__more-list">
+            {more.map((m) => (
+              <li>
+                <a href={m.href} class="tdf__more-link">
+                  <span class="tdf__more-kicker">
+                    {m.store.display_name} · {m.note_count} notes{m.is_sample ? ' · Sample' : ''}
+                  </span>
+                  <span class="tdf__more-title display">{m.title}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </aside>
+  )}
+</div>
+
+<style>
+  .tdf {
+    row-gap: var(--space-10);
+  }
+  .tdf__lead :global(.td-card__title) {
+    max-width: 22ch;
+  }
+  .tdf__lead :global(.td-card__dek) {
+    max-width: 56ch;
+  }
+  .tdf__list {
+    margin-top: var(--space-3);
+    border-top: 1px solid var(--ink);
+  }
+  .tdf__note {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .tdf__note:hover .tdf__title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .tdf__n {
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
+    line-height: 1.1;
+    color: var(--ink-3);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .tdf__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .tdf__title {
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    line-height: 1.35;
+  }
+  .tdf__meta {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tdf__foot {
+    margin-top: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .tdf__foot a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .tdf__more {
+    margin-top: var(--space-10);
+  }
+  .tdf__more-list {
+    margin-top: var(--space-3);
+    border-top: 1px solid var(--ink);
+  }
+  .tdf__more-link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) 0 var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+  .tdf__more-kicker {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tdf__more-title {
+    font-size: var(--text-xl);
+    line-height: 1.2;
+  }
+  .tdf__more-link:hover .tdf__more-title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+  }
+  @media (min-width: 1024px) {
+    .tdf__notes {
+      padding-top: var(--space-1);
+    }
+  }
+</style>

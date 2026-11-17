@@ -1,0 +1,95 @@
+---
+/**
+ * The results-page search field: a plain GET form (works without JS), large, ink underline.
+ * Unlike the home field it stays a real field here: people refine queries in place.
+ */
+import Icon from '~/components/ui/Icon.astro';
+
+interface Props {
+  q: string;
+  autofocus?: boolean;
+}
+const { q, autofocus = false } = Astro.props;
+---
+
+<form class="sform" action="/search" method="get" role="search">
+  <label for="search-q" class="visually-hidden">
+    Search stores, themes, apps and sections
+  </label>
+  <Icon name="magnifying-glass" size={20} class="sform__icon" />
+  <input
+    id="search-q"
+    class="sform__input"
+    type="search"
+    name="q"
+    value={q}
+    placeholder="Search stores, themes, apps"
+    autocomplete="off"
+    spellcheck="false"
+    enterkeyhint="search"
+    maxlength="100"
+    autofocus={autofocus}
+  />
+  <button type="submit" class="sform__submit">
+    Search
+  </button>
+</form>
+
+<style>
+  .sform {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .sform:focus-within {
+    border-bottom-color: var(--accent);
+  }
+  .sform :global(.sform__icon) {
+    flex: none;
+  }
+  .sform__input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 var(--space-3);
+    border: 0;
+    background: transparent;
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-snug);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .sform__input:focus-visible {
+    box-shadow: none;
+  }
+  .sform__input::placeholder {
+    color: var(--ink-3);
+  }
+  .sform__input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .sform__submit {
+    flex: none;
+    height: 36px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--inverse);
+    color: var(--ink-inverse);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .sform__submit:hover {
+    background: var(--inverse-2);
+  }
+  @media (min-width: 1024px) {
+    .sform {
+      height: 64px;
+    }
+    .sform__input {
+      font-size: var(--text-xl);
+    }
+  }
+</style>
