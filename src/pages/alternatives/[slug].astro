@@ -1,0 +1,486 @@
+---
+/**
+ * /alternatives/<slug> — what else stores run instead of an app (same category, ranked by usage
+ * in our scan) or a theme (same vendor, similar price, similar app stacks). Rank = usage or
+ * overlap, never quality; the page says so.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Rating from '~/components/ui/Rating.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Button from '~/components/ui/Button.astro';
+import IndexList from '~/components/ui/IndexList.astro';
+import IndexRow from '~/components/ui/IndexRow.astro';
+import AltRow from '~/components/compare/AltRow.astro';
+import Shot from '~/components/media/Shot.astro';
+import BlockHead from '~/components/compare/BlockHead.astro';
+import { api, orNotFound } from '~/server/api';
+import type { SectionCard } from '~/server/api/v1/types';
+import { APP_CATEGORY_SURFACES, type SectionType } from '~/lib/taxonomy';
+import { formatCount, formatDate } from '~/lib/format';
+import { pluralStores } from '~/components/compare/compare';
+
+const slug = Astro.params.slug ?? '';
+const res = await orNotFound(api.getAlternatives({ slug }));
+if (!res) return Astro.rewrite('/404');
+const { data: alt, meta } = res;
+// Alias slugs resolve to the canonical item: send them to its page.
+if (alt.slug !== slug) return Astro.redirect(`/alternatives/${alt.slug}`, 301);
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+
+const isApp = alt.kind === 'app';
+const app = alt.app;
+const theme = alt.theme;
+const name = app?.short_name ?? theme?.name ?? alt.slug;
+const usage = app?.usage ?? theme!.usage;
+const scan = Object.entries(meta.sources).find(([k]) => k.startsWith('storepeek-scan'))?.[1];
+const asOf = formatDate(meta.data_as_of);
+
+// Apps: one crop of where each app renders, from the category's primary surface.
+const crops = new Map<string, SectionCard>();
+let categoryTotal: number | null = null;
+if (isApp && alt.category) {
+  const surface = (APP_CATEGORY_SURFACES[alt.category.name] ?? [])[0] as SectionType | undefined;
+  const [sections, catApps] = await Promise.all([
+    surface ? api.listSections({ type: surface, device: 'desktop', limit: 60 }) : null,
+    api.listApps({ category: alt.category.slug, limit: 1 }),
+  ]);
+  categoryTotal = catApps.meta.pagination?.total ?? null;
+  if (sections && surface) {
+    for (const s of sections.data.items)
+      if (s.app && !crops.has(s.app.slug)) crops.set(s.app.slug, s);
+    // Apps that render this section but fell outside the first page of results.
+    const wanted = new Set([
+      alt.slug,
+      ...alt.items.map((i) => i.app?.slug).filter((x): x is string => !!x),
+    ]);
+    const missing = sections.data.facets.apps
+      .map((f) => f.value)
+      .filter((v) => wanted.has(v) && !crops.has(v));
+    const more = await Promise.all(
+      missing.map((a) =>
+        api.listSections({ type: surface, app: a, device: 'desktop', limit: 1 }).catch(() => null),
+      ),
+    );
+    for (const m of more) {
+      const s = m?.data.items[0];
+      if (s?.app) crops.set(s.app.slug, s);
+    }
+  }
+}
+const own = crops.get(alt.slug) ?? null;
+
+const count = alt.items.length;
+const others = categoryTotal !== null ? Math.max(count, categoryTotal - 1) : count;
+const statement = isApp
+  ? `${count === others ? count : `The ${count} most used of ${others}`} other ${alt.category?.name ?? ''} apps, in order of how many of ${formatCount(usage.denominator)} scanned stores run them.`
+  : `${count} themes close to ${name}: from the same vendor, at a similar price, or on stores that run similar apps.`;
+const ratingSource = app?.cta ? 'Shopify App Store listing' : undefined;
+
+const abs = (p: string) => new URL(p, Astro.site ?? Astro.url).href;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: abs('/') },
+      { '@type': 'ListItem', position: 2, name: 'Alternatives', item: abs('/alternatives') },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: `Alternatives to ${name}`,
+        item: abs(`/alternatives/${alt.slug}`),
+      },
+    ],
+  },
+  {
+    '@type': 'ItemList',
+    name: `Alternatives to ${name}`,
+    itemListOrder: 'https://schema.org/ItemListOrderDescending',
+    numberOfItems: count,
+    itemListElement: alt.items.map((i, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      name: i.app?.short_name ?? i.theme?.name,
+      url: abs(i.app?.href ?? i.theme!.href),
+    })),
+  },
+];
+const top3 = alt.items
+  .slice(0, 3)
+  .map((i) => i.app?.short_name ?? i.theme?.name)
+  .filter(Boolean)
+  .join(', ');
+const description = isApp
+  ? `Alternatives to ${name} on real Shopify stores: ${top3} and more ${alt.category?.name ?? ''} apps, ranked by how many of ${formatCount(usage.denominator)} scanned stores use them.`
+  : `Themes like ${name}: ${top3} and more, with the stores that use them.`;
+---
+
+<BaseLayout title={`Alternatives to ${name}`} description={description} jsonLd={jsonLd}>
+  <div class="container">
+    <Breadcrumbs
+      class="alt-p__crumbs"
+      items={[
+        { label: 'Home', href: '/' },
+        { label: 'Alternatives', href: '/alternatives' },
+        { label: name },
+      ]}
+    />
+
+    <header class="alt-p__head">
+      <div class="alt-p__bar">
+        <MonoLabel as="p" tone="ink">
+          {`Alternatives · ${isApp ? (alt.category?.name ?? 'Apps') : 'Themes'} · ${count} ranked`}
+        </MonoLabel>
+        <MonoLabel as="p" bullet={false}>{`Data as of ${asOf}`}</MonoLabel>
+      </div>
+      <div class="cols-12 alt-p__grid">
+        <div class="span-8">
+          <h1 class="alt-p__title">
+            <span class="alt-p__pre">Alternatives to</span>
+            <span class:list={['alt-p__name', { display: !isApp }]}>{name}</span>
+          </h1>
+          <p class="alt-p__statement display">{statement}</p>
+          <SourceNote
+            class="alt-p__honest"
+            source={
+              isApp
+                ? `${scan?.label ?? 'our scan'}. The order is usage in our scan, not a judgement of quality`
+                : `${scan?.label ?? 'our scan'}. The order is overlap in vendor, price and apps, not a judgement of quality`
+            }
+          />
+        </div>
+
+        <aside class="start-9 alt-p__spec" aria-label={`${name} at a glance`}>
+          <p class="alt-p__spec-who">
+            {app && <AppIcon src={app.icon_url} name={name} size={32} />}
+            <span>
+              <span class="alt-p__spec-name">{name}</span>
+              <span class="alt-p__spec-sub">
+                {app
+                  ? app.developer
+                    ? `by ${app.developer}`
+                    : 'App'
+                  : theme?.vendor
+                    ? `by ${theme.vendor}`
+                    : 'Theme'}
+              </span>
+            </span>
+          </p>
+          <dl class="alt-p__rows">
+            {app && (
+              <div>
+                <dt>Rating</dt>
+                <dd>
+                  <Rating
+                    rating={app.rating}
+                    reviews={app.reviews}
+                    size="sm"
+                    source={ratingSource}
+                  />
+                </dd>
+              </div>
+            )}
+            <div>
+              <dt>Price</dt>
+              <dd>
+                {app ? (app.pricing.label ?? 'Not listed') : (theme?.price.label ?? 'Not listed')}
+              </dd>
+            </div>
+            {alt.category && (
+              <div>
+                <dt>Category</dt>
+                <dd>
+                  <a href={alt.category.href}>{alt.category.name}</a>
+                </dd>
+              </div>
+            )}
+            <div>
+              <dt>Seen on</dt>
+              <dd class="num">
+                {formatCount(usage.stores)} of {formatCount(usage.denominator)}
+              </dd>
+            </div>
+            {usage.rank && (
+              <div>
+                <dt>{isApp ? 'Usage rank' : 'Usage rank'}</dt>
+                <dd class="num">{`N°${String(usage.rank).padStart(3, '0')}`}</dd>
+              </div>
+            )}
+          </dl>
+          {!own && theme?.previews[0] && (
+            <Shot
+              src={theme.previews[0].image.src}
+              width={theme.previews[0].image.width}
+              height={theme.previews[0].image.height}
+              device="desktop"
+              href={theme.href}
+              alt={`${name} on a curated store, home page, desktop`}
+              eager
+            />
+          )}
+          {own && (
+            <a class="alt-p__own" href={own.href}>
+              <img
+                src={own.crop.src}
+                alt={`${own.type.name} by ${name} on ${own.store.display_name}`}
+                width={own.crop.width}
+                height={own.crop.height}
+                loading="eager"
+                decoding="async"
+              />
+              <span class="mono">
+                {own.type.name} · {own.store.display_name}
+              </span>
+            </a>
+          )}
+          <a class="alt-p__profile" href={app?.href ?? theme!.href}>
+            {isApp ? `${name} profile` : `${name} theme page`} →
+          </a>
+        </aside>
+      </div>
+    </header>
+
+    <section class="page-block" aria-labelledby="ranked">
+      <BlockHead
+        id="ranked"
+        label={isApp ? 'Ranked by usage' : 'Ranked by closeness'}
+        title={isApp ? `Other ${alt.category?.name ?? ''} apps` : 'Similar themes'}
+        count={count}
+        description={
+          isApp
+            ? 'Position is how many scanned stores run each app, not how good it is. “With” counts stores running it alongside the original.'
+            : 'Position is how much each theme has in common with the original, not how good it is.'
+        }
+      />
+      {count > 0 ? (
+        <ol class="alt-p__list" aria-label={`Alternatives to ${name}`}>
+          {alt.items.map((i, idx) => (
+            <AltRow
+              n={idx + 1}
+              app={i.app}
+              theme={i.theme}
+              originalName={name}
+              sharedStores={i.shared_stores}
+              compareHref={i.compare_href}
+              reasons={i.reasons}
+              crop={i.app ? (crops.get(i.app.slug) ?? null) : null}
+              ratingSource={ratingSource}
+            />
+          ))}
+        </ol>
+      ) : (
+        <EmptyState
+          title="No alternatives in our data yet"
+          body={`We don’t track another ${isApp ? 'app in this category' : 'theme close to this one'} yet. Browse the full catalogue instead.`}
+        >
+          <Button href={isApp ? '/apps' : '/themes'} variant="secondary">
+            {isApp ? 'All apps' : 'All themes'}
+          </Button>
+        </EmptyState>
+      )}
+      <SourceNote
+        class="alt-p__source"
+        source={`${scan?.label ?? 'our scan of public storefronts'}; ratings and prices from each App Store listing. Ranking is usage in our scan, not quality`}
+      />
+    </section>
+
+    {alt.comparisons.length > 0 && (
+      <section class="page-block" aria-labelledby="pairs">
+        <BlockHead
+          id="pairs"
+          label="Side by side"
+          title={`${name}, compared`}
+          count={alt.comparisons.length}
+        />
+        <IndexList
+          columns="52px minmax(0, 2fr) minmax(0, 1fr)"
+          head={['N°', 'Comparison', 'Run both']}
+          label={`Comparisons with ${name}`}
+        >
+          {alt.comparisons.map((c, i) => (
+            <IndexRow
+              n={i + 1}
+              href={c.href}
+              title={c.title}
+              cells={[
+                { value: `(${pluralStores(c.shared_stores ?? 0)})`, serif: true, mobile: true },
+              ]}
+            />
+          ))}
+        </IndexList>
+      </section>
+    )}
+
+    <div class="page-block alt-p__foot">
+      <a href="/alternatives">All alternatives →</a>
+      <a href="/compare">Compare any two →</a>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .alt-p__crumbs {
+    padding-top: var(--space-6);
+  }
+  .alt-p__head {
+    padding-top: var(--space-6);
+  }
+  .alt-p__bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--ink);
+  }
+  .alt-p__grid {
+    padding-top: var(--space-10);
+    align-items: start;
+  }
+  .alt-p__title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .alt-p__pre {
+    color: var(--ink-3);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-snug);
+  }
+  .alt-p__name {
+    font-size: clamp(3rem, 1.4rem + 7vw, 8rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+    overflow-wrap: anywhere;
+  }
+  .alt-p__name.display {
+    font-weight: 400;
+    letter-spacing: -0.03em;
+  }
+  .alt-p__statement {
+    max-width: 22em;
+    margin-top: var(--space-8);
+    color: var(--ink);
+    font-size: clamp(1.375rem, 1.05rem + 1.1vw, 2rem);
+    line-height: 1.15;
+  }
+  :global(.alt-p__honest) {
+    max-width: 520px;
+    margin-top: var(--space-5);
+  }
+  .alt-p__spec {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .alt-p__spec-who {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--ink);
+  }
+  .alt-p__spec-who > span:last-child {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .alt-p__spec-name {
+    font-weight: var(--weight-semibold);
+  }
+  .alt-p__spec-sub {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .alt-p__rows {
+    margin-top: calc(var(--space-4) * -1);
+    font-size: var(--text-sm);
+  }
+  .alt-p__rows > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .alt-p__rows dt {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    align-self: center;
+  }
+  .alt-p__rows dd {
+    text-align: right;
+  }
+  .alt-p__rows a {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .alt-p__own {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    background: var(--tile);
+    transition: background-color var(--dur-base) var(--ease-out);
+  }
+  .alt-p__own:hover {
+    background: var(--tile-hover);
+  }
+  .alt-p__own img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-xs);
+    box-shadow: var(--shadow-shot);
+    background: var(--surface);
+  }
+  .alt-p__own span {
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .alt-p__profile,
+  .alt-p__foot a {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.25em;
+  }
+  .alt-p__list {
+    border-top: 1px solid var(--ink);
+  }
+  .alt-p__list > :global(li:first-child) {
+    border-top: 0;
+  }
+  .alt-p :global(.alt-p__source),
+  :global(.alt-p__source) {
+    margin-top: var(--space-5);
+  }
+  .alt-p__foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 1024px) {
+    .alt-p__spec {
+      padding-top: var(--space-8);
+    }
+  }
+</style>

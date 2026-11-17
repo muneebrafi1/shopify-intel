@@ -1,0 +1,297 @@
+---
+/**
+ * /alternatives — every app and theme with an alternatives page, as a typographic catalogue:
+ * apps grouped by category (busiest first), then themes with a hover preview of a curated store.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import Chip from '~/components/ui/Chip.astro';
+import ChipRow from '~/components/ui/ChipRow.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SourceNote from '~/components/ui/SourceNote.astro';
+import GroupedIndex, { type Group } from '~/components/compare/GroupedIndex.astro';
+import { api } from '~/server/api';
+import { formatCount, formatDate } from '~/lib/format';
+import { pluralStores } from '~/components/compare/compare';
+
+const kindParam = Astro.url.searchParams.get('kind');
+const kind = kindParam === 'app' || kindParam === 'theme' ? kindParam : null;
+
+const [{ data, meta }, { data: themes }] = await Promise.all([
+  api.listAlternatives(),
+  api.listThemes({ limit: 100, sort: 'usage' }),
+]);
+const themeInfo = new Map(themes.items.map((t) => [t.slug, t]));
+const scan = Object.entries(meta.sources).find(([k]) => k.startsWith('storepeek-scan'))?.[1];
+const denominator = themes.items[0]?.usage.denominator ?? null;
+const asOf = formatDate(meta.data_as_of);
+
+// Apps by category, categories ordered by their most used app; apps by usage within. The
+// "instead" column names the most used other apps in the same category (what the detail page
+// ranks first), derived from this same list.
+const byCat = new Map<
+  string,
+  { label: string; href?: string; weight: number; apps: typeof data.apps }
+>();
+for (const a of data.apps) {
+  const key = a.app.category?.slug ?? 'other';
+  const g = byCat.get(key) ?? {
+    label: a.app.category?.name ?? 'Other apps',
+    href: a.app.category?.href,
+    weight: 0,
+    apps: [],
+  };
+  g.weight = Math.max(g.weight, a.stores);
+  g.apps.push(a);
+  byCat.set(key, g);
+}
+const appGroups: Group[] = [...byCat.entries()]
+  .sort((x, y) => y[1].weight - x[1].weight)
+  .map(([key, g]) => {
+    const ranked = g.apps.slice().sort((x, y) => y.stores - x.stores);
+    return {
+      id: `cat-${key}`,
+      label: g.label,
+      href: g.href,
+      rows: g.apps.map((a, i, list) => {
+        const instead = ranked
+          .filter((o) => o.app.slug !== a.app.slug)
+          .slice(0, 2)
+          .map((o) => o.app.short_name);
+        const more = a.alternatives - instead.length;
+        const insteadText = instead.length
+          ? `${instead.join(', ')}${more > 0 ? ` +${more}` : ''}`
+          : `${a.alternatives} in category`;
+        // Ledger convention: a value repeated from the row above is set as a ditto mark.
+        const prev = list[i - 1];
+        const prevText = prev
+          ? (() => {
+              const pi = ranked
+                .filter((o) => o.app.slug !== prev.app.slug)
+                .slice(0, 2)
+                .map((o) => o.app.short_name);
+              const pm = prev.alternatives - pi.length;
+              return pi.length ? `${pi.join(', ')}${pm > 0 ? ` +${pm}` : ''}` : '';
+            })()
+          : null;
+        const ditto = prevText === insteadText;
+        return {
+          href: a.href,
+          title: a.app.short_name,
+          subtitle: instead.length ? `Instead: ${insteadText}` : undefined,
+          cells: [
+            { value: ditto ? '〃' : insteadText, muted: true },
+            { value: `(${pluralStores(a.stores)})`, serif: true, mobile: true },
+          ],
+        };
+      }),
+    };
+  });
+
+const themeGroup: Group = {
+  id: 'themes-all',
+  label: 'All themes',
+  note: 'Matched by vendor, price, apps',
+  rows: data.themes.map((t) => {
+    const info = themeInfo.get(t.theme.slug);
+    const p = info?.previews[0];
+    const facts = [info?.vendor, info?.price.label].filter(Boolean).join(' · ');
+    return {
+      href: t.href,
+      title: t.theme.name,
+      subtitle: facts || undefined,
+      cells: [
+        { value: `${facts}${facts ? ' · ' : ''}${t.alternatives} close`, muted: true },
+        { value: `(${pluralStores(t.stores)})`, serif: true, mobile: true },
+      ],
+      preview: p ? { src: p.image.src, width: p.image.width, height: p.image.height } : null,
+    };
+  }),
+};
+
+const showApps = kind !== 'theme';
+const showThemes = kind !== 'app';
+const total = data.apps.length + data.themes.length;
+const shownCount = (showApps ? data.apps.length : 0) + (showThemes ? data.themes.length : 0);
+const columns = '52px minmax(0, 1.2fr) minmax(0, 1.6fr) 120px';
+const head = ['N°', 'Replace', 'Most used instead', 'Seen on'];
+
+const chipHref = (k: string | null) => (k ? `/alternatives?kind=${k}` : '/alternatives');
+const abs = (p: string) => new URL(p, Astro.site ?? Astro.url).href;
+const jsonLd = {
+  '@type': 'ItemList',
+  name: 'Alternatives to Shopify apps and themes',
+  numberOfItems: total,
+  itemListElement: [
+    ...data.apps
+      .slice(0, 40)
+      .map((a) => ({ name: `Alternatives to ${a.app.short_name}`, href: a.href })),
+  ].map((x, i) => ({ '@type': 'ListItem', position: i + 1, name: x.name, url: abs(x.href) })),
+};
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+---
+
+<BaseLayout
+  title="Alternatives to Shopify apps and themes"
+  description="What else stores run instead: every app we track with the other apps in its category, and every theme with the themes closest to it, ranked by usage on real stores."
+  canonical="/alternatives"
+  noindex={!!kind}
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <PageHeader
+      title="Alternatives"
+      count={total}
+      eyebrow={`Index · ${data.apps.length} apps · ${data.themes.length} themes`}
+      size="lg"
+    >
+      <p slot="meta" class="alti__statement display">
+        Start from what you run now. See what else stores in the same category use, by how many
+        {denominator ? ` of ${formatCount(denominator)}` : ''} run it.
+      </p>
+      <div slot="actions" class="alti__aside">
+        <MonoLabel as="p" tone="ink">
+          How the order works
+        </MonoLabel>
+        <p>
+          Apps are ranked by usage in our scan, not by quality. Themes are matched by vendor, price
+          and the apps their stores run.
+        </p>
+        <a href="/compare">Or compare any two →</a>
+      </div>
+    </PageHeader>
+
+    <div class="alti__bar">
+      <ChipRow label="Kind">
+        <Chip href={chipHref(null)} selected={!kind} count={total}>
+          All
+        </Chip>
+        <Chip href={chipHref('app')} selected={kind === 'app'} count={data.apps.length}>
+          Apps
+        </Chip>
+        <Chip href={chipHref('theme')} selected={kind === 'theme'} count={data.themes.length}>
+          Themes
+        </Chip>
+      </ChipRow>
+      <MonoLabel
+        as="p"
+        bullet={false}
+        class="alti__count"
+      >{`${shownCount} pages · ${asOf}`}</MonoLabel>
+    </div>
+
+    {showApps && (
+      <section class="page-block" aria-labelledby="alti-apps">
+        <div class="alti__kind">
+          <h2 id="alti-apps" class="alti__kind-title">
+            Apps<sup class="count-sup">{data.apps.length}</sup>
+          </h2>
+          <p class="alti__kind-desc">
+            Apps detected on at least one scanned store, grouped by category.
+          </p>
+        </div>
+        <GroupedIndex
+          groups={appGroups}
+          columns={columns}
+          head={head}
+          listLabel={(l) => `${l} apps`}
+        />
+      </section>
+    )}
+    {showThemes && (
+      <section class="page-block" aria-labelledby="alti-themes">
+        <div class="alti__kind">
+          <h2 id="alti-themes" class="alti__kind-title">
+            Themes<sup class="count-sup">{data.themes.length}</sup>
+          </h2>
+          <p class="alti__kind-desc">
+            Themes with at least one close match by vendor, price or app stack.
+          </p>
+        </div>
+        <GroupedIndex
+          groups={[themeGroup]}
+          columns={columns}
+          head={['N°', 'Replace', 'Vendor · price · matches', 'Seen on']}
+          start={showApps ? data.apps.length + 1 : 1}
+          listLabel={() => 'Themes'}
+        />
+      </section>
+    )}
+
+    <div class="page-block alti__foot">
+      <SourceNote source={scan?.label ?? 'Our scan of public storefronts'} />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .alti__statement {
+    max-width: 20em;
+    margin-top: var(--space-5);
+    font-size: clamp(1.625rem, 1.1rem + 1.9vw, 2.75rem);
+    line-height: 1.08;
+    color: var(--ink);
+  }
+  .alti__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: 340px;
+    font-size: var(--text-sm);
+    color: var(--ink-2);
+    line-height: var(--leading-normal);
+  }
+  .alti__aside a {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.25em;
+  }
+  .alti__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .alti__bar :global(.chip-row) {
+    min-width: 0;
+  }
+  .alti__count {
+    flex: none;
+  }
+  .alti__kind {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+  .alti__kind-title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .alti__kind-desc {
+    max-width: 420px;
+    color: var(--ink-3);
+    font-size: var(--text-base);
+  }
+  .alti__foot {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 1024px) {
+    .alti__aside {
+      margin-left: auto;
+    }
+  }
+</style>

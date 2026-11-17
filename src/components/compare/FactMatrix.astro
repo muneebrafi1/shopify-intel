@@ -1,0 +1,280 @@
+---
+/**
+ * Narrow fact table. Rows come from the API matrix, grouped by source with numbered
+ * footnotes. ✓ in ink, × and — in light gray. Never colours or marks a "winner".
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Icon from '~/components/ui/Icon.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import { formatDate } from '~/lib/format';
+import type { MatrixRow, ResponseMeta } from '~/server/api/v1/types';
+import { matrixCell, matrixGroups, type SideInfo } from './compare';
+
+export interface ExtraRow {
+  /** Source key the row belongs with (it is appended to that group). */
+  source: string;
+  label: string;
+  a?: string;
+  b?: string;
+  /** One value spanning both columns (e.g. "Run both"). */
+  both?: string;
+}
+
+interface Props {
+  rows: MatrixRow[];
+  meta: ResponseMeta;
+  a: SideInfo;
+  b: SideInfo;
+  extra?: ExtraRow[];
+  /** Overrides for footnote text per source key (e.g. App Store "checked" date). */
+  notes?: Record<string, string>;
+}
+const { rows, meta, a, b, extra = [], notes = {} } = Astro.props;
+const groups = matrixGroups(rows, meta);
+const extraFor = (source: string) => extra.filter((e) => e.source === source);
+// Extra rows whose source has no matrix rows get their own group.
+for (const e of extra) {
+  if (!groups.some((g) => g.source === e.source)) {
+    const src = meta.sources[e.source];
+    groups.push({
+      source: e.source,
+      label: src?.label ?? e.source,
+      asOf: src?.as_of ?? null,
+      n: groups.length + 1,
+      rows: [],
+    });
+  }
+}
+const sourceText = (source: string) => {
+  if (notes[source]) return notes[source];
+  const s = meta.sources[source];
+  return s
+    ? `${s.label}${s.as_of && !s.label.includes(formatDate(s.as_of)) ? `, ${formatDate(s.as_of)}` : ''}`
+    : source;
+};
+const sideOf = { a, b };
+---
+
+<div class="fm">
+  <table class="fm__table">
+    <caption class="visually-hidden">{`${a.name} and ${b.name}, fact by fact`}</caption>
+    <colgroup>
+      <col class="fm__col-label" />
+      <col />
+      <col />
+    </colgroup>
+    <thead>
+      <tr>
+        <td></td>
+        {(['a', 'b'] as const).map((side) => (
+          <th scope="col" class="fm__head">
+            <span class="fm__head-inner">
+              {sideOf[side].kind === 'app' && (
+                <AppIcon src={sideOf[side].iconUrl} name={sideOf[side].name} size={20} />
+              )}
+              <span class="fm__head-name">{sideOf[side].name}</span>
+            </span>
+          </th>
+        ))}
+      </tr>
+    </thead>
+    {groups.map((g) => (
+      <tbody>
+        <tr class="fm__group">
+          <th colspan="3" scope="colgroup">
+            <MonoLabel>
+              {g.label}
+              <sup class="fm__fn">{g.n}</sup>
+            </MonoLabel>
+          </th>
+        </tr>
+        {g.rows.map((row) => (
+          <tr>
+            <th scope="row" class="fm__label">
+              {row.label}
+            </th>
+            {(['a', 'b'] as const).map((side) => {
+              const c = matrixCell(row, side, sideOf[side].denominator);
+              return (
+                <td class:list={['fm__cell', c.mark && `fm__cell--${c.mark}`]}>
+                  {c.mark === 'yes' ? (
+                    <>
+                      <Icon name="check" size={16} />
+                      <span class="visually-hidden">{c.text}</span>
+                    </>
+                  ) : c.mark === 'no' ? (
+                    <>
+                      <Icon name="x" size={14} />
+                      <span class="visually-hidden">{c.text}</span>
+                    </>
+                  ) : c.mark === 'none' ? (
+                    <span title={c.text}>
+                      <span aria-hidden="true">—</span>
+                      <span class="visually-hidden">{c.text}</span>
+                    </span>
+                  ) : (
+                    c.text
+                  )}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+        {extraFor(g.source).map((e) => (
+          <tr>
+            <th scope="row" class="fm__label">
+              {e.label}
+            </th>
+            {e.both !== undefined ? (
+              <td colspan="2" class="fm__cell fm__cell--span">
+                {e.both}
+              </td>
+            ) : (
+              <>
+                <td class:list={['fm__cell', { 'fm__cell--none': !e.a }]}>{e.a ?? '—'}</td>
+                <td class:list={['fm__cell', { 'fm__cell--none': !e.b }]}>{e.b ?? '—'}</td>
+              </>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    ))}
+  </table>
+
+  <ol class="fm__notes">
+    {groups.map((g) => (
+      <li>
+        <span class="fm__notes-n">{g.n}</span>
+        <span>{sourceText(g.source)}.</span>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  .fm {
+    width: 100%;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+  .fm__table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+  }
+  .fm__col-label {
+    width: 34%;
+  }
+  thead td,
+  thead th {
+    padding: 0 var(--space-3) var(--space-3);
+    border-bottom: 1px solid var(--ink);
+    vertical-align: bottom;
+  }
+  .fm__head {
+    text-align: left;
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-md);
+    letter-spacing: var(--tracking-snug);
+  }
+  .fm__head-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 100%;
+  }
+  .fm__head-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fm__group th {
+    padding: var(--space-6) var(--space-3) var(--space-2);
+    text-align: left;
+  }
+  tbody:first-of-type .fm__group th {
+    padding-top: var(--space-4);
+  }
+  .fm__fn {
+    margin-left: 2px;
+    font-size: 0.85em;
+    vertical-align: super;
+    line-height: 0;
+  }
+  .fm__label {
+    padding: 11px var(--space-3);
+    color: var(--ink-2);
+    font-weight: var(--weight-regular);
+    text-align: left;
+    vertical-align: top;
+    border-top: 1px solid var(--line);
+  }
+  .fm__cell {
+    padding: 11px var(--space-3);
+    color: var(--ink);
+    vertical-align: top;
+    border-top: 1px solid var(--line);
+    overflow-wrap: anywhere;
+  }
+  tbody tr:nth-child(2) > * {
+    border-top-color: var(--line-strong);
+  }
+  .fm__cell--yes {
+    color: var(--ink);
+  }
+  .fm__cell--no,
+  .fm__cell--none {
+    color: var(--ink-4);
+  }
+  .fm__cell :global(.icon) {
+    vertical-align: -3px;
+  }
+  .fm__cell--span {
+    color: var(--ink);
+  }
+  .fm__notes {
+    display: grid;
+    gap: 4px;
+    margin-top: var(--space-6);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.45;
+  }
+  .fm__notes li {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+  }
+  .fm__notes-n {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  @media (max-width: 639px) {
+    .fm__col-label {
+      width: 32%;
+    }
+    .fm__label,
+    .fm__cell,
+    thead td,
+    thead th,
+    .fm__group th {
+      padding-left: var(--space-2);
+      padding-right: var(--space-2);
+    }
+    .fm__label {
+      padding-left: 0;
+    }
+    .fm__group th {
+      padding-left: 0;
+    }
+    .fm__head {
+      font-size: var(--text-sm);
+    }
+    .fm__head-inner :global(.app-icon) {
+      display: none;
+    }
+  }
+</style>
