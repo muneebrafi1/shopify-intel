@@ -1,0 +1,492 @@
+---
+/**
+ * "Where it shows up" — the app detail page's dark stage (its one dark moment). A lead plate,
+ * the curated stores it was seen on, then the rest of the plates as a contact sheet with frame
+ * numbers. Every plate links into the store viewer anchored at that section. Apps that add no
+ * page section, or that no curated store runs, get an honest version of the same stage.
+ */
+import SectionCrop from '~/components/media/SectionCrop.astro';
+import SectionCard from '~/components/domain/SectionCard.astro';
+import Shot from '~/components/media/Shot.astro';
+import Count from '~/components/ui/Count.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Segmented from '~/components/ui/Segmented.astro';
+import type { AppDetail } from '~/server/api/v1/types';
+import type { Device } from '~/lib/taxonomy';
+import { pageName, sectionViewerHref, specimen } from './helpers';
+
+interface Props {
+  detail: AppDetail;
+  device: Device;
+  /** Hrefs for the device toggle (keep the rest of the URL, jump back to #where). */
+  deviceHref: (d: Device) => string;
+  /** Total detected stores (for the empty variant). */
+  storesTotal: number;
+}
+const { detail, device, deviceHref, storesTotal } = Astro.props;
+const app = detail.app;
+const name = app.short_name;
+const seen = detail.seen_on;
+const all = seen.sections;
+const byDevice = {
+  desktop: all.filter((s) => s.device === 'desktop'),
+  mobile: all.filter((s) => s.device === 'mobile'),
+};
+const shown = byDevice[device].length > 0 ? byDevice[device] : all;
+const activeDevice: Device = byDevice[device].length > 0 ? device : (shown[0]?.device ?? device);
+const lead = shown[0];
+const rest = shown.slice(1, 13);
+const frames = shown.length;
+const surfaces = detail.surfaces;
+const pageTypes = [...new Set(all.map((s) => pageName(s.page_type).toLowerCase()))];
+const storesWithSections = seen.stores.filter((s) => s.sections.length > 0);
+const variant = all.length > 0 ? 'plates' : seen.stores.length > 0 ? 'installed' : 'unseen';
+const surfaceList = surfaces.map((s) => s.name.toLowerCase()).join(' and ');
+const appSectionsHref = `/sections?app=${encodeURIComponent(app.slug)}`;
+const caption = (s: (typeof all)[number]) =>
+  [pageName(s.page_type), s.device === 'mobile' ? 'Mobile' : 'Desktop', s.theme?.name]
+    .filter(Boolean)
+    .join(' · ');
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<section class="seen" id="where" aria-labelledby="where-title">
+  <div class="container">
+    <div class="seen__head cols-12">
+      <div class="seen__intro span-8">
+        <MonoLabel as="p" tone="accent" class="seen__label">
+          Where it shows up
+        </MonoLabel>
+        {variant === 'plates' && (
+          <>
+            <h2 class="seen__title" id="where-title">
+              {name} on real store pages
+              <Count value={seen.section_total} label="sections" />
+            </h2>
+            <p class="seen__lede">
+              Seen as {surfaceList || 'a section'} on {storesWithSections.length} curated{' '}
+              {storesWithSections.length === 1 ? 'store' : 'stores'}, on {pageTypes.join(' and ')}{' '}
+              pages. Open a plate to see it in place on the full page.
+            </p>
+          </>
+        )}
+        {variant === 'installed' && (
+          <>
+            <h2 class="seen__title" id="where-title">
+              {name} adds no page section we slice
+            </h2>
+            <p class="seen__lede">
+              {surfaces.length > 0
+                ? `Apps like it usually render as ${surfaceList}, but on these stores we have not attributed one to ${name}.`
+                : `It works as a widget, a script or in the back office, so there is no slice to show.`}{' '}
+              It is installed on {seen.stores.length} curated{' '}
+              {seen.stores.length === 1 ? 'store' : 'stores'}:
+            </p>
+          </>
+        )}
+        {variant === 'unseen' && (
+          <>
+            <h2 class="seen__title" id="where-title">
+              Not on a curated store yet
+            </h2>
+            <p class="seen__lede">
+              We detect {name} on {storesTotal.toLocaleString('en-US')} scanned{' '}
+              {storesTotal === 1 ? 'store' : 'stores'}, but none of the stores we capture page by
+              page runs it, so there are no plates yet.
+              {surfaces.length > 0 && ` Apps in this category usually render as ${surfaceList}.`}
+            </p>
+          </>
+        )}
+      </div>
+      <div class="seen__side start-9">
+        {surfaces.length > 0 && (
+          <ul class="seen__surfaces" aria-label="Section types">
+            {surfaces.map((s) => (
+              <li>
+                <a href={s.href} class="seen__surface">
+                  <span class="mlabel mlabel--bullet">{s.group.name}</span>
+                  <span class="seen__surface-name">{s.name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        {variant === 'plates' && byDevice.desktop.length > 0 && byDevice.mobile.length > 0 && (
+          <Segmented
+            label="Device"
+            size="sm"
+            class="seen__devices"
+            items={[
+              {
+                label: 'Desktop',
+                value: 'desktop',
+                icon: 'desktop',
+                href: deviceHref('desktop'),
+                selected: activeDevice === 'desktop',
+                count: byDevice.desktop.length,
+              },
+              {
+                label: 'Mobile',
+                value: 'mobile',
+                icon: 'device-mobile',
+                href: deviceHref('mobile'),
+                selected: activeDevice === 'mobile',
+                count: byDevice.mobile.length,
+              },
+            ]}
+          />
+        )}
+      </div>
+    </div>
+
+    {variant === 'plates' && lead && (
+      <>
+        <div class="seen__stage cols-12">
+          <figure class="seen__lead span-8">
+            <div class="marks seen__lead-plate">
+              <span class="seen__frame">01/{pad(frames)}</span>
+              <SectionCrop
+                src={lead.crop.src}
+                width={lead.crop.width}
+                height={lead.crop.height}
+                device={lead.device}
+                alt={`${name}: ${lead.type.name.toLowerCase()} section on ${lead.store.display_name}, ${pageName(lead.page_type).toLowerCase()} page (${lead.device}, layout preview)`}
+                href={sectionViewerHref(lead)}
+                ratio={lead.device === 'mobile' ? '4 / 3' : '16 / 10'}
+                eager
+              />
+            </div>
+            <figcaption class="seen__cap">
+              <a href={sectionViewerHref(lead)} class="seen__cap-store">
+                {lead.store.display_name}
+              </a>
+              <span class="seen__cap-meta">
+                {lead.type.name} · {caption(lead)}
+              </span>
+            </figcaption>
+          </figure>
+          <div class="seen__stores start-9">
+            <p class="mlabel mlabel--bullet">Seen on</p>
+            <ol>
+              {storesWithSections.map((s, i) => {
+                const first = s.sections.find((x) => x.device === activeDevice) ?? s.sections[0];
+                return (
+                  <li>
+                    <a href={first ? sectionViewerHref(first) : s.store.href}>
+                      <span class="seen__n">{specimen(i + 1, 2)}</span>
+                      <span class="seen__store">{s.store.display_name}</span>
+                      <span class="seen__store-meta">
+                        {first?.theme?.name ?? ''}
+                        {first?.theme ? ' · ' : ''}
+                        {s.sections.length} {s.sections.length === 1 ? 'section' : 'sections'}
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
+
+        {rest.length > 0 && (
+          <div class="grid grid--sections seen__sheet">
+            {rest.map((s, i) => (
+              <div class="seen__card">
+                <span class="seen__frame">
+                  {pad(i + 2)}/{pad(frames)}
+                </span>
+                <SectionCard
+                  href={sectionViewerHref(s)}
+                  crop={s.crop}
+                  device={s.device}
+                  typeName={s.type.name}
+                  storeLabel={s.store.display_name}
+                  meta={`${s.type.name} · ${caption(s)}`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    )}
+
+    {variant === 'installed' && (
+      <div class="grid grid--shots seen__shots">
+        {seen.stores.slice(0, 6).map((s) =>
+          s.preview ? (
+            <figure class="seen__shot">
+              <Shot
+                src={s.preview.image.src}
+                width={s.preview.image.width}
+                height={s.preview.image.height}
+                device={s.preview.device}
+                alt={`${s.store.display_name} home page, ${s.preview.device} (layout preview)`}
+                href={s.store.href}
+              />
+              <figcaption class="seen__cap">
+                <a href={s.store.href} class="seen__cap-store">
+                  {s.store.display_name}
+                </a>
+                <span class="seen__cap-meta">{pageName(s.preview.page_type)} · Layout preview</span>
+              </figcaption>
+            </figure>
+          ) : (
+            <a class="seen__shot-plain" href={s.store.href}>
+              {s.store.display_name}
+            </a>
+          ),
+        )}
+      </div>
+    )}
+
+    <div class="seen__foot">
+      <p>
+        Plates are layout previews drawn from each page’s detected sections until captures land.
+        Sections are credited to an app only when the store runs it.
+      </p>
+      {variant === 'plates' ? (
+        <a href={appSectionsHref} class="seen__more">
+          All {seen.section_total} in the sections library <span aria-hidden="true">→</span>
+        </a>
+      ) : (
+        <a href="#stores" class="seen__more">
+          Stores running {name} <span aria-hidden="true">↓</span>
+        </a>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* The dark stage re-scopes the tokens, so shared components (SectionCard, Shot, Segmented)
+     render correctly on it without variants. */
+  .seen {
+    --bg: var(--inverse);
+    --ink: var(--ink-inverse);
+    --ink-2: color-mix(in srgb, var(--ink-inverse) 84%, var(--inverse));
+    --ink-3: var(--ink-inverse-2);
+    --ink-4: color-mix(in srgb, var(--ink-inverse-2) 60%, var(--inverse));
+    --line: var(--line-inverse);
+    --line-strong: color-mix(in srgb, var(--line-inverse) 70%, var(--ink-inverse-2));
+    --tile: var(--inverse-2);
+    --tile-hover: color-mix(in srgb, var(--inverse-2) 85%, var(--ink-inverse));
+    --fill: var(--inverse-2);
+    --surface: var(--line-inverse);
+    background: var(--inverse);
+    color: var(--ink);
+    padding-block: var(--space-12) var(--space-10);
+  }
+  @media (min-width: 1024px) {
+    .seen {
+      padding-block: var(--space-16) var(--space-12);
+    }
+  }
+  .seen :global(.marks) {
+    --mark: color-mix(in srgb, var(--ink-inverse-2) 55%, var(--inverse));
+  }
+  .seen__label {
+    margin-bottom: var(--space-4);
+  }
+  .seen__title {
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  .seen__lede {
+    max-width: 60ch;
+    margin-top: var(--space-4);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+  .seen__head {
+    align-items: end;
+  }
+  .seen__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    align-items: flex-start;
+  }
+  .seen__surfaces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4) var(--space-8);
+  }
+  .seen__surface {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .seen__surface-name {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+  .seen__surface:hover .seen__surface-name {
+    text-decoration-color: currentColor;
+  }
+  @media (min-width: 1024px) {
+    .seen__side {
+      align-items: flex-end;
+      text-align: right;
+    }
+    .seen__surfaces {
+      justify-content: flex-end;
+    }
+  }
+
+  .seen__stage {
+    margin-top: var(--space-10);
+    align-items: start;
+  }
+  .seen__lead {
+    min-width: 0;
+  }
+  .seen__lead-plate {
+    position: relative;
+  }
+  .seen__frame {
+    display: none;
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    z-index: 1;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    pointer-events: none;
+  }
+  .seen__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px var(--space-3);
+    margin-top: var(--space-3);
+  }
+  .seen__cap-store {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+  }
+  .seen__cap-store:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .seen__cap-meta {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .seen__stores ol {
+    margin-top: var(--space-3);
+    border-top: 1px solid var(--ink-3);
+  }
+  .seen__stores a {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-areas: 'n name' 'n meta';
+    column-gap: var(--space-3);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    transition: padding var(--dur-base) var(--ease-out);
+  }
+  .seen__stores a:hover {
+    padding-left: var(--space-2);
+  }
+  .seen__n {
+    grid-area: n;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    padding-top: 3px;
+  }
+  .seen__store {
+    grid-area: name;
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .seen__store-meta {
+    grid-area: meta;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 1024px) {
+    .seen__frame {
+      display: block;
+    }
+  }
+  .seen__sheet {
+    margin-top: var(--space-12);
+  }
+  /* Small screens: a compact two-up contact sheet, first six frames. */
+  @media (max-width: 639px) {
+    .seen__sheet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-5) var(--space-3);
+      margin-top: var(--space-8);
+    }
+    .seen__card:nth-child(n + 7) {
+      display: none;
+    }
+  }
+  .seen__card {
+    position: relative;
+    min-width: 0;
+  }
+  .seen__shots {
+    margin-top: var(--space-10);
+  }
+  .seen__shot {
+    min-width: 0;
+  }
+  .seen__shot-plain {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+    background: var(--tile);
+  }
+
+  .seen__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-8);
+    margin-top: var(--space-12);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .seen__foot p {
+    max-width: 70ch;
+  }
+  .seen__more {
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.25em;
+    white-space: nowrap;
+  }
+  .seen__more:hover {
+    text-decoration-color: currentColor;
+  }
+</style>
