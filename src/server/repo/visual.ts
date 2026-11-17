@@ -219,6 +219,7 @@ interface ShotSectionRow {
   hints_json: string | null;
   app_slug: string | null;
   app_name: string | null;
+  app_short_name: string | null;
   app_icon_url: string | null;
   app_cat_slug: string | null;
   app_cat_name: string | null;

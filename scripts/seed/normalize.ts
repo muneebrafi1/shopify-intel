@@ -53,3 +53,12 @@ export function humanizeSlug(slug: string): string {
 export function isScrapedSearchTitle(name: string): boolean {
   return /^search results for\b/i.test(name.trim());
 }
+
+/**
+ * Brand part of an App Store listing name: text before ': ', ' | ' or a spaced dash/ornament
+ * ("Klaviyo: Email Marketing & SMS" → "Klaviyo"). Editorial overrides win (data/curation/apps.json).
+ */
+export function shortAppName(name: string): string {
+  const short = name.split(/\s*[:|]\s+|\s+[-\u2011\u2013\u2014»\u2726\u2727]\s+/u)[0]?.trim();
+  return short && short.length >= 2 ? short : name.trim();
+}

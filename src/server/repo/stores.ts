@@ -19,14 +19,13 @@ import type {
   StorePage,
 } from '../api/v1/schemas/stores.ts';
 import type { SqlValue } from '../db/types.ts';
-import { normalizeDomain, slugify } from '../lib/slug.ts';
+import { normalizeDomain } from '../lib/slug.ts';
 import { ftsPrefixQuery } from './fts.ts';
 import {
   APP_REF_COLS,
   STORE_THEME_COLS,
   appRef,
   bool,
-  categoryRef,
   categorySurfaces,
   jsonIds,
   pageTypeRef,
@@ -41,12 +40,13 @@ import { homePreviews, screenshotDetails } from './visual.ts';
 // ---------------------------------------------------------------------------------------------
 // Rows and hydration
 // ---------------------------------------------------------------------------------------------
-export const STORE_SELECT = `SELECT s.id, s.domain, s.name, s.url, s.country, s.currency,
+export const STORE_COLS = `s.id, s.domain, s.name, s.url, s.country, s.currency,
   s.category_slug, sc.name AS category_name, s.tranco_rank, s.is_curated, s.is_captured,
-  ${STORE_THEME_COLS}, s.app_count, s.first_seen, s.last_seen, s.list_position
-FROM stores s
+  ${STORE_THEME_COLS}, s.app_count, s.first_seen, s.last_seen, s.list_position`;
+export const STORE_FROM = `FROM stores s
 LEFT JOIN themes t ON t.id = s.current_theme_id
 LEFT JOIN store_categories sc ON sc.slug = s.category_slug`;
+export const STORE_SELECT = `SELECT ${STORE_COLS} ${STORE_FROM}`;
 
 export interface StoreRow extends StoreThemeRow {
   id: number;
@@ -446,7 +446,7 @@ async function storePages(ctx: Ctx, storeId: number): Promise<StorePage[]> {
 
 export async function similarStores(ctx: Ctx, storeId: number, limit = 6) {
   const rows = await ctx.db.all<StoreRow & { same_theme: number; shared_apps: number }>(
-    `${STORE_SELECT.replace('SELECT', 'SELECT ss.same_theme, ss.shared_apps,')}
+    `SELECT ss.same_theme, ss.shared_apps, ${STORE_COLS} ${STORE_FROM}
      JOIN store_similar ss ON ss.other_store_id = s.id
      WHERE ss.store_id = ? AND s.status = 'active'
      ORDER BY ss.score DESC, s.list_position LIMIT ?`,
@@ -543,4 +543,3 @@ export async function storeRefsByIds(ctx: Ctx, ids: readonly number[]): Promise<
   });
 }
 
-export { categoryRef, slugify };

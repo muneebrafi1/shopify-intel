@@ -78,7 +78,7 @@ const pad = (i: number) => String(i + 1).padStart(2, '0');
     )
   }
 
-  <div class="fp__stage">
+  <div class="fp__stage marks">
     <div class="fp__canvas" style={`aspect-ratio:${width} / ${height}`}>
       <img src={src} alt={alt} width={width} height={height} loading={eager ? 'eager' : 'lazy'} decoding="async" />
       {

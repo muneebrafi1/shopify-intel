@@ -80,7 +80,8 @@ export const AppRefSchema = named(
   'AppRef',
   z.object({
     slug: z.string(),
-    name: z.string(),
+    name: z.string().describe('Full App Store listing name.'),
+    short_name: z.string().describe("Brand part of the name, e.g. 'Klaviyo'."),
     icon_url: z.string().nullable(),
     href: z.string(),
     category: CategoryRefSchema.nullable(),

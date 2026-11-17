@@ -176,7 +176,7 @@ const SEARCH_INDEX = [
   `INSERT INTO search_index (kind, ref, title, subtitle, keywords, boost)
   SELECT 'app', a.slug, a.name,
     COALESCE(a.developer, 'App') || COALESCE(' · ' || c.name, ''),
-    COALESCE(a.developer, '') || ' ' || COALESCE(c.name, '') || ' ' || a.slug || ' ' || COALESCE(a.app_store_handle, ''),
+    a.short_name || ' ' || COALESCE(a.developer, '') || ' ' || COALESCE(c.name, '') || ' ' || a.slug || ' ' || COALESCE(a.app_store_handle, ''),
     COALESCE(st.store_count, 0)
   FROM apps a
   LEFT JOIN app_categories c ON c.id = a.category_id

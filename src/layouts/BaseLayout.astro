@@ -23,6 +23,10 @@ interface Props {
   /** Hide the global header/footer (admin, focused flows). */
   chrome?: 'full' | 'minimal' | 'none';
   bodyClass?: string;
+  /** Live nav counts (see Header). Filled from the API meta by `getChromeData`. */
+  navCounts?: Record<string, number>;
+  /** Footer data line (source + as-of). */
+  dataNote?: string;
 }
 
 const {
@@ -34,6 +38,8 @@ const {
   jsonLd,
   chrome = 'full',
   bodyClass,
+  navCounts,
+  dataNote,
 } = Astro.props;
 
 const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} — ${SITE_TAGLINE}`;
@@ -85,11 +91,11 @@ const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   <body class={bodyClass}>
     <a class="skip-link" href="#main">Skip to content</a>
     {SHOW_CAPTURE_PREVIEW_NOTICE && chrome === 'full' && <PreviewNotice />}
-    {chrome !== 'none' && <Header minimal={chrome === 'minimal'} />}
+    {chrome !== 'none' && <Header minimal={chrome === 'minimal'} counts={navCounts} />}
     <main id="main" tabindex="-1">
       <slot />
     </main>
-    {chrome === 'full' && <Footer />}
+    {chrome === 'full' && <Footer dataNote={dataNote} />}
     <slot name="end" />
   </body>
 </html>

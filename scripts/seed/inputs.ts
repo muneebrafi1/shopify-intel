@@ -124,6 +124,12 @@ export const StoreCurationInput = z.object({
 });
 export type StoreCurationInput = z.infer<typeof StoreCurationInput>;
 
+export const AppCurationInput = z.object({
+  _note: z.string(),
+  short_names: z.record(z.string(), z.string().min(2)),
+});
+export type AppCurationInput = z.infer<typeof AppCurationInput>;
+
 export interface TeardownFile {
   file: string;
   source: string;
@@ -139,6 +145,7 @@ export interface SeedInputs {
   links: AffiliateLinkInput[];
   categories: string[];
   storeCuration: StoreCurationInput;
+  appCuration: AppCurationInput;
   teardowns: TeardownFile[];
   /** Raw bytes of every input, for the data_version hash. */
   rawFiles: Array<{ name: string; content: string }>;
@@ -177,6 +184,7 @@ export function loadSeedInputs(root: string): SeedInputs {
     links: json('data/seed/affiliate-links.json', z.array(AffiliateLinkInput)),
     categories: json('data/seed/categories.json', z.array(z.string())),
     storeCuration: json('data/curation/stores.json', StoreCurationInput),
+    appCuration: json('data/curation/apps.json', AppCurationInput),
     teardowns,
     rawFiles,
   };

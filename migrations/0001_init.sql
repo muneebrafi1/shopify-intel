@@ -90,7 +90,8 @@ CREATE TABLE apps (
   id INTEGER PRIMARY KEY,
   slug TEXT NOT NULL UNIQUE,             -- our public slug (= detection slug of the primary rule)
   app_store_handle TEXT,                 -- apps.shopify.com/<handle>
-  name TEXT NOT NULL,
+  name TEXT NOT NULL,                    -- full App Store listing name
+  short_name TEXT NOT NULL,              -- brand name for compact UI ('Klaviyo'); see build-seed
   developer TEXT,
   category_id INTEGER REFERENCES app_categories (id),
   app_store_category TEXT,               -- Shopify's own category label

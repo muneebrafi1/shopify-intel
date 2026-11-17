@@ -1,0 +1,48 @@
+---
+/**
+ * SITE_NAME set enormous across the full width. Inline SVG text fitted with textLength, so any
+ * brand name (short or long) fills the line exactly without JavaScript.
+ */
+import { SITE_NAME } from '~/config/site';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+const W = 1000;
+// Newsreader averages ~0.5em per glyph; the textLength attribute corrects the remainder.
+const size = Math.min(420, W / (SITE_NAME.length * 0.5));
+const hasDescender = /[gjpqy]/.test(SITE_NAME);
+const H = Math.round(size * (hasDescender ? 0.98 : 0.8));
+const baseline = Math.round(size * 0.76);
+---
+
+<div class:list={['wordmark', className]} aria-hidden="true">
+  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="presentation">
+    <text
+      x="0"
+      y={baseline}
+      textLength={W}
+      lengthAdjust="spacingAndGlyphs"
+      font-size={size}
+      font-family="Newsreader Variable, Newsreader, Georgia, serif"
+      fill="currentColor">{SITE_NAME}</text
+    >
+  </svg>
+</div>
+
+<style>
+  .wordmark {
+    color: var(--ink);
+    line-height: 0;
+  }
+  .wordmark svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .wordmark text {
+    font-variation-settings: 'opsz' 72;
+    letter-spacing: -0.02em;
+  }
+</style>

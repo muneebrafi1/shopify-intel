@@ -16,6 +16,7 @@ import {
   isScrapedSearchTitle,
   parseLongDate,
   priceToCents,
+  shortAppName,
 } from './normalize.ts';
 import { SqlWriter, type Row } from './sql.ts';
 import { parseTeardown } from './teardowns.ts';
@@ -209,10 +210,30 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   const resolveApp = (detectionSlug: string): AppRecord | undefined =>
     appBySlug.get(aliasOf.get(detectionSlug) ?? detectionSlug);
 
+  // Display names: scraped search-page titles fall back to the developer; short names come from
+  // editorial overrides, else the brand rule; collisions and very short results use the full name.
+  const displayName = (a: AppInput) =>
+    isScrapedSearchTitle(a.name) ? (a.developer ?? humanizeSlug(a.slug)) : a.name;
+  const overrides = inputs.appCuration.short_names;
+  for (const slug of Object.keys(overrides)) {
+    if (!appBySlug.has(slug)) warn(`apps curation: unknown app '${slug}'`);
+  }
+  const autoShort = new Map(apps.map((r) => [r.slug, shortAppName(displayName(r.input))]));
+  const shortCounts = new Map<string, number>();
+  for (const v of autoShort.values()) shortCounts.set(v.toLowerCase(), (shortCounts.get(v.toLowerCase()) ?? 0) + 1);
+  const shortName = (r: AppRecord): string => {
+    const override = overrides[r.slug];
+    if (override) return override;
+    const auto = autoShort.get(r.slug) ?? displayName(r.input);
+    const collides = (shortCounts.get(auto.toLowerCase()) ?? 0) > 1;
+    return collides || auto.length < 3 ? displayName(r.input) : auto;
+  };
+
   w.comment('apps');
   w.insert(
     'apps',
-    apps.map(({ id, slug, input: a, profile, categoryName }) => {
+    apps.map((rec) => {
+      const { id, slug, input: a, profile, categoryName } = rec;
       const scraped = isScrapedSearchTitle(a.name);
       if (scraped) warn(`app '${slug}': scraped search-page title replaced by developer name`);
       const listingUrl = scraped ? null : a.app_store_url;
@@ -231,7 +252,8 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
         id,
         slug,
         app_store_handle: scraped ? null : a.app_store_handle,
-        name: scraped ? (a.developer ?? humanizeSlug(slug)) : a.name,
+        name: displayName(a),
+        short_name: shortName(rec),
         developer: a.developer,
         category_id: categoryId.get(categoryName) ?? null,
         app_store_category: a.app_store_category ?? null,

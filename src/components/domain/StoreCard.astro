@@ -11,10 +11,12 @@ interface Props {
   /** One quiet meta line, e.g. "Prestige · 11 apps". */
   meta?: string;
   tag?: string;
+  /** Specimen number shown at the end of the caption (N°014). */
+  n?: number;
   eager?: boolean;
   class?: string;
 }
-const { domain, name, href = `/stores/${domain}`, shot, meta, tag, eager, class: className } = Astro.props;
+const { domain, name, href = `/stores/${domain}`, shot, meta, tag, n, eager, class: className } = Astro.props;
 const title = name || domain;
 ---
 
@@ -44,6 +46,7 @@ const title = name || domain;
       <h3 class="store-card__title"><a href={href}>{title}</a></h3>
       {meta && <p class="store-card__meta">{meta}</p>}
     </div>
+    {typeof n === 'number' && <span class="store-card__n">N°{String(n).padStart(3, '0')}</span>}
     <slot name="aside" />
   </div>
 </article>
@@ -73,9 +76,20 @@ const title = name || domain;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .store-card__meta {
+  .store-card__n {
+    flex: none;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
     color: var(--ink-3);
-    font-size: var(--text-sm);
+  }
+  .store-card__meta {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

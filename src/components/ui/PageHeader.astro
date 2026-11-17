@@ -1,32 +1,41 @@
 ---
 /**
- * Top of an index or static page: eyebrow/breadcrumbs, title, lede, actions, and an optional
- * meta line. Detail pages compose their own richer headers.
+ * Top of an index or static page. Asymmetric: the title block spans 8 of 12 columns, actions or
+ * specs sit at the right. One very large title (optionally with a superscript count), a mono
+ * eyebrow label, a short lede.
  */
+import Count from './Count.astro';
+import MonoLabel from './MonoLabel.astro';
+
 interface Props {
   title: string;
   lede?: string;
+  /** Mono label above the title, e.g. "Index · 20 themes". */
   eyebrow?: string;
-  /** Use the editorial serif for the title (teardowns, about, legal). */
+  /** Superscript count after the title. */
+  count?: number | string;
+  /** Use the editorial serif for the title (teardowns, about, legal, theme names). */
   serif?: boolean;
   size?: 'md' | 'lg';
   class?: string;
 }
-const { title, lede, eyebrow, serif = false, size = 'md', class: className } = Astro.props;
+const { title, lede, eyebrow, count, serif = false, size = 'md', class: className } = Astro.props;
 ---
 
 <header class:list={['ph', `ph--${size}`, className]}>
   <slot name="top" />
-  {eyebrow && <p class="ph__eyebrow">{eyebrow}</p>}
-  <div class="ph__row">
-    <div class="ph__text">
-      <h1 class:list={['ph__title', { display: serif }]}>{title}</h1>
+  <div class="ph__grid cols-12">
+    <div class="ph__text span-8">
+      {eyebrow && <MonoLabel as="p" class="ph__eyebrow">{eyebrow}</MonoLabel>}
+      <h1 class:list={['ph__title', { display: serif }]}>
+        {title}{count !== undefined && <Count value={count} />}
+      </h1>
       {lede && <p class="ph__lede">{lede}</p>}
       <slot name="meta" />
     </div>
     {
       Astro.slots.has('actions') && (
-        <div class="ph__actions">
+        <div class="ph__actions start-9">
           <slot name="actions" />
         </div>
       )
@@ -42,61 +51,54 @@ const { title, lede, eyebrow, serif = false, size = 'md', class: className } = A
   .ph--lg {
     padding-block: var(--space-12) var(--space-8);
   }
-  .ph__eyebrow {
-    margin-bottom: var(--space-2);
-    color: var(--ink-3);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
+  .ph :global(nav[aria-label='Breadcrumb']) {
+    margin-bottom: var(--space-6);
   }
-  .ph__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--space-4) var(--space-8);
+  .ph__grid {
+    align-items: end;
   }
   .ph__text {
     min-width: 0;
-    max-width: 760px;
+  }
+  .ph__eyebrow {
+    margin-bottom: var(--space-4);
   }
   .ph__title {
-    font-size: var(--text-3xl);
+    font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.5rem);
     font-weight: var(--weight-semibold);
-    letter-spacing: var(--tracking-tight);
-    line-height: var(--leading-tight);
-  }
-  .ph__title.display {
-    font-size: var(--text-4xl);
-    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1;
   }
   .ph--lg .ph__title {
-    font-size: var(--text-4xl);
+    font-size: clamp(2.75rem, 1.6rem + 4.2vw, 5rem);
+    letter-spacing: -0.04em;
   }
-  .ph--lg .ph__title.display {
-    font-size: var(--text-5xl);
+  .ph__title.display {
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
   }
   .ph__lede {
-    margin-top: var(--space-3);
+    margin-top: var(--space-4);
+    max-width: 560px;
     color: var(--ink-2);
     font-size: var(--text-lg);
     line-height: var(--leading-normal);
-    max-width: 620px;
   }
   .ph__actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+    justify-content: flex-start;
+  }
+  @media (min-width: 1024px) {
+    .ph__actions {
+      justify-content: flex-end;
+    }
   }
   @media (max-width: 639px) {
-    .ph__title {
-      font-size: var(--text-2xl);
-    }
-    .ph__title.display,
-    .ph--lg .ph__title {
-      font-size: var(--text-3xl);
-    }
-    .ph--lg .ph__title.display {
-      font-size: var(--text-4xl);
+    .ph {
+      padding-block: var(--space-6) var(--space-5);
     }
     .ph__lede {
       font-size: var(--text-md);

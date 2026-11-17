@@ -1,0 +1,48 @@
+---
+/** A short note for the right-hand aside of long documents, set off by a hairline (no box). */
+interface Props {
+  title: string;
+  class?: string;
+}
+const { title, class: className } = Astro.props;
+---
+
+<section class:list={['aside-note', className]}>
+  <h2 class="aside-note__title">{title}</h2>
+  <div class="aside-note__body">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .aside-note {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .aside-note + .aside-note {
+    margin-top: var(--space-8);
+  }
+  .aside-note__title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+  }
+  .aside-note__body {
+    margin-top: var(--space-1-5);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+  .aside-note__body :global(p + p),
+  .aside-note__body :global(p + .btn),
+  .aside-note__body :global(p + a) {
+    margin-top: var(--space-3);
+  }
+  .aside-note__body :global(a:not(.btn)) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+    overflow-wrap: anywhere;
+  }
+</style>

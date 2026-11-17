@@ -2,6 +2,8 @@
 
 The living reference is **`/design-system`** (run `npm run dev` and open it). Every shared
 component is shown there with fixture data. This document explains the rules behind it.
+**The visual concept and signature elements are in [`design/direction.md`](design/direction.md)
+— read that first; it is binding.**
 Reference research (Mobbin) is in [`docs/design/research.md`](design/research.md).
 
 ## Principles
@@ -55,6 +57,13 @@ Reference research (Mobbin) is in [`docs/design/research.md`](design/research.md
 `Breadcrumbs`, `Pagination`, `EmptyState` (our own blank-tile art), `Skeleton`, `Notice`,
 `Field` + `Input` (`as="textarea|select"`) + `Checkbox`, `Dialog` (native `<dialog>`, open with
 `data-dialog-open="id"`), `Kbd`, `AppIcon`, `StoreMark`.
+
+Signature elements (see direction.md): `MonoLabel` (■ mono spec label), `Count` (superscript
+count), `IndexList` + `IndexRow` (numbered catalogue rows, cursor-following capture preview),
+`Stat display` (serif numerals + mono label), utilities `.mlabel`, `.count-sup`, `.marks` (crop
+marks), `.cols-12` + `.span-8`/`.start-9` (asymmetric composition), `.rule`. The footer ends with
+`Wordmark` (SITE_NAME fitted to the full width). `PageHeader` takes `eyebrow` + `count`;
+`SectionHeader` takes `label` + `count` + `rule`.
 
 `src/components/media/` — screenshots:
 - `Shot`: thumbnail tile (top of a full-page capture in a warm well, bleeding off the bottom).

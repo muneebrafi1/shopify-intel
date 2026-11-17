@@ -1,6 +1,7 @@
 ---
 import { SITE_NAME } from '~/config/site';
 import Logo from './Logo.astro';
+import Wordmark from './Wordmark.astro';
 
 interface Props {
   /** Data freshness line, e.g. "930 stores scanned · data as of 17 Nov 2026". */
@@ -63,7 +64,7 @@ const year = new Date().getFullYear();
     {
       COLUMNS.map((col) => (
         <nav class="footer__col" aria-label={col.title}>
-          <h2 class="footer__title">{col.title}</h2>
+          <h2 class="footer__title mlabel mlabel--bullet">{col.title}</h2>
           <ul>
             {col.links.map((link) => (
               <li>
@@ -74,6 +75,9 @@ const year = new Date().getFullYear();
         </nav>
       ))
     }
+  </div>
+  <div class="container footer__mark">
+    <Wordmark />
   </div>
   <div class="container footer__legal">
     <p>© {year} {SITE_NAME}</p>
@@ -115,10 +119,7 @@ const year = new Date().getFullYear();
     font-size: var(--text-xs);
   }
   .footer__title {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    color: var(--ink);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
   }
   .footer__col li + li {
     margin-top: var(--space-2);
@@ -130,12 +131,16 @@ const year = new Date().getFullYear();
   .footer__col a:hover {
     color: var(--ink);
   }
+  .footer__mark {
+    padding-top: var(--space-6);
+  }
   .footer__legal {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    padding-block: var(--space-6) var(--space-10);
+    padding-block: var(--space-5) var(--space-8);
     border-top: 1px solid var(--line);
+    margin-top: var(--space-4);
     color: var(--ink-3);
     font-size: var(--text-xs);
   }

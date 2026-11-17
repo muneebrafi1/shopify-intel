@@ -27,6 +27,10 @@ import SectionHeader from '~/components/ui/SectionHeader.astro';
 import PageHeader from '~/components/ui/PageHeader.astro';
 import Facts from '~/components/ui/Facts.astro';
 import Kbd from '~/components/ui/Kbd.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Count from '~/components/ui/Count.astro';
+import IndexList from '~/components/ui/IndexList.astro';
+import IndexRow from '~/components/ui/IndexRow.astro';
 import Shot from '~/components/media/Shot.astro';
 import FullPage from '~/components/media/FullPage.astro';
 import StoreCard from '~/components/domain/StoreCard.astro';
@@ -99,12 +103,52 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
   <div class="container">
     <PageHeader
       title="Design system"
+      count={42}
+      eyebrow="Reference · Specimen archive"
       lede="Tokens and components used across the site. Screenshots here are drawn placeholders: the same renderer the site uses until real captures land."
       size="lg"
     >
       <Breadcrumbs slot="top" items={[{ label: 'Home', href: '/' }, { label: 'Design system' }]} />
     </PageHeader>
 
+
+    <section class="ds-block">
+      <SectionHeader label="01 — Signature" title="Specimen archive" count={6} description="Specimen numbers, mono spec labels, superscript counts, crop marks, contact-sheet captions, grid ↔ index. See docs/design/direction.md." rule />
+      <div class="row" style="gap:20px">
+        <MonoLabel>Detected 17 Nov 2026</MonoLabel>
+        <MonoLabel tone="ink">Theme</MonoLabel>
+        <MonoLabel tone="accent">Capture pending</MonoLabel>
+        <MonoLabel bullet={false}>N°014 — Store</MonoLabel>
+      </div>
+      <p style="margin-top:24px;font-size:var(--text-4xl);font-weight:600;letter-spacing:-0.035em;line-height:1">Themes<Count value={20} /> &nbsp;Stores<Count value={930} /></p>
+      <div class="marks ds-stats-marks">
+        <StatList columns={4}>
+          <Stat display value={930} label="Stores scanned" source="StorePeek scan" asOf="17 Nov 2026" />
+          <Stat display value="41.2%" label="Run Klaviyo" source="383 of 930 stores" />
+          <Stat display value={20} label="Themes tracked" source="Theme Store" />
+          <Stat display value={160} label="Plates queued" source="20 stores × 8" />
+        </StatList>
+      </div>
+      <div class="ds-index">
+        <IndexList columns="56px minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,0.8fr) 110px" head={['N°', 'Store', 'Theme', 'Category', 'Market', 'Apps']} label="Stores">
+          {STORES.map(([d, n, meta], i) => (
+            <IndexRow
+              n={i + 1}
+              href="#"
+              title={n}
+              subtitle={`${d} · ${meta}`}
+              preview={homeShots[i]}
+              cells={[
+                { value: meta.split(' · ')[0]! },
+                { value: i % 2 ? 'Food & drink' : 'Apparel', muted: true },
+                { value: i % 3 ? 'USD' : 'AUD', mono: true },
+                { value: `(${meta.split(' · ')[1]})`, serif: true, mobile: true },
+              ]}
+            />
+          ))}
+        </IndexList>
+      </div>
+    </section>
     <section class="ds-block">
       <SectionHeader title="Colour" description="Warm neutrals and one accent. The accent marks state, never decoration." />
       <div class="swatches">
@@ -381,6 +425,13 @@ const COLORS = ['bg', 'surface', 'tile', 'fill', 'line', 'line-strong', 'ink', '
     margin-top: var(--space-4);
   }
   :global(.ds-tabs) {
+    margin-top: var(--space-6);
+  }
+  .ds-stats-marks {
+    margin-block: var(--space-10) var(--space-12);
+    padding: var(--space-6);
+  }
+  .ds-index {
     margin-top: var(--space-6);
   }
   :global(.ds-stats) {

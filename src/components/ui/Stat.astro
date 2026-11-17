@@ -9,15 +9,17 @@ interface Props {
   source?: string;
   asOf?: string;
   size?: 'sm' | 'md' | 'lg';
+  /** Editorial serif numerals with a mono label (for page-level stat strips). */
+  display?: boolean;
   class?: string;
 }
-const { value, label, source, asOf, size = 'md', class: className } = Astro.props;
-const display = typeof value === 'number' ? value.toLocaleString('en-US') : value;
+const { value, label, source, asOf, size = 'md', display: serif = false, class: className } = Astro.props;
+const shown = typeof value === 'number' ? value.toLocaleString('en-US') : value;
 ---
 
-<div class:list={['stat', `stat--${size}`, className]}>
+<div class:list={['stat', `stat--${size}`, { 'stat--display': serif }, className]}>
   <dt class="stat__label">{label}</dt>
-  <dd class="stat__value num">{display}</dd>
+  <dd class="stat__value num">{shown}</dd>
   {
     (source || asOf) && (
       <dd class="stat__source">
@@ -55,6 +57,28 @@ const display = typeof value === 'number' ? value.toLocaleString('en-US') : valu
   .stat--lg .stat__value {
     font-size: var(--text-4xl);
     letter-spacing: var(--tracking-tight);
+  }
+  .stat--display .stat__value {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(2.25rem, 1.6rem + 2vw, 3.25rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .stat--display.stat--sm .stat__value {
+    font-size: var(--text-3xl);
+  }
+  .stat--display .stat__label {
+    margin-top: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .stat--display .stat__source {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
   }
   .stat__source {
     order: 3;

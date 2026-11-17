@@ -1,0 +1,12 @@
+---
+/** Superscript count after a title or nav item (Themes²⁰). Sized relative to its parent. */
+interface Props {
+  value: number | string;
+  label?: string;
+  class?: string;
+}
+const { value, label, class: className } = Astro.props;
+const text = typeof value === 'number' ? value.toLocaleString('en-US') : value;
+---
+
+<sup class:list={['count-sup', className]} aria-label={label ? `${text} ${label}` : undefined}>{text}</sup>

@@ -91,12 +91,13 @@ export const categoryRef = (slug: string | null, name: string | null): CategoryR
   slug && name ? { slug, name, href: hrefs.appCategory(slug) } : null;
 
 /** App columns (apps a LEFT JOIN app_categories ac ON ac.id = a.category_id). */
-export const APP_REF_COLS = `a.slug AS app_slug, a.name AS app_name, a.icon_url AS app_icon_url,
-  ac.slug AS app_cat_slug, ac.name AS app_cat_name`;
+export const APP_REF_COLS = `a.slug AS app_slug, a.name AS app_name, a.short_name AS app_short_name,
+  a.icon_url AS app_icon_url, ac.slug AS app_cat_slug, ac.name AS app_cat_name`;
 
 export interface AppRefRow {
   app_slug: string;
   app_name: string;
+  app_short_name: string | null;
   app_icon_url: string | null;
   app_cat_slug: string | null;
   app_cat_name: string | null;
@@ -105,6 +106,7 @@ export interface AppRefRow {
 export const appRef = (r: AppRefRow): AppRef => ({
   slug: r.app_slug,
   name: r.app_name,
+  short_name: r.app_short_name ?? r.app_name,
   icon_url: r.app_icon_url,
   href: hrefs.app(r.app_slug),
   category: categoryRef(r.app_cat_slug, r.app_cat_name),

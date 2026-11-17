@@ -3,12 +3,15 @@ import { PRIMARY_NAV } from '~/config/site';
 import Logo from './Logo.astro';
 import Icon from '~/components/ui/Icon.astro';
 import Kbd from '~/components/ui/Kbd.astro';
+import Count from '~/components/ui/Count.astro';
 
 interface Props {
   /** Minimal chrome: logo only (focused flows such as sign-in). */
   minimal?: boolean;
+  /** Live counts shown as superscripts after nav items, keyed by nav href ("/stores"). */
+  counts?: Record<string, number>;
 }
-const { minimal = false } = Astro.props;
+const { minimal = false, counts = {} } = Astro.props;
 const path = Astro.url.pathname;
 const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 
@@ -39,6 +42,7 @@ const SECONDARY_NAV = [
                 aria-current={isActive(item.href) ? 'page' : undefined}
               >
                 {item.label}
+                {typeof counts[item.href] === 'number' && <Count value={counts[item.href]!} />}
               </a>
             ))}
           </nav>
