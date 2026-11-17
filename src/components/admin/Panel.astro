@@ -1,0 +1,161 @@
+---
+/**
+ * The admin's card: --surface, 1px --line, radius 12, the card shadow (+ the lit edge in dark).
+ * A header row (title, count, description, actions on the right), a body, an optional footer.
+ * `flush` drops the body padding for tables and lists that run edge to edge.
+ *
+ *   <Panel title="Removal requests" count={3} flush>
+ *     <a slot="actions" class="a-link" href="/admin/removals">All requests</a>
+ *     <div class="a-tablewrap"><table class="table a-table">…</table></div>
+ *     <p slot="footer">…</p>
+ *   </Panel>
+ */
+interface Props {
+  title?: string;
+  description?: string;
+  count?: number;
+  /** id for the heading (aria-labelledby); derived from the title when omitted. */
+  id?: string;
+  flush?: boolean;
+  level?: 2 | 3;
+  tone?: 'default' | 'caution' | 'critical';
+  as?: 'section' | 'div' | 'aside';
+  class?: string;
+}
+const {
+  title,
+  description,
+  count,
+  id,
+  flush = false,
+  level = 2,
+  tone = 'default',
+  as: Tag = 'section',
+  class: className,
+} = Astro.props;
+const H = `h${level}` as 'h2' | 'h3';
+const headingId =
+  id ??
+  (title
+    ? `p-${title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-+$/, '')}`
+    : undefined);
+const hasHead = !!title || Astro.slots.has('actions');
+---
+
+<Tag
+  class:list={['panel', `panel--${tone}`, { 'panel--flush': flush }, className]}
+  aria-labelledby={title ? headingId : undefined}
+>
+  {hasHead && (
+    <div class="panel__head">
+      <div class="panel__heading">
+        {title && (
+          <H class="panel__title" id={headingId}>
+            {title}
+            {typeof count === 'number' && (
+              <span class="panel__count num">{count.toLocaleString('en-US')}</span>
+            )}
+          </H>
+        )}
+        {description && <p class="panel__desc">{description}</p>}
+      </div>
+      {Astro.slots.has('actions') && (
+        <div class="panel__actions">
+          <slot name="actions" />
+        </div>
+      )}
+    </div>
+  )}
+  <div class="panel__body">
+    <slot />
+  </div>
+  {Astro.slots.has('footer') && (
+    <div class="panel__foot">
+      <slot name="footer" />
+    </div>
+  )}
+</Tag>
+
+<style>
+  .panel {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+  .panel__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+  .panel__heading {
+    flex: 1 1 200px;
+    min-width: 0;
+    padding-block: 3px;
+  }
+  .panel__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .panel__count {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .panel__desc {
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .panel__actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 26px;
+    font-size: var(--text-sm);
+  }
+  .panel__body {
+    padding: var(--space-4);
+  }
+  .panel--flush > .panel__body {
+    padding: 0;
+  }
+  .panel__foot {
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--line);
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
+    background: var(--bg-subtle);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+  }
+  .panel--caution {
+    border-color: color-mix(in srgb, var(--caution) 35%, var(--line));
+  }
+  .panel--caution > .panel__head {
+    background: var(--caution-soft);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+  .panel--critical {
+    border-color: color-mix(in srgb, var(--critical) 35%, var(--line));
+  }
+  .panel--critical > .panel__head {
+    background: var(--critical-soft);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+</style>

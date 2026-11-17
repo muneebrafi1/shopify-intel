@@ -1,0 +1,21 @@
+---
+/**
+ * "Captures blocked": an approved removal request of scope 'store' or 'screenshots' (or a
+ * tombstone) means the crawler never captures this domain again. Shown on removal rows, the
+ * removal page and the store page.
+ */
+import Badge from '~/components/ui/Badge.astro';
+
+interface Props {
+  /** The request that set the block, when known ("RR-…"). */
+  reference?: string | null;
+  size?: 'sm' | 'md';
+  class?: string;
+}
+const { reference, size = 'sm', class: className } = Astro.props;
+const title = `No future captures of this domain${reference ? ` (removal request ${reference})` : ''}. Detection rescans still run.`;
+---
+
+<Badge tone="critical" size={size} icon="lock-simple" title={title} class={className}>
+  Captures blocked
+</Badge>

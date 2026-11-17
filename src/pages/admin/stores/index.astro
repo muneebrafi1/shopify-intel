@@ -2,8 +2,10 @@
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import { requireAdmin } from '~/server/admin/page';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
+import Panel from '~/components/admin/Panel.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
+import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
 import Icon from '~/components/ui/Icon.astro';
 import Input from '~/components/ui/Input.astro';
@@ -74,12 +76,16 @@ const captureLabel = (r: (typeof rows)[number]) =>
       : 'None';
 ---
 
-<AdminLayout title="Stores" section="stores">
+<AdminLayout title="Stores" section="stores" trail={[{ label: 'Stores' }]}>
+  <Fragment slot="actions">
+    <Button href="/stores" variant="secondary" size="sm" iconRight="arrow-up-right">
+      Public index
+    </Button>
+  </Fragment>
   <AdminHeader
     title="Stores"
     count={total}
     countLabel="stores"
-    trail={[{ label: 'Stores' }]}
     description="Every store in the database, including hidden and opted-out ones."
   />
   <FlashNotice />
@@ -106,80 +112,87 @@ const captureLabel = (r: (typeof rows)[number]) =>
         autocomplete="off"
       />
     </div>
-    <label class="a-filters__field">
-      <span class="visually-hidden">Status</span>
-      <Input as="select" name="status" data-autosubmit class={params.status ? 'is-set' : undefined}>
-        <option value="">Status</option>
-        <option value="active" selected={params.status === 'active'}>
-          Active
-        </option>
-        <option value="hidden" selected={params.status === 'hidden'}>
-          Hidden
-        </option>
-        <option value="opted_out" selected={params.status === 'opted_out'}>
-          Opted out
-        </option>
-      </Input>
-    </label>
-    <label class="a-filters__field">
-      <span class="visually-hidden">Curated</span>
-      <Input
-        as="select"
-        name="curated"
-        data-autosubmit
-        class={params.curated ? 'is-set' : undefined}
-      >
-        <option value="">Curated</option>
-        <option value="yes" selected={params.curated === 'yes'}>
-          Curated only
-        </option>
-        <option value="no" selected={params.curated === 'no'}>
-          Not curated
-        </option>
-      </Input>
-    </label>
-    <label class="a-filters__field">
-      <span class="visually-hidden">Captures</span>
-      <Input
-        as="select"
-        name="captured"
-        data-autosubmit
-        class={params.captured ? 'is-set' : undefined}
-      >
-        <option value="">Captures</option>
-        <option value="yes" selected={params.captured === 'yes'}>
-          Captured
-        </option>
-        <option value="placeholder" selected={params.captured === 'placeholder'}>
-          Preview only
-        </option>
-        <option value="no" selected={params.captured === 'no'}>
-          No captures
-        </option>
-      </Input>
-    </label>
-    <label class="a-filters__field">
-      <span class="visually-hidden">Theme</span>
-      <Input as="select" name="theme" data-autosubmit class={params.theme ? 'is-set' : undefined}>
-        <option value="">Theme</option>
-        {options.themes.map((t) => (
-          <option value={t.value} selected={params.theme === t.value}>
-            {t.label} ({t.count})
+    <div class="a-filters__pills">
+      <label class="a-filters__field">
+        <span class="visually-hidden">Status</span>
+        <Input
+          as="select"
+          name="status"
+          data-autosubmit
+          class={params.status ? 'is-set' : undefined}
+        >
+          <option value="">Status</option>
+          <option value="active" selected={params.status === 'active'}>
+            Active
           </option>
-        ))}
-      </Input>
-    </label>
-    <label class="a-filters__field">
-      <span class="visually-hidden">App</span>
-      <Input as="select" name="app" data-autosubmit class={params.app ? 'is-set' : undefined}>
-        <option value="">App</option>
-        {options.apps.map((a) => (
-          <option value={a.value} selected={params.app === a.value}>
-            {a.label} ({a.count})
+          <option value="hidden" selected={params.status === 'hidden'}>
+            Hidden
           </option>
-        ))}
-      </Input>
-    </label>
+          <option value="opted_out" selected={params.status === 'opted_out'}>
+            Opted out
+          </option>
+        </Input>
+      </label>
+      <label class="a-filters__field">
+        <span class="visually-hidden">Curated</span>
+        <Input
+          as="select"
+          name="curated"
+          data-autosubmit
+          class={params.curated ? 'is-set' : undefined}
+        >
+          <option value="">Curated</option>
+          <option value="yes" selected={params.curated === 'yes'}>
+            Curated only
+          </option>
+          <option value="no" selected={params.curated === 'no'}>
+            Not curated
+          </option>
+        </Input>
+      </label>
+      <label class="a-filters__field">
+        <span class="visually-hidden">Captures</span>
+        <Input
+          as="select"
+          name="captured"
+          data-autosubmit
+          class={params.captured ? 'is-set' : undefined}
+        >
+          <option value="">Captures</option>
+          <option value="yes" selected={params.captured === 'yes'}>
+            Captured
+          </option>
+          <option value="placeholder" selected={params.captured === 'placeholder'}>
+            Preview only
+          </option>
+          <option value="no" selected={params.captured === 'no'}>
+            No captures
+          </option>
+        </Input>
+      </label>
+      <label class="a-filters__field">
+        <span class="visually-hidden">Theme</span>
+        <Input as="select" name="theme" data-autosubmit class={params.theme ? 'is-set' : undefined}>
+          <option value="">Theme</option>
+          {options.themes.map((t) => (
+            <option value={t.value} selected={params.theme === t.value}>
+              {t.label} ({t.count})
+            </option>
+          ))}
+        </Input>
+      </label>
+      <label class="a-filters__field">
+        <span class="visually-hidden">App</span>
+        <Input as="select" name="app" data-autosubmit class={params.app ? 'is-set' : undefined}>
+          <option value="">App</option>
+          {options.apps.map((a) => (
+            <option value={a.value} selected={params.app === a.value}>
+              {a.label} ({a.count})
+            </option>
+          ))}
+        </Input>
+      </label>
+    </div>
     <div class="a-filters__actions">
       <Button type="submit" size="sm" variant="primary" class="a-filters__apply">
         Apply
@@ -192,105 +205,123 @@ const captureLabel = (r: (typeof rows)[number]) =>
     </div>
   </form>
 
-  <div class="a-result">
-    <p class="a-mono a-muted">
-      {total.toLocaleString('en-US')} {total === 1 ? 'store' : 'stores'}
-      {filtered ? ' match' : ''} · data as of {shortDate(meta.dataAsOf)}
-    </p>
-    <label class="a-sort">
-      <span class="a-mono a-muted">Sort</span>
-      <Input as="select" name="sort" form="store-filters" data-autosubmit>
-        {(Object.keys(SORT_LABELS) as StoreSort[]).map((key) => (
-          <option value={key} selected={(params.sort ?? 'rank') === key}>
-            {SORT_LABELS[key]}
-          </option>
-        ))}
-      </Input>
-    </label>
-  </div>
-
-  <div class="table-wrap">
-    <table class="table a-table stores">
-      <thead>
-        <tr>
-          <th scope="col">Store</th>
-          <th scope="col">Theme</th>
-          <th scope="col" class="is-num">
-            Apps
-          </th>
-          <th scope="col">Captures</th>
-          <th scope="col">Status</th>
-          <th scope="col">Last seen</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 ? (
+  <Panel flush>
+    <div class="toolbar">
+      <p class="toolbar__count">
+        <span class="a-strong num">{total.toLocaleString('en-US')}</span>{' '}
+        {total === 1 ? 'store' : 'stores'}
+        {filtered ? ' match' : ''}
+        <span class="a-muted"> · data as of {shortDate(meta.dataAsOf)}</span>
+      </p>
+      <label class="a-sort">
+        <span>Sort</span>
+        <Input as="select" name="sort" form="store-filters" data-autosubmit>
+          {(Object.keys(SORT_LABELS) as StoreSort[]).map((key) => (
+            <option value={key} selected={(params.sort ?? 'rank') === key}>
+              {SORT_LABELS[key]}
+            </option>
+          ))}
+        </Input>
+      </label>
+    </div>
+    <div class="a-tablewrap">
+      <table class="table a-table a-table--stack stores">
+        <thead>
           <tr>
-            <td colspan="6" class="a-empty-cell">
-              No stores match these filters.{' '}
-              <a class="a-link" href="/admin/stores">
-                Clear filters
-              </a>
-            </td>
+            <th scope="col">Store</th>
+            <th scope="col">Theme</th>
+            <th scope="col" class="is-num">
+              Apps
+            </th>
+            <th scope="col">Captures</th>
+            <th scope="col">Status</th>
+            <th scope="col">Last seen</th>
           </tr>
-        ) : (
-          rows.map((r) => (
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
             <tr>
-              <td>
-                <span class="a-cell-main">
-                  <StoreMark domain={r.domain} name={r.name} size={24} />
-                  <span>
-                    <a href={`/admin/stores/${r.domain}`} class="a-row-link">
-                      {r.name ?? r.domain}
-                    </a>
-                    {r.is_curated ? <span class="tag">Curated</span> : null}
-                    {r.name && <span class="a-sub">{r.domain}</span>}
-                  </span>
-                </span>
+              <td colspan="6" class="a-empty-cell">
+                No stores match these filters.{' '}
+                <a class="a-link" href="/admin/stores">
+                  Clear filters
+                </a>
               </td>
-              <td>
-                {r.theme_name ?? r.current_theme_name ?? <span class="a-muted">—</span>}
-                {r.current_theme_version && (
-                  <span class="a-sub a-mono">{r.current_theme_version}</span>
-                )}
-              </td>
-              <td class="is-num">{r.app_count}</td>
-              <td
-                class:list={[
-                  'a-nowrap',
-                  { 'a-muted': !r.is_captured && r.placeholder_shots === 0 },
-                ]}
-              >
-                {captureLabel(r)}
-              </td>
-              <td>
-                <StatusPill status={r.status} variant="dot" />
-              </td>
-              <td class="a-nowrap a-muted">{shortDate(r.last_seen)}</td>
             </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
+          ) : (
+            rows.map((r) => (
+              <tr>
+                <td class="is-primary store">
+                  <span class="a-cell-main">
+                    <StoreMark domain={r.domain} name={r.name} size={28} />
+                    <span>
+                      <span class="store__name">
+                        <a href={`/admin/stores/${r.domain}`} class="a-row-link">
+                          {r.name ?? r.domain}
+                        </a>
+                        {r.is_curated ? (
+                          <Badge tone="outline" size="sm">
+                            Curated
+                          </Badge>
+                        ) : null}
+                      </span>
+                      {r.name && <span class="a-sub">{r.domain}</span>}
+                    </span>
+                  </span>
+                </td>
+                <td class="is-meta">
+                  {r.theme_name ?? r.current_theme_name ?? <span class="a-muted">No theme</span>}
+                  {r.current_theme_version && (
+                    <span class="a-sub a-mono">{r.current_theme_version}</span>
+                  )}
+                </td>
+                <td class="is-meta is-num" data-label="Apps">
+                  {r.app_count}
+                </td>
+                <td class="is-meta a-nowrap">
+                  <StatusPill
+                    variant="dot"
+                    status={r.is_captured ? 'captured' : 'none'}
+                    label={captureLabel(r)}
+                    class={!r.is_captured && r.placeholder_shots === 0 ? 'a-muted' : undefined}
+                  />
+                </td>
+                <td class="is-meta">
+                  <StatusPill status={r.status} variant="dot" />
+                </td>
+                <td class="a-nowrap a-muted a-hide-sm">{shortDate(r.last_seen)}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </Panel>
   <Pagination page={current} pageSize={PAGE_SIZE} total={total} hrefFor={hrefFor} noun="stores" />
 </AdminLayout>
 
 <style>
-  .stores td:first-child {
-    min-width: 220px;
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    min-height: 44px;
+    padding: var(--space-1-5) var(--space-4);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
   }
-  .tag {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 0 5px;
-    border-radius: var(--radius-xs);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
+  .toolbar__count {
     color: var(--ink-2);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    line-height: 16px;
-    text-transform: uppercase;
+  }
+  .store {
+    min-width: 240px;
+  }
+  .store__name {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
   }
 </style>

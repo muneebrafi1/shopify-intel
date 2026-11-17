@@ -2,8 +2,10 @@
 import AdminLayout from '~/layouts/AdminLayout.astro';
 import AdminHeader from '~/components/admin/AdminHeader.astro';
 import FlashNotice from '~/components/admin/FlashNotice.astro';
+import Panel from '~/components/admin/Panel.astro';
 import StatusPill from '~/components/admin/StatusPill.astro';
 import Button from '~/components/ui/Button.astro';
+import Field from '~/components/ui/Field.astro';
 import Input from '~/components/ui/Input.astro';
 import Pagination from '~/components/ui/Pagination.astro';
 import Tabs from '~/components/ui/Tabs.astro';
@@ -74,7 +76,8 @@ const scope = (json: string | null, fallback: string) => {
   }
 };
 const EMPTY: Record<JobStatus, string> = {
-  queued: 'The queue is empty. Queue a rescan or capture from a store page, or below.',
+  queued:
+    'The queue is empty. Queue a rescan or capture with the form above, or from a store page.',
   running: 'Nothing is running. The crawler takes queued jobs on its next run.',
   done: 'No finished jobs yet.',
   failed: 'No failed jobs.',
@@ -83,53 +86,57 @@ const EMPTY: Record<JobStatus, string> = {
 const timeCol = status === 'queued' ? 'Queued' : status === 'running' ? 'Started' : 'Finished';
 ---
 
-<AdminLayout title="Scan jobs" section="scans">
+<AdminLayout title="Scans" section="scans" trail={[{ label: 'Scans' }]}>
   <AdminHeader
     title="Scan and capture jobs"
-    trail={[{ label: 'Scan jobs' }]}
     description="The external crawler takes queued jobs by priority, then age. Cancel a job before it starts."
   />
   <FlashNotice />
 
-  <form method="post" class="queue-form" aria-label="Queue a job">
-    <input type="hidden" name="intent" value="queue" />
-    <label class="visually-hidden" for="q-domain">
-      Store domain
-    </label>
-    <Input
-      id="q-domain"
-      name="domain"
-      placeholder="Store domain, e.g. example.com"
-      required
-      maxlength={300}
-      autocomplete="off"
-    />
-    <label class="visually-hidden" for="q-kind">
-      Job kind
-    </label>
-    <Input as="select" id="q-kind" name="kind">
-      <option value="rescan">Rescan (detect theme and apps)</option>
-      <option value="capture">Capture (screenshots)</option>
-      <option value="detect">Detect (new domain)</option>
-    </Input>
-    <Button type="submit" variant="primary" size="sm">
-      Queue job
-    </Button>
-  </form>
+  <Panel title="Queue a job" class="queue">
+    <form method="post" class="queue-form" aria-label="Queue a job">
+      <input type="hidden" name="intent" value="queue" />
+      <Field label="Store domain" for="q-domain" hint="A bare domain, like example.com.">
+        <Input
+          id="q-domain"
+          name="domain"
+          placeholder="example.com"
+          required
+          maxlength={300}
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </Field>
+      <Field
+        label="Job"
+        for="q-kind"
+        hint="Captures are refused for stores with an approved removal request."
+      >
+        <Input as="select" id="q-kind" name="kind">
+          <option value="rescan">Rescan: detect theme and apps</option>
+          <option value="capture">Capture: take screenshots</option>
+          <option value="detect">Detect: a new domain</option>
+        </Input>
+      </Field>
+      <div class="queue-form__submit">
+        <Button type="submit" variant="primary" size="md" icon="plus">
+          Queue job
+        </Button>
+      </div>
+    </form>
+  </Panel>
 
-  <Tabs items={tabs} label="Job status" />
+  <Tabs items={tabs} label="Job status" class="jtabs" />
 
-  {rows.length === 0 ? (
-    <p class="a-quiet-empty jobs">{EMPTY[status]}</p>
-  ) : (
-    <div class="table-wrap">
-      <table class="table a-table jobs">
+  <Panel flush>
+    <div class="a-tablewrap">
+      <table class="table a-table a-table--stack jobs">
         <thead>
           <tr>
+            <th scope="col">Store</th>
             <th scope="col" class="is-num">
               Job
             </th>
-            <th scope="col">Store</th>
             <th scope="col">Kind</th>
             <th scope="col">Pages · devices</th>
             <th scope="col" class="is-num">
@@ -147,68 +154,79 @@ const timeCol = status === 'queued' ? 'Queued' : status === 'running' ? 'Started
           </tr>
         </thead>
         <tbody>
-          {rows.map((j) => {
-            const when =
-              status === 'queued'
-                ? j.created_at
-                : status === 'running'
-                  ? (j.started_at ?? j.created_at)
-                  : (j.finished_at ?? j.created_at);
-            return (
-              <tr>
-                <td class="is-num a-mono">#{j.id}</td>
-                <td>
-                  {j.store_id ? (
-                    <a class="a-row-link" href={`/admin/stores/${j.domain}`}>
-                      {j.domain}
-                    </a>
-                  ) : (
-                    <span class="a-strong">{j.domain}</span>
-                  )}
-                  {j.store_name && <span class="a-sub">{j.store_name}</span>}
-                </td>
-                <td>{KIND[j.kind] ?? j.kind}</td>
-                <td class="a-muted">
-                  {scope(j.page_types_json, 'Core pages')} · {scope(j.devices_json, 'both devices')}
-                </td>
-                <td class="is-num">{j.priority}</td>
-                <td class="a-muted">{j.requested_by ?? 'crawler'}</td>
-                <td class="a-nowrap" title={fullTime(when)}>
-                  {timeAgo(when, now)}
-                  {j.attempts > 0 && (
-                    <span class="a-sub">
-                      {j.attempts} {j.attempts === 1 ? 'attempt' : 'attempts'}
-                    </span>
-                  )}
-                </td>
-                {(status === 'failed' || status === 'cancelled') && (
-                  <td class="a-muted note">{j.error ?? '—'}</td>
-                )}
-                <td>
-                  <StatusPill status={j.status} variant="dot" />
-                </td>
-                {status === 'queued' && (
-                  <td class="is-actions">
-                    <form method="post" data-confirm={`Cancel job #${j.id} for ${j.domain}?`}>
-                      <input type="hidden" name="intent" value="cancel" />
-                      <input type="hidden" name="id" value={j.id} />
-                      <Button
-                        type="submit"
-                        size="sm"
-                        variant="secondary"
-                        icon="x"
-                        label={`Cancel job ${j.id}`}
-                      />
-                    </form>
+          {rows.length === 0 ? (
+            <tr>
+              <td colspan="10" class="a-empty-cell">
+                {EMPTY[status]}
+              </td>
+            </tr>
+          ) : (
+            rows.map((j) => {
+              const when =
+                status === 'queued'
+                  ? j.created_at
+                  : status === 'running'
+                    ? (j.started_at ?? j.created_at)
+                    : (j.finished_at ?? j.created_at);
+              return (
+                <tr>
+                  <td class="is-primary">
+                    {j.store_id ? (
+                      <a class="a-row-link" href={`/admin/stores/${j.domain}`}>
+                        {j.domain}
+                      </a>
+                    ) : (
+                      <span class="a-strong">{j.domain}</span>
+                    )}
+                    {j.store_name && <span class="a-sub">{j.store_name}</span>}
                   </td>
-                )}
-              </tr>
-            );
-          })}
+                  <td class="is-meta is-num a-mono a-muted">#{j.id}</td>
+                  <td class="is-meta">{KIND[j.kind] ?? j.kind}</td>
+                  <td class="is-meta a-muted">
+                    {scope(j.page_types_json, 'Core pages')} ·{' '}
+                    {scope(j.devices_json, 'both devices')}
+                  </td>
+                  <td class="is-meta is-num" data-label="Priority">
+                    {j.priority}
+                  </td>
+                  <td class="a-muted a-hide-sm">{j.requested_by ?? 'crawler'}</td>
+                  <td class="is-meta a-nowrap" title={fullTime(when)}>
+                    {timeAgo(when, now)}
+                    {j.attempts > 0 && (
+                      <span class="a-sub">
+                        {j.attempts} {j.attempts === 1 ? 'attempt' : 'attempts'}
+                      </span>
+                    )}
+                  </td>
+                  {(status === 'failed' || status === 'cancelled') && (
+                    <td class="is-meta a-muted note">{j.error ?? '—'}</td>
+                  )}
+                  <td class="is-meta">
+                    <StatusPill status={j.status} variant="dot" />
+                  </td>
+                  {status === 'queued' && (
+                    <td class="is-actions">
+                      <form method="post" data-confirm={`Cancel job #${j.id} for ${j.domain}?`}>
+                        <input type="hidden" name="intent" value="cancel" />
+                        <input type="hidden" name="id" value={j.id} />
+                        <Button
+                          type="submit"
+                          size="sm"
+                          variant="ghost"
+                          icon="x"
+                          label={`Cancel job ${j.id}`}
+                        />
+                      </form>
+                    </td>
+                  )}
+                </tr>
+              );
+            })
+          )}
         </tbody>
       </table>
     </div>
-  )}
+  </Panel>
   <Pagination
     page={current}
     pageSize={PAGE_SIZE}
@@ -224,28 +242,25 @@ const timeCol = status === 'queued' ? 'Queued' : status === 'running' ? 'Started
 </AdminLayout>
 
 <style>
+  :global(.queue) {
+    margin-bottom: var(--space-6);
+  }
   .queue-form {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
-    margin-bottom: var(--space-6);
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    box-shadow: 0 0 0 1px var(--line);
+    gap: var(--space-4);
   }
-  .queue-form :global(.input) {
-    height: 36px;
-    font-size: var(--text-sm);
-  }
-  @media (min-width: 768px) {
+  @media (min-width: 900px) {
     .queue-form {
-      grid-template-columns: minmax(0, 1fr) 260px auto;
-      align-items: center;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      align-items: start;
+    }
+    .queue-form__submit {
+      padding-top: 26px;
     }
   }
-  .jobs {
-    margin-top: var(--space-2);
+  :global(.jtabs) {
+    margin-bottom: var(--space-4);
   }
   .note {
     max-width: 260px;

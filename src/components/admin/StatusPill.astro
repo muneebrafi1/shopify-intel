@@ -1,25 +1,31 @@
 ---
 /**
- * Status as a quiet pill with a square marker. The only place semantic colour appears in the
- * admin: pending/queued = caution, approved/done/active/published = positive, rejected/failed/
- * opted out = critical, everything else neutral.
+ * Status as a badge: the shared Badge (small, with a status dot) in a semantic tone.
+ * pending/queued = caution, approved/done/active/published = positive, running = accent,
+ * rejected/failed/opted out/blocked = critical, everything else neutral.
+ * `variant="dot"`: dot and text without a fill, for long tables where a pill per row is noise.
  */
+import Badge from '~/components/ui/Badge.astro';
+
 interface Props {
   status: string;
   /** Override the visible text (defaults to the status, humanised). */
   label?: string;
-  /** `dot`: marker and text only, for long tables where a filled pill per row is noise. */
   variant?: 'pill' | 'dot';
+  size?: 'sm' | 'md';
+  title?: string;
   class?: string;
 }
-const { status, label, variant = 'pill', class: className } = Astro.props;
-const TONES: Record<string, 'caution' | 'positive' | 'critical' | 'accent' | 'neutral'> = {
+const { status, label, variant = 'pill', size = 'sm', title, class: className } = Astro.props;
+type Tone = 'caution' | 'positive' | 'critical' | 'accent' | 'neutral';
+const TONES: Record<string, Tone> = {
   pending: 'caution',
   queued: 'caution',
   approved: 'positive',
   done: 'positive',
   active: 'positive',
   published: 'positive',
+  captured: 'positive',
   running: 'accent',
   rejected: 'critical',
   failed: 'critical',
@@ -30,65 +36,45 @@ const tone = TONES[status] ?? 'neutral';
 const text = label ?? status.replace(/[_-]+/g, ' ').replace(/^./, (c) => c.toUpperCase());
 ---
 
-<span class:list={['pill', `pill--${tone}`, { 'pill--dot': variant === 'dot' }, className]}>
-  {text}
-</span>
+{variant === 'dot' ? (
+  <span class:list={['sdot', `sdot--${tone}`, className]} title={title}>
+    <span class="sdot__mark" aria-hidden="true" />
+    {text}
+  </span>
+) : (
+  <Badge tone={tone} size={size} dot class={className} title={title}>
+    {text}
+  </Badge>
+)}
 
 <style>
-  .pill {
+  .sdot {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 22px;
-    padding: 0 8px;
-    border-radius: var(--radius-pill);
-    background: var(--fill);
+    gap: 7px;
     color: var(--ink-2);
-    font-size: var(--text-xs);
-    font-weight: var(--weight-medium);
-    line-height: 1;
     white-space: nowrap;
   }
-  .pill::before {
-    content: '';
+  .sdot__mark {
     flex: none;
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
     background: var(--ink-4);
   }
-  .pill--caution {
-    background: var(--caution-soft);
-    color: var(--caution);
+  .sdot--caution .sdot__mark {
+    background: var(--caution);
   }
-  .pill--positive {
-    background: var(--positive-soft);
-    color: var(--positive);
-  }
-  .pill--critical {
-    background: var(--critical-soft);
-    color: var(--critical);
-  }
-  .pill--accent {
-    background: var(--accent-soft);
-    color: var(--accent-text);
-  }
-  .pill--dot {
-    height: auto;
-    padding: 0;
-    background: none;
-    font-weight: var(--weight-regular);
-  }
-  .pill--dot.pill--positive,
-  .pill--dot.pill--neutral {
-    color: var(--ink-2);
-  }
-  .pill--dot.pill--positive::before {
+  .sdot--positive .sdot__mark {
     background: var(--positive);
   }
-  .pill--caution::before,
-  .pill--positive::before,
-  .pill--critical::before,
-  .pill--accent::before {
-    background: currentColor;
+  .sdot--critical .sdot__mark {
+    background: var(--critical);
+  }
+  .sdot--accent .sdot__mark {
+    background: var(--accent);
+  }
+  .sdot--critical {
+    color: var(--critical);
   }
 </style>

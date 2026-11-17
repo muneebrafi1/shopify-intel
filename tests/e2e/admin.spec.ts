@@ -101,6 +101,11 @@ test.describe('admin guard (signed out)', () => {
     await expectHealthyPage(page, '/admin/login', { status: configured ? 200 : 503 });
     if (!configured) {
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Admin is not configured');
+    } else if (await page.getByLabel('Password').isVisible()) {
+      // The password form is the break-glass backup behind Cloudflare Access.
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Emergency sign-in');
+      await expect(page.getByText(/signed in through Cloudflare Access/)).toBeVisible();
+      await expect(page.locator('body')).not.toContainText('replaced by Cloudflare Access');
     }
   });
 });
@@ -187,6 +192,53 @@ test.describe('admin pages (signed in)', () => {
     });
   }
 
+  test('the app shell: sections with counts, breadcrumb, theme controls', async ({
+    page,
+  }, testInfo) => {
+    const mobile = testInfo.project.name.includes('mobile');
+    await page.goto('/admin/stores/youngla.com');
+    await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('youngla.com');
+    if (mobile) await page.getByLabel('Open admin menu').click();
+    const nav = page.getByRole('navigation', { name: 'Admin sections' }).locator('visible=true');
+    for (const label of [
+      'Overview',
+      'Removals',
+      'Stores',
+      'Themes',
+      'Apps',
+      'Affiliates',
+      'Teardowns',
+      'Scans',
+    ]) {
+      await expect(nav.getByRole('link', { name: new RegExp(`^${label}`) })).toBeVisible();
+    }
+    await expect(nav.getByRole('link', { name: /^Stores/ })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(nav.getByRole('link', { name: /^Stores/ })).toContainText(/\d/);
+    if (mobile) {
+      await expect(page.getByRole('radiogroup', { name: 'Theme' })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(nav).toHaveCount(0);
+    } else {
+      // The sidebar theme toggle flips the theme and remembers it.
+      const toggle = page.locator('.aside [data-theme-toggle]');
+      const before = await page.locator('html').getAttribute('data-theme');
+      await toggle.click();
+      await expect(page.locator('html')).not.toHaveAttribute('data-theme', before ?? '');
+      await toggle.click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', before ?? 'light');
+    }
+  });
+
+  test('the capture-blocked flash explains the block', async ({ page }) => {
+    await page.goto('/admin/scans?err=capture_blocked');
+    await expect(page.getByRole('status')).toContainText(
+      'Captures of this store are blocked by an approved removal request.',
+    );
+  });
+
   test('unknown records return 404', async ({ page }) => {
     await expectHealthyPage(page, '/admin/stores/no-such-store.example', { status: 404 });
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Store not found');
@@ -262,9 +314,13 @@ test.describe('admin pages (signed in)', () => {
     await page.goto('/admin/removals');
     const row = page.locator('tr', { hasText: data.reference });
     await expect(row).toContainText(domain);
+    await expect(row).toContainText('Pending');
     await row.getByRole('link', { name: 'Review' }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(domain);
     await expect(page.getByText(`${domain} is not in the library.`)).toBeVisible();
+    // Approving a whole-store request blocks future captures, and the form says so.
+    await expect(page.getByText(`Block every future capture of ${domain}.`)).toBeVisible();
+    await expect(page.getByText('Future captures stay blocked')).toBeVisible();
 
     if (mobile) {
       await page.getByLabel('Reject with a note').fill('Could not verify ownership.');
@@ -275,9 +331,17 @@ test.describe('admin pages (signed in)', () => {
       await page.getByLabel('I understand this cannot be undone.').check();
       await page.getByRole('button', { name: 'Approve and remove store' }).click();
       await expect(page.getByRole('status')).toContainText('Removal approved.');
+      // The request now shows the capture block, and the history records the decision.
+      await expect(page.locator('.ahead').getByText('Captures blocked')).toBeVisible();
+      await expect(page.getByText('Approved removal')).toBeVisible();
       await page.goto('/admin/removals?status=approved');
+      await expect(
+        page.locator('tr', { hasText: data.reference }).getByText('Captures blocked'),
+      ).toBeVisible();
     }
     await expect(page.locator('tr', { hasText: data.reference })).toHaveCount(1);
+    // Retention policy for closed records is stated on the queue.
+    await expect(page.getByText(/kept for 2 years \(730 days\)/)).toBeVisible();
   });
 });
 

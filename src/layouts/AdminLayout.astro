@@ -1,45 +1,85 @@
 ---
 /**
- * Shell for the protected admin: compact left navigation on desktop, a top bar with a menu on
- * mobile. Same tokens and components as the public site, denser and quieter (Linear-like).
+ * The protected admin's app shell (Linear-like): a 232px sidebar with the sections and their
+ * counts, a sticky top bar with the breadcrumb and the page's actions, and the content area.
+ * Below 1024px the sidebar becomes a top bar with a menu sheet (a native <details>, so it works
+ * without JS), and the breadcrumb + actions row sits above the page title.
+ *
+ * Same tokens, type and theme mechanics as the public site (see BaseLayout): the theme is
+ * resolved before first paint and client/theme.ts keeps the toggle and switch in sync.
  * Always noindex; the middleware also sends X-Robots-Tag and Cache-Control: no-store.
+ *
+ *   <AdminLayout title="Stores" section="stores" trail={[{ label: 'Stores' }]}>
+ *     <Fragment slot="actions"><Button …>Add link</Button></Fragment>
+ *     …
+ *   </AdminLayout>
  */
 import '~/styles/base.css';
 import fontUrl from '@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url';
 import { SITE_NAME } from '~/config/site';
 import Logo from '~/components/site/Logo.astro';
 import Icon from '~/components/ui/Icon.astro';
-import AdminNav, { type AdminSection } from '~/components/admin/AdminNav.astro';
+import ThemeToggle from '~/components/ui/ThemeToggle.astro';
+import ThemeSwitch from '~/components/ui/ThemeSwitch.astro';
+import AdminNav from '~/components/admin/AdminNav.astro';
+import {
+  SECTION_ICONS,
+  SECTION_LABELS,
+  type AdminSection,
+  type NavCounts,
+} from '~/components/admin/nav';
 import { adminDb } from '~/server/admin/env';
-import { getNavCounts } from '~/server/admin/queries';
 import { fullTime } from '~/server/admin/format';
 
+export interface Crumb {
+  label: string;
+  href?: string;
+}
 interface Props {
   /** Page title (without "Admin" or the brand). */
   title: string;
   section?: AdminSection;
+  /** Breadcrumb after the section root, e.g. [{ label: 'Stores', href }, { label: domain }]. */
+  trail?: Crumb[];
   /** Bare shell for the sign-in page (no navigation). */
   bare?: boolean;
 }
-const { title, section = 'overview', bare = false } = Astro.props;
+const { title, section = 'overview', trail, bare = false } = Astro.props;
 const session = Astro.locals.admin;
-const counts =
-  !bare && session ? await getNavCounts(adminDb()) : { pendingRemovals: 0, openJobs: 0 };
-const sectionLabel: Record<AdminSection, string> = {
-  overview: 'Overview',
-  stores: 'Stores',
-  themes: 'Themes',
-  apps: 'Apps',
-  removals: 'Removals',
-  scans: 'Scan jobs',
-  teardowns: 'Teardowns',
-  affiliates: 'Affiliates',
+
+// Sidebar counts in one query (the D1 per-request budget is 50).
+const EMPTY: NavCounts = {
+  removals: 0,
+  jobs: 0,
+  stores: 0,
+  themes: 0,
+  apps: 0,
+  links: 0,
+  teardowns: 0,
 };
-const sessionNote = session
-  ? session.method === 'access'
-    ? `Cloudflare Access · until ${fullTime(new Date(session.expiresAt * 1000).toISOString())}`
-    : `Password session · until ${fullTime(new Date(session.expiresAt * 1000).toISOString())}`
-  : '';
+let counts = EMPTY;
+if (!bare && session) {
+  counts =
+    (await adminDb().first<NavCounts>(
+      `SELECT (SELECT COUNT(*) FROM removal_requests WHERE status = 'pending') AS removals,
+        (SELECT COUNT(*) FROM scan_jobs WHERE status IN ('queued', 'running')) AS jobs,
+        (SELECT COUNT(*) FROM stores) AS stores,
+        (SELECT COUNT(*) FROM themes) AS themes,
+        (SELECT COUNT(*) FROM apps) AS apps,
+        (SELECT COUNT(*) FROM affiliate_links) AS links,
+        (SELECT COUNT(*) FROM teardowns) AS teardowns`,
+    )) ?? EMPTY;
+}
+
+const crumbs: Crumb[] = trail?.length ? trail : [{ label: SECTION_LABELS[section] }];
+const until = session ? fullTime(new Date(session.expiresAt * 1000).toISOString()) : '';
+const method = session?.method === 'access' ? 'Cloudflare Access' : 'Break-glass sign-in';
+const initial =
+  (session?.actor ?? 'A')
+    .replace(/[^a-z0-9]/gi, '')
+    .charAt(0)
+    .toUpperCase() || 'A';
+const hasActions = Astro.slots.has('actions');
 ---
 
 <!doctype html>
@@ -47,14 +87,34 @@ const sessionNote = session
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <script is:inline>
+      // Theme before first paint (same as BaseLayout; see the comment at the top of that file).
+      (function () {
+        var d = document.documentElement;
+        var pref = 'system';
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored === 'light' || stored === 'dark' || stored === 'system') pref = stored;
+        } catch (e) {}
+        var dark =
+          pref === 'dark' ||
+          (pref === 'system' &&
+            !!window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        d.setAttribute('data-theme', dark ? 'dark' : 'light');
+        d.setAttribute('data-theme-pref', pref);
+        d.className += ' js';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', dark ? '#0a0a0b' : '#ffffff');
+      })();
+    </script>
     <title>{`${title} · Admin · ${SITE_NAME}`}</title>
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="same-origin" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
-    <meta name="theme-color" content="#fcfbf9" />
     <script is:inline>
-      document.documentElement.classList.add('js');
       // App icons come from the App Store CDN and can fail: drop them so the monogram shows.
       document.addEventListener(
         'error',
@@ -75,89 +135,154 @@ const sessionNote = session
         <slot />
       </main>
     ) : (
-      <div class="admin-shell">
-        <aside class="admin-side" aria-label="Admin">
-          <div class="admin-side__inner">
-            <a href="/admin" class="admin-brand" aria-label="Admin overview">
-              <Logo size="sm" />
-              <span class="admin-brand__tag">Admin</span>
-            </a>
-            <nav class="admin-side__nav" aria-label="Admin sections">
-              <AdminNav
-                current={section}
-                pendingRemovals={counts.pendingRemovals}
-                openJobs={counts.openJobs}
-                variant="side"
-              />
+      <div class="ashell">
+        <aside class="aside" aria-label="Admin">
+          <div class="aside__inner">
+            <div class="aside__brand">
+              <a href="/admin" class="abrand" aria-label="Admin overview">
+                <Logo size="sm" />
+              </a>
+              <span class="abrand__tag">Admin</span>
+            </div>
+            <nav class="aside__nav" aria-label="Admin sections">
+              <AdminNav current={section} counts={counts} variant="side" />
             </nav>
-            <div class="admin-side__foot">
-              <a href="/" class="admin-side__site">
-                View public site <Icon name="arrow-up-right" size={14} />
+            <div class="aside__foot">
+              <a href="/" class="aside__site">
+                <Icon name="arrow-up-right" size={16} />
+                <span>View public site</span>
               </a>
               {session && (
-                <div class="admin-session">
-                  <p class="admin-session__who" title={session.actor}>
-                    {session.actor}
-                  </p>
-                  <p class="admin-session__note">{sessionNote}</p>
-                  <form method="post" action="/admin/logout">
-                    <button type="submit" class="admin-signout">
-                      <Icon name="sign-out" size={14} /> Sign out
-                    </button>
-                  </form>
+                <div class="auser">
+                  <span class="auser__avatar" aria-hidden="true">
+                    {initial}
+                  </span>
+                  <span class="auser__text">
+                    <span class="auser__name" title={session.actor}>
+                      {session.actor}
+                    </span>
+                    <span class="auser__note" title={`Session ends ${until}`}>
+                      {method}
+                    </span>
+                  </span>
+                  <ThemeToggle class="auser__theme" />
                 </div>
+              )}
+              {session && (
+                <form method="post" action="/admin/logout" class="aside__signout">
+                  <button type="submit" class="asignout">
+                    <Icon name="sign-out" size={16} />
+                    <span>Sign out</span>
+                  </button>
+                </form>
               )}
             </div>
           </div>
         </aside>
 
-        <header class="admin-top">
-          <a href="/admin" class="admin-brand" aria-label="Admin overview">
-            <Logo size="sm" wordmark={false} />
-            <span class="admin-brand__tag">Admin</span>
-          </a>
-          <span class="admin-top__section" aria-hidden="true">
-            {sectionLabel[section]}
-          </span>
-          <details class="admin-menu" data-admin-menu>
-            <summary class="admin-menu__button" aria-label="Open admin menu">
+        <header class="mbar">
+          <details class="amenu" data-admin-menu>
+            <summary class="amenu__btn" aria-label="Open admin menu">
               <Icon name="list" size={20} />
-              {counts.pendingRemovals > 0 && <span class="admin-menu__dot" aria-hidden="true" />}
+              {counts.removals > 0 && <span class="amenu__dot" aria-hidden="true" />}
             </summary>
-            <div class="admin-menu__panel">
-              <nav aria-label="Admin sections">
-                <AdminNav
-                  current={section}
-                  pendingRemovals={counts.pendingRemovals}
-                  openJobs={counts.openJobs}
-                  variant="menu"
-                />
+            <div class="amenu__sheet">
+              <div class="amenu__head">
+                <a href="/admin" class="abrand" aria-label="Admin overview">
+                  <Logo size="sm" />
+                </a>
+                <span class="abrand__tag">Admin</span>
+                <button type="button" class="amenu__close" aria-label="Close menu" data-menu-close>
+                  <Icon name="x" size={18} />
+                </button>
+              </div>
+              <nav aria-label="Admin sections" class="amenu__nav">
+                <AdminNav current={section} counts={counts} variant="menu" />
               </nav>
-              <div class="admin-menu__foot">
-                <a href="/" class="admin-side__site">
-                  View public site <Icon name="arrow-up-right" size={14} />
+              <div class="amenu__foot">
+                <div class="amenu__row">
+                  <ThemeSwitch labels size="sm" />
+                </div>
+                <a href="/" class="aside__site">
+                  <Icon name="arrow-up-right" size={16} />
+                  <span>View public site</span>
                 </a>
                 {session && (
+                  <div class="auser">
+                    <span class="auser__avatar" aria-hidden="true">
+                      {initial}
+                    </span>
+                    <span class="auser__text">
+                      <span class="auser__name">{session.actor}</span>
+                      <span class="auser__note">{method}</span>
+                    </span>
+                  </div>
+                )}
+                {session && (
                   <form method="post" action="/admin/logout">
-                    <button type="submit" class="admin-signout">
-                      <Icon name="sign-out" size={14} /> Sign out
+                    <button type="submit" class="asignout asignout--menu">
+                      <Icon name="sign-out" size={16} />
+                      <span>Sign out</span>
                     </button>
                   </form>
                 )}
               </div>
             </div>
           </details>
+          <a href="/admin" class="abrand" aria-label="Admin overview">
+            <Logo size="sm" wordmark={false} />
+          </a>
+          <span class="mbar__section">
+            <Icon name={SECTION_ICONS[section]} size={16} />
+            {SECTION_LABELS[section]}
+          </span>
+          <ThemeToggle class="mbar__theme" />
         </header>
 
-        <main id="main" tabindex="-1" class="admin-main">
-          <div class="admin-content">
-            <slot />
+        <div class="acol">
+          <div
+            class:list={[
+              'atop',
+              {
+                'atop--root': crumbs.length === 1,
+                'atop--bare': crumbs.length === 1 && !hasActions,
+              },
+            ]}
+          >
+            <nav class="atop__crumbs" aria-label="Breadcrumb">
+              <ol>
+                <li class="atop__section">
+                  <Icon name={SECTION_ICONS[section]} size={16} />
+                </li>
+                {crumbs.map((c, i) => (
+                  <li>
+                    {c.href && i < crumbs.length - 1 ? (
+                      <a href={c.href}>{c.label}</a>
+                    ) : (
+                      <span aria-current={i === crumbs.length - 1 ? 'page' : undefined}>
+                        {c.label}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+            {hasActions && (
+              <div class="atop__actions">
+                <slot name="actions" />
+              </div>
+            )}
           </div>
-        </main>
+          <main id="main" tabindex="-1" class="amain">
+            <slot />
+          </main>
+        </div>
       </div>
     )}
 
     <script>
+      import '~/components/ui/client/theme';
+
       // Progressive enhancements only; every form works without JS.
       document.addEventListener('submit', (event) => {
         const form = event.target as HTMLFormElement;
@@ -169,288 +294,587 @@ const sessionNote = session
         if (el instanceof HTMLSelectElement && el.dataset.autosubmit !== undefined)
           el.form?.requestSubmit();
       });
-      // Close the mobile menu with Escape or a click outside it.
+      // Mobile menu sheet: Escape and the close button close it; focus returns to the button.
       const menu = document.querySelector<HTMLDetailsElement>('[data-admin-menu]');
       if (menu) {
+        const close = () => {
+          menu.open = false;
+          menu.querySelector('summary')?.focus();
+        };
         document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && menu.open) {
-            menu.open = false;
-            menu.querySelector('summary')?.focus();
-          }
+          if (e.key === 'Escape' && menu.open) close();
         });
-        document.addEventListener('click', (e) => {
-          if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+        menu.querySelector('[data-menu-close]')?.addEventListener('click', close);
+        menu.addEventListener('toggle', () => {
+          if (menu.open) menu.querySelector<HTMLElement>('.amenu__nav a')?.focus();
         });
+      }
+      // Sticky top bar: hairline + blur once the content has scrolled under it.
+      const top = document.querySelector<HTMLElement>('.atop');
+      if (top) {
+        const onScroll = () => top.toggleAttribute('data-scrolled', window.scrollY > 4);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
       }
     </script>
   </body>
 </html>
 
 <style is:global>
-  /* ---------- Shell ---------- */
+  /* ======================================================================================
+     Shell
+     ====================================================================================== */
   body.admin {
-    --admin-side-w: 240px;
+    --aside-w: 232px;
     --admin-top-h: 52px;
+    --admin-pad: var(--page-gutter);
     background: var(--bg);
   }
-  .admin-shell {
+  .ashell {
     min-height: 100dvh;
   }
-  .admin-side {
-    display: none;
-  }
-  .admin-brand {
+  .abrand {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
     min-width: 0;
+    border-radius: var(--radius-sm);
   }
-  .admin-brand__tag {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    padding: 2px 6px;
-    border-radius: var(--radius-xs);
+  .abrand__tag {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
     box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink-3);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    line-height: 1;
   }
 
-  /* Mobile top bar */
-  .admin-top {
+  /* ---------- Desktop sidebar ---------- */
+  .aside {
+    display: none;
+  }
+  .aside__site {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 32px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .aside__site .icon {
+    color: var(--ink-3);
+  }
+  .aside__site:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .auser {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: var(--space-2);
+  }
+  .auser__avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-3);
+    color: var(--ink);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+  }
+  .auser__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+  }
+  .auser__name {
+    overflow: hidden;
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .auser__note {
+    overflow: hidden;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .auser .theme-toggle {
+    width: 32px;
+    height: 32px;
+  }
+  .asignout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 32px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-align: left;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .asignout .icon {
+    color: var(--ink-3);
+  }
+  .asignout:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+
+  /* ---------- Mobile top bar + menu sheet ---------- */
+  .mbar {
     position: sticky;
     top: 0;
     z-index: var(--z-header);
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    height: var(--admin-top-h);
-    padding: 0 var(--page-gutter);
-    background: color-mix(in srgb, var(--bg) 94%, transparent);
-    backdrop-filter: saturate(1.2) blur(8px);
+    gap: var(--space-2);
+    height: 56px;
+    padding: 0 var(--space-2) 0 var(--space-2);
     border-bottom: 1px solid var(--line);
+    /* Solid (no backdrop-filter): a filter would trap the fixed menu sheet inside the bar. */
+    background: var(--bg);
   }
-  .admin-top__section {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--ink-2);
-    font-weight: var(--weight-medium);
-    padding-left: var(--space-3);
-    border-left: 1px solid var(--line);
-  }
-  .admin-menu {
-    margin-left: auto;
-  }
-  .admin-menu__button {
-    position: relative;
+  .mbar__section {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: var(--space-1-5);
+    min-width: 0;
+    margin-left: var(--space-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line);
+    overflow: hidden;
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+  .mbar__section .icon {
+    color: var(--ink-3);
+  }
+  .mbar__theme {
+    margin-left: auto;
+  }
+  .amenu__btn {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
     width: 40px;
     height: 40px;
-    margin-right: -8px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-control);
+    color: var(--ink);
     list-style: none;
     cursor: pointer;
-    color: var(--ink);
+    transition: background-color var(--dur-fast) var(--ease-out);
   }
-  .admin-menu__button::-webkit-details-marker {
+  .amenu__btn::-webkit-details-marker {
     display: none;
   }
-  .admin-menu__button:hover,
-  .admin-menu[open] .admin-menu__button {
-    background: var(--fill);
+  .amenu__btn:hover {
+    background: var(--surface-2);
   }
-  .admin-menu__dot {
+  .amenu__dot {
     position: absolute;
     top: 9px;
-    right: 9px;
-    width: 6px;
-    height: 6px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
     background: var(--accent);
+    box-shadow: 0 0 0 2px var(--bg);
   }
-  .admin-menu:not([open]) .admin-menu__panel {
+  /* The open summary doubles as the backdrop: a click outside the sheet closes it (no JS). */
+  .amenu[open] > .amenu__btn::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background: var(--overlay);
+    cursor: default;
+  }
+  .amenu:not([open]) .amenu__sheet {
     display: none;
   }
-  .admin-menu__panel {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: var(--admin-top-h);
-    max-height: calc(100dvh - var(--admin-top-h));
+  .amenu__sheet {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    width: min(320px, 86vw);
     overflow-y: auto;
-    padding: var(--space-4) var(--page-gutter) var(--space-6);
-    background: var(--bg);
-    border-bottom: 1px solid var(--line);
-    box-shadow: 0 16px 32px rgb(25 24 22 / 0.08);
+    background: var(--bg-subtle);
+    border-right: 1px solid var(--line);
+    box-shadow: var(--shadow-lg);
+    animation: amenu-in var(--dur-slow) var(--ease-out);
   }
-  .admin-menu__foot {
+  @keyframes amenu-in {
+    from {
+      transform: translateX(-16px);
+      opacity: 0;
+    }
+  }
+  html:has(.amenu[open]) {
+    overflow: hidden;
+  }
+  .amenu__head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 56px;
+    padding: 0 var(--space-2) 0 var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+  .amenu__close {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    border-radius: var(--radius-control);
+    color: var(--ink-2);
+  }
+  html:not(.js) .amenu__close {
+    display: none;
+  }
+  .amenu__close:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .amenu__nav {
+    padding: var(--space-3);
+  }
+  .amenu__foot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-top: auto;
+    padding: var(--space-3) var(--space-3) var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+  .amenu__row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-4);
-    margin-top: var(--space-5);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
+    gap: var(--space-3);
+    padding: var(--space-1) var(--space-2) var(--space-2);
+  }
+  .amenu__label {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .amenu__foot .aside__site,
+  .asignout--menu {
+    height: 44px;
+    font-size: var(--text-ui);
   }
 
-  .admin-side__site {
+  /* ---------- Top bar: breadcrumb + page actions ---------- */
+  .atop {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-4) var(--admin-pad) 0;
+  }
+  .atop--bare {
+    display: none;
+  }
+  /* Phones: a section root repeats the bar's section name, so only its actions show. */
+  .atop--root {
+    justify-content: flex-end;
+  }
+  .atop--root .atop__crumbs {
+    display: none;
+  }
+  .atop__crumbs {
+    min-width: 0;
+  }
+  .atop__crumbs ol {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1-5);
+    min-width: 0;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .atop__crumbs li {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    color: var(--ink-2);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
+    gap: var(--space-1-5);
+    min-width: 0;
   }
-  .admin-side__site:hover {
+  .atop__crumbs li + li:not(:nth-child(2))::before {
+    content: '/';
+    color: var(--ink-4);
+  }
+  .atop__crumbs a,
+  .atop__crumbs span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .atop__crumbs a {
+    border-radius: var(--radius-xs);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .atop__crumbs a:hover {
     color: var(--ink);
   }
-  .admin-signout {
-    display: inline-flex;
+  .atop__crumbs [aria-current='page'] {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .atop__section {
+    display: none !important;
+    color: var(--ink-3);
+  }
+  .atop__actions {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-    height: 32px;
-    padding: 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    color: var(--ink-2);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
-    background: var(--surface);
+    gap: var(--space-2);
   }
-  .admin-signout:hover {
-    background: var(--fill);
-    color: var(--ink);
+  .atop__actions form {
+    display: contents;
   }
 
-  .admin-main:focus {
+  .amain:focus {
     outline: none;
   }
-  .admin-content {
+  .amain {
+    display: block;
     width: 100%;
-    max-width: 1280px;
+    max-width: 1320px;
     margin-inline: auto;
-    padding: var(--space-6) var(--page-gutter) var(--space-16);
+    padding: var(--space-5) var(--admin-pad) var(--space-16);
   }
 
   @media (min-width: 1024px) {
-    .admin-shell {
-      display: grid;
-      grid-template-columns: var(--admin-side-w) minmax(0, 1fr);
+    body.admin {
+      --admin-pad: var(--space-8);
     }
-    .admin-top {
+    .ashell {
+      display: grid;
+      grid-template-columns: var(--aside-w) minmax(0, 1fr);
+    }
+    .mbar {
       display: none;
     }
-    .admin-side {
+    .aside {
       display: block;
       border-right: 1px solid var(--line);
-      background: color-mix(in srgb, var(--fill) 45%, var(--bg));
+      background: var(--bg-subtle);
     }
-    .admin-side__inner {
+    .aside__inner {
       position: sticky;
       top: 0;
       display: flex;
       flex-direction: column;
-      gap: var(--space-6);
       height: 100dvh;
-      padding: var(--space-4) var(--space-3);
       overflow-y: auto;
+      padding: 0 var(--space-3) var(--space-3);
     }
-    .admin-side__inner > .admin-brand {
-      height: 36px;
-      padding: 0 var(--space-2);
-    }
-    .admin-side__nav {
-      flex: 1;
-    }
-    .admin-side__foot {
+    .aside__brand {
       display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-      padding: var(--space-4) var(--space-2) var(--space-1);
-      border-top: 1px solid var(--line);
+      align-items: center;
+      gap: var(--space-2);
+      height: var(--admin-top-h);
+      padding: 0 var(--space-2);
+      flex: none;
     }
-    .admin-session {
+    .aside__nav {
+      flex: 1;
+      padding-top: var(--space-2);
+    }
+    .aside__foot {
       display: flex;
       flex-direction: column;
       gap: 2px;
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--line);
     }
-    .admin-session__who {
-      font-size: var(--text-sm);
-      font-weight: var(--weight-medium);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .atop,
+    .atop--bare {
+      position: sticky;
+      top: 0;
+      z-index: var(--z-header);
+      display: flex;
+      flex-wrap: nowrap;
+      height: var(--admin-top-h);
+      padding: 0 var(--admin-pad);
+      border-bottom: 1px solid transparent;
+      background: var(--bg);
+      transition:
+        border-color var(--dur-base) var(--ease-out),
+        background-color var(--dur-base) var(--ease-out);
     }
-    .admin-session__note {
-      color: var(--ink-3);
-      font-size: var(--text-xs);
-      margin-bottom: var(--space-2);
+    .atop[data-scrolled] {
+      border-bottom-color: var(--line);
+      background: var(--header-bg);
+      backdrop-filter: saturate(1.4) blur(12px);
+      -webkit-backdrop-filter: saturate(1.4) blur(12px);
     }
-    .admin-session form {
-      align-self: flex-start;
+    .atop__section {
+      display: inline-flex !important;
     }
-    .admin-content {
-      padding: var(--space-8) var(--space-10) var(--space-20);
+    .atop--root {
+      justify-content: space-between;
+    }
+    .atop--root .atop__crumbs {
+      display: block;
+    }
+    .atop__actions {
+      flex-wrap: nowrap;
+    }
+    .amain {
+      padding: var(--space-6) var(--admin-pad) var(--space-20);
     }
   }
 
-  /* Bare shell (sign-in) */
+  /* Bare shell (sign-in): a centred card on the subtle background. */
+  body.admin--bare {
+    background: var(--bg-subtle);
+  }
   .admin-bare {
     display: grid;
     min-height: 100dvh;
     place-items: center;
     padding: var(--space-10) var(--page-gutter);
   }
+  .admin-bare:focus {
+    outline: none;
+  }
 
-  /* ---------- Building blocks shared by admin pages ---------- */
-  .a-block {
-    margin-top: var(--space-10);
-  }
-  .a-block:first-child {
-    margin-top: 0;
-  }
-  .a-h2 {
-    font-size: var(--text-md);
-    font-weight: var(--weight-semibold);
-    letter-spacing: var(--tracking-snug);
-  }
-  .a-block__head {
+  /* ======================================================================================
+     Building blocks shared by admin pages (a-*)
+     ====================================================================================== */
+  .a-stack {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--space-2) var(--space-4);
-    margin-bottom: var(--space-3);
+    flex-direction: column;
+    gap: var(--space-5);
   }
-  .a-block__desc {
-    margin-top: 2px;
-    color: var(--ink-3);
-    font-size: var(--text-sm);
+  .a-block {
+    margin-top: var(--space-5);
   }
   .a-split {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-10) var(--space-10);
+    gap: var(--space-5);
+    align-items: start;
   }
   @media (min-width: 1180px) {
     .a-split {
       grid-template-columns: minmax(0, 1fr) 320px;
     }
-    .a-split--even {
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+  .a-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+  }
+
+  /* Text helpers */
+  .a-strong {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .a-sub {
+    display: block;
+    margin-top: 1px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .a-mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: -0.01em;
+  }
+  .a-muted {
+    color: var(--ink-3);
+  }
+  .a-nowrap {
+    white-space: nowrap;
+  }
+  .a-truncate {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.a-link {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+  a.a-link:hover {
+    text-decoration-color: currentColor;
+  }
+  a.a-row-link {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  a.a-row-link.a-mono {
+    color: var(--ink-2);
+    font-weight: var(--weight-regular);
+  }
+  a.a-row-link:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .a-badges {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    vertical-align: middle;
+  }
+  .a-pre {
+    white-space: pre-wrap;
+  }
+  @media (max-width: 639px) {
+    .a-hide-sm {
+      display: none !important;
     }
   }
 
-  /* Filter bar: search + compact select pills, all URL state (GET form). */
+  /* ---------- Filter bar: search + select pills, all URL state (GET form) ---------- */
   .a-filters {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
     align-items: center;
-    padding-bottom: var(--space-4);
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
   }
   .a-filters__search {
     position: relative;
@@ -458,7 +882,7 @@ const sessionNote = session
   }
   .a-filters__search .icon {
     position: absolute;
-    left: 11px;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--ink-3);
@@ -466,25 +890,40 @@ const sessionNote = session
   }
   .a-filters .a-filters__search input.input {
     height: 36px;
-    padding-left: 34px;
+    padding-left: 32px;
     font-size: var(--text-sm);
+  }
+  .a-filters__pills {
+    display: flex;
+    gap: var(--space-1-5);
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .a-filters__pills::-webkit-scrollbar {
+    display: none;
   }
   .a-filters select.input {
+    flex: none;
     width: auto;
-    max-width: 168px;
+    max-width: 180px;
     height: 32px;
     padding-left: 12px;
-    padding-right: 30px;
+    padding-right: 28px;
     border-radius: var(--radius-pill);
     background-color: var(--surface);
-    background-position: right 10px center;
+    background-position: right 9px center;
     background-size: 12px;
+    color: var(--ink-2);
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
-    color: var(--ink-2);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-xs);
   }
   .a-filters select.input.is-set {
+    background-color: var(--surface-2);
     color: var(--ink);
     box-shadow: inset 0 0 0 1.5px var(--ink);
   }
@@ -500,6 +939,10 @@ const sessionNote = session
     .a-filters__search {
       flex: 0 1 280px;
     }
+    .a-filters__pills {
+      flex-wrap: wrap;
+      overflow: visible;
+    }
   }
   /* With JS the selects submit on change, so the Apply button is only a fallback. */
   html.js .a-filters .a-filters__apply,
@@ -509,52 +952,52 @@ const sessionNote = session
   .a-sort {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-1-5);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
   }
   .a-sort select.input {
     width: auto;
     height: 28px;
-    padding: 0 26px 0 0;
+    padding: 0 22px 0 0;
+    border: 0;
     background-color: transparent;
-    background-position: right 4px center;
+    background-position: right 2px center;
     background-size: 12px;
     box-shadow: none;
+    color: var(--ink);
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
   }
-  .a-result {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-    padding: var(--space-2) 0;
-    border-top: 1px solid var(--line);
-  }
 
-  /* Dense admin tables (on top of the shared .table). The wrapper is positioned so that
-     visually-hidden header labels (absolute) stay inside its scroll box on small screens. */
-  body.admin .table-wrap {
+  /* ---------- Dense admin tables inside a panel ---------- */
+  .a-tablewrap {
     position: relative;
+    overflow-x: auto;
+    --table-head-bg: var(--surface);
   }
   .a-table {
     font-size: var(--text-sm);
   }
   .a-table th {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    font-weight: 450;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding-top: var(--space-2);
+    height: 36px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
   }
   .a-table td {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    height: 44px;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
   }
-  .a-table th:last-child,
-  .a-table td:last-child {
-    padding-right: 0;
+  .a-table :is(th, td):first-child {
+    padding-left: var(--space-4);
+  }
+  .a-table :is(th, td):last-child {
+    padding-right: var(--space-4);
+  }
+  .a-table tbody tr:last-child td {
+    border-bottom: 0;
   }
   .a-table .is-actions {
     text-align: right;
@@ -569,68 +1012,130 @@ const sessionNote = session
   .a-cell-main {
     display: flex;
     align-items: center;
-    gap: var(--space-2-5, 10px);
+    gap: 10px;
     min-width: 0;
   }
   .a-cell-main > span:last-child {
     min-width: 0;
   }
-  .a-strong {
-    color: var(--ink);
-    font-weight: var(--weight-medium);
+  /* An empty table shows its message without column headers. */
+  .a-table:has(td.a-empty-cell) thead {
+    display: none;
   }
-  .a-sub {
-    display: block;
+  .a-table td.a-empty-cell {
+    height: auto;
+    padding: var(--space-10) var(--space-4);
     color: var(--ink-3);
-    font-size: var(--text-xs);
+    text-align: left;
   }
-  .a-mono {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: -0.01em;
+  .a-table tr.is-editing {
+    background: var(--accent-wash);
   }
-  .a-muted {
-    color: var(--ink-3);
+  .a-table tr.is-editing > td:first-child {
+    box-shadow: inset 2px 0 0 var(--accent);
   }
-  .a-nowrap {
-    white-space: nowrap;
-  }
-  @media (max-width: 639px) {
-    .a-hide-sm {
-      display: none;
+  /* Sticky column headers under the top bar once the table fits the content width. Clipping
+     (instead of a scroll box) keeps the page as the sticky scroller. */
+  @media (min-width: 1280px) {
+    .a-tablewrap {
+      overflow: clip;
+      border-radius: 0 0 var(--radius-card) var(--radius-card);
+    }
+    .a-table thead th {
+      position: sticky;
+      top: var(--admin-top-h);
+      z-index: 1;
+      box-shadow: 0 1px 0 var(--line);
     }
   }
-  .a-truncate {
-    display: block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  a.a-link {
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
-  }
-  a.a-link:hover {
-    text-decoration-color: currentColor;
-  }
-  a.a-row-link {
-    color: var(--ink);
-    font-weight: var(--weight-medium);
-  }
-  a.a-row-link:hover {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-  .a-empty-cell {
-    padding: var(--space-8) 0 !important;
-    color: var(--ink-3);
-    text-align: center;
+  /* Phones: each row collapses into a compact block — the main cell and the action on the
+     first line, the other cells as one muted meta line. */
+  @media (max-width: 639px) {
+    .a-table--stack thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .a-table--stack,
+    .a-table--stack tbody {
+      display: block;
+    }
+    .a-table--stack tr {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      column-gap: var(--space-2);
+      row-gap: 2px;
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--line);
+    }
+    .a-table--stack tbody tr:last-child {
+      border-bottom: 0;
+    }
+    .a-table--stack tr::after {
+      content: '';
+      order: 1;
+      flex-basis: 100%;
+    }
+    .a-table--stack td {
+      display: block;
+      height: auto;
+      padding: 0 !important;
+      border: 0;
+      order: 2;
+      color: var(--ink-3);
+      font-size: var(--text-xs);
+    }
+    .a-table--stack td.is-primary {
+      flex: 1 1 0;
+      min-width: 0;
+      order: 0;
+      color: var(--ink);
+      font-size: var(--text-sm);
+    }
+    .a-table--stack td.is-actions {
+      order: 0;
+      margin-left: auto;
+    }
+    .a-table--stack td.is-num {
+      text-align: left;
+    }
+    /* Long titles: the row's actions move to their own line under the meta. */
+    .a-table--stack.a-actions-below td.is-actions {
+      order: 3;
+      flex-basis: 100%;
+      margin: var(--space-2) 0 0;
+      text-align: left;
+    }
+    /* Meta cells: "Desktop · Layout preview · Sections 12". Spacing is in the generated
+       content (no-break spaces) so a label and its value never split across lines. */
+    .a-table--stack td[data-label]::before {
+      content: attr(data-label) '\00a0';
+    }
+    .a-table--stack td.is-meta ~ td.is-meta::before {
+      content: '·\00a0\00a0';
+    }
+    .a-table--stack td.is-meta ~ td.is-meta[data-label]::before {
+      content: '·\00a0\00a0' attr(data-label) '\00a0';
+    }
+    .a-table--stack td.is-meta .a-sub {
+      display: inline;
+    }
+    .a-table--stack td.is-meta .a-sub::before {
+      content: '\00a0';
+    }
+    .a-table--stack td.a-empty-cell {
+      flex: 1;
+      order: 0;
+      padding: var(--space-6) 0 !important;
+      font-size: var(--text-sm);
+    }
   }
 
-  /* Forms */
+  /* ---------- Forms ---------- */
   .a-form {
     display: grid;
     gap: var(--space-4);
@@ -650,41 +1155,9 @@ const sessionNote = session
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
-    padding-top: var(--space-1);
-  }
-  /* Spec rows: mono label left, value right (replaces key/value cards). */
-  .a-spec {
-    border-top: 1px solid var(--line);
-    font-size: var(--text-sm);
-  }
-  .a-spec__row {
-    display: grid;
-    grid-template-columns: 9.5rem minmax(0, 1fr);
-    gap: var(--space-4);
-    padding: 9px 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .a-spec__row dt {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    padding-top: 3px;
-  }
-  .a-spec__row dd {
-    min-width: 0;
-    color: var(--ink);
-    overflow-wrap: anywhere;
   }
   textarea.input.input--short {
     min-height: 72px;
-  }
-  .a-panel {
-    padding: var(--space-5);
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    box-shadow: 0 0 0 1px var(--line);
   }
   .a-inline-form {
     display: inline-flex;
@@ -694,25 +1167,59 @@ const sessionNote = session
   .a-inline-form select.input {
     width: auto;
     height: 30px;
-    padding: 0 30px 0 12px;
-    border-radius: var(--radius-pill);
-    background-position: right 10px center;
+    padding: 0 28px 0 10px;
+    background-position: right 9px center;
     background-size: 12px;
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
   }
-  /* The row being edited in a table (paired with an edit panel above it). */
-  .a-table tr.is-editing {
-    background: var(--fill);
+
+  /* ---------- Key/value rows (facts) ---------- */
+  .a-facts {
+    font-size: var(--text-sm);
   }
-  .a-table tr.is-editing > td:first-child {
-    box-shadow: inset 2px 0 0 var(--accent);
-    padding-left: var(--space-3);
-  }
-  .a-quiet-empty {
-    padding: var(--space-6) 0;
-    border-top: 1px solid var(--line);
+  .a-facts__row {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: 9px var(--space-4);
     border-bottom: 1px solid var(--line);
+  }
+  .a-facts__row:last-child {
+    border-bottom: 0;
+  }
+  .a-facts__row dt {
+    color: var(--ink-3);
+  }
+  .a-facts__row dd {
+    min-width: 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .a-facts__row dd.a-mono {
+    font-size: var(--text-xs);
+    line-height: 1.6;
+  }
+
+  /* ---------- Lists inside side panels ---------- */
+  .a-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .a-list li:last-child {
+    border-bottom: 0;
+  }
+  .a-list li > span:first-child {
+    min-width: 0;
+  }
+  .a-quiet {
+    padding: var(--space-5) var(--space-4);
     color: var(--ink-3);
     font-size: var(--text-sm);
   }

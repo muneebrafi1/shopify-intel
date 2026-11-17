@@ -1,97 +1,94 @@
 ---
-/** The admin navigation list. Rendered in the desktop sidebar and in the mobile menu. */
+/**
+ * The admin sections with their counts. Rendered in the desktop sidebar and in the mobile menu
+ * sheet. Pending removals show as an accent badge (they need someone); other counts are quiet.
+ */
 import Icon from '~/components/ui/Icon.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
-import type { IconName } from '~/components/ui/icons';
-
-export type AdminSection =
-  'overview' | 'stores' | 'themes' | 'apps' | 'removals' | 'scans' | 'teardowns' | 'affiliates';
-
-interface Item {
-  key: AdminSection;
-  href: string;
-  label: string;
-  icon: IconName;
-  count?: number;
-  /** Count needs someone's attention (shown in the accent colour). */
-  attention?: boolean;
-}
+import {
+  SECTION_HREFS,
+  SECTION_ICONS,
+  SECTION_LABELS,
+  type AdminSection,
+  type NavCounts,
+} from './nav';
 
 interface Props {
   current: AdminSection;
-  pendingRemovals: number;
-  openJobs: number;
-  /** Distinguishes the two instances (sidebar / mobile menu) for ids. */
+  counts: NavCounts;
+  /** Distinguishes the two instances (sidebar / mobile menu) for ids and sizes. */
   variant: 'side' | 'menu';
 }
-const { current, pendingRemovals, openJobs, variant } = Astro.props;
+const { current, counts, variant } = Astro.props;
 
+interface Item {
+  key: AdminSection;
+  count?: number;
+  /** Shown as an accent badge, with a label for assistive tech. */
+  attention?: string;
+  countLabel?: string;
+}
 const groups: Array<{ label: string | null; items: Item[] }> = [
-  { label: null, items: [{ key: 'overview', href: '/admin', label: 'Overview', icon: 'house' }] },
   {
-    label: 'Library',
+    label: null,
     items: [
-      { key: 'stores', href: '/admin/stores', label: 'Stores', icon: 'storefront' },
-      { key: 'themes', href: '/admin/themes', label: 'Themes', icon: 'paint-brush' },
-      { key: 'apps', href: '/admin/apps', label: 'Apps', icon: 'puzzle-piece' },
+      { key: 'overview' },
+      {
+        key: 'removals',
+        count: counts.removals,
+        attention: counts.removals > 0 ? `${counts.removals} pending` : undefined,
+      },
     ],
   },
   {
-    label: 'Queues',
+    label: 'Library',
     items: [
-      {
-        key: 'removals',
-        href: '/admin/removals',
-        label: 'Removals',
-        icon: 'flag',
-        count: pendingRemovals,
-        attention: pendingRemovals > 0,
-      },
-      {
-        key: 'scans',
-        href: '/admin/scans',
-        label: 'Scan jobs',
-        icon: 'arrow-clockwise',
-        count: openJobs,
-      },
+      { key: 'stores', count: counts.stores, countLabel: 'stores' },
+      { key: 'themes', count: counts.themes, countLabel: 'themes' },
+      { key: 'apps', count: counts.apps, countLabel: 'apps' },
     ],
   },
   {
     label: 'Content',
     items: [
-      { key: 'teardowns', href: '/admin/teardowns', label: 'Teardowns', icon: 'article' },
-      { key: 'affiliates', href: '/admin/affiliates', label: 'Affiliates', icon: 'link-simple' },
+      { key: 'affiliates', count: counts.links, countLabel: 'links' },
+      { key: 'teardowns', count: counts.teardowns, countLabel: 'teardowns' },
     ],
   },
+  {
+    label: 'Pipeline',
+    items: [{ key: 'scans', count: counts.jobs, countLabel: 'open jobs' }],
+  },
 ];
+const fmt = (n: number) => (n >= 10_000 ? `${Math.round(n / 1000)}k` : n.toLocaleString('en-US'));
 ---
 
 <div class:list={['anav', `anav--${variant}`]}>
   {groups.map((group, gi) => (
     <div class="anav__group">
       {group.label && (
-        <MonoLabel as="p" bullet={false} class="anav__label" id={`anav-${variant}-${gi}`}>
+        <p class="anav__label" id={`anav-${variant}-${gi}`}>
           {group.label}
-        </MonoLabel>
+        </p>
       )}
       <ul aria-labelledby={group.label ? `anav-${variant}-${gi}` : undefined}>
         {group.items.map((item) => (
           <li>
             <a
-              href={item.href}
+              href={SECTION_HREFS[item.key]}
               class="anav__link"
               aria-current={item.key === current ? 'page' : undefined}
             >
-              <Icon name={item.icon} size={16} />
-              <span class="anav__text">{item.label}</span>
-              {typeof item.count === 'number' && item.count > 0 && (
-                <span
-                  class:list={['anav__count', { 'anav__count--attention': item.attention }]}
-                  aria-label={`${item.count} open`}
-                >
-                  {item.count.toLocaleString('en-US')}
+              <Icon name={SECTION_ICONS[item.key]} size={16} />
+              <span class="anav__text">{SECTION_LABELS[item.key]}</span>
+              {item.attention ? (
+                <span class="anav__badge num" aria-label={item.attention}>
+                  {fmt(item.count ?? 0)}
                 </span>
-              )}
+              ) : typeof item.count === 'number' && item.count > 0 ? (
+                <span class="anav__count num" aria-label={`${item.count} ${item.countLabel ?? ''}`}>
+                  {fmt(item.count)}
+                </span>
+              ) : null}
             </a>
           </li>
         ))}
@@ -104,20 +101,28 @@ const groups: Array<{ label: string | null; items: Item[] }> = [
   .anav {
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-4);
+  }
+  .anav ul {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
   }
   .anav__label {
-    padding: 0 var(--space-2) var(--space-1-5);
+    padding: 0 var(--space-2) var(--space-1);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
   }
   .anav__link {
     display: flex;
     align-items: center;
     gap: 10px;
-    height: 34px;
+    height: 32px;
     padding: 0 var(--space-2);
     border-radius: var(--radius-sm);
     color: var(--ink-2);
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     font-weight: var(--weight-medium);
     transition:
       background-color var(--dur-fast) var(--ease-out),
@@ -125,9 +130,10 @@ const groups: Array<{ label: string | null; items: Item[] }> = [
   }
   .anav__link :global(.icon) {
     color: var(--ink-3);
+    transition: color var(--dur-fast) var(--ease-out);
   }
   .anav__link:hover {
-    background: var(--fill);
+    background: var(--surface-2);
     color: var(--ink);
   }
   .anav__link[aria-current='page'] {
@@ -135,7 +141,8 @@ const groups: Array<{ label: string | null; items: Item[] }> = [
     color: var(--ink);
     box-shadow:
       0 0 0 1px var(--line),
-      0 1px 2px rgb(25 24 22 / 0.04);
+      var(--shadow-xs),
+      var(--highlight);
   }
   .anav__link[aria-current='page'] :global(.icon) {
     color: var(--ink);
@@ -145,25 +152,24 @@ const groups: Array<{ label: string | null; items: Item[] }> = [
     min-width: 0;
   }
   .anav__count {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
     color: var(--ink-3);
-    font-variant-numeric: tabular-nums;
+    font-size: var(--text-xs);
   }
-  .anav__count--attention {
+  .anav__badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
     color: var(--accent-text);
-  }
-  .anav__count--attention::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    background: var(--accent);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-semibold);
   }
   .anav--menu .anav__link {
     height: 44px;
-    font-size: var(--text-md);
+    font-size: var(--text-ui);
   }
 </style>
