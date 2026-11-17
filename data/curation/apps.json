@@ -1,0 +1,16 @@
+{
+  "_note": "Editorial overrides for app display. short_names: the brand name shown in compact UI (cards, comparison titles) when the automatic rule (text before ':' or a spaced dash) gets it wrong or two apps would collide. Verify by the owner.",
+  "short_names": {
+    "judgeme": "Judge.me",
+    "yotpo": "Yotpo Reviews",
+    "swell": "Yotpo Loyalty",
+    "upsell-cross-sell-kit-1": "Selleasy",
+    "mailchimp": "Mailchimp",
+    "omnisend": "Omnisend",
+    "recharge": "Recharge",
+    "rebuy": "Rebuy",
+    "gift-card-loyalty-program": "Rise",
+    "automizely-messages": "AfterShip Email",
+    "global-e-crossborder": "Global-e"
+  }
+}

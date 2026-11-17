@@ -1,0 +1,12 @@
+# Admin sign-in for local development (copy to .dev.vars, which is gitignored).
+# Password form + signed session cookie. Use a long random ADMIN_SESSION_SECRET (32+ chars).
+ADMIN_PASSWORD=
+ADMIN_SESSION_SECRET=
+# Production uses Cloudflare Access instead (password sign-in is disabled when these are set):
+# CF_ACCESS_TEAM_DOMAIN=
+# CF_ACCESS_AUD=
+
+# Public API: salt for hashing client IPs (rate limiting). Any long random string locally.
+IP_HASH_SALT=
+# Optional: serve captured media from an absolute origin instead of /media/<key>.
+# MEDIA_BASE_URL=
