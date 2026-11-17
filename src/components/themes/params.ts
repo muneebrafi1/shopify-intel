@@ -1,6 +1,6 @@
 /**
  * URL state for the themes pages. Filters are query params (shareable, crawlable, no JS):
- *   /themes?price=free|paid|under-300|300-399|400-plus&vendor=<slug>&sort=usage|name|price&view=index&p=2
+ *   /themes?q=<text>&price=free|paid|under-300|300-399|400-plus&vendor=<slug>&sort=usage|name|price&view=index&p=2
  *   /themes/<slug>?page=home|collection|product|cart&device=desktop|mobile&cursor=…&p=2#stores
  * One `price` param covers both the API's `price` (free/paid) and `price_band` filters.
  */
@@ -17,6 +17,8 @@ export const SORTS = [
 export type ThemeSort = (typeof SORTS)[number]['value'];
 
 export interface IndexState {
+  /** Search text (theme name or vendor, prefix match). */
+  q?: string;
   price?: PriceFilter;
   vendor?: string;
   sort: ThemeSort;
@@ -31,7 +33,9 @@ export function readIndexState(sp: URLSearchParams): IndexState {
   const vendor = sp.get('vendor')?.trim().toLowerCase();
   const sort = sp.get('sort');
   const p = Number.parseInt(sp.get('p') ?? '1', 10);
+  const q = sp.get('q')?.trim().slice(0, 100);
   return {
+    q: q || undefined,
     price: (PRICE_FILTERS as readonly string[]).includes(price ?? '')
       ? (price as PriceFilter)
       : undefined,
@@ -46,6 +50,7 @@ export function readIndexState(sp: URLSearchParams): IndexState {
 export function indexHref(state: IndexState, patch: Partial<IndexState> = {}): string {
   const s = { ...state, p: 1, ...patch };
   const q = new URLSearchParams();
+  if (s.q) q.set('q', s.q);
   if (s.price) q.set('price', s.price);
   if (s.vendor) q.set('vendor', s.vendor);
   if (s.sort !== 'usage') q.set('sort', s.sort);
@@ -95,8 +100,8 @@ export function detailHref(
   return `/themes/${slug}${qs ? `?${qs}` : ''}${extra.hash ? `#${extra.hash}` : ''}`;
 }
 
-/** "N°003" */
-export const specimenNo = (n: number) => `N°${String(n).padStart(3, '0')}`;
+/** Usage rank as shown everywhere on the themes pages: "#3". Ties share a rank (API `usage.rank`). */
+export const rankLabel = (rank: number | null | undefined) => (rank ? `#${rank}` : '—');
 
 /** Highest semantic version in a list ("9.3.0" > "9.10.0" handled numerically). */
 export function latestVersion(versions: readonly (string | null)[]): string | null {

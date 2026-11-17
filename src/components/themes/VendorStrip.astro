@@ -1,10 +1,8 @@
 ---
 /**
- * Typographic vendor index: every theme vendor set in the serif, each a link to its filter with
- * a superscript count. Reads like the "set in" list of a type specimen, not a chip row.
+ * Theme vendors as a hairline-cell grid (the Stripe logo-strip pattern): each cell is a link to
+ * the vendor filter with its theme count. The current vendor's cell is marked.
  */
-import Count from '~/components/ui/Count.astro';
-
 interface Props {
   vendors: { label: string; href: string; count: number; selected?: boolean }[];
   label?: string;
@@ -16,14 +14,16 @@ const { vendors, label = 'Theme vendors', class: className } = Astro.props;
 <nav class:list={['vstrip', className]} aria-label={label}>
   <ul class="vstrip__list">
     {vendors.map((v) => (
-      <li>
+      <li class="vstrip__cell">
         <a
           href={v.href}
           class:list={['vstrip__item', { 'is-on': v.selected }]}
           aria-current={v.selected ? 'true' : undefined}
         >
-          {v.label}
-          <Count value={v.count} label={v.count === 1 ? 'theme' : 'themes'} />
+          <span class="vstrip__name">{v.label}</span>
+          <span class="vstrip__count">
+            <span class="num">{v.count}</span> {v.count === 1 ? 'theme' : 'themes'}
+          </span>
         </a>
       </li>
     ))}
@@ -32,34 +32,72 @@ const { vendors, label = 'Theme vendors', class: className } = Astro.props;
 
 <style>
   .vstrip__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--line);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  @media (min-width: 640px) {
+    .vstrip__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .vstrip__list {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1280px) {
+    .vstrip__list {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+  }
+  .vstrip__cell {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.2em 0.9em;
-    font-family: var(--font-serif);
-    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
+    background: var(--bg);
   }
   .vstrip__item {
-    color: var(--ink-3);
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.16em;
-    transition:
-      color var(--dur-fast) var(--ease-out),
-      text-decoration-color var(--dur-fast) var(--ease-out);
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: 72px;
+    padding: var(--space-3) var(--space-4);
+    transition: background-color var(--dur-fast) var(--ease-out);
   }
   .vstrip__item:hover {
-    color: var(--ink);
-    text-decoration-color: var(--line-strong);
+    background: var(--surface-2);
   }
   .vstrip__item.is-on {
-    color: var(--ink);
-    text-decoration-color: var(--ink);
+    background: var(--accent-soft);
   }
-  .vstrip__item :global(.count-sup) {
-    font-size: max(0.32em, 10px);
+  .vstrip__item.is-on::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: var(--space-3);
+    bottom: var(--space-3);
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .vstrip__name {
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vstrip__count {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
   }
 </style>

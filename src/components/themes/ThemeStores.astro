@@ -1,0 +1,199 @@
+---
+/**
+ * Every detected store running a theme, as a table: store (mark, name, domain), the theme
+ * version it runs, its most-used apps (icons) and app count, currency, and capture state. The
+ * store name is the row's one link. Below 640px version and currency fold away and the app icons
+ * give way to the count.
+ */
+import StoreMark from '~/components/ui/StoreMark.astro';
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Badge from '~/components/ui/Badge.astro';
+import type { StoreListItem } from '~/server/api/v1/types';
+
+interface Props {
+  stores: StoreListItem[];
+  label: string;
+  class?: string;
+}
+const { stores, label, class: className } = Astro.props;
+const capture = (s: StoreListItem) =>
+  s.is_captured
+    ? { label: 'Captured', tone: 'positive' as const }
+    : s.is_curated
+      ? { label: 'Layout preview', tone: 'neutral' as const }
+      : { label: 'Not captured', tone: 'outline' as const };
+---
+
+<div class:list={['table-wrap', 'tstores', className]}>
+  <table class="table">
+    <caption class="visually-hidden">{label}</caption>
+    <thead>
+      <tr>
+        <th scope="col">Store</th>
+        <th scope="col" class="tstores__opt">
+          Version
+        </th>
+        <th scope="col" class="tstores__apps-h">
+          Apps
+        </th>
+        <th scope="col" class="tstores__opt">
+          Currency
+        </th>
+        <th scope="col" class="tstores__cap-h">
+          Capture
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {stores.map((s) => {
+        const c = capture(s);
+        const icons = s.top_apps.slice(0, 3);
+        return (
+          <tr>
+            <td>
+              <div class="tstores__store">
+                <StoreMark domain={s.domain} name={s.name} size={28} />
+                <span class="tstores__id">
+                  <a href={s.href} class="tstores__name stretched-link">
+                    {s.display_name}
+                  </a>
+                  {(s.name || s.theme.version) && (
+                    <span class="tstores__sub">
+                      {s.name && <span class="mono">{s.domain}</span>}
+                      {s.theme.version && (
+                        <span class="tstores__sub-v mono">v{s.theme.version}</span>
+                      )}
+                    </span>
+                  )}
+                </span>
+              </div>
+            </td>
+            <td class:list={['tstores__opt', 'tstores__mono', { 'is-muted': !s.theme.version }]}>
+              {s.theme.version ?? '—'}
+            </td>
+            <td>
+              <span class="tstores__apps">
+                {icons.length > 0 && (
+                  <span class="tstores__icons" aria-hidden="true">
+                    {icons.map((a) => (
+                      <AppIcon src={a.icon_url} name={a.short_name} size={20} />
+                    ))}
+                  </span>
+                )}
+                <span
+                  class="num tstores__count"
+                  title={icons.length ? icons.map((a) => a.short_name).join(', ') : undefined}
+                >
+                  {s.app_count}
+                  <span class="tstores__unit">{s.app_count === 1 ? ' app' : ' apps'}</span>
+                </span>
+              </span>
+            </td>
+            <td class:list={['tstores__opt', 'tstores__mono', { 'is-muted': !s.currency }]}>
+              {s.currency ?? '—'}
+            </td>
+            <td>
+              <Badge tone={c.tone} size="sm" dot={s.is_captured}>
+                {c.label}
+              </Badge>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .tstores tbody tr {
+    position: relative;
+  }
+  .tstores tbody tr:has(.stretched-link:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  .tstores .stretched-link:focus-visible {
+    outline: none;
+  }
+  .tstores__store {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .tstores__id {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .tstores__name {
+    overflow: hidden;
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tstores__sub {
+    display: flex;
+    gap: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .tstores__sub-v {
+    display: none;
+  }
+  .tstores__mono {
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .tstores .is-muted {
+    color: var(--ink-3);
+  }
+  .tstores__apps-h {
+    width: 140px;
+  }
+  .tstores__cap-h {
+    width: 132px;
+  }
+  .tstores__apps {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .tstores__icons {
+    display: inline-flex;
+  }
+  .tstores__icons :global(.app-icon) {
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+  .tstores__icons :global(.app-icon + .app-icon) {
+    margin-left: -5px;
+  }
+  .tstores__count {
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .tstores__unit {
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+  @media (max-width: 639px) {
+    .tstores__opt,
+    .tstores__icons {
+      display: none;
+    }
+    .tstores__sub-v {
+      display: inline;
+    }
+    .tstores__apps-h,
+    .tstores__cap-h {
+      width: auto;
+    }
+    .tstores__unit {
+      display: none;
+    }
+  }
+</style>

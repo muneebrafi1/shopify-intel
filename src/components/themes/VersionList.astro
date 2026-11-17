@@ -1,8 +1,10 @@
 ---
 /**
- * Versions seen: a quiet typographic distribution. Version in mono, a hairline track with an
- * ink bar for its share, and the store count. No chart library.
+ * Versions seen on a theme's stores: version in mono, a bar for its share of those stores and
+ * the store count. Known versions first (newest first), then the stores whose storefront does
+ * not expose a version. No chart library.
  */
+import Badge from '~/components/ui/Badge.astro';
 import { formatCount } from '~/lib/format';
 
 interface Props {
@@ -11,7 +13,6 @@ interface Props {
 }
 const { versions, class: className } = Astro.props;
 const total = versions.reduce((n, v) => n + v.stores, 0) || 1;
-// Known versions first (newest first), then the stores whose version was not recorded.
 const parts = (v: string) => v.split(/[.-]/).map((x) => Number.parseInt(x, 10) || 0);
 const cmp = (a: string, b: string) => {
   const x = parts(a);
@@ -22,10 +23,9 @@ const cmp = (a: string, b: string) => {
   }
   return 0;
 };
-const rows = [
-  ...versions.filter((v) => v.version).sort((a, b) => cmp(a.version!, b.version!)),
-  ...versions.filter((v) => !v.version),
-];
+const known = versions.filter((v) => v.version).sort((a, b) => cmp(a.version!, b.version!));
+const rows = [...known, ...versions.filter((v) => !v.version)];
+const latest = known[0]?.version ?? null;
 ---
 
 <ol class:list={['vlist', className]}>
@@ -33,12 +33,15 @@ const rows = [
     const pct = (v.stores / total) * 100;
     return (
       <li class:list={['vlist__row', { 'vlist__row--unknown': !v.version }]}>
-        <span class="vlist__v">{v.version ?? 'Not recorded'}</span>
-        <span class="vlist__track" aria-hidden="true">
-          <span class="vlist__bar" style={`--w:${Math.max(pct, 1.5).toFixed(1)}%`} />
+        <span class="vlist__v">
+          {v.version ?? 'Not recorded'}
+          {v.version && v.version === latest && known.length > 1 && <Badge size="sm">Latest</Badge>}
         </span>
-        <span class="vlist__n num">
-          {formatCount(v.stores)}
+        <span class="vlist__track" aria-hidden="true">
+          <span class="vlist__bar" style={`--w:${Math.max(pct, 2).toFixed(1)}%`} />
+        </span>
+        <span class="vlist__n">
+          <span class="num">{formatCount(v.stores)}</span>
           <span class="vlist__unit">{v.stores === 1 ? 'store' : 'stores'}</span>
         </span>
       </li>
@@ -52,47 +55,58 @@ const rows = [
   }
   .vlist__row {
     display: grid;
-    grid-template-columns: 7.5rem minmax(0, 1fr) 6rem;
+    grid-template-columns: minmax(8.5rem, 0.8fr) minmax(0, 1fr) 5.5rem;
     align-items: center;
     gap: var(--space-4);
-    padding: 12px 0;
+    min-height: 48px;
+    padding: var(--space-2) 0;
     border-bottom: 1px solid var(--line);
   }
   .vlist__v {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     letter-spacing: -0.01em;
-    color: var(--ink);
   }
   .vlist__row--unknown .vlist__v {
-    font-family: var(--font-sans);
     color: var(--ink-3);
+    font-family: var(--font-sans);
   }
   .vlist__track {
     position: relative;
-    height: 1px;
-    background: var(--line-strong);
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface-3);
   }
   .vlist__bar {
     position: absolute;
-    left: 0;
-    top: -1px;
+    inset: 0 auto 0 0;
     width: var(--w);
-    height: 3px;
-    background: var(--ink);
+    border-radius: inherit;
+    background: var(--ink-2);
   }
   .vlist__row--unknown .vlist__bar {
     background: var(--ink-4);
   }
   .vlist__n {
-    text-align: right;
+    color: var(--ink);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
+    text-align: right;
   }
   .vlist__unit {
     margin-left: 4px;
     color: var(--ink-3);
     font-family: var(--font-sans);
     font-size: var(--text-xs);
+  }
+  @media (max-width: 479px) {
+    .vlist__row {
+      grid-template-columns: minmax(0, 1fr) 64px 4.5rem;
+      gap: var(--space-3);
+    }
   }
 </style>

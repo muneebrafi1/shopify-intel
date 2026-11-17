@@ -3,6 +3,8 @@
  * A theme as a v2 card: a --surface-2 well holding a small deck of real stores (the front
  * capture plus up to two peeking behind it; a desktop + phone pair when only one store is
  * captured), then the name, vendor, price badge and store count. One link (stretched title).
+ * Optional `share` (0..1, of the scan) and `rank` (usage rank; ties share it) extend the count row:
+ * "20 stores · 2.1%" … "#1".
  */
 import { thumbCropHeight, thumbUrl } from '~/lib/media';
 import Badge from '~/components/ui/Badge.astro';
@@ -21,6 +23,10 @@ interface Props {
   priceLabel: string;
   storesCount: number;
   shots: ShotRef[];
+  /** Share of scanned stores, 0..1 (shown after the count). */
+  share?: number | null;
+  /** Usage rank (equal usage shares a rank). */
+  rank?: number | null;
   href?: string;
   eager?: boolean;
   class?: string;
@@ -32,6 +38,8 @@ const {
   priceLabel,
   storesCount,
   shots,
+  share,
+  rank,
   href = `/themes/${slug}`,
   eager = false,
   class: className,
@@ -98,7 +106,22 @@ const ordered = [...deck].reverse();
   </div>
   <p class="theme-card__count">
     <span class="theme-card__count-n num">{storesCount.toLocaleString('en-US')}</span>
-    <span class="theme-card__count-l">{storesCount === 1 ? 'store' : 'stores'} in our scan</span>
+    <span class="theme-card__count-l">
+      {storesCount === 1 ? 'store' : 'stores'}
+      {typeof share === 'number' ? (
+        <>
+          {' · '}
+          <span class="num">{`${(share * 100).toFixed(1)}%`}</span>
+        </>
+      ) : (
+        ' in our scan'
+      )}
+    </span>
+    {rank ? (
+      <span class="theme-card__rank num" title={`Rank ${rank} by stores using it`}>
+        #{rank}
+      </span>
+    ) : null}
   </p>
 </article>
 
@@ -244,5 +267,11 @@ const ordered = [...deck].reverse();
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: 500;
+  }
+  .theme-card__rank {
+    margin-left: auto;
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
   }
 </style>

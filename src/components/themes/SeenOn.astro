@@ -1,0 +1,496 @@
+---
+/**
+ * "Seen on": the theme on the real stores that run it. Page-type tabs over a product window
+ * (store domain in the URL pill, Desktop/Mobile in its toolbar) holding the lead store's capture
+ * with every section's tag pinned on it, cropped with a fade; the store under it with a link to
+ * the full page in the store viewer. Further curated stores follow as smaller captures.
+ *
+ * Tabs and the device switch are links (URL state: ?page=&device=#seen-on), so every view is
+ * server-rendered with its tags and works without JavaScript. Only the current view is rendered
+ * (one capture + its sections = one extra API call, well inside D1's per-request budget).
+ */
+import Tabs from '~/components/ui/Tabs.astro';
+import Segmented from '~/components/ui/Segmented.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import Button from '~/components/ui/Button.astro';
+import Badge from '~/components/ui/Badge.astro';
+import Window from '~/components/ui/Window.astro';
+import StoreMark from '~/components/ui/StoreMark.astro';
+import Icon from '~/components/ui/Icon.astro';
+import Shot from '~/components/media/Shot.astro';
+import FullPage, { type FullPageSection } from '~/components/media/FullPage.astro';
+import { CORE_PAGE_TYPES, DEVICES, PAGE_TYPES, type Device, type PageType } from '~/lib/taxonomy';
+import { formatCount } from '~/lib/format';
+import type { CuratedStoreShots, ScreenshotThumb } from '~/server/api/v1/types';
+import { detailHref, type PlateState } from './params';
+
+interface Props {
+  slug: string;
+  name: string;
+  curated: CuratedStoreShots[];
+  state: PlateState;
+  /** Page types that have at least one capture, in display order. */
+  pages: PageType[];
+  /** Sections of the lead capture in the current view (pinned as tags). */
+  sections: FullPageSection[];
+  /** Detected app counts by store domain, when known. */
+  appCounts?: Map<string, number>;
+  /** Extra params to keep on tab links (stores-list paging). */
+  keep?: { cursor?: string | null; p?: number };
+  class?: string;
+}
+const {
+  slug,
+  name,
+  curated,
+  state,
+  pages,
+  sections,
+  appCounts,
+  keep = {},
+  class: className,
+} = Astro.props;
+
+const pageName = (p: PageType) => PAGE_TYPES.find((x) => x.slug === p)?.name ?? p;
+const deviceName = (d: Device) => DEVICES.find((x) => x.slug === d)?.name ?? d;
+const href = (page: PageType, device: Device) =>
+  detailHref(slug, { page, device }, { ...keep, hash: 'seen-on' });
+const storePageHref = (storeHref: string, page: PageType, device: Device) =>
+  `${storeHref}?${new URLSearchParams({ page, device }).toString()}`;
+
+const tabs = (pages.length ? pages : CORE_PAGE_TYPES).map((p) => ({
+  label: pageName(p),
+  href: href(p, state.device),
+  selected: p === state.page,
+}));
+const devices = DEVICES.map((d) => ({
+  label: d.name,
+  value: d.slug,
+  icon: d.slug === 'desktop' ? ('desktop' as const) : ('device-mobile' as const),
+  iconOnly: true,
+  href: href(state.page, d.slug),
+  selected: d.slug === state.device,
+}));
+
+interface Frame {
+  store: CuratedStoreShots['store'];
+  version: string | null;
+  shot: ScreenshotThumb;
+}
+const frames: Frame[] = curated.flatMap((c) => {
+  const shot = c.pages.find((p) => p.page_type === state.page)?.[state.device];
+  return shot ? [{ store: c.store, version: c.version, shot }] : [];
+});
+const [lead, ...others] = frames;
+const storeCount = curated.length;
+
+// The URL pill: Shopify's standard paths (we don't store the exact URL of each captured page).
+const PATHS: Partial<Record<PageType, string>> = {
+  collection: '/collections/…',
+  product: '/products/…',
+  cart: '/cart',
+};
+const urlFor = (domain: string) => `${domain}${PATHS[state.page] ?? ''}`;
+const altFor = (f: Frame) =>
+  `${f.store.display_name} ${pageName(state.page).toLowerCase()} page on ${name}, ${state.device}${f.shot.is_placeholder ? ' (layout preview)' : ''}`;
+const metaFor = (f: Frame) => {
+  const apps = appCounts?.get(f.store.domain);
+  return [
+    `${name}${f.version ? ` ${f.version}` : ''}`,
+    typeof apps === 'number' ? `${apps} ${apps === 1 ? 'app' : 'apps'}` : null,
+  ].filter(Boolean) as string[];
+};
+const anyPlaceholder = frames.some((f) => f.shot.is_placeholder);
+// Beside a phone capture there is room for the page's section list (each links to its section).
+const ordered = [...sections].sort((a, b) => a.y - b.y);
+const description =
+  storeCount === 0
+    ? `No store running ${name} has been captured yet.`
+    : storeCount === 1
+      ? `Home, collection, product and cart pages of a curated store running ${name}, on desktop and mobile, with every section tagged.`
+      : `${name} on ${formatCount(storeCount)} curated stores, page by page, on desktop and mobile, with every section tagged.`;
+---
+
+<section
+  class:list={['seen', className]}
+  id="seen-on"
+  aria-labelledby="seen-title"
+  data-page={state.page}
+  data-device={state.device}
+>
+  <SectionHeader id="seen-title" eyebrow="Seen on" title={`${name} on real stores`} {description} />
+
+  {storeCount === 0 ? (
+    <EmptyState
+      title="Not captured yet"
+      body={`We detect ${name} on the stores listed below; captures of their pages follow in the next capture run.`}
+      icon="browser"
+      size="sm"
+      level={3}
+      class="seen__empty"
+    >
+      <Button href="#stores" size="sm" variant="secondary">
+        See the stores using {name}
+      </Button>
+    </EmptyState>
+  ) : (
+    <>
+      <Tabs items={tabs} label="Page type" class="seen__tabs" />
+      <div
+        class="seen__panel"
+        data-seen-panel
+        data-page={state.page}
+        data-device={state.device}
+        role="region"
+        aria-label={`${pageName(state.page)} page, ${deviceName(state.device)}`}
+      >
+        {!lead ? (
+          <div class="seen__none">
+            <p>
+              No {pageName(state.page).toLowerCase()} page on {state.device} yet for {name}.
+            </p>
+            <Segmented items={devices} label="Device" size="sm" class="seen__device" />
+          </div>
+        ) : (
+          <figure class="seen__lead">
+            <Window
+              url={urlFor(lead.store.domain)}
+              fade
+              class={`seen__window seen__window--${state.device}`}
+              bodyClass="seen__body"
+            >
+              <Segmented
+                slot="toolbar"
+                items={devices}
+                label="Device"
+                size="sm"
+                class="seen__device"
+              />
+              <div class="seen__stage">
+                <FullPage
+                  src={lead.shot.image.src}
+                  width={lead.shot.image.width}
+                  height={lead.shot.image.height}
+                  device={state.device}
+                  alt={altFor(lead)}
+                  {sections}
+                  rail={false}
+                  tags="pinned"
+                  bare
+                  eager
+                />
+                {state.device === 'mobile' && ordered.length > 0 && (
+                  <div class="seen__list">
+                    <p class="seen__list-title">
+                      Sections on this page <span class="num">{ordered.length}</span>
+                    </p>
+                    <ol>
+                      {ordered.map((s, i) => (
+                        <li>
+                          <a href={s.href} class="seen__list-item">
+                            <span class="seen__list-n num">{String(i + 1).padStart(2, '0')}</span>
+                            <span class="seen__list-name">{s.name}</span>
+                            {s.app && <span class="seen__list-app">{s.app.name}</span>}
+                          </a>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+            </Window>
+            <figcaption class="seen__caption">
+              <StoreMark domain={lead.store.domain} name={lead.store.name} size={36} />
+              <div class="seen__who">
+                <p class="seen__store">
+                  <a href={lead.store.href}>{lead.store.display_name}</a>
+                  {lead.shot.is_placeholder && (
+                    <Badge size="sm" tone="outline">
+                      Layout preview
+                    </Badge>
+                  )}
+                </p>
+                <p class="seen__meta">
+                  <span class="mono">{lead.store.domain}</span>
+                  {metaFor(lead).map((m) => (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>{m}</span>
+                    </>
+                  ))}
+                  {sections.length > 0 && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>
+                        <span class="num">{sections.length}</span> sections tagged
+                      </span>
+                    </>
+                  )}
+                </p>
+              </div>
+              <Button
+                href={storePageHref(lead.store.href, state.page, state.device)}
+                size="sm"
+                variant="secondary"
+                arrow
+                class="seen__open"
+              >
+                Full {pageName(state.page).toLowerCase()} page
+              </Button>
+            </figcaption>
+          </figure>
+        )}
+
+        {others.length > 0 && (
+          <div class="seen__others">
+            <h3 class="eyebrow seen__others-title">Also on</h3>
+            <div
+              class:list={[
+                'grid',
+                state.device === 'desktop' ? 'grid--shots' : 'grid--mobile-shots',
+              ]}
+            >
+              {others.map((f) => (
+                <figure class="seen__frame">
+                  <Shot
+                    src={f.shot.image.src}
+                    width={f.shot.image.width}
+                    height={f.shot.image.height}
+                    device={state.device}
+                    alt={altFor(f)}
+                    href={storePageHref(f.store.href, state.page, state.device)}
+                  />
+                  <figcaption>
+                    <span class="seen__frame-store">{f.store.display_name}</span>
+                    <span class="seen__frame-meta">{metaFor(f).join(' · ')}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {anyPlaceholder && (
+        <p class="seen__note">
+          <Icon name="info" size={14} />
+          <span>
+            Layout previews are drawn from each page’s detected sections until the first capture
+            run. Theme and section detection is real.
+          </span>
+        </p>
+      )}
+    </>
+  )}
+</section>
+
+<style>
+  .seen {
+    scroll-margin-top: calc(var(--header-h) + var(--space-4));
+  }
+  .seen__panel {
+    margin-top: var(--space-5);
+  }
+  .seen__lead {
+    margin: 0;
+  }
+
+  /* The window: a fixed, faded crop of the full page (the store viewer has the rest). */
+  .seen :global(.seen__body) {
+    height: 420px;
+  }
+  @media (min-width: 640px) {
+    .seen :global(.seen__body) {
+      height: 520px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .seen :global(.seen__body) {
+      height: 600px;
+    }
+  }
+  .seen :global(.seen__window--mobile .seen__body) {
+    padding: var(--space-6) var(--space-4) 0;
+  }
+  .seen :global(.seen__window--mobile .fp__canvas) {
+    max-width: 300px;
+    box-shadow: var(--shadow-shot), var(--shadow-md);
+  }
+  .seen :global(.seen__window--desktop .fp__canvas) {
+    max-width: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .seen :global(.seen__device) {
+    margin-right: -4px;
+  }
+  /* Touch: the device switch keeps ≥40px targets inside the 36px window bar. */
+  @media (pointer: coarse) {
+    .seen :global(.seen__device .seg__item--icon) {
+      width: 40px;
+      aspect-ratio: auto;
+    }
+    .seen :global(.seen__device .seg__item)::after {
+      content: '';
+      position: absolute;
+      inset: -5px 0;
+    }
+  }
+  /* Phone capture + its section list side by side (≥640); the phone alone below. */
+  .seen__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .seen__list {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .seen :global(.seen__window--mobile .seen__stage) {
+      grid-template-columns: minmax(0, 300px) minmax(0, 300px);
+      justify-content: center;
+      gap: var(--space-8);
+    }
+    .seen__list {
+      display: block;
+      padding-top: var(--space-2);
+    }
+  }
+  .seen__list-title {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 var(--space-2) var(--space-2);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+  }
+  .seen__list-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 32px;
+    padding: 4px var(--space-2);
+    border-radius: var(--radius-control);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .seen__list-item:hover {
+    background: var(--surface-3);
+    color: var(--ink);
+  }
+  .seen__list-n {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .seen__list-name {
+    flex: 1;
+    min-width: 0;
+  }
+  .seen__list-app {
+    overflow: hidden;
+    max-width: 120px;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seen__caption {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+  .seen__caption :global(.seen__open) {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  @media (min-width: 640px) {
+    .seen__caption {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+    .seen__caption :global(.seen__open) {
+      grid-column: auto;
+    }
+  }
+  .seen__who {
+    min-width: 0;
+  }
+  .seen__store {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .seen__store a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .seen__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 6px;
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+
+  .seen__none {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-card);
+    color: var(--ink-2);
+  }
+
+  .seen__others {
+    margin-top: var(--space-8);
+  }
+  .seen__others-title {
+    margin-bottom: var(--space-3);
+  }
+  .seen__frame {
+    min-width: 0;
+    margin: 0;
+  }
+  .seen__frame figcaption {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--space-2);
+  }
+  .seen__frame-store {
+    font-weight: var(--weight-medium);
+  }
+  .seen__frame-meta {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+
+  .seen__note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.45;
+  }
+  .seen__note :global(svg) {
+    flex: none;
+    margin-top: 1px;
+  }
+</style>

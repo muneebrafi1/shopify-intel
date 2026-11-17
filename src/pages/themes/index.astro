@@ -1,21 +1,21 @@
 ---
 /**
- * /themes: every theme we track, each shown on the real stores that run it.
- * Grid of ThemeCard decks (default) or a numbered index (?view=index) with hover previews.
- * Filters are URL state: price (free, paid or a price band), vendor, sort; see params.ts.
+ * /themes: every theme we track, each shown on the real stores that run it (Base44 browse
+ * pattern). Page header → BrowseBar (search, price pills, vendor, sort, grid/table) → ThemeCard
+ * grid, or a ranked table (?view=index) → vendors → source.
+ * Filters are URL state: q, price (free, paid or a price band), vendor, sort, view, p; see
+ * params.ts. Ranks are the API's usage ranks (equal usage shares a rank).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import PageHeader from '~/components/ui/PageHeader.astro';
-import FilterBar, { type FilterGroup } from '~/components/ui/FilterBar.astro';
-import IndexList from '~/components/ui/IndexList.astro';
-import IndexRow from '~/components/ui/IndexRow.astro';
+import BrowseBar, { type FilterGroup } from '~/components/ui/BrowseBar.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
 import Pagination from '~/components/ui/Pagination.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
 import ThemeCard from '~/components/domain/ThemeCard.astro';
-import SpecRows from '~/components/themes/SpecRows.astro';
+import ThemeTable from '~/components/themes/ThemeTable.astro';
 import VendorStrip from '~/components/themes/VendorStrip.astro';
 import {
   SORTS,
@@ -28,16 +28,17 @@ import {
 import { api } from '~/server/api';
 import { encodeCursor } from '~/server/api/v1/pagination';
 import type { ThemeListItem } from '~/server/api/v1/types';
-import { formatCount, formatDate, formatPercent } from '~/lib/format';
+import { formatCount, formatDate } from '~/lib/format';
 
 const PAGE_SIZE = 48;
 const state = readIndexState(Astro.url.searchParams);
-const filtered = !!(state.price || state.vendor);
+const filtered = !!(state.price || state.vendor || state.q);
 
 const [list, all, metaRes] = await Promise.all([
   api.listThemes({
     ...apiPriceInput(state.price),
     vendor: state.vendor,
+    q: state.q,
     sort: state.sort,
     limit: PAGE_SIZE,
     // The theme catalogue is small and offset-paged (docs/API.md), so page N is a known offset.
@@ -61,7 +62,7 @@ const scanned = meta.counts.stores_scanned;
 // Page past the end (e.g. after a filter change): back to the first page.
 if (state.p > 1 && themes.length === 0) return Astro.redirect(indexHref(state, { p: 1 }), 302);
 
-// ---- Filter bar --------------------------------------------------------------------------
+// ---- Browse bar ----------------------------------------------------------------------------
 const bandCount = (v: string) => facets.price_bands.find((b) => b.value === v)?.count;
 const paidCount = facets.price_bands
   .filter((b) => b.value !== 'free')
@@ -130,12 +131,17 @@ if (state.vendor) heading = `${vendorLabel(state.vendor)} themes`;
 if (state.price === 'free' || state.price === 'paid')
   heading = `${priceLabel} ${state.vendor ? heading : 'Shopify themes'}`;
 else if (state.price) heading = `${heading} ${priceLabel?.replace(/^U/, 'u')}`;
-const title = filtered ? heading : 'Shopify themes on real stores';
-const description = filtered
+const facetFiltered = !!(state.price || state.vendor);
+const title = state.q
+  ? `Themes matching “${state.q}”`
+  : facetFiltered
+    ? heading
+    : 'Shopify themes on real stores';
+const description = facetFiltered
   ? `${formatCount(total)} ${heading.toLowerCase()} we track, each shown on the real Shopify stores that run it, with prices, vendors and usage in our scan of ${formatCount(scanned)} stores.`
   : `Every Shopify theme we track (${allTotal}), shown on the real stores that run it: home, collection, product and cart pages, desktop and mobile, with price, vendor and usage in our scan.`;
 
-const singleFilter = (state.price ? 1 : 0) + (state.vendor ? 1 : 0) === 1;
+const singleFilter = !state.q && (state.price ? 1 : 0) + (state.vendor ? 1 : 0) === 1;
 const canonical = singleFilter
   ? indexHref({ price: state.price, vendor: state.vendor, sort: 'usage', view: 'grid', p: 1 })
   : '/themes';
@@ -174,16 +180,11 @@ const jsonLd = [
 ];
 
 const free = allFacets.price_bands.find((b) => b.value === 'free')?.count ?? 0;
-const headerSpecs = [
-  { label: 'Themes profiled', value: formatCount(allTotal), mono: true },
-  { label: 'Vendors', value: formatCount(allFacets.vendors.length), mono: true },
-  { label: 'Free · paid', value: `${free} · ${allTotal - free}`, mono: true },
-  {
-    label: 'Stores scanned',
-    value: formatCount(scanned),
-    mono: true,
-    note: `${meta.counts.theme_names_detected} theme names detected · ${asOf}`,
-  },
+const headerFacts = [
+  `${free} free`,
+  `${allTotal - free} paid`,
+  `${allFacets.vendors.length} vendors`,
+  `${formatCount(scanned)} stores scanned`,
 ];
 
 const vendors = allFacets.vendors.map((v) => ({
@@ -194,49 +195,90 @@ const vendors = allFacets.vendors.map((v) => ({
 }));
 
 const viewState = (view: IndexState['view']) => indexHref(state, { view, p: state.p });
+const noun = total === 1 ? 'theme' : 'themes';
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 ---
 
-<BaseLayout {title} {description} {canonical} {noindex} {jsonLd}>
-  <div class="container themes-index">
+<BaseLayout {title} {description} {canonical} {noindex} {jsonLd} wide>
+  <div class="container--wide ti">
     <PageHeader
-      title={filtered ? heading : 'Themes'}
+      eyebrow="Theme index"
+      title={state.q ? 'Themes' : facetFiltered ? heading : 'Themes'}
       count={filtered ? total : allTotal}
-      eyebrow={`Theme index · ${asOf}`}
-      size="lg"
-      class="ti-header"
+      description={
+        state.q
+          ? `Matching “${state.q}”, shown on the real stores that run them.`
+          : 'Every Shopify theme we track, shown on the real stores that run it.'
+      }
     >
-      <p slot="meta" class="ti-statement">
-        Every theme we track, shown on the real stores that run it.
+      <p slot="meta" class="ti-facts">
+        {headerFacts.map((f, i) => (
+          <>
+            {i > 0 && (
+              <span class="ti-facts__sep" aria-hidden="true">
+                ·
+              </span>
+            )}
+            <span>{f}</span>
+          </>
+        ))}
+        <span class="ti-facts__sep" aria-hidden="true">
+          ·
+        </span>
+        <span>
+          data <time datetime={meta.data_as_of}>{asOf}</time>
+        </span>
       </p>
-      <div slot="actions" class="ti-specs">
-        <SpecRows rows={headerSpecs} />
-        <p class="ti-bias">
-          Stores were found through Theme Store example lists, so a count shows reach in our scan,
-          not market share.
-        </p>
-      </div>
+      <Fragment slot="actions">
+        <Button href="/compare?kind=theme" variant="secondary" icon="scales">
+          Compare themes
+        </Button>
+      </Fragment>
     </PageHeader>
 
-    <FilterBar
+    <BrowseBar
       {groups}
+      pills="price"
       {total}
-      noun={total === 1 ? 'theme' : 'themes'}
+      {noun}
       {sort}
       view={{ current: state.view, gridHref: viewState('grid'), indexHref: viewState('index') }}
       {clearHref}
+      search={{
+        action: '/themes',
+        value: state.q ?? '',
+        placeholder: 'Search themes',
+        hidden: {
+          price: state.price,
+          vendor: state.vendor,
+          sort: state.sort !== 'usage' ? state.sort : undefined,
+          view: state.view === 'index' ? 'index' : undefined,
+        },
+      }}
     />
 
     <section class="ti-results" aria-label="Themes">
       {themes.length === 0 ? (
         <EmptyState
-          title="No themes match these filters"
-          body="Try another price or vendor, or clear the filters to see every theme we track."
+          title={
+            state.q && !facetFiltered
+              ? `No themes match “${state.q}”`
+              : 'No themes match these filters'
+          }
+          body={
+            state.q
+              ? `We search theme names and vendors. Try a shorter search${facetFiltered ? ', or clear the filters' : ''} to see every theme we track.`
+              : 'Try another price or vendor, or clear the filters to see every theme we track.'
+          }
           class="ti-empty"
         >
-          <Button href={clearHref} variant="primary" size="sm">
-            Clear filters
+          <Button
+            href={indexHref({ sort: state.sort, view: state.view, p: 1 })}
+            variant="secondary"
+            size="sm"
+          >
+            {state.q && !facetFiltered ? 'Clear search' : 'Clear filters'}
           </Button>
         </EmptyState>
       ) : state.view === 'grid' ? (
@@ -247,9 +289,11 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
               name={t.name}
               href={t.href}
               vendor={t.vendor ?? 'Unknown vendor'}
-              priceLabel={t.price.label ?? '—'}
+              priceLabel={t.price.is_free ? 'Free' : (t.price.label ?? '—')}
               storesCount={t.usage.stores}
-              eager={i < 3}
+              share={t.usage.share}
+              rank={t.usage.rank}
+              eager={i < 4}
               shots={t.previews.map((p) => ({
                 src: p.image.src,
                 width: p.image.width,
@@ -261,44 +305,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           ))}
         </div>
       ) : (
-        <IndexList
-          columns="56px minmax(0,1.5fr) minmax(0,1.2fr) 96px 88px 150px"
-          head={['N°', 'Theme', 'Vendor', 'Price', 'Share', 'Stores']}
-          label="Themes"
-          class="ti-index"
-        >
-          {themes.map((t, i) => {
-            const shot = t.previews[0];
-            return (
-              <IndexRow
-                n={offset + i + 1}
-                href={t.href}
-                title={t.name}
-                subtitle={[t.vendor, t.price.label].filter(Boolean).join(' · ')}
-                preview={
-                  shot
-                    ? {
-                        src: shot.image.src,
-                        width: shot.image.width,
-                        height: shot.image.height,
-                        device: 'desktop',
-                      }
-                    : null
-                }
-                cells={[
-                  { value: t.vendor ?? '—' },
-                  { value: t.price.label ?? '—', mono: true },
-                  { value: formatPercent(t.usage.share * 100), mono: true, muted: true },
-                  {
-                    value: `(${formatCount(t.usage.stores)} ${t.usage.stores === 1 ? 'store' : 'stores'})`,
-                    serif: true,
-                    mobile: true,
-                  },
-                ]}
-              />
-            );
-          })}
-        </IndexList>
+        <ThemeTable themes={themes} label={title} />
       )}
 
       {total > PAGE_SIZE && (
@@ -307,22 +314,21 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           pageSize={PAGE_SIZE}
           {total}
           hrefFor={(p) => indexHref(state, { p })}
-          noun={total === 1 ? 'theme' : 'themes'}
+          {noun}
           class="ti-pager"
         />
       )}
     </section>
 
     {vendors.length > 0 && (
-      <section class="page-block ti-vendors cols-12" aria-labelledby="ti-vendors-title">
-        <div class="ti-vendors__head span-4">
-          <MonoLabel as="p">By vendor</MonoLabel>
-          <h2 id="ti-vendors-title" class="ti-vendors__title">
-            {vendors.length} studios make the themes we track.
-          </h2>
-          <p class="ti-vendors__desc">Pick one to see only its themes.</p>
-        </div>
-        <VendorStrip vendors={vendors} class="ti-vendors__strip span-8" />
+      <section class="ti-vendors" aria-labelledby="ti-vendors-title">
+        <SectionHeader
+          id="ti-vendors-title"
+          eyebrow="By vendor"
+          title={`${vendors.length} studios make the themes we track`}
+          description="Pick one to see only its themes."
+        />
+        <VendorStrip vendors={vendors} />
       </section>
     )}
 
@@ -332,87 +338,97 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         asOf={source.label.includes(asOf) ? undefined : asOf}
         href={source.url ?? '/methodology'}
       />
+      <p class="ti-source__bias">
+        Stores were found through Shopify Theme Store example lists, so a count shows reach in our
+        scan of {formatCount(scanned)} stores, not market share.
+      </p>
     </footer>
   </div>
 </BaseLayout>
 
 <style>
-  .ti-statement {
-    margin-top: var(--space-5);
-    max-width: 24ch;
-    color: var(--ink-2);
-    font-family: var(--font-serif);
-    font-size: clamp(1.375rem, 1.05rem + 1.2vw, 2rem);
-    font-weight: 400;
-    letter-spacing: -0.015em;
-    line-height: 1.15;
-  }
-  .ti-specs {
-    width: 100%;
-    max-width: 420px;
-  }
-  @media (max-width: 639px) {
-    .ti-specs :global(.specs) {
-      display: none;
-    }
-  }
-  .ti-bias {
-    margin-top: var(--space-3);
+  .ti-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px var(--space-2);
+    margin-top: var(--space-4);
     color: var(--ink-3);
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
-    line-height: 1.45;
+    letter-spacing: 0.01em;
+  }
+  .ti-facts__sep {
+    color: var(--ink-4);
   }
   .ti-results {
-    margin-top: var(--space-8);
-  }
-  .ti-grid {
-    row-gap: var(--space-10);
-  }
-  :global(.ti-empty) {
-    margin-top: var(--space-4);
-  }
-  /* Theme names are set in the serif, as on the theme pages. */
-  :global(.ti-index .irow__name) {
-    font-family: var(--font-serif);
-    font-size: clamp(1.25rem, 1.05rem + 0.6vw, 1.625rem);
-    font-weight: 400;
-    letter-spacing: -0.015em;
-    line-height: 1.15;
-  }
-  :global(.ti-index .irow__link) {
-    align-items: center;
-  }
-  :global(.ti-pager) {
-    margin-top: var(--space-2);
-  }
-  .ti-vendors {
     padding-top: var(--space-6);
-    border-top: 1px solid var(--ink);
-  }
-  .ti-vendors__title {
-    margin-top: var(--space-3);
-    font-size: var(--text-xl);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    max-width: 18ch;
-  }
-  .ti-vendors__desc {
-    margin-top: var(--space-2);
-    color: var(--ink-3);
-    font-size: var(--text-sm);
   }
   @media (min-width: 1024px) {
-    :global(.ti-vendors__strip) {
-      grid-column: 5 / -1;
+    .ti-results {
+      padding-top: var(--space-8);
     }
+  }
+  @media (min-width: 1280px) {
+    .ti-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  /* 390: a two-up gallery (20 themes in ten rows, not twenty screens). */
+  @media (max-width: 639px) {
+    .ti-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4) var(--space-3);
+    }
+    /* Name and price share the first line; the vendor gets the card's full width. */
+    .ti-grid :global(.theme-card__body) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0 var(--space-2);
+      padding: 10px var(--space-3) 0;
+    }
+    .ti-grid :global(.theme-card__text) {
+      display: contents;
+    }
+    .ti-grid :global(.theme-card__name) {
+      grid-area: 1 / 1;
+    }
+    .ti-grid :global(.theme-card__body .badge) {
+      grid-area: 1 / 2;
+      justify-self: end;
+    }
+    .ti-grid :global(.theme-card__meta) {
+      grid-area: 2 / 1 / 3 / 3;
+    }
+    .ti-grid :global(:is(.theme-card__name, .theme-card__meta)) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ti-grid :global(.theme-card__count) {
+      padding: var(--space-2) var(--space-3) var(--space-3);
+    }
+  }
+  :global(.ti-empty) {
+    margin-top: var(--space-2);
+  }
+  :global(.ti-pager) {
+    margin-top: var(--space-10);
+  }
+  .ti-vendors {
+    margin-top: var(--space-16);
+    padding-top: var(--section-y-app);
+    border-top: 1px solid var(--line);
+  }
+  .ti-vendors :global(.vstrip) {
+    margin-top: var(--space-6);
   }
   .ti-source {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
     margin-top: var(--space-12);
-    padding-top: var(--space-4);
+    padding-block: var(--space-4) var(--space-4);
     border-top: 1px solid var(--line);
   }
   .ti-source__bias {
