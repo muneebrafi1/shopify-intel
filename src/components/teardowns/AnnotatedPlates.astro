@@ -82,9 +82,14 @@ const hrefFor = (key: string, hash = '') => `?plate=${encodeURIComponent(key)}${
 
 // Notes on this plate, in section order; their sections stay outlined and tagged on the capture.
 const legend = (current?.notes ?? [])
-  .map((note) => ({ note, num: note.section ? numbers.get(String(note.section.id)) ?? null : null }))
+  .map((note) => ({
+    note,
+    num: note.section ? (numbers.get(String(note.section.id)) ?? null) : null,
+  }))
   .sort((a, b) => (a.num ?? 99) - (b.num ?? 99));
-const annotatedIds = legend.map((l) => l.note.section?.id).filter((id): id is number => typeof id === 'number');
+const annotatedIds = legend
+  .map((l) => l.note.section?.id)
+  .filter((id): id is number => typeof id === 'number');
 const css = annotatedIds
   .map(
     (id) =>
@@ -94,95 +99,99 @@ const css = annotatedIds
   .join('');
 const storePlateHref = current
   ? `${basePath}${current.shot.page_type.slug === 'home' ? '' : `?page=${current.shot.page_type.slug}`}${
-      current.shot.device === 'mobile' ? `${current.shot.page_type.slug === 'home' ? '?' : '&'}device=mobile` : ''
+      current.shot.device === 'mobile'
+        ? `${current.shot.page_type.slug === 'home' ? '?' : '&'}device=mobile`
+        : ''
     }#plates`
   : basePath;
 ---
 
-{
-  current && (
-    <div class="tdplates" data-tdplates>
-      {css && <Fragment set:html={`<style>${css}</style>`} />}
-      {plates.length > 1 && (
-        <Tabs
-          label="Plates with notes"
-          class="tdplates__tabs"
-          items={plates.map((x) => ({
-            label: x.label,
-            href: hrefFor(x.key),
-            selected: x.key === current.key,
-            count: x.notes.length,
-          }))}
-        />
-      )}
+{current && (
+  <div class="tdplates" data-tdplates>
+    {css && <Fragment set:html={`<style>${css}</style>`} />}
+    {plates.length > 1 && (
+      <Tabs
+        label="Plates with notes"
+        class="tdplates__tabs"
+        items={plates.map((x) => ({
+          label: x.label,
+          href: hrefFor(x.key),
+          selected: x.key === current.key,
+          count: x.notes.length,
+        }))}
+      />
+    )}
 
-      <div class="tdplates__grid">
-        <div class="tdplates__legend">
-          <MonoLabel as="p">{`${current.label} · ${legend.length} ${legend.length === 1 ? 'note' : 'notes'}`}</MonoLabel>
-          <ol class="tdnotes">
-            {legend.map(({ note, num }) => (
-              <li class="tdnote">
-                <a
-                  class="tdnote__num display num"
-                  href={note.section ? `#section-${note.section.id}` : undefined}
-                  data-note-target={note.section ? String(note.section.id) : undefined}
-                  aria-label={num ? `Section ${pad(num)} on the plate` : undefined}
-                >
-                  {num ? pad(num) : '—'}
-                </a>
-                <div class="tdnote__text">
-                  <p class="tdnote__where mono">
-                    {note.section_type.name}
-                    {note.section?.app && (
-                      <span class="tdnote__app">
-                        <AppIcon src={note.section.app.icon_url} name={note.section.app.short_name} size={14} />
-                        {note.section.app.short_name}
-                      </span>
-                    )}
-                  </p>
-                  <h3 class="tdnote__title">{note.title}</h3>
-                  <p class="tdnote__body" set:html={inline(note.body)} />
-                </div>
-              </li>
-            ))}
-          </ol>
-          <p class="tdplates__hint">
-            Numbers are the section numbers on the{' '}
-            <a href={storePlateHref}>
-              store’s {current.label} plate
-              <Icon name="arrow-right" size={12} />
-            </a>
-          </p>
-          {plates.length > 1 && (
-            <ul class="tdplates__others">
-              {plates
-                .filter((x) => x.key !== current.key)
-                .map((x) => (
-                  <li>
-                    <a href={hrefFor(x.key)}>
-                      <span class="mono">{x.notes.length}</span> more on {x.label}
-                      <Icon name="arrow-right" size={12} />
-                    </a>
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
-
-        <FullPage
-          src={current.shot.image.src}
-          width={current.shot.width}
-          height={current.shot.height}
-          device={current.shot.device}
-          alt={`${current.shot.store.display_name}, ${current.label} plate${current.shot.is_placeholder ? ' (layout preview, not a screenshot)' : ''}`}
-          sections={sections}
-          rail={false}
-          class="tdplates__viewer"
-        />
+    <div class="tdplates__grid">
+      <div class="tdplates__legend">
+        <MonoLabel as="p">{`${current.label} · ${legend.length} ${legend.length === 1 ? 'note' : 'notes'}`}</MonoLabel>
+        <ol class="tdnotes">
+          {legend.map(({ note, num }) => (
+            <li class="tdnote">
+              <a
+                class="tdnote__num display num"
+                href={note.section ? `#section-${note.section.id}` : undefined}
+                data-note-target={note.section ? String(note.section.id) : undefined}
+                aria-label={num ? `Section ${pad(num)} on the plate` : undefined}
+              >
+                {num ? pad(num) : '—'}
+              </a>
+              <div class="tdnote__text">
+                <p class="tdnote__where mono">
+                  {note.section_type.name}
+                  {note.section?.app && (
+                    <span class="tdnote__app">
+                      <AppIcon
+                        src={note.section.app.icon_url}
+                        name={note.section.app.short_name}
+                        size={14}
+                      />
+                      {note.section.app.short_name}
+                    </span>
+                  )}
+                </p>
+                <h3 class="tdnote__title">{note.title}</h3>
+                <p class="tdnote__body" set:html={inline(note.body)} />
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p class="tdplates__hint">
+          Numbers are the section numbers on the{' '}
+          <a href={storePlateHref}>
+            store’s {current.label} plate
+            <Icon name="arrow-right" size={12} />
+          </a>
+        </p>
+        {plates.length > 1 && (
+          <ul class="tdplates__others">
+            {plates
+              .filter((x) => x.key !== current.key)
+              .map((x) => (
+                <li>
+                  <a href={hrefFor(x.key)}>
+                    <span class="mono">{x.notes.length}</span> more on {x.label}
+                    <Icon name="arrow-right" size={12} />
+                  </a>
+                </li>
+              ))}
+          </ul>
+        )}
       </div>
+
+      <FullPage
+        src={current.shot.image.src}
+        width={current.shot.width}
+        height={current.shot.height}
+        device={current.shot.device}
+        alt={`${current.shot.store.display_name}, ${current.label} plate${current.shot.is_placeholder ? ' (layout preview, not a screenshot)' : ''}`}
+        sections={sections}
+        rail={false}
+        class="tdplates__viewer"
+      />
     </div>
-  )
-}
+  </div>
+)}
 
 <script>
   // Hovering a note lights up its section on the capture (FullPage's own hover state).

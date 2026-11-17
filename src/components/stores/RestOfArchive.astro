@@ -28,11 +28,17 @@ const more = Math.max(0, count - shown.length);
   <div class="container">
     <div class="rest__grid cols-12">
       <div class="rest__lead span-5">
-        <MonoLabel as="p" class="rest__label">Detected, not captured</MonoLabel>
-        <p class="rest__num display num" aria-hidden="true">{formatCount(count)}</p>
+        <MonoLabel as="p" class="rest__label">
+          Detected, not captured
+        </MonoLabel>
+        <p class="rest__num display num" aria-hidden="true">
+          {formatCount(count)}
+        </p>
         <h2 id="rest-title" class="rest__title">
           <span class="visually-hidden">{formatCount(count)}</span>
-          more {count === 1 ? 'store' : 'stores'}{filterSummary ? ` ${filterSummary}` : ''} with their theme and apps on file. No screenshots yet.
+          more {count === 1 ? 'store' : 'stores'}
+          {filterSummary ? ` ${filterSummary}` : ''} with their theme and apps on file. No
+          screenshots yet.
         </h2>
         <a class="rest__cta" href={href}>
           Open the full index
@@ -41,34 +47,32 @@ const more = Math.max(0, count - shown.length);
       </div>
 
       <ol class="rest__rows" aria-label="Detected stores">
-        {
-          shown.map((s) => (
-            <li>
-              <a href={s.href} class="rest__row">
-                <span class="rest__n">{specimen(s.position ?? 0)}</span>
-                <span class="rest__domain">{s.domain}</span>
-                <span class="rest__theme">{s.theme.label}</span>
-                <span class="rest__apps num">
-                  {s.app_count} {s.app_count === 1 ? 'app' : 'apps'}
-                </span>
-              </a>
-            </li>
-          ))
-        }
-        {
-          more > 0 && (
-            <li>
-              <a href={href} class="rest__row rest__row--more">
-                <span class="rest__n">…</span>
-                <span class="rest__domain">and {formatCount(more)} more in the index</span>
-                <Icon name="arrow-right" size={14} />
-              </a>
-            </li>
-          )
-        }
+        {shown.map((s) => (
+          <li>
+            <a href={s.href} class="rest__row">
+              <span class="rest__n">{specimen(s.position ?? 0)}</span>
+              <span class="rest__domain">{s.domain}</span>
+              <span class="rest__theme">{s.theme.label}</span>
+              <span class="rest__apps num">
+                {s.app_count} {s.app_count === 1 ? 'app' : 'apps'}
+              </span>
+            </a>
+          </li>
+        ))}
+        {more > 0 && (
+          <li>
+            <a href={href} class="rest__row rest__row--more">
+              <span class="rest__n">…</span>
+              <span class="rest__domain">and {formatCount(more)} more in the index</span>
+              <Icon name="arrow-right" size={14} />
+            </a>
+          </li>
+        )}
       </ol>
     </div>
-    <p class="rest__source mlabel">Source: {source} · {asOf}</p>
+    <p class="rest__source mlabel">
+      Source: {source} · {asOf}
+    </p>
   </div>
 </section>
 

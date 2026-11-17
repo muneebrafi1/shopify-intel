@@ -30,13 +30,15 @@ const { teardown, store: detail, notes } = data;
 const store = detail.store;
 const { data: list } = await api.listTeardowns({});
 const ordered = [...list.items].sort(
-  (a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? '') || b.note_count - a.note_count,
+  (a, b) =>
+    (b.published_at ?? '').localeCompare(a.published_at ?? '') || b.note_count - a.note_count,
 );
 const number = Math.max(1, ordered.findIndex((t) => t.slug === teardown.slug) + 1);
 const others = ordered.filter((t) => t.slug !== teardown.slug).slice(0, 3);
 
 const body = renderMarkdown(teardown.body_md, { headingPrefix: true });
-const words = teardown.body_md.split(/\s+/).length + notes.reduce((n, x) => n + x.body.split(/\s+/).length, 0);
+const words =
+  teardown.body_md.split(/\s+/).length + notes.reduce((n, x) => n + x.body.split(/\s+/).length, 0);
 const minutes = Math.max(1, Math.round(words / 220));
 const plates = new Set(notes.map((n) => `${n.page_type}-${n.device}`)).size;
 const source = meta.sources[detail.detection.source];
@@ -64,7 +66,11 @@ const specs: SpecRow[] = [
     mono: !!store.tranco_rank,
     muted: !store.tranco_rank,
   },
-  { label: 'Detected', value: formatDate(detail.detection.last_seen), note: `Rules ${detail.detection.rules_version ?? 'unknown'}` },
+  {
+    label: 'Detected',
+    value: formatDate(detail.detection.last_seen),
+    note: `Rules ${detail.detection.rules_version ?? 'unknown'}`,
+  },
 ];
 const toc = [
   ...body.headings.filter((h) => h.level === 2).map((h) => ({ href: `#${h.id}`, text: h.text })),
@@ -80,7 +86,12 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Teardowns', item: new URL('/teardowns', site).href },
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Teardowns',
+        item: new URL('/teardowns', site).href,
+      },
       { '@type': 'ListItem', position: 2, name: teardown.title, item: pageUrl },
     ],
   },
@@ -89,7 +100,9 @@ const jsonLd = [
     '@type': 'Article',
     headline: teardown.title,
     ...(teardown.dek ? { description: teardown.dek } : {}),
-    ...(teardown.published_at ? { datePublished: teardown.published_at, dateModified: teardown.published_at } : {}),
+    ...(teardown.published_at
+      ? { datePublished: teardown.published_at, dateModified: teardown.published_at }
+      : {}),
     author: { '@type': 'Organization', name: SITE_NAME, url: new URL('/about', site).href },
     publisher: { '@type': 'Organization', name: SITE_NAME },
     mainEntityOfPage: pageUrl,
@@ -103,13 +116,19 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
 <BaseLayout
   title={teardown.title}
-  description={teardown.dek ?? `A teardown of ${store.domain}: theme, apps and where each one shows up on the page.`}
+  description={
+    teardown.dek ??
+    `A teardown of ${store.domain}: theme, apps and where each one shows up on the page.`
+  }
   canonical={teardown.href}
   jsonLd={jsonLd}
 >
   <article class="td">
     <div class="container">
-      <Breadcrumbs items={[{ label: 'Teardowns', href: '/teardowns' }, { label: title }]} class="td__crumbs" />
+      <Breadcrumbs
+        items={[{ label: 'Teardowns', href: '/teardowns' }, { label: title }]}
+        class="td__crumbs"
+      />
 
       <header class="td__head">
         <p class="td__labels">
@@ -122,7 +141,10 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <span>{SITE_NAME} editorial</span>
           {teardown.published_at && <span>{formatDate(teardown.published_at)}</span>}
           <span>{minutes} min read</span>
-          <span>{notes.length} {notes.length === 1 ? 'note' : 'notes'} on {plates} {plates === 1 ? 'plate' : 'plates'}</span>
+          <span>
+            {notes.length} {notes.length === 1 ? 'note' : 'notes'} on {plates}{' '}
+            {plates === 1 ? 'plate' : 'plates'}
+          </span>
           <span>Scan {asOf}</span>
           {isPreview && <span class="td__pending">Capture pending</span>}
         </p>
@@ -146,22 +168,26 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
               </a>
             </p>
             <SpecRows rows={specs} label={`${title} specification`} class="td__specs" />
-            <Button href={store.href} size="sm" variant="secondary" iconRight="arrow-right" class="td__open">
+            <Button
+              href={store.href}
+              size="sm"
+              variant="secondary"
+              iconRight="arrow-right"
+              class="td__open"
+            >
               Open the store specimen
             </Button>
             <nav class="td__toc" aria-label="In this teardown">
               <MonoLabel as="p">In this teardown</MonoLabel>
               <ol>
-                {
-                  toc.map((t, i) => (
-                    <li>
-                      <a href={t.href}>
-                        <span class="mono">{String(i + 1).padStart(2, '0')}</span>
-                        {t.text}
-                      </a>
-                    </li>
-                  ))
-                }
+                {toc.map((t, i) => (
+                  <li>
+                    <a href={t.href}>
+                      <span class="mono">{String(i + 1).padStart(2, '0')}</span>
+                      {t.text}
+                    </a>
+                  </li>
+                ))}
               </ol>
             </nav>
           </div>
@@ -169,25 +195,23 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       </div>
     </div>
 
-    {
-      notes.length > 0 && (
-        <section id="notes" class="container td__notes" aria-labelledby="notes-title">
-          <SectionHeader
-            id="notes-title"
-            title="Notes on the plates"
-            count={notes.length}
-            label={isPreview ? 'Plates · layout previews, capture pending' : 'Plates'}
-            description={
-              isPreview
-                ? 'Each note points at one section. The plates are drawn from the sections we expect on each page until the store is captured.'
-                : 'Each note points at one section of a captured page.'
-            }
-            rule
-          />
-          <AnnotatedPlates notes={notes} store={detail} basePath={store.href} plate={plateParam} />
-        </section>
-      )
-    }
+    {notes.length > 0 && (
+      <section id="notes" class="container td__notes" aria-labelledby="notes-title">
+        <SectionHeader
+          id="notes-title"
+          title="Notes on the plates"
+          count={notes.length}
+          label={isPreview ? 'Plates · layout previews, capture pending' : 'Plates'}
+          description={
+            isPreview
+              ? 'Each note points at one section. The plates are drawn from the sections we expect on each page until the store is captured.'
+              : 'Each note points at one section of a captured page.'
+          }
+          rule
+        />
+        <AnnotatedPlates notes={notes} store={detail} basePath={store.href} plate={plateParam} />
+      </section>
+    )}
 
     <section id="stack" class="container page-block" aria-labelledby="stack-title">
       <SectionHeader
@@ -200,18 +224,22 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       <StackSheet detail={detail} basePath={store.href} />
     </section>
 
-    {
-      others.length > 0 && (
-        <section class="container page-block td__more" aria-labelledby="more-title">
-          <SectionHeader id="more-title" title="More teardowns" href="/teardowns" linkLabel="All teardowns" rule />
-          <div class="td__more-list">
-            {others.map((t) => (
-              <TeardownRow item={t} n={ordered.indexOf(t) + 1} />
-            ))}
-          </div>
-        </section>
-      )
-    }
+    {others.length > 0 && (
+      <section class="container page-block td__more" aria-labelledby="more-title">
+        <SectionHeader
+          id="more-title"
+          title="More teardowns"
+          href="/teardowns"
+          linkLabel="All teardowns"
+          rule
+        />
+        <div class="td__more-list">
+          {others.map((t) => (
+            <TeardownRow item={t} n={ordered.indexOf(t) + 1} />
+          ))}
+        </div>
+      </section>
+    )}
 
     <div class="container">
       <SourceNote

@@ -50,7 +50,9 @@ try {
 }
 const [{ data: meta }, curatedRes, restRes] = await Promise.all([
   api.getMeta({}),
-  q.view === 'grid' ? api.listStores({ ...filters, curated: true, sort: q.sort, limit: PAGE }) : null,
+  q.view === 'grid'
+    ? api.listStores({ ...filters, curated: true, sort: q.sort, limit: PAGE })
+    : null,
   q.view === 'grid' && q.filters.capture !== 'planned'
     ? api.listStores({ ...filters, curated: false, sort: q.sort, limit: 6 })
     : null,
@@ -101,12 +103,25 @@ const group = (
     count: f.count,
   }));
   if (current && !list.some((o) => o.selected)) {
-    list.unshift({ label: current, href: storesHref(q.filters, { sort: q.sort }), selected: true, count: allTotal });
+    list.unshift({
+      label: current,
+      href: storesHref(q.filters, { sort: q.sort }),
+      selected: true,
+      count: allTotal,
+    });
   }
   return {
     key,
     label,
-    options: [{ label: allLabel, href: storesHref(withFilter(key, null), { sort: q.sort }), selected: !current, count: null }, ...list],
+    options: [
+      {
+        label: allLabel,
+        href: storesHref(withFilter(key, null), { sort: q.sort }),
+        selected: !current,
+        count: null,
+      },
+      ...list,
+    ],
   };
 };
 
@@ -142,7 +157,8 @@ const firstHref = q.cursor ? storesHref(q.filters, { sort: q.sort, view: q.viewP
 // ---- Copy ---------------------------------------------------------------------------------
 const filterSummary = (() => {
   const parts: string[] = [];
-  const themeLabel = facets.themes.find((f) => f.value === q.filters.theme)?.label ?? q.filters.theme;
+  const themeLabel =
+    facets.themes.find((f) => f.value === q.filters.theme)?.label ?? q.filters.theme;
   const appLabel = facets.apps.find((f) => f.value === q.filters.app)?.label;
   if (q.filters.theme) parts.push(`on ${themeLabel}`);
   if (q.filters.app) parts.push(`running ${appLabel ? shortAppName(appLabel) : q.filters.app}`);
@@ -151,8 +167,13 @@ const filterSummary = (() => {
 const restCount = Math.max(0, allTotal - curatedTotal);
 
 // ---- SEO ----------------------------------------------------------------------------------
-const singleParam = filterCount === 1 && !q.cursor ? (['theme', 'app', 'category'] as const).find((k) => q.filters[k]) : undefined;
-const canonical = singleParam ? `/stores?${singleParam}=${encodeURIComponent(q.filters[singleParam]!)}` : '/stores';
+const singleParam =
+  filterCount === 1 && !q.cursor
+    ? (['theme', 'app', 'category'] as const).find((k) => q.filters[k])
+    : undefined;
+const canonical = singleParam
+  ? `/stores?${singleParam}=${encodeURIComponent(q.filters[singleParam]!)}`
+  : '/stores';
 const noindex = filterCount >= 2 || q.p > 1 || !!q.cursor || q.filters.capture !== undefined;
 const listed = q.view === 'grid' ? curatedItems : all.data.items;
 const site = Astro.site ?? Astro.url;
@@ -171,7 +192,9 @@ const jsonLd = {
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 const asOf = formatDate(meta.data_as_of);
-const title = hasFilters ? `Shopify stores ${filterSummary || 'filtered'}`.trim() : 'Shopify stores, page by page';
+const title = hasFilters
+  ? `Shopify stores ${filterSummary || 'filtered'}`.trim()
+  : 'Shopify stores, page by page';
 ---
 
 <BaseLayout
@@ -185,22 +208,31 @@ const title = hasFilters ? `Shopify stores ${filterSummary || 'filtered'}`.trim(
     <header class="shead cols-12">
       <div class="shead__main span-8">
         <MonoLabel as="p">Index — Stores</MonoLabel>
-        <h1 class="shead__title">Stores<Count value={counts.stores_scanned} label="stores" /></h1>
+        <h1 class="shead__title">
+          Stores
+          <Count value={counts.stores_scanned} label="stores" />
+        </h1>
         <p class="shead__statement display">
           Every store we scanned, read for its theme and apps. The curated ones, page by page.
         </p>
       </div>
       <dl class="shead__specs start-9" aria-label="What the numbers mean">
         <div>
-          <dt class="mlabel mlabel--bullet mlabel--ink"><span class="num">{formatCount(counts.stores_scanned)}</span>&nbsp;detected</dt>
+          <dt class="mlabel mlabel--bullet mlabel--ink">
+            <span class="num">{formatCount(counts.stores_scanned)}</span>&nbsp;detected
+          </dt>
           <dd>Theme and apps on file, from the {asOf} scan.</dd>
         </div>
         <div>
-          <dt class="mlabel mlabel--bullet mlabel--accent mlabel--ink"><span class="num">{counts.stores_curated}</span>&nbsp;curated</dt>
+          <dt class="mlabel mlabel--bullet mlabel--accent mlabel--ink">
+            <span class="num">{counts.stores_curated}</span>&nbsp;curated
+          </dt>
           <dd>Every page planned for capture. Shown as layout previews for now.</dd>
         </div>
         <div>
-          <dt class="mlabel mlabel--bullet"><span class="num">{counts.stores_captured}</span>&nbsp;captured</dt>
+          <dt class="mlabel mlabel--bullet">
+            <span class="num">{counts.stores_captured}</span>&nbsp;captured
+          </dt>
           <dd>Real screenshots arrive with the first capture run.</dd>
         </div>
       </dl>
@@ -210,120 +242,135 @@ const title = hasFilters ? `Shopify stores ${filterSummary || 'filtered'}`.trim(
       <Segmented
         label="Which stores"
         items={[
-          { label: 'Curated', value: 'grid', href: gridHref, selected: q.view === 'grid', count: curatedTotal },
-          { label: 'All detected', value: 'index', href: indexHref, selected: q.view === 'index', count: allTotal },
+          {
+            label: 'Curated',
+            value: 'grid',
+            href: gridHref,
+            selected: q.view === 'grid',
+            count: curatedTotal,
+          },
+          {
+            label: 'All detected',
+            value: 'index',
+            href: indexHref,
+            selected: q.view === 'index',
+            count: allTotal,
+          },
         ]}
       />
       <p class="scope__note">
-        {
-          q.view === 'grid'
-            ? 'Curated stores, shown as captures. Switch to all detected stores for the full catalogue.'
-            : 'Every detected store, numbered. Curated stores are marked with a square and have layout previews.'
-        }
+        {q.view === 'grid'
+          ? 'Curated stores, shown as captures. Switch to all detected stores for the full catalogue.'
+          : 'Every detected store, numbered. Curated stores are marked with a square and have layout previews.'}
       </p>
     </div>
 
     <FilterBar
       groups={groups}
       total={q.view === 'grid' ? curatedItems.length : allTotal}
-      noun={q.view === 'grid' ? (curatedItems.length === 1 ? 'curated store' : 'curated stores') : allTotal === 1 ? 'store' : 'stores'}
+      noun={
+        q.view === 'grid'
+          ? curatedItems.length === 1
+            ? 'curated store'
+            : 'curated stores'
+          : allTotal === 1
+            ? 'store'
+            : 'stores'
+      }
       sort={sortOptions}
       view={{ current: q.view, gridHref, indexHref }}
       clearHref={clearHref}
       class="stores__filters"
     />
 
-    {
-      q.view === 'grid' ? (
-        <section class="stores__results" aria-label="Curated stores">
-          {curatedItems.length > 0 ? (
-            <div class="grid grid--shots stores__grid">
-              {curatedItems.map((s, i) => (
-                <StoreCard
-                  domain={s.domain}
-                  name={s.name}
-                  href={s.href}
-                  shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
-                  meta={`${s.theme.label} · ${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`}
-                  n={i + 1}
-                  eager={i < 3}
-                />
-              ))}
-              {curatedItems.length % 3 === 2 && <PlanTile stores={counts.stores_curated} class="stores__plan" />}
-            </div>
-          ) : (
-            <EmptyState
-              title="No curated store matches"
-              body={
-                restCount > 0
-                  ? `${formatCount(restCount)} detected ${restCount === 1 ? 'store matches' : 'stores match'}, without captures. See them in the index.`
-                  : 'Try removing a filter.'
-              }
-            >
-              {restCount > 0 ? (
-                <Button href={indexHref} size="sm">
-                  Open the index
-                </Button>
-              ) : (
-                <Button href={clearHref} size="sm">
-                  Clear filters
-                </Button>
-              )}
-            </EmptyState>
-          )}
-
-        </section>
-      ) : (
-        <section class="stores__results" aria-label="All detected stores">
-          {all.data.items.length > 0 ? (
-            <StoreIndex
-              items={all.data.items}
-              offset={offset}
-              total={allTotal}
-              nextHref={nextHref}
-              firstHref={firstHref}
-              label="Detected stores"
-            />
-          ) : (
-            <EmptyState
-              title="No stores match these filters"
-              body={
-                q.filters.capture === 'captured'
-                  ? 'No store has real screenshots yet: the first capture run hasn’t happened. Curated stores show layout previews until then.'
-                  : 'Try removing a filter, or browse every detected store.'
-              }
-            >
+    {q.view === 'grid' ? (
+      <section class="stores__results" aria-label="Curated stores">
+        {curatedItems.length > 0 ? (
+          <div class="grid grid--shots stores__grid">
+            {curatedItems.map((s, i) => (
+              <StoreCard
+                domain={s.domain}
+                name={s.name}
+                href={s.href}
+                shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
+                meta={`${s.theme.label} · ${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`}
+                n={i + 1}
+                eager={i < 3}
+              />
+            ))}
+            {curatedItems.length % 3 === 2 && (
+              <PlanTile stores={counts.stores_curated} class="stores__plan" />
+            )}
+          </div>
+        ) : (
+          <EmptyState
+            title="No curated store matches"
+            body={
+              restCount > 0
+                ? `${formatCount(restCount)} detected ${restCount === 1 ? 'store matches' : 'stores match'}, without captures. See them in the index.`
+                : 'Try removing a filter.'
+            }
+          >
+            {restCount > 0 ? (
+              <Button href={indexHref} size="sm">
+                Open the index
+              </Button>
+            ) : (
               <Button href={clearHref} size="sm">
                 Clear filters
               </Button>
-            </EmptyState>
-          )}
-        </section>
-      )
-    }
+            )}
+          </EmptyState>
+        )}
+      </section>
+    ) : (
+      <section class="stores__results" aria-label="All detected stores">
+        {all.data.items.length > 0 ? (
+          <StoreIndex
+            items={all.data.items}
+            offset={offset}
+            total={allTotal}
+            nextHref={nextHref}
+            firstHref={firstHref}
+            label="Detected stores"
+          />
+        ) : (
+          <EmptyState
+            title="No stores match these filters"
+            body={
+              q.filters.capture === 'captured'
+                ? 'No store has real screenshots yet: the first capture run hasn’t happened. Curated stores show layout previews until then.'
+                : 'Try removing a filter, or browse every detected store.'
+            }
+          >
+            <Button href={clearHref} size="sm">
+              Clear filters
+            </Button>
+          </EmptyState>
+        )}
+      </section>
+    )}
 
-    {q.view === 'index' && <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />}
+    {q.view === 'index' && (
+      <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
+    )}
   </div>
 
-  {
-    q.view === 'grid' && restCount > 0 && (
-      <RestOfArchive
-        count={restCount}
-        items={restRes?.data.items ?? []}
-        href={indexHref}
-        filterSummary={filterSummary}
-        source={meta.source.label}
-        asOf={asOf}
-      />
-    )
-  }
-  {
-    q.view === 'grid' && restCount === 0 && (
-      <div class="container">
-        <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
-      </div>
-    )
-  }
+  {q.view === 'grid' && restCount > 0 && (
+    <RestOfArchive
+      count={restCount}
+      items={restRes?.data.items ?? []}
+      href={indexHref}
+      filterSummary={filterSummary}
+      source={meta.source.label}
+      asOf={asOf}
+    />
+  )}
+  {q.view === 'grid' && restCount === 0 && (
+    <div class="container">
+      <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
+    </div>
+  )}
 </BaseLayout>
 
 <style>

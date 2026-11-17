@@ -21,13 +21,18 @@ const { href, title, dek, isSample, noteCount, publishedAt } = Astro.props;
 <section class="tdband" aria-labelledby="tdband-title">
   <div class="container cols-12 tdband__grid">
     <div class="tdband__meta span-4">
-      <MonoLabel as="p" class="tdband__label">Teardown{isSample ? ' · Sample' : ''}</MonoLabel>
+      <MonoLabel as="p" class="tdband__label">
+        Teardown{isSample ? ' · Sample' : ''}
+      </MonoLabel>
       <p class="tdband__facts mono num">
-        {`${noteCount} ${noteCount === 1 ? 'note' : 'notes'} on the plates`}{publishedAt && ` · ${formatDate(publishedAt)}`}
+        {`${noteCount} ${noteCount === 1 ? 'note' : 'notes'} on the plates`}
+        {publishedAt && ` · ${formatDate(publishedAt)}`}
       </p>
     </div>
     <div class="tdband__main span-8">
-      <h2 id="tdband-title" class="tdband__title display"><a href={href}>{title}</a></h2>
+      <h2 id="tdband-title" class="tdband__title display">
+        <a href={href}>{title}</a>
+      </h2>
       {dek && <p class="tdband__dek">{dek}</p>}
       <a class="tdband__cta" href={href} aria-label={`Read the teardown: ${title}`}>
         Read the teardown

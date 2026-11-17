@@ -16,10 +16,13 @@ const { item, n } = Astro.props;
     {item.is_sample && <span class="tdrow__sample">Sample</span>}
     {item.published_at && <span>{formatDate(item.published_at)}</span>}
   </p>
-  <h3 class="tdrow__title display"><a href={item.href}>{item.title}</a></h3>
+  <h3 class="tdrow__title display">
+    <a href={item.href}>{item.title}</a>
+  </h3>
   {item.dek && <p class="tdrow__dek">{item.dek}</p>}
   <p class="tdrow__facts mono">
-    {item.store.domain}{item.theme && ` · ${item.theme.name}`} · {item.note_count}
+    {item.store.domain}
+    {item.theme && ` · ${item.theme.name}`} · {item.note_count}
     {item.note_count === 1 ? ' note' : ' notes'}
   </p>
 </article>

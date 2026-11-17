@@ -13,7 +13,9 @@ test.describe('teardowns', () => {
   for (const slug of ['youngla', 'thesill', 'fishwife']) {
     test(`detail is healthy: ${slug}`, async ({ page }) => {
       await expectHealthyPage(page, `/teardowns/${slug}`);
-      const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join('');
+      const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join(
+        '',
+      );
       expect(ld).toContain('"Article"');
       expect(ld).toContain('BreadcrumbList');
       await expect(page.locator('.td__sheet a[href^="/stores/"]').first()).toBeVisible();

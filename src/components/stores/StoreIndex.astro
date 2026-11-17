@@ -31,40 +31,54 @@ const step = Math.min(items.length, Math.max(0, total - to));
     columns="64px minmax(0,1.5fr) minmax(0,1.15fr) 72px 72px minmax(0,0.95fr) 108px"
     head={['N°', 'Store', 'Theme', 'Apps', 'Currency', 'Capture', 'Detected']}
   >
-    {
-      items.map((s, i) => (
-        <IndexRow
-          n={offset + i + 1}
-          href={s.href}
-          title={s.domain}
-          subtitle={`${s.theme.label} · ${s.is_curated ? 'Layout preview' : 'Not captured'}`}
-          preview={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
-          class:list={['sindex__row', { 'sindex__row--curated': s.is_curated }]}
-          cells={[
-            { value: s.theme.label, muted: !s.theme.name },
-            { value: `${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`, mono: true, mobile: true },
-            { value: s.currency ?? '—', mono: true, muted: !s.currency },
-            { value: s.is_curated ? 'Layout preview' : 'Not captured', muted: !s.is_curated },
-            { value: formatDate(s.first_seen), mono: true, muted: true },
-          ]}
-        />
-      ))
-    }
+    {items.map((s, i) => (
+      <IndexRow
+        n={offset + i + 1}
+        href={s.href}
+        title={s.domain}
+        subtitle={`${s.theme.label} · ${s.is_curated ? 'Layout preview' : 'Not captured'}`}
+        preview={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
+        class:list={['sindex__row', { 'sindex__row--curated': s.is_curated }]}
+        cells={[
+          { value: s.theme.label, muted: !s.theme.name },
+          {
+            value: `${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`,
+            mono: true,
+            mobile: true,
+          },
+          { value: s.currency ?? '—', mono: true, muted: !s.currency },
+          { value: s.is_curated ? 'Layout preview' : 'Not captured', muted: !s.is_curated },
+          { value: formatDate(s.first_seen), mono: true, muted: true },
+        ]}
+      />
+    ))}
   </IndexList>
 
   <div class="sindex__foot" data-store-index-foot>
     <p class="mlabel">
-      <span class="num">{formatCount(from)}–{formatCount(to)}</span>&nbsp;of&nbsp;<span class="num">{formatCount(total)}</span>
+      <span class="num">
+        {formatCount(from)}–{formatCount(to)}
+      </span>
+      &nbsp;of&nbsp;<span class="num">{formatCount(total)}</span>
     </p>
     <div class="sindex__actions">
-      {firstHref && <a class="sindex__first" href={firstHref} rel="nofollow">Back to the top of the list</a>}
-      {
-        nextHref && step > 0 && (
-          <Button href={nextHref} size="sm" variant="secondary" iconRight="arrow-right" rel="nofollow" data-load-more>
-            Load {step} more
-          </Button>
-        )
-      }
+      {firstHref && (
+        <a class="sindex__first" href={firstHref} rel="nofollow">
+          Back to the top of the list
+        </a>
+      )}
+      {nextHref && step > 0 && (
+        <Button
+          href={nextHref}
+          size="sm"
+          variant="secondary"
+          iconRight="arrow-right"
+          rel="nofollow"
+          data-load-more
+        >
+          Load {step} more
+        </Button>
+      )}
     </div>
   </div>
 </div>
@@ -84,7 +98,9 @@ const step = Math.min(items.length, Math.max(0, total - to));
         const next = doc.querySelector<HTMLElement>('[data-store-index]');
         const list = root.querySelector('ol');
         if (!next || !list) throw new Error('missing list');
-        next.querySelectorAll('ol > li').forEach((li) => list.append(document.importNode(li, true)));
+        next
+          .querySelectorAll('ol > li')
+          .forEach((li) => list.append(document.importNode(li, true)));
         const foot = root.querySelector('[data-store-index-foot]');
         const nextFoot = next.querySelector('[data-store-index-foot]');
         const range = foot?.querySelector('.num');

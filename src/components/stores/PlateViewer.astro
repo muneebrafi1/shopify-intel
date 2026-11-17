@@ -37,7 +37,9 @@ const plates = pages.flatMap((p) =>
     .map((d) => ({ page: p, device: d, shot: p.screenshots[d] }))
     .filter((x) => x.shot !== null),
 );
-const plateIndex = plates.findIndex((x) => x.page.page_type.slug === current.page_type.slug && x.device === device);
+const plateIndex = plates.findIndex(
+  (x) => x.page.page_type.slug === current.page_type.slug && x.device === device,
+);
 const pad = (n: number) => String(n).padStart(2, '0');
 
 const tabs = pages.map((p) => ({
@@ -69,108 +71,106 @@ const deviceName = device === 'desktop' ? 'Desktop' : 'Mobile';
 
 <section id="plates" class="plates" aria-label="Pages">
   <div class="plates__top">
-    <MonoLabel as="h2" tone="ink">{label}</MonoLabel>
-    {
-      hasDesktop && hasMobile && (
-        <Segmented
-          label="Device"
-          size="sm"
-          class="plates__device"
-          items={[
-            {
-              label: 'Desktop',
-              value: 'desktop',
-              icon: 'desktop',
-              href: plateHref(basePath, current.page_type.slug, 'desktop', '#plates'),
-              selected: device === 'desktop',
-            },
-            {
-              label: 'Mobile',
-              value: 'mobile',
-              icon: 'device-mobile',
-              href: plateHref(basePath, current.page_type.slug, 'mobile', '#plates'),
-              selected: device === 'mobile',
-            },
-          ]}
-        />
-      )
-    }
+    <MonoLabel as="h2" tone="ink">
+      {label}
+    </MonoLabel>
+    {hasDesktop && hasMobile && (
+      <Segmented
+        label="Device"
+        size="sm"
+        class="plates__device"
+        items={[
+          {
+            label: 'Desktop',
+            value: 'desktop',
+            icon: 'desktop',
+            href: plateHref(basePath, current.page_type.slug, 'desktop', '#plates'),
+            selected: device === 'desktop',
+          },
+          {
+            label: 'Mobile',
+            value: 'mobile',
+            icon: 'device-mobile',
+            href: plateHref(basePath, current.page_type.slug, 'mobile', '#plates'),
+            selected: device === 'mobile',
+          },
+        ]}
+      />
+    )}
   </div>
   <Tabs items={tabs} label="Page type" class="plates__tabs" />
 
   <div class="plates__head">
     <div class="plates__meta">
       <p class="plates__frame mono num">
-        Plate {pad(plateIndex + 1)}<span>/{pad(plates.length)}</span>
+        Plate {pad(plateIndex + 1)}
+        <span>/{pad(plates.length)}</span>
       </p>
-      <p class="plates__what">{current.page_type.name} page · {deviceName}</p>
-      {
-        shot && (
-          <p class="plates__dims mono num">
-            {formatCount(shot.viewport_w)} × {formatCount(shot.height)} px · {shot.sections.length} sections
+      <p class="plates__what">
+        {current.page_type.name} page · {deviceName}
+      </p>
+      {shot && (
+        <p class="plates__dims mono num">
+          {formatCount(shot.viewport_w)} × {formatCount(shot.height)} px · {shot.sections.length}{' '}
+          sections
+        </p>
+      )}
+      {shot?.is_placeholder ? (
+        <div class="plates__status">
+          <MonoLabel tone="accent" as="p">
+            Layout preview — capture pending
+          </MonoLabel>
+          <p class="plates__status-note">
+            Drawn from the sections we expect on this page, with each app where its category usually
+            renders. Not a screenshot.
           </p>
-        )
-      }
-      {
-        shot?.is_placeholder ? (
-          <div class="plates__status">
-            <MonoLabel tone="accent" as="p">Layout preview — capture pending</MonoLabel>
-            <p class="plates__status-note">
-              Drawn from the sections we expect on this page, with each app where its category usually renders. Not a
-              screenshot.
-            </p>
-          </div>
-        ) : (
-          shot?.captured_at && <MonoLabel as="p">Captured {formatDate(shot.captured_at)}</MonoLabel>
-        )
-      }
+        </div>
+      ) : (
+        shot?.captured_at && <MonoLabel as="p">Captured {formatDate(shot.captured_at)}</MonoLabel>
+      )}
     </div>
 
     <ol class="strip" aria-label="All plates">
-      {
-        plates.map((x, i) => {
-          const isCurrent = i === plateIndex;
-          return (
-            <li class:list={['strip__item', `strip__item--${x.device}`, { 'is-current': isCurrent }]}>
-              <Shot
-                src={x.shot!.image.src}
-                width={x.shot!.width}
-                height={x.shot!.height}
-                device={x.device}
-                ratio="1 / 1"
-                alt={`${storeLabel} ${x.page.page_type.name.toLowerCase()} page, ${x.device}`}
-                href={plateHref(basePath, x.page.page_type.slug, x.device, '#plates')}
-                class="strip__shot"
-              />
-              <span class="strip__cap mono num" aria-current={isCurrent ? 'true' : undefined}>
-                <span>{pad(i + 1)}</span> {x.page.page_type.name}
-                <span class="strip__dev" title={x.device === 'desktop' ? 'Desktop' : 'Mobile'}>
-                  <Icon name={x.device === 'desktop' ? 'desktop' : 'device-mobile'} size={11} />
-                </span>
+      {plates.map((x, i) => {
+        const isCurrent = i === plateIndex;
+        return (
+          <li class:list={['strip__item', `strip__item--${x.device}`, { 'is-current': isCurrent }]}>
+            <Shot
+              src={x.shot!.image.src}
+              width={x.shot!.width}
+              height={x.shot!.height}
+              device={x.device}
+              ratio="1 / 1"
+              alt={`${storeLabel} ${x.page.page_type.name.toLowerCase()} page, ${x.device}`}
+              href={plateHref(basePath, x.page.page_type.slug, x.device, '#plates')}
+              class="strip__shot"
+            />
+            <span class="strip__cap mono num" aria-current={isCurrent ? 'true' : undefined}>
+              <span>{pad(i + 1)}</span> {x.page.page_type.name}
+              <span class="strip__dev" title={x.device === 'desktop' ? 'Desktop' : 'Mobile'}>
+                <Icon name={x.device === 'desktop' ? 'desktop' : 'device-mobile'} size={11} />
               </span>
-            </li>
-          );
-        })
-      }
+            </span>
+          </li>
+        );
+      })}
     </ol>
   </div>
 
-  {
-    shot ? (
-      <FullPage
-        src={shot.image.src}
-        width={shot.width}
-        height={shot.height}
-        device={device}
-        alt={`${storeLabel}, ${current.page_type.name.toLowerCase()} page on ${device}${shot.is_placeholder ? ' (layout preview, not a screenshot)' : ''}`}
-        sections={sections}
-        eager
-        class="plates__viewer"
-      />
-    ) : (
-      <p class="plates__missing">No {device} plate for this page.</p>
-    )
-  }
+  {shot ? (
+    <FullPage
+      src={shot.image.src}
+      width={shot.width}
+      height={shot.height}
+      device={device}
+      alt={`${storeLabel}, ${current.page_type.name.toLowerCase()} page on ${device}${shot.is_placeholder ? ' (layout preview, not a screenshot)' : ''}`}
+      sections={sections}
+      eager
+      class="plates__viewer"
+    />
+  ) : (
+    <p class="plates__missing">No {device} plate for this page.</p>
+  )}
 </section>
 
 <style>

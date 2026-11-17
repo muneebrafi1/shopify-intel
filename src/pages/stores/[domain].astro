@@ -33,7 +33,9 @@ if (store.domain !== param) {
   return Astro.redirect(`${store.href}${Astro.url.search}`, 301);
 }
 
-const teardownRes = detail.teardown ? await orNotFound(api.getTeardown({ slug: detail.teardown.slug })) : null;
+const teardownRes = detail.teardown
+  ? await orNotFound(api.getTeardown({ slug: detail.teardown.slug }))
+  : null;
 const basePath = store.href;
 const hasPlates = detail.pages.length > 0;
 const { page, device } = parsePlate(
@@ -52,7 +54,8 @@ const lastSeen = formatDate(detail.detection.last_seen);
 let regionName: string | null = null;
 if (store.country) {
   try {
-    regionName = new Intl.DisplayNames(['en'], { type: 'region' }).of(store.country) ?? store.country;
+    regionName =
+      new Intl.DisplayNames(['en'], { type: 'region' }).of(store.country) ?? store.country;
   } catch {
     regionName = store.country;
   }
@@ -66,8 +69,17 @@ const specs: SpecRow[] = [
     note: store.theme.theme?.vendor ?? (store.theme.name ? 'No theme profile yet' : null),
     muted: !store.theme.name,
   },
-  { label: 'Apps', value: `${store.app_count} detected`, note: detail.apps.unresolved.count ? `${detail.apps.unresolved.count} without a profile` : null },
-  { label: 'Category', value: store.category?.name ?? '—', href: store.category?.href ?? null, muted: !store.category },
+  {
+    label: 'Apps',
+    value: `${store.app_count} detected`,
+    note: detail.apps.unresolved.count ? `${detail.apps.unresolved.count} without a profile` : null,
+  },
+  {
+    label: 'Category',
+    value: store.category?.name ?? '—',
+    href: store.category?.href ?? null,
+    muted: !store.category,
+  },
   {
     label: 'Currency / country',
     value: [store.currency ?? '—', regionName].filter(Boolean).join(' · '),
@@ -135,7 +147,9 @@ const jsonLd = [
       '@type': 'OnlineStore',
       name: title,
       url: store.url,
-      ...(store.country ? { address: { '@type': 'PostalAddress', addressCountry: store.country } } : {}),
+      ...(store.country
+        ? { address: { '@type': 'PostalAddress', addressCountry: store.country } }
+        : {}),
       ...(store.currency ? { currenciesAccepted: store.currency } : {}),
     },
   },
@@ -148,22 +162,35 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 ---
 
 <BaseLayout
-  title={hasPlates ? `${title}: Shopify theme, apps and pages` : `${store.domain}: Shopify theme and apps`}
+  title={
+    hasPlates
+      ? `${title}: Shopify theme, apps and pages`
+      : `${store.domain}: Shopify theme and apps`
+  }
   description={description}
   canonical={basePath}
   noindex={!hasPlates}
   jsonLd={jsonLd}
 >
   <div class="container store">
-    <Breadcrumbs items={[{ label: 'Stores', href: '/stores' }, { label: title }]} class="store__crumbs" />
+    <Breadcrumbs
+      items={[{ label: 'Stores', href: '/stores' }, { label: title }]}
+      class="store__crumbs"
+    />
 
     <header class="shdr cols-12">
       <div class="shdr__id span-8">
         <p class="shdr__label">
           <MonoLabel tone="ink">{n ? `${specimen(n)} — Store` : 'Store'}</MonoLabel>
-          {store.is_curated ? <MonoLabel tone="accent">Curated</MonoLabel> : <MonoLabel>Detected only</MonoLabel>}
+          {store.is_curated ? (
+            <MonoLabel tone="accent">Curated</MonoLabel>
+          ) : (
+            <MonoLabel>Detected only</MonoLabel>
+          )}
         </p>
-        <h1 class="shdr__name" style={`--chars:${nameChars}`}>{title}</h1>
+        <h1 class="shdr__name" style={`--chars:${nameChars}`}>
+          {title}
+        </h1>
         <p class="shdr__statement display">{statement}</p>
         <p class="shdr__links">
           {store.name && <span class="shdr__domain mono">{store.domain}</span>}
@@ -178,26 +205,24 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       </div>
     </header>
 
-    {
-      hasPlates ? (
-        <PlateViewer
-          label={block('Plates')}
-          basePath={basePath}
-          storeLabel={title}
-          pages={detail.pages}
-          page={page}
-          device={device}
-        />
-      ) : (
-        <NotCaptured
-          label={block('Detection')}
-          detectedOn={detail.detection.first_seen}
-          appCount={store.app_count}
-          themeLabel={store.theme.label}
-          pixelCount={detail.pixels.length}
-        />
-      )
-    }
+    {hasPlates ? (
+      <PlateViewer
+        label={block('Plates')}
+        basePath={basePath}
+        storeLabel={title}
+        pages={detail.pages}
+        page={page}
+        device={device}
+      />
+    ) : (
+      <NotCaptured
+        label={block('Detection')}
+        detectedOn={detail.detection.first_seen}
+        appCount={store.app_count}
+        themeLabel={store.theme.label}
+        pixelCount={detail.pixels.length}
+      />
+    )}
 
     <section class="page-block" aria-labelledby="stack-title">
       <SectionHeader
@@ -214,43 +239,40 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       <StackSheet detail={detail} basePath={basePath} class="store__stack" />
     </section>
 
-    {
-      detail.similar.length > 0 && (
-        <section class="page-block" aria-labelledby="similar-title">
-          <SectionHeader
-            id="similar-title"
-            title="Similar stores"
-            count={detail.similar.length}
-            label={block('Similar')}
-            description="Ranked by apps in common, with extra weight for the same theme. From the same scan."
-            href={store.theme.theme ? `/stores?theme=${store.theme.theme.slug}` : undefined}
-            linkLabel={store.theme.theme ? `All stores on ${store.theme.theme.name}` : undefined}
-          />
-          <SimilarStores items={detail.similar} />
-        </section>
-      )
-    }
+    {detail.similar.length > 0 && (
+      <section class="page-block" aria-labelledby="similar-title">
+        <SectionHeader
+          id="similar-title"
+          title="Similar stores"
+          count={detail.similar.length}
+          label={block('Similar')}
+          description="Ranked by apps in common, with extra weight for the same theme. From the same scan."
+          href={store.theme.theme ? `/stores?theme=${store.theme.theme.slug}` : undefined}
+          linkLabel={store.theme.theme ? `All stores on ${store.theme.theme.name}` : undefined}
+        />
+        <SimilarStores items={detail.similar} />
+      </section>
+    )}
   </div>
 
-  {
-    detail.teardown && (
-      <TeardownBand
-        href={detail.teardown.href}
-        title={detail.teardown.title}
-        dek={teardownRes?.data.teardown.dek ?? null}
-        isSample={teardownRes?.data.teardown.is_sample ?? false}
-        noteCount={teardownRes?.data.notes.length ?? 0}
-        publishedAt={teardownRes?.data.teardown.published_at ?? null}
-      />
-    )
-  }
+  {detail.teardown && (
+    <TeardownBand
+      href={detail.teardown.href}
+      title={detail.teardown.title}
+      dek={teardownRes?.data.teardown.dek ?? null}
+      isSample={teardownRes?.data.teardown.is_sample ?? false}
+      noteCount={teardownRes?.data.notes.length ?? 0}
+      publishedAt={teardownRes?.data.teardown.published_at ?? null}
+    />
+  )}
 
   <div class="container">
     <aside class="optout" aria-label="Removal">
       <div>
         <p class="optout__title">Is this your store?</p>
         <p class="optout__body">
-          We only show public pages and what they load. Ask us to remove the store or correct a detail.
+          We only show public pages and what they load. Ask us to remove the store or correct a
+          detail.
         </p>
       </div>
       <a class="optout__link" href={`/opt-out?domain=${encodeURIComponent(store.domain)}`}>
@@ -260,7 +282,9 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     </aside>
     <SourceNote
       class="store__source"
-      source={isPreview ? `${sourceLabel}; layouts are previews from the capture plan` : sourceLabel}
+      source={
+        isPreview ? `${sourceLabel}; layouts are previews from the capture plan` : sourceLabel
+      }
       asOf={asOf}
     />
   </div>

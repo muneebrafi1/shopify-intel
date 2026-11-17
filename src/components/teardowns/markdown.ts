@@ -73,7 +73,8 @@ export function renderMarkdown(src: string, opts: { headingPrefix?: boolean } = 
   const isBlank = (l: string | undefined) => l === undefined || l.trim() === '';
   const isUl = (l: string) => /^\s*[-*]\s+/.test(l);
   const isOl = (l: string) => /^\s*\d+[.)]\s+/.test(l);
-  const isSpecial = (l: string) => /^(#{2,3})\s/.test(l) || /^>/.test(l) || isUl(l) || isOl(l) || /^-{3,}\s*$/.test(l);
+  const isSpecial = (l: string) =>
+    /^(#{2,3})\s/.test(l) || /^>/.test(l) || isUl(l) || isOl(l) || /^-{3,}\s*$/.test(l);
 
   while (i < lines.length) {
     const line = lines[i]!;
@@ -129,7 +130,12 @@ export function renderMarkdown(src: string, opts: { headingPrefix?: boolean } = 
         let item = lines[i]!.replace(ordered ? /^\s*\d+[.)]\s+/ : /^\s*[-*]\s+/, '');
         i++;
         // Continuation lines (indented, not a new item).
-        while (i < lines.length && /^\s{2,}\S/.test(lines[i]!) && !isUl(lines[i]!) && !isOl(lines[i]!)) {
+        while (
+          i < lines.length &&
+          /^\s{2,}\S/.test(lines[i]!) &&
+          !isUl(lines[i]!) &&
+          !isOl(lines[i]!)
+        ) {
           item += ` ${lines[i]!.trim()}`;
           i++;
         }

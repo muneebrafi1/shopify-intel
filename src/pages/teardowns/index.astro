@@ -16,7 +16,8 @@ import { formatDate } from '~/lib/format';
 
 const [{ data }, { data: meta }] = await Promise.all([api.listTeardowns({}), api.getMeta({})]);
 const items = [...data.items].sort(
-  (a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? '') || b.note_count - a.note_count,
+  (a, b) =>
+    (b.published_at ?? '').localeCompare(a.published_at ?? '') || b.note_count - a.note_count,
 );
 const [lead, ...rest] = items;
 const allSamples = items.length > 0 && items.every((t) => t.is_sample);
@@ -47,77 +48,91 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     <header class="tdh cols-12">
       <div class="span-8">
         <MonoLabel as="p">Index — Teardowns</MonoLabel>
-        <h1 class="tdh__title display">Teardowns<Count value={items.length} label="teardowns" /></h1>
+        <h1 class="tdh__title display">
+          Teardowns
+          <Count value={items.length} label="teardowns" />
+        </h1>
         <p class="tdh__lede">
-          One store at a time: the theme, every app we detected and where each one lands on the page. Written from what
-          the scan found, never from estimates.
+          One store at a time: the theme, every app we detected and where each one lands on the
+          page. Written from what the scan found, never from estimates.
         </p>
       </div>
       <div class="tdh__aside start-9">
-        {allSamples && <MonoLabel as="p" tone="accent">All samples for now</MonoLabel>}
+        {allSamples && (
+          <MonoLabel as="p" tone="accent">
+            All samples for now
+          </MonoLabel>
+        )}
         <p class="tdh__note">
-          {
-            allSamples
-              ? 'These show the format. They use detection data from the '
-              : 'Written from detection data from the '
-          }
+          {allSamples
+            ? 'These show the format. They use detection data from the '
+            : 'Written from detection data from the '}
           {asOf} scan; page layouts are previews until the first capture run.
         </p>
       </div>
     </header>
 
-    {
-      lead ? (
-        <section class="tdfront cols-12" aria-label="Teardowns">
-          <div class="tdfront__lead span-7">
-            <MonoLabel as="p" class="tdfront__n">
-              N°01{lead.is_sample ? ' · Sample' : ''}
+    {lead ? (
+      <section class="tdfront cols-12" aria-label="Teardowns">
+        <div class="tdfront__lead span-7">
+          <MonoLabel as="p" class="tdfront__n">
+            N°01{lead.is_sample ? ' · Sample' : ''}
+          </MonoLabel>
+          <TeardownCard
+            slug={lead.slug}
+            title={lead.title}
+            dek={lead.dek}
+            storeLabel={lead.store.domain}
+            publishedAt={lead.published_at}
+            shot={lead.cover ? lead.cover.image : null}
+            size="lg"
+            isSample={lead.is_sample}
+          />
+          <p class="tdfront__facts mono">
+            {lead.theme ? `${lead.theme.name} · ` : ''}
+            {`${lead.note_count} ${lead.note_count === 1 ? 'note' : 'notes'} on the plates`}
+          </p>
+        </div>
+        {rest.length > 0 && (
+          <div class="tdfront__list">
+            <MonoLabel as="h2" tone="ink" class="tdfront__head">
+              More teardowns
             </MonoLabel>
-            <TeardownCard
-              slug={lead.slug}
-              title={lead.title}
-              dek={lead.dek}
-              storeLabel={lead.store.domain}
-              publishedAt={lead.published_at}
-              shot={lead.cover ? lead.cover.image : null}
-              size="lg"
-              isSample={lead.is_sample}
-            />
-            <p class="tdfront__facts mono">
-              {lead.theme ? `${lead.theme.name} · ` : ''}
-              {`${lead.note_count} ${lead.note_count === 1 ? 'note' : 'notes'} on the plates`}
-            </p>
+            {rest.map((t, i) => (
+              <TeardownRow item={t} n={i + 2} />
+            ))}
           </div>
-          {rest.length > 0 && (
-            <div class="tdfront__list">
-              <MonoLabel as="h2" tone="ink" class="tdfront__head">
-                More teardowns
-              </MonoLabel>
-              {rest.map((t, i) => (
-                <TeardownRow item={t} n={i + 2} />
-              ))}
-            </div>
-          )}
-        </section>
-      ) : (
-        <EmptyState title="No teardowns yet" body="The first ones are being written. Browse the stores in the meantime.">
-          <Button href="/stores" size="sm">
-            Browse stores
-          </Button>
-        </EmptyState>
-      )
-    }
+        )}
+      </section>
+    ) : (
+      <EmptyState
+        title="No teardowns yet"
+        body="The first ones are being written. Browse the stores in the meantime."
+      >
+        <Button href="/stores" size="sm">
+          Browse stores
+        </Button>
+      </EmptyState>
+    )}
 
     <section class="tdhow cols-12" aria-labelledby="tdhow-title">
-      <h2 id="tdhow-title" class="tdhow__title display span-5">How a teardown is written</h2>
+      <h2 id="tdhow-title" class="tdhow__title display span-5">
+        How a teardown is written
+      </h2>
       <ol class="tdhow__list">
         <li>
           <span class="mono">01</span>
-          <p>We start from one scan of the store: theme and version, every app we detect, tracking pixels.</p>
+          <p>
+            We start from one scan of the store: theme and version, every app we detect, tracking
+            pixels.
+          </p>
         </li>
         <li>
           <span class="mono">02</span>
-          <p>Each note points at a section on a page plate, numbered the same way as on the store page.</p>
+          <p>
+            Each note points at a section on a page plate, numbered the same way as on the store
+            page.
+          </p>
         </li>
         <li>
           <span class="mono">03</span>

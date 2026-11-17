@@ -21,30 +21,32 @@ const pages = CORE_PAGE_TYPES.map((slug) => PAGE_TYPES.find((p) => p.slug === sl
 ---
 
 <section class="nc" aria-labelledby="nc-title">
-  <MonoLabel as="p" tone="ink" class="nc__label">{label}</MonoLabel>
+  <MonoLabel as="p" tone="ink" class="nc__label">
+    {label}
+  </MonoLabel>
   <div class="nc__stage marks" aria-hidden="true">
     <ol class="nc__plates">
-      {
-        pages.map((p, i) => (
-          <li class="nc__plate">
-            <span class="nc__page">
-              <span class="nc__bar" />
-              <span class="nc__void mono">Not captured</span>
-            </span>
-            <span class="nc__cap mono">
-              <span>{String(i + 1).padStart(2, '0')}</span> {p.name}
-            </span>
-          </li>
-        ))
-      }
+      {pages.map((p, i) => (
+        <li class="nc__plate">
+          <span class="nc__page">
+            <span class="nc__bar" />
+            <span class="nc__void mono">Not captured</span>
+          </span>
+          <span class="nc__cap mono">
+            <span>{String(i + 1).padStart(2, '0')}</span> {p.name}
+          </span>
+        </li>
+      ))}
     </ol>
   </div>
 
   <div class="nc__text">
-    <h2 id="nc-title" class="nc__title display">Not captured yet.</h2>
+    <h2 id="nc-title" class="nc__title display">
+      Not captured yet.
+    </h2>
     <p class="nc__body">
-      We detected its stack on {formatDate(detectedOn)}. Screenshots come with the capture pipeline, which starts with
-      the curated stores.
+      We detected its stack on {formatDate(detectedOn)}. Screenshots come with the capture pipeline,
+      which starts with the curated stores.
     </p>
     <dl class="nc__known">
       <div>

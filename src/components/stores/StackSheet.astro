@@ -35,7 +35,14 @@ for (const device of ['desktop', 'mobile'] as const) {
       if (!s.app) continue;
       const list = placements.get(s.app.slug) ?? [];
       if (!list.some((x) => x.typeSlug === s.type.slug && x.pageSlug === p.page_type.slug)) {
-        list.push({ type: s.type.name, typeSlug: s.type.slug, page: p.page_type.name, pageSlug: p.page_type.slug, device, id: s.id });
+        list.push({
+          type: s.type.name,
+          typeSlug: s.type.slug,
+          page: p.page_type.name,
+          pageSlug: p.page_type.slug,
+          device,
+          id: s.id,
+        });
       }
       placements.set(s.app.slug, list);
     }
@@ -43,9 +50,12 @@ for (const device of ['desktop', 'mobile'] as const) {
 }
 // Which app holds each section type on this store (for "attributed to …").
 const holder = new Map<string, string>();
-for (const g of apps.groups) for (const a of g.apps) for (const s of a.seen_in) if (!holder.has(s.slug)) holder.set(s.slug, a.short_name);
+for (const g of apps.groups)
+  for (const a of g.apps)
+    for (const s of a.seen_in) if (!holder.has(s.slug)) holder.set(s.slug, a.short_name);
 
-type Where = { kind: 'link'; items: { label: string; href: string }[] } | { kind: 'text'; text: string };
+type Where =
+  { kind: 'link'; items: { label: string; href: string }[] } | { kind: 'text'; text: string };
 const whereFor = (a: StoreDetail['apps']['groups'][number]['apps'][number]): Where => {
   const placed = placements.get(a.slug) ?? [];
   if (placed.length) {
@@ -62,7 +72,8 @@ const whereFor = (a: StoreDetail['apps']['groups'][number]['apps'][number]): Whe
   const name = surface.name.toLowerCase();
   if (!hasPlates) return { kind: 'text', text: `Usually renders in the ${name}` };
   const other = holder.get(surface.slug);
-  if (other && other !== a.short_name) return { kind: 'text', text: `${surface.name}: attributed to ${other}` };
+  if (other && other !== a.short_name)
+    return { kind: 'text', text: `${surface.name}: attributed to ${other}` };
   return { kind: 'text', text: `Usually in the ${name}, not on this plan` };
 };
 
@@ -76,96 +87,100 @@ const replaced = theme.history.filter((h) => h.replaced_at);
     <ul class="stack__apps">
       <li class="stack__app">
         <span class="stack__name">
-          <span class="stack__glyph" aria-hidden="true">T</span>
-          {
-            themeInfo.theme ? (
-              <a href={themeInfo.theme.href}>{themeInfo.label}</a>
-            ) : (
-              <span class:list={[{ 'stack__muted': !themeInfo.name }]}>{themeInfo.label}</span>
-            )
-          }
+          <span class="stack__glyph" aria-hidden="true">
+            T
+          </span>
+          {themeInfo.theme ? (
+            <a href={themeInfo.theme.href}>{themeInfo.label}</a>
+          ) : (
+            <span class:list={[{ stack__muted: !themeInfo.name }]}>{themeInfo.label}</span>
+          )}
         </span>
         <span class="stack__where">
-          {themeInfo.theme?.vendor ? `By ${themeInfo.theme.vendor}` : themeInfo.is_custom ? 'Custom theme' : themeInfo.name ? 'No theme profile yet' : 'Not detected on this scan'}
+          {themeInfo.theme?.vendor
+            ? `By ${themeInfo.theme.vendor}`
+            : themeInfo.is_custom
+              ? 'Custom theme'
+              : themeInfo.name
+                ? 'No theme profile yet'
+                : 'Not detected on this scan'}
           {replaced.length > 0 && <> · replaced {replaced.length}×</>}
         </span>
       </li>
     </ul>
   </div>
 
-  {
-    apps.groups.map((g) => (
-      <div class="stack__group">
-        <p class="stack__cat">
-          {g.category ? <a href={g.category.href}>{g.category.name}</a> : 'Other'}
-          <span class="stack__count num">{g.apps.length}</span>
-        </p>
-        <ul class="stack__apps">
-          {g.apps.map((a) => {
-            const where = whereFor(a);
-            return (
-              <li class="stack__app">
-                <a class="stack__name" href={a.href} title={a.name}>
-                  <AppIcon src={a.icon_url} name={a.short_name} size={20} />
-                  <span>{a.short_name}</span>
-                </a>
-                <span class="stack__where">
-                  {where.kind === 'link'
-                    ? where.items.map((w, i) => (
-                        <>
-                          {i > 0 && <span class="stack__sep">·</span>}
-                          <a href={w.href} class="stack__jump">
-                            {w.label}
-                            <Icon name="arrow-right" size={12} />
-                          </a>
-                        </>
-                      ))
-                    : <span class="stack__muted">{where.text}</span>}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    ))
-  }
+  {apps.groups.map((g) => (
+    <div class="stack__group">
+      <p class="stack__cat">
+        {g.category ? <a href={g.category.href}>{g.category.name}</a> : 'Other'}
+        <span class="stack__count num">{g.apps.length}</span>
+      </p>
+      <ul class="stack__apps">
+        {g.apps.map((a) => {
+          const where = whereFor(a);
+          return (
+            <li class="stack__app">
+              <a class="stack__name" href={a.href} title={a.name}>
+                <AppIcon src={a.icon_url} name={a.short_name} size={20} />
+                <span>{a.short_name}</span>
+              </a>
+              <span class="stack__where">
+                {where.kind === 'link' ? (
+                  where.items.map((w, i) => (
+                    <>
+                      {i > 0 && <span class="stack__sep">·</span>}
+                      <a href={w.href} class="stack__jump">
+                        {w.label}
+                        <Icon name="arrow-right" size={12} />
+                      </a>
+                    </>
+                  ))
+                ) : (
+                  <span class="stack__muted">{where.text}</span>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  ))}
 
-  {
-    apps.unresolved.count > 0 && (
-      <div class="stack__group">
-        <p class="stack__cat">Unresolved</p>
-        <div class="stack__body">
-          <p class="stack__lead">
-            +{apps.unresolved.count} {apps.unresolved.count === 1 ? 'detection' : 'detections'} without a profile yet
-          </p>
-          <p class="stack__slugs mono">
-            {apps.unresolved.slugs.map((slug) => (
-              <span>{slug}</span>
-            ))}
-          </p>
-        </div>
+  {apps.unresolved.count > 0 && (
+    <div class="stack__group">
+      <p class="stack__cat">Unresolved</p>
+      <div class="stack__body">
+        <p class="stack__lead">
+          +{apps.unresolved.count} {apps.unresolved.count === 1 ? 'detection' : 'detections'}{' '}
+          without a profile yet
+        </p>
+        <p class="stack__slugs mono">
+          {apps.unresolved.slugs.map((slug) => (
+            <span>{slug}</span>
+          ))}
+        </p>
       </div>
-    )
-  }
+    </div>
+  )}
 
   <div class="stack__group">
     <p class="stack__cat">Pixels</p>
     <div class="stack__body">
-      {
-        pixels.length ? (
-          <ul class="stack__pixels mono">
-            {pixels.map((p) => (
-              <li>{p.name}</li>
-            ))}
-          </ul>
-        ) : (
-          <p class="stack__muted">No tracking pixels detected</p>
-        )
-      }
+      {pixels.length ? (
+        <ul class="stack__pixels mono">
+          {pixels.map((p) => (
+            <li>{p.name}</li>
+          ))}
+        </ul>
+      ) : (
+        <p class="stack__muted">No tracking pixels detected</p>
+      )}
     </div>
   </div>
   <p class="stack__foot mlabel">
-    Detected {formatDate(detail.detection.last_seen)} · rules {detail.detection.rules_version ?? 'unknown'}
+    Detected {formatDate(detail.detection.last_seen)} · rules{' '}
+    {detail.detection.rules_version ?? 'unknown'}
   </p>
 </div>
 

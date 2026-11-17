@@ -19,19 +19,19 @@ const plates = stores * pages.length * 2;
 <article class:list={['plan', className]} aria-label="The capture plan">
   <a class="plan__well" href={href}>
     <span class="plan__sheet" aria-hidden="true">
-      {
-        pages.map((name) => (
-          <span class="plan__col">
-            <span class="plan__frame plan__frame--desktop" />
-            <span class="plan__frame plan__frame--mobile" />
-            <span class="plan__name">{name}</span>
-          </span>
-        ))
-      }
+      {pages.map((name) => (
+        <span class="plan__col">
+          <span class="plan__frame plan__frame--desktop" />
+          <span class="plan__frame plan__frame--mobile" />
+          <span class="plan__name">{name}</span>
+        </span>
+      ))}
     </span>
   </a>
   <div class="plan__caption">
-    <h3 class="plan__title"><a href={href}>The capture plan</a></h3>
+    <h3 class="plan__title">
+      <a href={href}>The capture plan</a>
+    </h3>
     <p class="plan__meta">
       {pages.length} pages × 2 devices · {formatCount(plates)} plates
     </p>

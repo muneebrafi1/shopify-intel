@@ -204,6 +204,14 @@ const to = from + items.length - 1;
 </script>
 
 <style>
+  /* Index hover preview: show the whole crop (strips are wide, mobile slices tall). */
+  .sgrid__index :global(.index__preview img),
+  .sgrid__index :global(.index__preview[data-device='mobile'] img) {
+    aspect-ratio: auto;
+    height: auto;
+    max-height: 360px;
+    object-fit: contain;
+  }
   .sgrid__foot {
     display: flex;
     flex-wrap: wrap;
