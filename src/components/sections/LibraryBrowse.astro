@@ -1,0 +1,137 @@
+---
+/**
+ * The browse block shared by /sections and /sections/<type>: the sticky browse bar (search,
+ * section-type pills, page/theme/app filters, count, sort, grid/list), an optional search
+ * notice, the results and the lightbox. Device is a header switch on wide screens, so its
+ * dropdown steps aside there (it stays in the Filters sheet below 1024px).
+ */
+import BrowseBar, { type FilterGroup, type SortOption } from '~/components/ui/BrowseBar.astro';
+import Notice from '~/components/ui/Notice.astro';
+import type { Device } from '~/lib/taxonomy';
+import type { SectionCard } from '~/server/api/v1/types';
+import SectionGrid from './SectionGrid.astro';
+import SectionLightbox from './SectionLightbox.astro';
+
+interface Props {
+  groups: FilterGroup[];
+  sort: SortOption[];
+  items: SectionCard[];
+  total: number;
+  tag: 'type' | 'page';
+  page: number;
+  pageSize: number;
+  nextHref: string | null;
+  firstHref: string;
+  clearHref: string;
+  device?: Device | undefined;
+  view: { current: 'grid' | 'index'; gridHref: string; indexHref: string };
+  search: { value: string; hidden: Record<string, string | undefined> };
+  /** The search box query that matched nothing. */
+  unmatched?: string | null;
+  class?: string;
+}
+const {
+  groups,
+  sort,
+  items,
+  total,
+  tag,
+  page,
+  pageSize,
+  nextHref,
+  firstHref,
+  clearHref,
+  device,
+  view,
+  search,
+  unmatched,
+  class: className,
+} = Astro.props;
+---
+
+<div class:list={['lib', className]}>
+  <BrowseBar
+    class="lib__bar"
+    groups={groups}
+    pills="type"
+    total={total}
+    noun={total === 1 ? 'section' : 'sections'}
+    sort={sort}
+    view={view}
+    clearHref={clearHref}
+    search={{
+      value: search.value,
+      placeholder: 'Search type, theme, app, store',
+      hidden: search.hidden,
+    }}
+  />
+  <div class="lib__results" id="results" tabindex="-1">
+    <slot name="lead" />
+    {unmatched && (
+      <Notice class="lib__notice" title={`Nothing in the library matches “${unmatched}”`}>
+        Search looks for a section type, theme, app or store name.{' '}
+        <a href={`/search?q=${encodeURIComponent(unmatched)}`}>Search the whole site</a>
+      </Notice>
+    )}
+    <SectionGrid
+      items={items}
+      total={total}
+      tag={tag}
+      page={page}
+      pageSize={pageSize}
+      nextHref={nextHref}
+      firstHref={firstHref}
+      clearHref={clearHref}
+      device={device}
+      view={view.current}
+    />
+  </div>
+  <SectionLightbox />
+</div>
+
+<script>
+  // Bring the selected type pill into view (the row scrolls sideways; 31 types don't fit).
+  // Run again once fonts and styles have settled, since pill widths change with them.
+  const revealPill = () =>
+    document.querySelectorAll<HTMLElement>('.lib .fbar__pills').forEach((row) => {
+      const on = row.querySelector<HTMLElement>('[aria-current], .chip--selected');
+      if (!on || on === row.firstElementChild) return;
+      // Keep the pill before it fully in view, so the row reads as a continuation.
+      const prev = on.previousElementSibling as HTMLElement | null;
+      const target = (prev ?? on).getBoundingClientRect().left;
+      row.scrollLeft += target - row.getBoundingClientRect().left - 2;
+    });
+  revealPill();
+  void document.fonts?.ready.then(revealPill);
+  window.addEventListener('load', revealPill, { once: true });
+</script>
+
+<style>
+  .lib__results {
+    margin-top: var(--space-5);
+    scroll-margin-top: calc(var(--header-h) + 72px);
+  }
+  .lib__results:focus {
+    outline: none;
+  }
+  .lib :global(.lib__notice) {
+    margin-bottom: var(--space-5);
+  }
+  .lib :global(.lib__notice a) {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  @media (min-width: 1024px) {
+    /* Device lives in the header switch here (the first dropdown after the type pills). */
+    .lib :global(.fbar__groups > details.fpill:first-of-type) {
+      display: none;
+    }
+    /* 31 type pills would squeeze the search to its icon: give it a fixed width. */
+    .lib :global(.fbar__search) {
+      flex: 0 0 clamp(200px, 18vw, 260px);
+    }
+    .lib__results {
+      margin-top: var(--space-6);
+    }
+  }
+</style>

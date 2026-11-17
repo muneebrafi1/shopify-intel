@@ -1,10 +1,11 @@
 ---
 /**
- * Lightbox for the library grid (progressive enhancement, ≥768px wide). A click on a card opens
- * a native <dialog> with the same "section in focus" markup the detail page renders (fetched
- * from that page), and pushes the section's URL so back/forward, reload and sharing all work.
- * ← → step through the grid in order (loading the next page at the end), Esc closes.
- * Without JavaScript, or on small screens, cards are plain links to the detail page.
+ * Lightbox for the library grid (progressive enhancement). A click on a card opens a native
+ * modal <dialog> (focus stays inside, the page behind is inert, Esc closes) with the same
+ * "section in focus" markup the detail page renders (fetched from that page), and pushes the
+ * section's URL so back/forward, reload and sharing all work. ← → (or a swipe, or the arrow
+ * buttons) step through the grid in order, loading the next page at the end. Below 768px it
+ * is a full-screen sheet with prev/next in a bottom bar. Without JavaScript cards are links.
  */
 import Icon from '~/components/ui/Icon.astro';
 import Kbd from '~/components/ui/Kbd.astro';
@@ -17,9 +18,9 @@ void SectionFocus;
 
 <dialog class="lb" aria-label="Section" data-lb>
   <div class="lb__bar">
-    <p class="lb__count mlabel">
+    <p class="lb__count">
       <span class="num" data-lb-pos>
-        01
+        1
       </span>
       <span class="lb__of">of</span>
       <span class="num" data-lb-total>
@@ -28,8 +29,16 @@ void SectionFocus;
     </p>
     <p class="lb__keys" aria-hidden="true">
       <Kbd>←</Kbd>
-      <Kbd>→</Kbd> browse <span class="lb__sep">·</span> <Kbd>Esc</Kbd> close
+      <Kbd>→</Kbd>
+      <span>browse</span>
+      <span class="lb__sep">·</span>
+      <Kbd>Esc</Kbd>
+      <span>close</span>
     </p>
+    <a class="lb__page" href="/sections" data-lb-page>
+      Section page
+      <Icon name="arrow-right" size={14} />
+    </a>
     <button type="button" class="lb__close" data-lb-close aria-label="Close">
       <Icon name="x" size={18} />
     </button>
@@ -38,40 +47,50 @@ void SectionFocus;
     <button type="button" class="lb__nav lb__nav--prev" data-lb-prev aria-label="Previous section">
       <Icon name="caret-left" size={18} />
     </button>
-    <div class="lb__body" data-lb-body aria-live="polite" tabindex="-1" autofocus></div>
+    <div class="lb__body" data-lb-body tabindex="-1" autofocus></div>
     <button type="button" class="lb__nav lb__nav--next" data-lb-next aria-label="Next section">
       <Icon name="caret-right" size={18} />
     </button>
   </div>
+  <div class="lb__foot">
+    <button type="button" class="lb__step" data-lb-prev aria-label="Previous section">
+      <Icon name="arrow-left" size={16} />
+      <span aria-hidden="true">Previous</span>
+    </button>
+    <button type="button" class="lb__step" data-lb-next aria-label="Next section">
+      <span aria-hidden="true">Next</span>
+      <Icon name="arrow-right" size={16} />
+    </button>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-lb-live></p>
 </dialog>
 
 <script>
   const dialog = document.querySelector<HTMLDialogElement>('[data-lb]');
   const grid = document.querySelector<HTMLElement>('[data-sgrid]');
-  const wide = matchMedia('(min-width: 768px)');
 
   if (dialog && grid) {
     const body = dialog.querySelector<HTMLElement>('[data-lb-body]')!;
     const pos = dialog.querySelector<HTMLElement>('[data-lb-pos]')!;
     const totalEl = dialog.querySelector<HTMLElement>('[data-lb-total]')!;
-    const prevBtn = dialog.querySelector<HTMLButtonElement>('[data-lb-prev]')!;
-    const nextBtn = dialog.querySelector<HTMLButtonElement>('[data-lb-next]')!;
+    const pageLink = dialog.querySelector<HTMLAnchorElement>('[data-lb-page]')!;
+    const live = dialog.querySelector<HTMLElement>('[data-lb-live]')!;
+    const prevBtns = Array.from(dialog.querySelectorAll<HTMLButtonElement>('[data-lb-prev]'));
+    const nextBtns = Array.from(dialog.querySelectorAll<HTMLButtonElement>('[data-lb-next]'));
     const parser = new DOMParser();
     const cache = new Map<string, Promise<Element | null>>();
     const baseTitle = document.title;
+    const fmt = (n: number) => n.toLocaleString('en-US');
     let current = '';
     let pushed = false;
     let closingFromHistory = false;
     let returnFocus: HTMLElement | null = null;
 
-    totalEl.textContent = Number(grid.dataset.total ?? 0).toLocaleString('en-US');
-    const pad = (n: number) => String(n).padStart(2, '0');
+    totalEl.textContent = fmt(Number(grid.dataset.total ?? 0));
 
-    // One link per card (grid view) or per row (index view).
-    const ITEMS = '.section-card a.crop, [data-sgrid-index] .irow__link';
-    /** Section links in grid order. */
+    /** Section links in grid order (cards or list rows). */
     const links = () =>
-      Array.from(grid.querySelectorAll<HTMLAnchorElement>(ITEMS)).map(
+      Array.from(grid.querySelectorAll<HTMLAnchorElement>('[data-ccard-link]')).map(
         (a) => new URL(a.href, location.href).pathname,
       );
 
@@ -104,15 +123,17 @@ void SectionFocus;
     const syncNav = () => {
       const list = links();
       const i = list.indexOf(current);
-      pos.textContent = pad(i + 1);
-      prevBtn.disabled = i <= 0;
-      nextBtn.disabled = i >= list.length - 1 && !grid.querySelector('[data-sgrid-more]');
+      pos.textContent = fmt(i + 1);
+      const more = !!grid.querySelector('[data-sgrid-more]');
+      prevBtns.forEach((b) => (b.disabled = i <= 0));
+      nextBtns.forEach((b) => (b.disabled = i >= list.length - 1 && !more));
       return { list, i };
     };
 
     async function show(href: string, mode: 'push' | 'replace' | 'none') {
       current = href;
       const { list, i } = syncNav();
+      pageLink.href = href;
       body.setAttribute('aria-busy', 'true');
       if (!dialog!.open) {
         dialog!.showModal();
@@ -134,7 +155,10 @@ void SectionFocus;
       body.replaceChildren(node);
       body.removeAttribute('aria-busy');
       body.scrollTop = 0;
-      document.title = `${node.dataset.title ?? 'Section'} · ${baseTitle.split(' · ').pop()}`;
+      const title = node.dataset.title ?? 'Section';
+      dialog!.setAttribute('aria-label', title);
+      live.textContent = `${title}, ${i + 1} of ${totalEl.textContent}`;
+      document.title = `${title} · ${baseTitle.split(' · ').pop()}`;
       // Warm the neighbours so stepping feels instant.
       [list[i - 1], list[i + 1]].forEach((h) => h && void fetchFocus(h));
     }
@@ -144,7 +168,7 @@ void SectionFocus;
       const target = list[i + dir];
       if (target) return void show(target, 'replace');
       if (dir === 1 && grid!.querySelector('[data-sgrid-more]')) {
-        nextBtn.disabled = true;
+        nextBtns.forEach((b) => (b.disabled = true));
         document.dispatchEvent(
           new CustomEvent('sgrid:more', {
             detail: { done: (ok: boolean) => ok && step(1) },
@@ -153,9 +177,7 @@ void SectionFocus;
       }
     }
 
-    function close() {
-      if (dialog!.open) dialog!.close();
-    }
+    const close = () => dialog.open && dialog.close();
 
     dialog.addEventListener('close', () => {
       document.documentElement.classList.remove('lb-open');
@@ -169,10 +191,8 @@ void SectionFocus;
     });
 
     grid.addEventListener('click', (event) => {
-      const a = (event.target as HTMLElement).closest<HTMLAnchorElement>(
-        '.section-card a, .irow__link',
-      );
-      if (!a || !wide.matches) return;
+      const a = (event.target as HTMLElement).closest<HTMLAnchorElement>('[data-ccard-link]');
+      if (!a) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
         return;
       event.preventDefault();
@@ -187,8 +207,31 @@ void SectionFocus;
       else if (t.closest('[data-lb-next]')) step(1);
     });
 
-    document.addEventListener('keydown', (event) => {
-      if (!dialog.open || event.metaKey || event.ctrlKey || event.altKey) return;
+    // Keep Tab inside the dialog (a modal <dialog> alone lets focus escape to the browser UI).
+    const FOCUSABLE =
+      'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusables = () =>
+      Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.offsetParent !== null || el === document.activeElement,
+      );
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Tab') return;
+      const list = focusables();
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (!first || !last) return;
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !dialog.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
       if ((event.target as HTMLElement).closest('input, textarea, select')) return;
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
@@ -198,6 +241,28 @@ void SectionFocus;
         step(1);
       }
     });
+
+    // Swipe left/right on touch screens.
+    let sx = 0;
+    let sy = 0;
+    body.addEventListener(
+      'touchstart',
+      (event) => {
+        const t = event.changedTouches[0];
+        if (t) [sx, sy] = [t.clientX, t.clientY];
+      },
+      { passive: true },
+    );
+    body.addEventListener(
+      'touchend',
+      (event) => {
+        const t = event.changedTouches[0];
+        if (!t) return;
+        const dx = t.clientX - sx;
+        if (Math.abs(dx) > 64 && Math.abs(t.clientY - sy) < 40) step(dx < 0 ? 1 : -1);
+      },
+      { passive: true },
+    );
 
     window.addEventListener('popstate', (event) => {
       const href = (event.state as { lb?: string } | null)?.lb;
@@ -219,25 +284,27 @@ void SectionFocus;
 <style>
   .lb {
     width: calc(100vw - 48px);
-    max-width: 1480px;
+    max-width: 1400px;
     height: calc(100dvh - 48px);
     max-height: none;
     margin: auto;
     padding: 0;
     border: 0;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-band);
     background: var(--bg);
     color: var(--ink);
-    box-shadow: var(--shadow-float);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-lg);
     overflow: hidden;
     flex-direction: column;
   }
   .lb[open] {
     display: flex;
-    animation: lb-in var(--dur-base) var(--ease-out);
+    animation: lb-in var(--dur-slow) var(--ease-out);
   }
   .lb::backdrop {
-    background: rgb(25 24 22 / 0.55);
+    background: var(--overlay);
   }
   @keyframes lb-in {
     from {
@@ -251,38 +318,65 @@ void SectionFocus;
   .lb__bar {
     display: flex;
     align-items: center;
-    gap: var(--space-5);
-    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6);
+    gap: var(--space-4);
+    min-height: 56px;
+    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
     border-bottom: 1px solid var(--line);
   }
   .lb__count {
+    display: inline-flex;
     gap: 6px;
     color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
   }
   .lb__of {
     color: var(--ink-3);
+    font-weight: var(--weight-regular);
   }
   .lb__keys {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 4px;
-    margin-left: auto;
     color: var(--ink-3);
     font-size: var(--text-xs);
+  }
+  .lb__keys > span:not(.lb__sep) {
+    margin-left: 2px;
   }
   .lb__sep {
     margin-inline: 4px;
   }
+  .lb__page {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    margin-left: auto;
+    padding: 0 10px;
+    border-radius: var(--radius-control);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .lb__page:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
   .lb__close {
     display: inline-grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-pill);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-control);
     color: var(--ink-2);
+    transition: background-color var(--dur-fast) var(--ease-out);
   }
   .lb__close:hover {
-    background: var(--fill);
+    background: var(--surface-2);
     color: var(--ink);
   }
   .lb__frame {
@@ -290,14 +384,13 @@ void SectionFocus;
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) 64px;
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
   }
   .lb__body {
     height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: var(--space-6) var(--space-4);
+    padding: var(--space-5) var(--page-gutter) var(--space-8);
     scrollbar-width: thin;
   }
   .lb__body:focus {
@@ -308,42 +401,106 @@ void SectionFocus;
     transition: opacity var(--dur-base) var(--ease-out);
   }
   .lb__nav {
-    align-self: center;
-    justify-self: center;
-    display: inline-grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-pill);
-    background: var(--surface);
-    box-shadow: var(--shadow-float);
-    color: var(--ink);
-    transition: background-color var(--dur-fast) var(--ease-out);
-  }
-  .lb__nav:hover {
-    background: var(--fill);
-  }
-  .lb__nav:disabled {
-    opacity: 0.35;
-    box-shadow: var(--shadow-hairline);
-    cursor: default;
-  }
-  .lb__nav:focus-visible {
-    border-radius: var(--radius-pill);
-  }
-  /* The fragment's own type-order stepper is replaced by the grid-order arrows here. */
-  .lb__body :global([data-sf-seq]),
-  .lb__body :global([data-sf-keys]) {
     display: none;
   }
-  /* Inside the dialog the sheet scrolls with the stage instead of sticking to the page header. */
-  .lb__body :global(.sf__sheet) {
-    top: 0;
+  .lb__foot {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--page-gutter) calc(var(--space-2) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--bg);
   }
-  .lb__body :global(.sf__stage) {
-    --maxh: calc(100dvh - 300px);
+  .lb__step {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
   }
-  .lb__body :global(h2[data-sf-title]) {
-    font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+  .lb__step:disabled,
+  .lb__nav:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* Below 768: a full-screen sheet that slides up. */
+  @media (max-width: 767px) {
+    .lb {
+      width: 100vw;
+      max-width: none;
+      height: 100dvh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .lb[open] {
+      animation-name: lb-sheet;
+    }
+    @keyframes lb-sheet {
+      from {
+        transform: translateY(32px);
+        opacity: 0;
+      }
+    }
+    .lb__bar {
+      padding-left: var(--page-gutter);
+    }
+  }
+  @media (min-width: 768px) {
+    .lb__foot {
+      display: none;
+    }
+    .lb__frame {
+      grid-template-columns: 64px minmax(0, 1fr) 64px;
+    }
+    .lb__body {
+      padding: var(--space-6) var(--space-2) var(--space-10);
+    }
+    .lb__nav {
+      align-self: center;
+      justify-self: center;
+      display: inline-grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-pill);
+      background: var(--surface);
+      box-shadow:
+        inset 0 0 0 1px var(--line-strong),
+        var(--shadow-sm);
+      color: var(--ink);
+      transition: background-color var(--dur-fast) var(--ease-out);
+    }
+    .lb__nav:hover:not(:disabled) {
+      background: var(--surface-2);
+    }
+  }
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+    .lb__keys {
+      display: inline-flex;
+    }
+  }
+
+  /* The fragment's own type-order stepper is replaced by the grid-order arrows here. */
+  .lb__body :global([data-sf-seq]) {
+    display: none;
+  }
+  /* Fit the crop to the dialog, under its bar and the identity row. */
+  .lb__body :global(.sf .sf__plate) {
+    --maxh: calc(100dvh - 380px);
+    min-height: 200px;
+  }
+  .lb__body :global(.sf--long .sf__plate) {
+    max-height: calc(100dvh - 300px);
+  }
+  /* Inside the dialog the facts don't stick to the page header. */
+  .lb__body :global(.fcard--sticky) {
+    position: static;
   }
 </style>

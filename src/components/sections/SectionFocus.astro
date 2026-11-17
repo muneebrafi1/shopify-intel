@@ -1,28 +1,31 @@
 ---
 /**
- * One section, in focus: the crop large on a calm stage with crop marks, and a 320px spec sheet
- * (mono labels, sans values) with the actions. The detail page renders it as its hero; the
- * library's lightbox fetches the same markup (`[data-section-focus]`) from the detail page, so
- * there is one source of truth for both.
+ * One section in focus: an identity row (type on store, page/device/app badges, prev/next in
+ * the type, Save, Open in full page), the crop large in a product Window, and a facts card.
+ * The detail page renders it as its hero; the library's lightbox fetches the same markup
+ * (`[data-section-focus]`) from the detail page, so there is one source of truth for both.
  */
 import SaveButton from '~/components/domain/SaveButton.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
+import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
+import FactsCard from '~/components/ui/FactsCard.astro';
+import Icon from '~/components/ui/Icon.astro';
 import Kbd from '~/components/ui/Kbd.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
+import Window from '~/components/ui/Window.astro';
 import { formatDate } from '~/lib/format';
-import { pageTypeName } from '~/lib/taxonomy';
-import type { SectionDetail } from '~/server/api/v1/types';
-import { pagePhrase } from './library';
+import type { SectionDetail, StoreListItem } from '~/server/api/v1/types';
+import { fmt, pageLabel, pagePhrase } from './library';
 
 interface Props {
   detail: SectionDetail;
   /** Source line for the capture ("Planned capture layouts …", date). */
   source: { label: string; asOf: string };
+  /** The store's list entry (theme version, storefront URL, scan dates), when found. */
+  store?: StoreListItem | null;
   class?: string;
 }
-const { detail, source, class: className } = Astro.props;
+const { detail, source, store, class: className } = Astro.props;
 const { section: s, screenshot: shot, in_type: seq } = detail;
 
 const ordered = [...shot.sections].sort((a, b) => a.order_index - b.order_index);
@@ -30,182 +33,335 @@ const index = Math.max(
   0,
   ordered.findIndex((x) => x.id === s.id),
 );
-const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+const page = pageLabel(s.page_type);
 const deviceLabel = s.device === 'mobile' ? 'Mobile' : 'Desktop';
 const fullPageHref = `${s.store.href}?page=${s.page_type}&device=${s.device}#section-${s.id}`;
 const captured = shot.captured_at && !s.is_placeholder ? formatDate(shot.captured_at) : null;
+const themeLabel = store?.theme.label ?? s.theme?.name ?? 'Custom theme';
+const themeHref = store?.theme.theme?.href ?? s.theme?.href;
+const scanned = store?.last_seen ? formatDate(store.last_seen) : null;
+const storeUrl = store?.url ?? `https://${s.store.domain}`;
 const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.width}px`;
+// Long sections (a desktop product grid, a mobile footer) would shrink to a sliver if fitted to
+// the height: show them at full width in a plate that scrolls instead.
+const long = s.crop.height / s.crop.width > (s.device === 'mobile' ? 2.4 : 1);
 ---
 
 <div
-  class:list={['sf', `sf--${s.device}`, className]}
+  class:list={['sf', `sf--${s.device}`, { 'sf--long': long }, className]}
   data-section-focus
   data-id={s.id}
   data-title={`${s.type.name} on ${s.store.display_name}`}
 >
-  <figure class="sf__stage marks">
-    <div class="sf__plate" style={plateStyle}>
-      <img
-        class="sf__img"
-        src={s.crop.src}
-        alt={`${s.type.name} section on ${s.store.display_name}, ${pagePhrase(s.page_type, s.device)}`}
-        width={s.crop.width}
-        height={s.crop.height}
-        decoding="async"
-        fetchpriority="high"
-      />
+  <header class="sf__head">
+    <div class="sf__id">
+      <h1 class="sf__title" data-sf-title>
+        {s.type.name} <span class="tone-muted">on {s.store.display_name}</span>
+      </h1>
+      <div class="sf__badges">
+        <Badge tone="outline">{page}</Badge>
+        <Badge tone="outline" icon={s.device === 'mobile' ? 'device-mobile' : 'desktop'}>
+          {deviceLabel} · {shot.viewport_w}px
+        </Badge>
+        {s.app ? (
+          <a href={s.app.href} class="sf__app-badge">
+            <AppIcon src={s.app.icon_url} name={s.app.short_name} size={16} />
+            {s.app.short_name}
+          </a>
+        ) : (
+          <Badge tone="neutral">Rendered by the theme</Badge>
+        )}
+      </div>
     </div>
-    <figcaption class="sf__cap">
-      <span>{s.store.domain}</span>
-      <span aria-hidden="true">·</span>
-      <span>{pageTypeName(s.page_type)}</span>
-      <span aria-hidden="true">·</span>
-      <span>{deviceLabel}</span>
-      <span class="sf__cap-n num">
-        {pad(index + 1)}/{pad(ordered.length)}
-      </span>
-    </figcaption>
-  </figure>
-
-  <aside class="sf__sheet" aria-label="Section details">
-    <MonoLabel as="p" tone="accent" class="sf__label">
-      N°{pad(seq.position, 3)} of {seq.total} · {s.type.group.name}
-    </MonoLabel>
-    <h1 class="sf__title" data-sf-title>
-      {s.type.name}
-      <span class="sf__on">on {s.store.display_name}</span>
-    </h1>
 
     <div class="sf__actions">
-      <Button href={fullPageHref} variant="primary" iconRight="arrow-right" class="sf__open">
+      <nav class="sf__seq" aria-label={`Browse ${s.type.name.toLowerCase()} sections`} data-sf-seq>
+        {seq.prev ? (
+          <a class="sf__step" href={seq.prev.href} rel="prev" data-sf-prev>
+            <Icon name="arrow-left" size={16} />
+            <span class="visually-hidden">Previous {s.type.name.toLowerCase()} section</span>
+          </a>
+        ) : (
+          <span class="sf__step is-off" aria-hidden="true">
+            <Icon name="arrow-left" size={16} />
+          </span>
+        )}
+        <span class="sf__count">
+          <span class="num">{fmt(seq.position)}</span>
+          <span class="sf__of">of</span>
+          <span class="num">{fmt(seq.total)}</span>
+        </span>
+        {seq.next ? (
+          <a class="sf__step" href={seq.next.href} rel="next" data-sf-next>
+            <Icon name="arrow-right" size={16} />
+            <span class="visually-hidden">Next {s.type.name.toLowerCase()} section</span>
+          </a>
+        ) : (
+          <span class="sf__step is-off" aria-hidden="true">
+            <Icon name="arrow-right" size={16} />
+          </span>
+        )}
+      </nav>
+      <SaveButton itemType="section" itemId={s.id} size="md" />
+      <Button href={fullPageHref} variant="primary" arrow class="sf__open">
         Open in full page
       </Button>
-      <SaveButton itemType="section" itemId={s.id} size="md" />
     </div>
+  </header>
 
-    <dl class="sf__rows">
-      <div class="sf__row">
-        <dt>Store</dt>
+  <div class="sf__main">
+    <figure class="sf__figure">
+      <Window url={s.store.domain} class="sf__window" bodyClass="sf__well">
+        <span slot="toolbar" class="sf__dims">
+          {s.crop.width} × {s.crop.height}
+        </span>
+        <div
+          class="sf__plate"
+          style={plateStyle}
+          tabindex={long ? 0 : undefined}
+          aria-label={long ? 'Section crop (scrolls)' : undefined}
+        >
+          <img
+            class="sf__img"
+            src={s.crop.src}
+            alt={`${s.type.name} section on ${s.store.display_name}, ${pagePhrase(s.page_type, s.device)}`}
+            width={s.crop.width}
+            height={s.crop.height}
+            decoding="async"
+            fetchpriority="high"
+          />
+        </div>
+      </Window>
+      <figcaption class="sf__cap">
+        <span>
+          Section <span class="num">{index + 1}</span> of <span class="num">{ordered.length}</span>{' '}
+          on the {page.toLowerCase()}
+          {long && <span class="sf__scroll-hint"> · scroll the crop to see all of it</span>}
+        </span>
+        <span class="sf__keys" data-sf-seq>
+          <Kbd>←</Kbd>
+          <Kbd>→</Kbd> more {s.type.name.toLowerCase()} sections
+        </span>
+      </figcaption>
+    </figure>
+
+    <FactsCard
+      class="sf__facts"
+      title="Section facts"
+      sticky
+      source={source.label}
+      asOf={source.asOf}
+      items={[
+        { label: 'Store', value: s.store.display_name, href: s.store.href },
+        ...(s.store.display_name !== s.store.domain
+          ? [{ label: 'Domain', value: s.store.domain, mono: true }]
+          : []),
+        { label: 'Theme', value: themeLabel, ...(themeHref ? { href: themeHref } : {}) },
+        { label: 'Page type', value: page },
+        { label: 'Device', value: `${deviceLabel}, ${shot.viewport_w}px viewport` },
+        { label: 'Position', value: `${index + 1} of ${ordered.length} on the page` },
+        { label: 'Size', value: `${s.crop.width} × ${s.crop.height} px`, mono: true },
+      ]}
+    >
+      <div class="facts__row">
+        <dt>App</dt>
         <dd>
-          <a href={s.store.href}>{s.store.display_name}</a>
-        </dd>
-      </div>
-      <div class="sf__row">
-        <dt>Theme</dt>
-        <dd>
-          {s.theme ? (
-            <a href={s.theme.href}>{s.theme.name}</a>
+          {s.app ? (
+            <a href={s.app.href} class="sf__app">
+              <AppIcon src={s.app.icon_url} name={s.app.short_name} size={16} />
+              <span>{s.app.short_name}</span>
+            </a>
           ) : (
-            <span class="sf__muted">Custom theme</span>
+            <span class="sf__muted">None (theme section)</span>
           )}
         </dd>
       </div>
-      <div class="sf__row">
-        <dt>Page type</dt>
-        <dd>{pageTypeName(s.page_type)}</dd>
-      </div>
-      <div class="sf__row">
-        <dt>Device</dt>
+      <div class="facts__row">
+        <dt>Captured</dt>
         <dd>
-          {deviceLabel} <span class="sf__mono">{shot.viewport_w}px</span>
+          {captured ? (
+            <span class="mono">{captured}</span>
+          ) : (
+            <span class="sf__muted">Not yet, layout preview</span>
+          )}
         </dd>
       </div>
-      <div class="sf__row">
-        <dt>Position</dt>
-        <dd>
-          Section <span class="num">{pad(index + 1)}</span> of{' '}
-          <span class="num">{pad(ordered.length)}</span>
-        </dd>
-      </div>
-      {s.app && (
-        <div class="sf__row">
-          <dt>App</dt>
-          <dd>
-            <a href={s.app.href} class="sf__app">
-              <AppIcon src={s.app.icon_url} name={s.app.short_name} size={18} />
-              <span>{s.app.short_name}</span>
-            </a>
-          </dd>
+      {scanned && (
+        <div class="facts__row">
+          <dt>Store scanned</dt>
+          <dd class="mono">{scanned}</dd>
         </div>
       )}
-      <div class="sf__row">
-        <dt>Size</dt>
-        <dd class="sf__mono">
-          {s.crop.width} × {s.crop.height}
-        </dd>
-      </div>
-      <div class="sf__row">
-        <dt>Captured</dt>
-        <dd>{captured ?? <span class="sf__muted">Layout preview — capture pending</span>}</dd>
-      </div>
-    </dl>
-
-    <nav class="sf__seq" aria-label={`More ${s.type.name.toLowerCase()} sections`} data-sf-seq>
-      {seq.prev ? (
-        <a class="sf__step" href={seq.prev.href} rel="prev" data-sf-prev>
-          <span aria-hidden="true">←</span> Previous
-        </a>
-      ) : (
-        <span class="sf__step is-off" aria-hidden="true">
-          <span>←</span> Previous
-        </span>
-      )}
-      <span class="sf__count">
-        <span class="num">{pad(seq.position)}</span>
-        <span class="sf__of">/</span>
-        <span class="num">{pad(seq.total)}</span>
-      </span>
-      {seq.next ? (
-        <a class="sf__step" href={seq.next.href} rel="next" data-sf-next>
-          Next <span aria-hidden="true">→</span>
-        </a>
-      ) : (
-        <span class="sf__step is-off" aria-hidden="true">
-          Next <span>→</span>
-        </span>
-      )}
-    </nav>
-    <p class="sf__keys" data-sf-keys>
-      <Kbd>←</Kbd>
-      <Kbd>→</Kbd> browse {s.type.name.toLowerCase()} sections
-    </p>
-
-    <SourceNote source={source.label} asOf={source.asOf} class="sf__source" />
-  </aside>
+      <Button
+        slot="actions"
+        href={storeUrl}
+        variant="secondary"
+        iconRight="arrow-up-right"
+        external
+        full
+      >
+        Visit {s.store.domain}
+      </Button>
+    </FactsCard>
+  </div>
 </div>
 
 <style>
   .sf {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  /* Identity row */
+  .sf__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
   }
   @media (min-width: 1024px) {
-    .sf {
-      grid-template-columns: minmax(0, 1fr) 320px;
-      gap: var(--space-12);
-      align-items: start;
+    .sf__head {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-8);
+    }
+  }
+  .sf__id {
+    min-width: 0;
+  }
+  .sf__title {
+    font-size: var(--text-display-md);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  .sf__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .sf__app-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 9px 0 3px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: var(--text-xs);
+    font-weight: 520;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .sf__app-badge:hover {
+    background: var(--surface-3);
+  }
+  .sf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .sf__actions :global(.sf__open) {
+    flex: 1 1 auto;
+  }
+  @media (min-width: 1024px) {
+    .sf__actions {
+      flex: none;
+      flex-wrap: nowrap;
     }
   }
 
-  /* Stage: a warm plate with registration marks; the crop sits centred at a readable size. */
-  .sf__stage {
-    --maxh: 72vh;
-    display: flex;
-    flex-direction: column;
+  /* Prev / next within the type */
+  .sf__seq {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 36px;
+    padding: 2px;
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-xs);
+  }
+  .sf__step {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    color: var(--ink);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  a.sf__step:hover {
+    background: var(--surface-2);
+  }
+  .sf__step.is-off {
+    color: var(--ink-4);
+  }
+  .sf__count {
+    display: inline-flex;
+    gap: 4px;
+    padding: 0 6px;
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+  .sf__of {
+    color: var(--ink-3);
+    font-weight: var(--weight-regular);
+  }
+  @media (max-width: 1023px) {
+    .sf__step {
+      width: 40px;
+      height: 40px;
+    }
+    .sf__seq {
+      height: 44px;
+    }
+    .sf__actions :global(.btn) {
+      min-height: 44px;
+    }
+  }
+
+  /* Main: crop in a window + facts */
+  .sf__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+  @media (min-width: 1024px) {
+    .sf__main {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: var(--space-8);
+      align-items: start;
+    }
+  }
+  .sf__figure {
     min-width: 0;
     margin: 0;
-    border-radius: var(--radius-lg);
-    background: var(--tile);
+  }
+  .sf__dims {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    white-space: nowrap;
   }
   .sf__plate {
+    --maxh: 64vh;
     display: grid;
     place-items: center;
-    flex: 1;
-    min-height: clamp(200px, 34vh, 320px);
-    padding: var(--space-6) var(--space-4);
+    min-height: 220px;
+    padding: var(--space-5) var(--space-3);
+    background: var(--surface-2);
   }
-  .sf--mobile .sf__stage {
+  .sf--mobile .sf__plate {
     --maxh: 70vh;
   }
   .sf__img {
@@ -214,197 +370,77 @@ const plateStyle = `--ar:${s.crop.width} / ${s.crop.height};--native:${s.crop.wi
     height: auto;
     aspect-ratio: var(--ar);
     border-radius: var(--radius-xs);
-    background: var(--surface);
+    background: var(--capture-bg);
     box-shadow: var(--shadow-shot);
   }
   .sf--mobile .sf__img {
-    border-radius: 12px;
+    border-radius: 14px;
+  }
+  @media (min-width: 1024px) {
+    .sf__plate {
+      min-height: clamp(280px, 52vh, 600px);
+      padding: var(--space-10) var(--space-8);
+    }
+  }
+  .sf--long .sf__img {
+    width: min(100%, var(--native));
+  }
+  @media (min-width: 768px) {
+    .sf--long .sf__plate {
+      display: block;
+      max-height: 76vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    .sf--long .sf__img {
+      margin-inline: auto;
+    }
+    .sf--long.sf--desktop .sf__img {
+      width: min(100%, 880px);
+    }
+  }
+  .sf__scroll-hint {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .sf__scroll-hint {
+      display: inline;
+    }
+  }
+  .sf__plate:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
   .sf__cap {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 6px;
-    padding: var(--space-3) var(--space-4);
-    border-top: 1px solid color-mix(in srgb, var(--line-strong) 60%, transparent);
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .sf__cap > :first-child {
-    color: var(--ink-2);
-    text-transform: none;
-    letter-spacing: 0.01em;
-  }
-  .sf__cap-n {
-    margin-left: auto;
-    color: var(--ink-2);
-  }
-  @media (min-width: 1024px) {
-    .sf__plate {
-      min-height: clamp(240px, 58vh, 620px);
-      padding: var(--space-12) var(--space-10);
-    }
-    .sf__cap {
-      padding-inline: var(--space-5);
-    }
-  }
-
-  /* Spec sheet */
-  .sf__sheet {
-    min-width: 0;
-  }
-  @media (min-width: 1024px) {
-    .sf__sheet {
-      position: sticky;
-      top: calc(var(--header-h) + var(--space-6));
-    }
-  }
-  .sf__sheet :global(.sf__label) {
-    margin-bottom: var(--space-3);
-  }
-  .sf__title {
-    font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-  }
-  .sf__on {
-    display: block;
-    margin-top: 4px;
-    color: var(--ink-3);
-    font-weight: var(--weight-regular);
-  }
-  .sf__actions {
-    display: flex;
-    gap: var(--space-2);
-    margin-top: var(--space-5);
-  }
-  .sf__actions :global(.sf__open) {
-    flex: 1;
-  }
-  .sf__rows {
-    margin-top: var(--space-6);
-    border-top: 1px solid var(--ink);
-  }
-  .sf__row {
-    display: grid;
-    grid-template-columns: 96px minmax(0, 1fr);
-    align-items: baseline;
-    gap: var(--space-3);
-    padding: 9px 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .sf__row dt {
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .sf__row dd {
-    min-width: 0;
-    text-wrap: balance;
-    color: var(--ink);
-    font-size: var(--text-base);
-    text-align: right;
-    overflow-wrap: anywhere;
-  }
-  .sf__row a {
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
-    transition: text-decoration-color var(--dur-fast) var(--ease-out);
-  }
-  .sf__row a:hover {
-    text-decoration-color: currentColor;
-  }
-  .sf__row a.sf__app {
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-end;
-    gap: 8px;
-    text-decoration: none;
-  }
-  .sf__app :global(.app-icon) {
-    margin-top: 1px;
-  }
-  .sf__app span {
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
-  }
-  .sf__app:hover span {
-    text-decoration-color: currentColor;
-  }
-  .sf__mono {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--ink-2);
-  }
-  .sf__muted {
-    color: var(--ink-3);
-  }
-
-  .sf__seq {
-    display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-3);
-    margin-top: var(--space-5);
-  }
-  .sf__step {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 34px;
-    padding: 0 12px;
-    border-radius: var(--radius-pill);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
-    color: var(--ink);
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-3);
+    color: var(--ink-3);
     font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    transition: background-color var(--dur-fast) var(--ease-out);
-  }
-  a.sf__step:hover {
-    background: var(--fill);
-  }
-  .sf__step:focus-visible {
-    border-radius: var(--radius-pill);
-  }
-  .sf__step.is-off {
-    color: var(--ink-4);
-    box-shadow: inset 0 0 0 1px var(--line);
-  }
-  .sf__count {
-    display: inline-flex;
-    gap: 4px;
-    color: var(--ink-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-  }
-  .sf__of {
-    color: var(--ink-4);
   }
   .sf__keys {
     display: none;
     align-items: center;
     gap: 4px;
-    margin-top: var(--space-3);
-    color: var(--ink-3);
     font-size: var(--text-xs);
-  }
-  .sf__keys :global(.kbd:last-of-type) {
-    margin-right: 4px;
   }
   @media (hover: hover) and (pointer: fine) {
     .sf__keys {
-      display: flex;
+      display: inline-flex;
     }
   }
-  .sf__sheet :global(.sf__source) {
-    margin-top: var(--space-5);
+
+  .sf__facts :global(dd a.sf__app) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    vertical-align: middle;
+  }
+  .sf__muted {
+    color: var(--ink-3);
   }
 </style>

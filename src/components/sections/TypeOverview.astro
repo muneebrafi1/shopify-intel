@@ -1,0 +1,114 @@
+---
+/**
+ * "Browse by type": every section type as a card with a real crop and its count, in taxonomy
+ * order (roughly top of a page to bottom). An aligned grid on wide screens; below 640px a
+ * two-row sideways scroller so the whole map stays one swipe away.
+ */
+import type { SectionTypeInfo } from '~/server/api/v1/types';
+import TypeCard from './TypeCard.astro';
+import { fmt } from './library';
+
+interface Props {
+  types: SectionTypeInfo[];
+  groupCount: number;
+  class?: string;
+}
+const { types, groupCount, class: className } = Astro.props;
+const shown = types.filter((t) => t.count > 0);
+---
+
+<section class:list={['tov', className]} aria-labelledby="tov-title">
+  <div class="tov__head">
+    <h2 id="tov-title" class="tov__title">
+      Browse by type
+    </h2>
+    <p class="tov__desc">
+      {shown.length} types in {groupCount} groups, from the announcement bar to the footer.
+    </p>
+    <a class="tov__skip" href="#all-sections">
+      All {fmt(shown.reduce((n, t) => n + t.count, 0))} sections
+      <span aria-hidden="true">↓</span>
+    </a>
+  </div>
+  <ul class="tov__grid" role="list">
+    {shown.map((t, i) => (
+      <li>
+        <TypeCard name={t.name} href={t.href} count={t.count} preview={t.preview} eager={i < 8} />
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .tov__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .tov__title {
+    font-size: var(--text-h3);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.015em;
+  }
+  .tov__desc {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .tov__skip {
+    display: none;
+    margin-left: auto;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+  .tov__skip:hover {
+    color: var(--ink);
+  }
+  @media (min-width: 640px) {
+    .tov__skip {
+      display: inline;
+    }
+  }
+
+  /* <640: two rows that scroll sideways (bleeding to the screen edge). */
+  .tov__grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, auto);
+    grid-auto-columns: 148px;
+    gap: var(--space-3);
+    margin-inline: calc(var(--page-gutter) * -1);
+    padding: 2px var(--page-gutter) var(--space-3);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--page-gutter);
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .tov__grid > li {
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+  @media (min-width: 640px) {
+    .tov__grid {
+      grid-auto-flow: row;
+      grid-template-rows: none;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-inline: 0;
+      padding: 0;
+      overflow: visible;
+    }
+  }
+  @media (min-width: 1024px) {
+    .tov__grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1280px) {
+    .tov__grid {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+  }
+</style>

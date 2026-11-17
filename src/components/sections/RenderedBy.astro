@@ -1,0 +1,249 @@
+---
+/**
+ * Who renders a section type: the apps behind it (and how many the theme draws itself) and the
+ * themes it was seen on, each with its count and share of the type. Names filter the library;
+ * the arrow opens the app or theme page.
+ */
+import AppIcon from '~/components/ui/AppIcon.astro';
+import Icon from '~/components/ui/Icon.astro';
+import { fmt } from './library';
+
+interface Row {
+  slug: string;
+  name: string;
+  count: number;
+  /** Library view filtered to this app/theme. */
+  href: string;
+  /** The app or theme page. */
+  page: string;
+  icon?: string | null;
+}
+interface Props {
+  typeName: string;
+  total: number;
+  apps: Row[];
+  /** Sections no app was detected on (the theme renders them). */
+  themeOwn: number;
+  themes: Row[];
+  /** All apps / themes seen on the type (the lists show the top ones). */
+  appTotal: number;
+  themeTotal: number;
+  source: { label: string; asOf: string };
+  class?: string;
+}
+const {
+  typeName,
+  total,
+  apps,
+  themeOwn,
+  themes,
+  appTotal,
+  themeTotal,
+  source,
+  class: className,
+} = Astro.props;
+const lower = typeName.toLowerCase();
+const share = (n: number) => (total > 0 ? Math.max(2, Math.round((n / total) * 100)) : 0);
+const pct = (n: number) => (total > 0 ? `${Math.round((n / total) * 100)}%` : '—');
+const viaApps = Math.max(0, total - themeOwn);
+---
+
+<div class:list={['rby', className]}>
+  <section class="rby__card" aria-labelledby="rby-apps">
+    <header class="rby__head">
+      <h3 id="rby-apps" class="rby__title">
+        Apps
+      </h3>
+      <p class="rby__note">
+        {apps.length === 0
+          ? `No app detected on ${lower} sections yet.`
+          : `${fmt(viaApps)} of ${fmt(total)} rendered by ${appTotal} ${appTotal === 1 ? 'app' : 'apps'}`}
+      </p>
+    </header>
+    <ol class="rby__list">
+      {apps.map((a) => (
+        <li class="rby__row">
+          <AppIcon src={a.icon} name={a.name} size={20} />
+          <a href={a.href} class="rby__name" rel="nofollow">
+            {a.name}
+          </a>
+          <span class="rby__bar" aria-hidden="true">
+            <span style={`width:${share(a.count)}%`} />
+          </span>
+          <span class="rby__n num" title={pct(a.count)}>
+            {fmt(a.count)}
+          </span>
+          <a href={a.page} class="rby__go" aria-label={`${a.name} app page`}>
+            <Icon name="arrow-up-right" size={14} />
+          </a>
+        </li>
+      ))}
+      {themeOwn > 0 && (
+        <li class="rby__row rby__row--theme">
+          <span class="rby__mark" aria-hidden="true" />
+          <span class="rby__name">The theme itself</span>
+          <span class="rby__bar" aria-hidden="true">
+            <span style={`width:${share(themeOwn)}%`} />
+          </span>
+          <span class="rby__n num" title={pct(themeOwn)}>
+            {fmt(themeOwn)}
+          </span>
+          <span class="rby__go" aria-hidden="true" />
+        </li>
+      )}
+    </ol>
+  </section>
+
+  <section class="rby__card" aria-labelledby="rby-themes">
+    <header class="rby__head">
+      <h3 id="rby-themes" class="rby__title">
+        Themes
+      </h3>
+      <p class="rby__note">
+        {themes.length === 0
+          ? 'No theme recorded yet.'
+          : themeTotal > themes.length
+            ? `Seen on ${themeTotal} themes, top ${themes.length} shown`
+            : `Seen on ${themeTotal} ${themeTotal === 1 ? 'theme' : 'themes'}`}
+      </p>
+    </header>
+    <ol class="rby__list rby__list--plain">
+      {themes.map((t) => (
+        <li class="rby__row">
+          <a href={t.href} class="rby__name" rel="nofollow">
+            {t.name}
+          </a>
+          <span class="rby__bar" aria-hidden="true">
+            <span style={`width:${share(t.count)}%`} />
+          </span>
+          <span class="rby__n num" title={pct(t.count)}>
+            {fmt(t.count)}
+          </span>
+          <a href={t.page} class="rby__go" aria-label={`${t.name} theme page`}>
+            <Icon name="arrow-up-right" size={14} />
+          </a>
+        </li>
+      ))}
+    </ol>
+  </section>
+  <p class="rby__source">
+    Counts are {lower} sections in the library · Source: {source.label} ·{' '}
+    <span class="num">{source.asOf}</span>
+  </p>
+</div>
+
+<style>
+  .rby {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  @media (min-width: 768px) {
+    .rby {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+  }
+  .rby__card {
+    min-width: 0;
+    padding: var(--space-4) var(--space-5) var(--space-3);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs),
+      var(--highlight);
+  }
+  .rby__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .rby__title {
+    font-size: var(--text-ui);
+    font-weight: var(--weight-semibold);
+  }
+  .rby__note {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .rby__row {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) minmax(48px, 96px) 32px 32px;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    border-bottom: 1px solid var(--line);
+  }
+  .rby__row:last-child {
+    border-bottom: 0;
+  }
+  .rby__list--plain .rby__row {
+    grid-template-columns: minmax(0, 1fr) minmax(48px, 96px) 32px 32px;
+  }
+  .rby__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink);
+    font-size: var(--text-ui);
+  }
+  a.rby__name:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .rby__row--theme .rby__name {
+    color: var(--ink-2);
+  }
+  .rby__mark {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1px dashed var(--line-strong);
+    background: var(--surface-2);
+  }
+  .rby__bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .rby__bar > span {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--ink-3);
+  }
+  .rby__n {
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    text-align: right;
+  }
+  .rby__go {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-control);
+    color: var(--ink-3);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  a.rby__go:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .rby__source {
+    grid-column: 1 / -1;
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+</style>

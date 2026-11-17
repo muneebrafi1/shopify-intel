@@ -1,28 +1,36 @@
 ---
 /**
- * /sections/<type> — one section type as a chapter of the library: the type name set very large,
- * what it is, how many there are (with source), where it usually appears, which apps render it,
- * then the same contents rail + filters + crop grid as the library, scoped to the type.
+ * /sections/<type> — one section type: what it does on a Shopify store, how many there are and
+ * where they appear, the Desktop/Mobile switch, then the same browse bar + crop grid as the
+ * library scoped to the type, who renders it (apps and themes), and the other types in its
+ * group.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import AppIcon from '~/components/ui/AppIcon.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
-import Count from '~/components/ui/Count.astro';
-import MonoLabel from '~/components/ui/MonoLabel.astro';
-import LibraryBook from '~/components/sections/LibraryBook.astro';
-import SpecList from '~/components/sections/SpecList.astro';
+import Chip from '~/components/ui/Chip.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import Segmented from '~/components/ui/Segmented.astro';
+import LibraryBrowse from '~/components/sections/LibraryBrowse.astro';
+import RenderedBy from '~/components/sections/RenderedBy.astro';
+import TypeCard from '~/components/sections/TypeCard.astro';
 import {
   PAGE_SIZE,
   activeFilterCount,
+  apiSort,
   buildFilterGroups,
-  buildRail,
+  buildSort,
   cropSource,
+  deviceItems,
   filterQuery,
+  fmt,
   isSectionType,
   libraryHref,
+  pageLabel,
   readFilters,
+  resolveSearch,
 } from '~/components/sections/library';
-import { SECTION_GROUPS, SECTION_TYPES, pageTypeName, type PageType } from '~/lib/taxonomy';
+import { SECTION_TYPES, type PageType } from '~/lib/taxonomy';
 import { api, isApiError } from '~/server/api';
 
 const slug = Astro.params.type;
@@ -32,29 +40,39 @@ const type = slug;
 const url = Astro.url;
 const filters = readFilters(url);
 const cursor = url.searchParams.get('cursor') || undefined;
+const q = (url.searchParams.get('q') ?? '').trim().slice(0, 100);
+if (q) {
+  const target = await resolveSearch(q, type, filters);
+  if (target) return Astro.redirect(target, 302);
+}
 const filtered = activeFilterCount(filters);
+// The header and "who renders it" describe the whole type; the grid follows the filters.
+const narrowed = filtered > 0 || !!cursor;
 
 let list;
 let whole;
+let types;
 try {
-  // The grid follows the filters; the chapter header describes the whole type.
-  [list, whole] = await Promise.all([
+  [list, whole, types] = await Promise.all([
     api.listSections({
       type,
       page_type: filters.page,
       device: filters.device,
       theme: filters.theme,
       app: filters.app,
-      sort: 'mixed',
+      store: filters.store,
+      sort: apiSort(filters),
       cursor,
       limit: PAGE_SIZE,
     }),
-    api.listSections({ type, sort: 'mixed', limit: 60 }),
+    narrowed ? api.listSections({ type, sort: 'mixed', limit: 60 }) : Promise.resolve(null),
+    api.listSectionTypes({}),
   ]);
 } catch (err) {
   if (isApiError(err) && err.status === 400) return Astro.redirect(libraryHref(type, filters), 302);
   throw err;
 }
+whole ??= list;
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
@@ -63,81 +81,70 @@ const info = whole.data.section_type ?? data.section_type;
 if (!info) return Astro.rewrite('/404');
 
 const taxonomy = SECTION_TYPES.find((t) => t.slug === type)!;
-const typeIndex = SECTION_TYPES.findIndex((t) => t.slug === type) + 1;
-const groupIndex = SECTION_GROUPS.findIndex((g) => g.slug === info.group.slug) + 1;
-const fmt = (n: number) => n.toLocaleString('en-US');
 const total = meta.pagination?.total ?? data.items.length;
 const page = cursor ? Math.max(2, Number.parseInt(url.searchParams.get('p') ?? '', 10) || 2) : 1;
 const nextCursor = meta.pagination?.next_cursor;
 const nextHref = nextCursor
   ? `/sections/${type}${filterQuery(filters, { cursor: nextCursor, p: String(page + 1) })}`
   : null;
-const rail = buildRail(data.facets.types, type, filters);
 const groups = buildFilterGroups(data.facets, type, filters);
 const source = cropSource(whole.meta, whole.data.items);
 
-// Where it usually appears: the taxonomy's pages first, then any other page it was seen on.
-const pageFacets = whole.data.facets.page_types;
+// Where it usually appears: page types it was seen on (most first), then the taxonomy's others.
+const pageFacets = [...whole.data.facets.page_types].sort((a, b) => b.count - a.count);
 const usualPages = [
-  ...taxonomy.pages,
-  ...pageFacets.map((p) => p.value as PageType).filter((p) => !taxonomy.pages.includes(p as never)),
-].map((p) => ({
-  slug: p,
-  name: pageTypeName(p),
-  count: pageFacets.find((f) => f.value === p)?.count ?? 0,
-  href: libraryHref(type, { page: p }),
-}));
+  ...pageFacets.map((p) => ({ slug: p.value as PageType, count: p.count })),
+  ...taxonomy.pages
+    .filter((p) => !pageFacets.some((f) => f.value === p))
+    .map((p) => ({ slug: p as PageType, count: 0 })),
+];
 
-// Apps that render it, with icons from the cards we already have.
+// Who renders it, with icons from the cards we already have.
 const icons = new Map<string, string | null>();
 for (const s of [...whole.data.items, ...data.items])
   if (s.app) icons.set(s.app.slug, s.app.icon_url);
-const apps = whole.data.facets.apps.slice(0, 6).map((a) => ({
+const appFacets = whole.data.facets.apps;
+const apps = appFacets.slice(0, 7).map((a) => ({
   slug: a.value,
   name: a.label,
   count: a.count,
   icon: icons.get(a.value) ?? null,
-  href: `/apps/${a.value}`,
+  href: libraryHref(type, { app: a.value }),
+  page: `/apps/${a.value}`,
 }));
-const attributed = whole.data.facets.apps.reduce((n, a) => n + a.count, 0);
-const appTotal = whole.data.facets.apps.length;
+const attributed = appFacets.reduce((n, a) => n + a.count, 0);
 const themeOwn = Math.max(0, info.count - attributed);
-const renderedNote =
-  appTotal === 0
-    ? 'No app detected'
-    : `${appTotal} ${appTotal === 1 ? 'app' : 'apps'} · ${fmt(attributed)} of ${fmt(info.count)} sections`;
-const devices = whole.data.facets.devices;
-const deviceLine = devices.map((d) => `${d.label} ${fmt(d.count)}`).join(' · ') || '—';
+const themes = whole.data.facets.themes.slice(0, 8).map((t) => ({
+  slug: t.value,
+  name: t.label,
+  count: t.count,
+  href: libraryHref(type, { theme: t.value }),
+  page: `/themes/${t.value}`,
+}));
+
+// The other types in this group, with a real crop each.
+const siblings = types.data.items.filter(
+  (t) => t.group.slug === info.group.slug && t.slug !== type && t.count > 0,
+);
 
 const lower = info.name.toLowerCase();
-// Typographic quotes for the editorial line ("you may also like" → “you may also like”).
-const statement = info.description.replace(/"([^"]+)"/g, '\u201c$1\u201d');
 const title = `${info.name} sections on real Shopify stores`;
 const description = `${fmt(info.count)} ${lower} sections from ${info.stores} Shopify stores on ${info.themes} themes. ${info.description} Desktop and mobile, filterable by page type, theme and app.`;
 const canonical = `/sections/${type}`;
+const site = Astro.site ?? url;
 const jsonLd = [
   {
     '@type': 'BreadcrumbList',
     itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Sections',
-        item: new URL('/sections', Astro.site ?? url).href,
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: info.name,
-        item: new URL(canonical, Astro.site ?? url).href,
-      },
+      { '@type': 'ListItem', position: 1, name: 'Sections', item: new URL('/sections', site).href },
+      { '@type': 'ListItem', position: 2, name: info.name, item: new URL(canonical, site).href },
     ],
   },
   {
     '@type': 'CollectionPage',
     name: `${info.name} sections`,
     description,
-    url: new URL(canonical, Astro.site ?? url).href,
+    url: new URL(canonical, site).href,
   },
 ];
 ---
@@ -146,254 +153,204 @@ const jsonLd = [
   title={page > 1 ? `${info.name} sections — page ${page}` : title}
   description={description}
   canonical={canonical}
-  noindex={!!cursor || filtered > 1}
+  noindex={!!cursor || filtered > 1 || !!filters.store || !!filters.sort}
   jsonLd={jsonLd}
+  wide
 >
-  <header class="chap container">
-    <Breadcrumbs items={[{ label: 'Sections', href: '/sections' }, { label: info.name }]} />
-
-    <MonoLabel as="p" class="chap__eyebrow">
-      Type {String(typeIndex).padStart(2, '0')} of {SECTION_TYPES.length} · Chapter
-      {String(groupIndex).padStart(2, '0')}, {info.group.name}
-    </MonoLabel>
-    <h1 class="chap__title">
-      {info.name}
-      <Count value={info.count} label="sections" />
-    </h1>
-
-    <div class="chap__row cols-12">
-      <div class="chap__lede span-7">
-        <p class="chap__statement">{statement}</p>
-
-        <div class="chap__apps">
-          <p class="chap__apps-head">
-            <MonoLabel tone="ink">Rendered by</MonoLabel>
-            <span class="chap__apps-note">{renderedNote}</span>
-          </p>
-          <ol class="chap__app-list">
-            {apps.map((a) => (
-              <li>
-                <a href={a.href} class="chap__app">
-                  <AppIcon src={a.icon} name={a.name} size={20} />
-                  <span class="chap__app-name">{a.name}</span>
-                  <span class="chap__lead" aria-hidden="true" />
-                  <span class="chap__app-n num">{fmt(a.count)}</span>
-                </a>
-              </li>
-            ))}
-            {themeOwn > 0 && (
-              <li>
-                <span class="chap__app chap__app--theme" title="Sections the theme renders itself">
-                  <span class="chap__theme-mark" aria-hidden="true" />
-                  <span class="chap__app-name">The theme itself</span>
-                  <span class="chap__lead" aria-hidden="true" />
-                  <span class="chap__app-n num">{fmt(themeOwn)}</span>
-                </span>
-              </li>
+  <div class="container--wide tx">
+    <PageHeader
+      eyebrow={info.group.name}
+      title={info.name}
+      count={info.count}
+      description={info.description}
+    >
+      <Breadcrumbs
+        slot="top"
+        items={[{ label: 'Sections', href: '/sections' }, { label: info.name }]}
+      />
+      <div slot="meta" class="tx__meta">
+        <p class="tx__stats">
+          <span>
+            <span class="num">{fmt(info.stores)}</span> stores
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>
+            <span class="num">{fmt(info.themes)}</span> themes
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>
+            {appFacets.length > 0 ? (
+              <>
+                <span class="num">{fmt(appFacets.length)}</span>{' '}
+                {appFacets.length === 1 ? 'app' : 'apps'}
+              </>
+            ) : (
+              'no app detected'
             )}
-          </ol>
+          </span>
+        </p>
+        <div class="tx__pages" role="group" aria-label="Usually appears on">
+          <span class="tx__pages-label">Usually on</span>
+          {usualPages.map((p) =>
+            p.count > 0 ? (
+              <Chip
+                size="sm"
+                href={libraryHref(type, { ...filters, page: p.slug })}
+                selected={filters.page === p.slug}
+                count={p.count}
+              >
+                {pageLabel(p.slug)}
+              </Chip>
+            ) : (
+              <span class="tx__page-off" title="Not seen on this page type yet">
+                {pageLabel(p.slug)}
+              </span>
+            ),
+          )}
         </div>
       </div>
+      <Segmented
+        slot="actions"
+        label="Device"
+        items={deviceItems(data.facets.devices, type, filters)}
+      />
+    </PageHeader>
 
-      <div class="chap__side start-9">
-        <SpecList
-          items={[
-            { label: 'Sections', value: fmt(info.count) },
-            { label: 'Stores', value: fmt(info.stores) },
-            { label: 'Themes', value: fmt(info.themes) },
-            { label: 'Devices', value: deviceLine },
-          ]}
-          source={source}
-        />
-        <div class="chap__pages">
-          <MonoLabel as="p" tone="ink">
-            Usually appears on
-          </MonoLabel>
-          <ul class="chap__page-list">
-            {usualPages.map((p) => (
-              <li>
-                {p.count > 0 ? (
-                  <a href={p.href} rel="nofollow" class="chap__page">
-                    <span>{p.name} page</span>
-                    <span class="chap__lead" aria-hidden="true" />
-                    <span class="chap__page-n num">{fmt(p.count)}</span>
-                  </a>
-                ) : (
-                  <span class="chap__page is-off" title="Not seen on this page type yet">
-                    <span>{p.name} page</span>
-                    <span class="chap__lead" aria-hidden="true" />
-                    <span class="chap__page-n num">—</span>
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <div class="container chap__body">
-    <LibraryBook
-      rail={rail}
+    <LibraryBrowse
       groups={groups}
+      sort={buildSort(type, filters)}
       items={data.items}
       total={total}
-      meta={['page', 'device', 'theme']}
+      tag="page"
       page={page}
       pageSize={PAGE_SIZE}
       nextHref={nextHref}
       firstHref={libraryHref(type, filters)}
       clearHref={libraryHref(type, { view: filters.view })}
+      device={filters.device}
       view={{
         current: filters.view ?? 'grid',
         gridHref: libraryHref(type, { ...filters, view: undefined }),
         indexHref: libraryHref(type, { ...filters, view: 'index' }),
       }}
+      search={{
+        value: q,
+        hidden: {
+          page: filters.page,
+          device: filters.device,
+          theme: filters.theme,
+          app: filters.app,
+          store: filters.store,
+          sort: filters.sort,
+          view: filters.view,
+        },
+      }}
+      unmatched={q || null}
     />
+
+    <section class="tx__block" aria-labelledby="rendered-by">
+      <SectionHeader
+        id="rendered-by"
+        title={`Who renders ${lower} sections`}
+        description={`Across all ${fmt(info.count)} in the library. Pick a name to filter the grid to it.`}
+      />
+      <RenderedBy
+        typeName={info.name}
+        total={info.count}
+        apps={apps}
+        themeOwn={themeOwn}
+        themes={themes}
+        appTotal={appFacets.length}
+        themeTotal={info.themes}
+        source={source}
+      />
+    </section>
+
+    {siblings.length > 0 && (
+      <section class="tx__block" aria-labelledby="related-types">
+        <SectionHeader
+          id="related-types"
+          title={`More ${info.group.name.toLowerCase()} sections`}
+          href="/sections"
+          linkLabel="All types"
+        />
+        <ul class="tx__types" role="list">
+          {siblings.map((t) => (
+            <li>
+              <TypeCard name={t.name} href={t.href} count={t.count} preview={t.preview} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
   </div>
 </BaseLayout>
 
 <style>
-  .chap {
-    padding-top: var(--space-6);
+  .tx {
+    padding-bottom: var(--section-y-app);
   }
-  .chap :global(.chap__eyebrow) {
-    margin-top: var(--space-8);
-    margin-bottom: var(--space-4);
+  .tx__meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
   }
-  .chap__title {
-    font-size: clamp(3rem, 0.9rem + 7.6vw, 8.5rem);
-    font-weight: var(--weight-semibold);
-    letter-spacing: -0.05em;
-    line-height: 0.92;
-    margin-left: -0.035em;
-    overflow-wrap: break-word;
-  }
-  .chap__title :global(.count-sup) {
-    margin-left: 0.1em;
-    font-size: max(0.16em, 12px);
-    letter-spacing: 0.02em;
-    transform: translateY(0.4em);
-    color: var(--ink-2);
-  }
-  .chap__row {
-    margin-top: var(--space-8);
-    align-items: start;
-  }
-  .chap__statement {
-    max-width: 24ch;
-    font-family: var(--font-serif);
-    font-size: clamp(1.625rem, 1.1rem + 1.6vw, 2.5rem);
-    font-weight: 400;
-    letter-spacing: -0.015em;
-    line-height: 1.12;
-  }
-  .chap__apps {
-    margin-top: var(--space-10);
-  }
-  .chap__apps-head {
+  .tx__stats {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-2) var(--space-4);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--ink);
-  }
-  .chap__apps-note {
+    gap: var(--space-2);
     color: var(--ink-3);
     font-size: var(--text-sm);
   }
-  .chap__app-list {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    column-gap: var(--space-8);
+  .tx__stats .num {
+    color: var(--ink);
+    font-weight: var(--weight-medium);
   }
-  @media (min-width: 640px) {
-    .chap__app-list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  .chap__app,
-  .chap__page {
+  .tx__pages {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
-    min-height: 40px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--line);
-    font-size: var(--text-base);
   }
-  .chap__theme-mark {
-    flex: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    border: 1px dashed var(--line-strong);
-    background: var(--tile);
+  .tx__pages-label {
+    margin-right: var(--space-1);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
   }
-  .chap__app--theme {
-    color: var(--ink-2);
+  .tx__page-off {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
   }
-  .chap__app-name {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .chap__lead {
-    flex: 1;
-    min-width: 12px;
-    align-self: baseline;
-    border-bottom: 1px dotted var(--line-strong);
-    transform: translateY(-4px);
-  }
-  .chap__app .chap__lead {
-    align-self: center;
-    transform: translateY(3px);
-  }
-  .chap__app-n,
-  .chap__page-n {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--ink-2);
-  }
-  .chap__app:hover .chap__app-name,
-  a.chap__page:hover > span:first-child {
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 0.2em;
-  }
-  .chap__page {
-    align-items: baseline;
-    min-height: 0;
-    padding: 8px 0;
-  }
-  .chap__page.is-off {
-    color: var(--ink-4);
-  }
-  .chap__page-list {
-    margin-top: var(--space-3);
-    border-top: 1px solid var(--ink);
-  }
-  .chap__side {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
-  }
-  .chap__body {
+  .tx__block {
     margin-top: var(--space-12);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--line);
+  }
+  .tx__types {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  @media (min-width: 640px) {
+    .tx__types {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
   @media (min-width: 1024px) {
-    .chap :global(.chap__eyebrow) {
-      margin-top: var(--space-10);
+    .tx__types {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--space-4);
     }
-    .chap__row {
-      margin-top: var(--space-10);
-    }
-    .chap__body {
-      margin-top: var(--space-12);
+    .tx__block {
+      margin-top: var(--space-16);
+      padding-top: var(--space-10);
     }
   }
 </style>
