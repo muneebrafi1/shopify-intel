@@ -1,7 +1,7 @@
 ---
 /**
  * A sliced section in a fixed-aspect well, so wide desktop strips and tall mobile slices
- * share one even grid. The crop is contained (never cut).
+ * share one even grid. Crops are contained; long ones show their top and bleed off the bottom.
  */
 import type { Device } from '~/lib/taxonomy';
 
@@ -33,6 +33,9 @@ const tall = height / width > 1.1;
 // The well's inner box is 86% x 61% of its width (4:3 well, 7% padding). Fill whichever side
 // binds, so the image has a definite size before it loads (lazy images need a box to load).
 const wide = width / height > 0.86 / 0.61;
+// Long sections (a desktop product grid, a mobile footer) would shrink to a sliver if contained.
+// Show their top instead and let them bleed off the bottom edge, like page tiles do.
+const long = height / width > (device === 'mobile' ? 2.4 : 1);
 ---
 
 <Tag
@@ -40,9 +43,9 @@ const wide = width / height > 0.86 / 0.61;
   class:list={['crop', `crop--${device}`, { 'crop--tall': tall }, className]}
   style={ratio ? `--ratio:${ratio}` : undefined}
 >
-  <span class="crop__frame">
+  <span class:list={['crop__frame', { 'crop__frame--long': long }]}>
     <img
-      class:list={[wide ? 'crop__img--wide' : 'crop__img--tall']}
+      class:list={[long ? 'crop__img--long' : wide ? 'crop__img--wide' : 'crop__img--tall']}
       src={src}
       alt={alt}
       width={width}
@@ -79,6 +82,20 @@ const wide = width / height > 0.86 / 0.61;
     box-shadow: var(--shadow-shot);
     background: var(--surface);
     transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .crop__frame--long {
+    inset: 7% 7% 0 7%;
+    align-items: flex-start;
+  }
+  .crop .crop__img--long {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  }
+  .crop--mobile .crop__img--long {
+    width: 54%;
+    border-radius: 10px 10px 0 0;
   }
   .crop__img--wide {
     width: 100%;
