@@ -46,6 +46,15 @@ test.describe('site pages are healthy', () => {
     }
   });
 
+  test('the server-error page is designed, honest and offers a retry', async ({ page }) => {
+    await expectHealthyPage(page, '/500', { status: 500 });
+    await expect(page.locator('h1')).toHaveText('This page didn’t load.');
+    await expect(page.getByRole('link', { name: 'Try again' })).toBeVisible();
+    await expect(page.locator('main a[href="/"]').first()).toBeVisible();
+    // Never leaks the error itself.
+    await expect(page.locator('main')).not.toContainText(/stack|exception|Error:/);
+  });
+
   test('board ids that are not slugs are 404s', async ({ page }) => {
     await prepare(page);
     const res = await page.goto('/account/boards/Not_A_Slug!');
