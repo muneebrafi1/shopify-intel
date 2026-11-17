@@ -1,0 +1,562 @@
+---
+/**
+ * Pro pricing — a spec sheet of plans. Checkout (Whop) is not live: plan buttons go to
+ * /sign-in?next=/pro, which explains that accounts open with Pro. The billing toggle works
+ * without JS (?billing=yearly) and switches in place with JS.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Button from '~/components/ui/Button.astro';
+import Icon from '~/components/ui/Icon.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Segmented from '~/components/ui/Segmented.astro';
+import { SITE_NAME } from '~/config/site';
+import {
+  LIFETIME,
+  PLAN_MATRIX,
+  PLANS,
+  YEARLY_SAVING,
+  type Billing,
+  type Cell,
+  type Price,
+} from '~/components/static/content';
+
+const billing: Billing = Astro.url.searchParams.get('billing') === 'yearly' ? 'yearly' : 'monthly';
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+
+const perLabel = (p: Price) => (p.per ? `/${p.per}` : '');
+const priceText = (p: Price) => (p.amount === 0 ? '$0' : `$${p.amount}`);
+
+const FAQ = [
+  {
+    q: 'When can I buy Pro?',
+    a: 'Pro opens together with accounts. Checkout isn’t live yet, so nothing on this page can charge you. The prices here are the planned launch prices.',
+  },
+  {
+    q: 'How will payment work?',
+    a: 'Checkout, billing and memberships run on Whop. You will be able to cancel at any time before your next renewal, and we will publish the refund policy with the prices.',
+  },
+  {
+    q: 'What is the lifetime deal?',
+    a: `Pro for one payment of $${LIFETIME.price} instead of a subscription, for the first ${LIFETIME.cap} accounts at launch. It includes everything in Pro, including what we add to Pro later.`,
+  },
+  {
+    q: 'Does Pro change the data I see?',
+    a: 'No. Detections, counts and rankings are the same for everyone. Pro adds depth: every page type, mobile captures, filters by section, theme and app, boards and exports.',
+  },
+  {
+    q: 'Is the API part of Pro?',
+    a: 'The public JSON API stays free within fair use, on every plan. A plan for heavy API and MCP use may come later.',
+  },
+  {
+    q: 'Will you add revenue or traffic estimates to Pro?',
+    a: 'No, on any plan. They can’t be measured honestly from outside a store, so we don’t publish them.',
+  },
+];
+
+const cellLabel = (c: Cell) => (c === true ? 'Included' : c === false ? 'Not included' : c);
+---
+
+<BaseLayout
+  title="Pro"
+  description={`${SITE_NAME} Pro: every page type on desktop and mobile, section, theme and app filters, boards, CSV exports and theme-switch alerts. Planned launch pricing.`}
+  canonical="/pro"
+>
+  <div class="pro container" data-billing={billing} data-pro>
+    <header class="pro__head cols-12">
+      <div class="pro__statement">
+        <MonoLabel as="p" class="pro__eyebrow">
+          Pro · opens with accounts
+        </MonoLabel>
+        <h1 class="pro__title display">Every page of every store, on both devices.</h1>
+      </div>
+      <div class="pro__intro">
+        <p>
+          Browsing stays free. Pro is for people who build stores for a living: the full library,
+          sliced into sections, with filters, boards and exports.
+        </p>
+        <div class="pro__toggle" data-billing-toggle>
+          <Segmented
+            label="Billing period"
+            items={[
+              { label: 'Monthly', value: 'monthly', href: '/pro', selected: billing === 'monthly' },
+              {
+                label: `Yearly · save ${YEARLY_SAVING}%`,
+                value: 'yearly',
+                href: '/pro?billing=yearly',
+                selected: billing === 'yearly',
+              },
+            ]}
+          />
+        </div>
+      </div>
+    </header>
+
+    <section class="sheet" aria-labelledby="plans-title">
+      <h2 class="visually-hidden" id="plans-title">
+        Plans
+      </h2>
+      <div class="sheet__plans">
+        <div class="sheet__corner">
+          <MonoLabel as="p">Planned launch prices · USD</MonoLabel>
+          <p class="sheet__corner-note">
+            Checkout runs on Whop and isn’t open yet. Nothing here charges you.
+          </p>
+        </div>
+        {PLANS.map((plan) => {
+          const now = plan.price[billing];
+          return (
+            <div
+              class:list={['plan', { 'plan--recommended': plan.recommended }]}
+              data-plan={plan.id}
+            >
+              <MonoLabel
+                as="p"
+                tone={plan.recommended ? 'ink' : 'muted'}
+                bullet={!!plan.recommended}
+                class="plan__flag"
+              >
+                {plan.recommended ? 'Recommended' : ' '}
+              </MonoLabel>
+              <h3 class="plan__name">{plan.name}</h3>
+              <p class="plan__for">{plan.forWho}</p>
+              <p class="plan__price">
+                <span
+                  class="plan__amount display"
+                  data-price
+                  data-monthly={priceText(plan.price.monthly)}
+                  data-yearly={priceText(plan.price.yearly)}
+                >
+                  {priceText(now)}
+                </span>
+                <span
+                  class="plan__per"
+                  data-per
+                  data-monthly={perLabel(plan.price.monthly)}
+                  data-yearly={perLabel(plan.price.yearly)}
+                >
+                  {perLabel(now)}
+                </span>
+              </p>
+              <p
+                class="plan__note"
+                data-note
+                data-monthly={plan.price.monthly.note}
+                data-yearly={plan.price.yearly.note}
+              >
+                {now.note}
+              </p>
+              <Button
+                href={plan.cta.href}
+                variant={plan.recommended ? 'primary' : 'secondary'}
+                size="md"
+                full
+                rel={plan.id === 'free' ? undefined : 'nofollow'}
+                class="plan__cta"
+              >
+                {plan.cta.label}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+
+      <table class="matrix">
+        <caption class="visually-hidden">What each plan includes</caption>
+        <thead>
+          <tr>
+            <th scope="col">
+              <span class="visually-hidden">Feature</span>
+            </th>
+            {PLANS.map((p) => (
+              <th scope="col" class:list={[{ 'is-rec': p.recommended }]}>
+                {p.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        {PLAN_MATRIX.map((group) => (
+          <tbody>
+            <tr class="matrix__group">
+              <th scope="rowgroup" colspan={4}>
+                <MonoLabel>{group.group}</MonoLabel>
+              </th>
+            </tr>
+            {group.rows.map((row) => (
+              <tr>
+                <th scope="row">{row.label}</th>
+                {PLANS.map((p) => {
+                  const c = row[p.id];
+                  return (
+                    <td class:list={[{ 'is-rec': p.recommended }]}>
+                      {c === true ? (
+                        <Icon name="check" size={16} label="Included" class="matrix__yes" />
+                      ) : c === false ? (
+                        <span class="matrix__no" aria-label="Not included">
+                          —
+                        </span>
+                      ) : (
+                        <span class="matrix__val" title={cellLabel(c)}>
+                          {c}
+                        </span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        ))}
+      </table>
+    </section>
+
+    <section class="lifetime" aria-labelledby="lifetime-title">
+      <MonoLabel as="p" tone="ink" class="lifetime__label">
+        Launch offer
+      </MonoLabel>
+      <div class="lifetime__body">
+        <h2 class="lifetime__title" id="lifetime-title">
+          <span class="display lifetime__price">${LIFETIME.price}</span>
+          <span>once, for Pro for life.</span>
+        </h2>
+        <p class="lifetime__text">
+          For the first {LIFETIME.cap} accounts when checkout opens. One payment, no renewals, and
+          everything we add to Pro later.
+        </p>
+      </div>
+      <div class="lifetime__cta">
+        <Button href="/sign-in?next=/pro" variant="secondary" rel="nofollow">
+          Get lifetime
+        </Button>
+      </div>
+    </section>
+
+    <section class="faq cols-12" aria-labelledby="faq-title">
+      <h2 class="faq__title" id="faq-title">
+        Questions
+      </h2>
+      <div class="faq__list">
+        {FAQ.map((item) => (
+          <details class="disclosure">
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  // Switch prices in place (the links still work without JS) and keep the URL shareable.
+  const root = document.querySelector<HTMLElement>('[data-pro]');
+  const toggle = root?.querySelector<HTMLElement>('[data-billing-toggle]');
+  toggle?.addEventListener('click', (event) => {
+    const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[data-value]');
+    if (!link || !root) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const billing = link.dataset.value === 'yearly' ? 'yearly' : 'monthly';
+    root.dataset.billing = billing;
+    toggle.querySelectorAll<HTMLAnchorElement>('a[data-value]').forEach((a) => {
+      if (a === link) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+    root.querySelectorAll<HTMLElement>('[data-price], [data-per], [data-note]').forEach((el) => {
+      const next = el.dataset[billing];
+      if (next !== undefined) el.textContent = next;
+    });
+    history.replaceState(null, '', link.href);
+  });
+</script>
+
+<style>
+  .pro {
+    padding-top: var(--space-12);
+  }
+
+  /* ---------- Header ---------- */
+  .pro__head {
+    align-items: end;
+    padding-bottom: var(--space-12);
+  }
+  .pro__head :global(.pro__eyebrow) {
+    display: flex;
+    margin-bottom: var(--space-6);
+  }
+  .pro__title {
+    font-size: clamp(2.5rem, 1.4rem + 4.6vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+  }
+  .pro__intro {
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+  }
+  .pro__toggle {
+    margin-top: var(--space-5);
+  }
+
+  /* ---------- Spec sheet: plan heads ---------- */
+  .sheet {
+    border-top: 1px solid var(--ink);
+  }
+  .sheet__plans {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sheet__corner {
+    display: none;
+  }
+  .plan {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: var(--space-4) var(--space-3) var(--space-6);
+    border-left: 1px solid var(--line);
+  }
+  .plan:nth-child(2) {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .plan--recommended {
+    box-shadow: inset 0 2px 0 var(--ink);
+  }
+  .plan :global(.plan__flag) {
+    display: flex;
+    min-height: 15px;
+  }
+  .plan__name {
+    margin-top: var(--space-3);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+  }
+  .plan__for {
+    display: none;
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+  }
+  .plan__price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 4px;
+    margin-top: var(--space-4);
+  }
+  .plan__amount {
+    font-size: var(--text-3xl);
+    line-height: 1;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .plan__per {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+  .plan__note {
+    min-height: 2.6em;
+    margin-top: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+    line-height: 1.3;
+  }
+  .plan :global(.plan__cta) {
+    margin-top: auto;
+  }
+
+  /* ---------- Spec sheet: feature matrix ---------- */
+  .matrix {
+    width: 100%;
+    table-layout: fixed;
+    font-size: var(--text-sm);
+  }
+  .matrix thead {
+    display: none;
+  }
+  .matrix tbody tr:not(.matrix__group) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-bottom: 1px solid var(--line);
+  }
+  .matrix th[scope='row'] {
+    grid-column: 1 / -1;
+    padding: var(--space-3) 0 2px;
+    color: var(--ink);
+    font-weight: var(--weight-regular);
+    text-align: left;
+  }
+  .matrix td {
+    padding: var(--space-1) var(--space-3) var(--space-3);
+    color: var(--ink);
+    text-align: left;
+  }
+  .matrix td:first-of-type {
+    padding-left: 0;
+  }
+  .matrix__group th {
+    padding: var(--space-8) 0 var(--space-2);
+    text-align: left;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .matrix__group {
+    display: block;
+  }
+  .matrix__group th {
+    display: block;
+  }
+  .matrix :global(.matrix__yes) {
+    color: var(--ink);
+  }
+  .matrix__no {
+    color: var(--ink-4);
+  }
+  .matrix__val {
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- Lifetime ---------- */
+  .lifetime {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-16);
+    padding-block: var(--space-8);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--line);
+  }
+  .lifetime :global(.lifetime__label) {
+    display: flex;
+  }
+  .lifetime__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-3);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-snug);
+  }
+  .lifetime__price {
+    font-size: var(--text-5xl);
+    line-height: 1;
+  }
+  .lifetime__text {
+    max-width: 520px;
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+  }
+
+  /* ---------- FAQ ---------- */
+  .faq {
+    margin-top: var(--space-16);
+  }
+  .faq__title {
+    font-size: var(--text-xl);
+    letter-spacing: var(--tracking-snug);
+  }
+  .faq__list {
+    min-width: 0;
+    border-top: 1px solid var(--line);
+  }
+  .faq__list :global(summary) {
+    min-height: 52px;
+    font-size: var(--text-md);
+  }
+  .faq__list p {
+    max-width: 620px;
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+  }
+
+  @media (min-width: 640px) {
+    .plan {
+      padding: var(--space-5) var(--space-5) var(--space-8);
+    }
+    .plan__for {
+      display: block;
+    }
+    .plan__amount {
+      font-size: var(--text-5xl);
+    }
+    .plan__per {
+      font-size: var(--text-xs);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .pro {
+      padding-top: var(--space-16);
+    }
+    .pro__statement {
+      grid-column: 1 / span 8;
+    }
+    .pro__intro {
+      grid-column: 9 / -1;
+    }
+    .pro__head {
+      padding-bottom: var(--space-16);
+    }
+
+    /* One column grid shared by plan heads and matrix rows. */
+    .sheet__plans,
+    .matrix tbody tr:not(.matrix__group) {
+      grid-template-columns: minmax(0, 4fr) repeat(3, minmax(0, 2.6fr));
+    }
+    .sheet__corner {
+      display: block;
+      padding: var(--space-5) var(--space-8) var(--space-8) 0;
+    }
+    .sheet__corner-note {
+      max-width: 260px;
+      margin-top: var(--space-3);
+      color: var(--ink-3);
+      font-size: var(--text-sm);
+      line-height: var(--leading-normal);
+    }
+    .plan:nth-child(2) {
+      border-left: 1px solid var(--line);
+      padding-left: var(--space-5);
+    }
+    .plan--recommended {
+      box-shadow: inset 0 2px 0 var(--ink);
+    }
+    .matrix th[scope='row'] {
+      grid-column: auto;
+      padding: var(--space-3) var(--space-4) var(--space-3) 0;
+      color: var(--ink-2);
+    }
+    .matrix td,
+    .matrix td:first-of-type {
+      padding: var(--space-3) var(--space-5);
+      border-left: 1px solid var(--line);
+    }
+    .lifetime {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 5.2fr) minmax(0, 2.6fr);
+      align-items: center;
+      gap: 0;
+    }
+    .lifetime :global(.lifetime__label) {
+      align-self: start;
+      padding-top: var(--space-3);
+    }
+    .lifetime__body {
+      padding-left: var(--space-5);
+    }
+    .lifetime__cta {
+      padding-left: var(--space-5);
+    }
+    .faq__title {
+      grid-column: 1 / span 4;
+    }
+    .faq__list {
+      grid-column: 5 / -1;
+    }
+  }
+</style>

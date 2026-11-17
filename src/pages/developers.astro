@@ -1,0 +1,709 @@
+---
+/**
+ * API & MCP docs. The endpoint list is read from the API registry (same source as the router
+ * and /api/v1/openapi.json), so it can't drift; examples use real seed slugs.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Button from '~/components/ui/Button.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import Count from '~/components/ui/Count.astro';
+import CodeBlock from '~/components/static/CodeBlock.astro';
+import { endpointList } from '~/server/api/v1/registry';
+import { CONTACT, SITE_NAME, SITE_URL } from '~/config/site';
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+
+const BASE = `${SITE_URL}/api/v1`;
+
+/** Example values for path params, and a useful query per endpoint. */
+const EXAMPLES: Record<string, string> = {
+  index: '',
+  getMeta: '/meta',
+  search: '/search?q=prestige',
+  listStores: '/stores?theme=prestige&limit=12',
+  getStore: '/stores/youngla.com',
+  listThemes: '/themes',
+  getTheme: '/themes/prestige',
+  listThemeStores: '/themes/prestige/stores',
+  listApps: '/apps?price=free&sort=rating',
+  listAppCategories: '/app-categories',
+  getApp: '/apps/judgeme',
+  listAppStores: '/apps/judgeme/stores',
+  listSections: '/sections?type=reviews&page_type=product&device=mobile',
+  listSectionTypes: '/section-types',
+  getSection: '/sections/1',
+  getScreenshot: '/screenshots/1',
+  listTeardowns: '/teardowns',
+  getTeardown: '/teardowns/youngla',
+  getComparison: '/compare/judgeme-vs-loox',
+  listComparisons: '/comparisons',
+  getAlternatives: '/alternatives/klaviyo',
+  listAlternatives: '/alternatives',
+};
+
+const REMOVAL_EXAMPLE = `curl -X POST ${BASE}/removal-requests \\
+  -H 'Content-Type: application/json' \\
+  -d '{"domain":"example.com","email":"owner@example.com","scope":"store","reason":"I own this store and want it removed."}'`;
+
+const exampleFor = (id: string, method: string, path: string) => {
+  if (method === 'POST') return REMOVAL_EXAMPLE;
+  const p = EXAMPLES[id] ?? path.replace(/\{[a-z_]+\}/g, 'example');
+  return `curl ${BASE}${p}`;
+};
+
+const GROUP_ORDER = [
+  'Stores',
+  'Themes',
+  'Apps',
+  'Sections',
+  'Teardowns',
+  'Compare',
+  'Search',
+  'Meta',
+  'Removal',
+];
+const GROUP_NOTES: Record<string, string> = {
+  Stores: 'Scanned stores with their theme, apps and captures.',
+  Themes: 'Themes with the stores using them.',
+  Apps: 'App Store facts, where each app is seen, co-installs and alternatives.',
+  Sections: 'The sliced library: sections, section types and full screenshots.',
+  Teardowns: 'Editorial deep dives on one store.',
+  Compare: 'Side-by-side comparisons and alternatives.',
+  Search: 'One query across stores, themes, apps, categories and section types.',
+  Meta: 'Data dates, sources and headline counts.',
+  Removal: 'Store owners asking to be removed. Rate limited.',
+};
+const groups = GROUP_ORDER.map((tag) => ({
+  tag,
+  id: `api-${tag.toLowerCase()}`,
+  items: endpointList.filter((e) => (e.tags[0] ?? 'Other') === tag && e.id !== 'index'),
+})).filter((g) => g.items.length > 0);
+const endpointCount = groups.reduce((n, g) => n + g.items.length, 0);
+
+const ENVELOPE = `{
+  "data": { "domain": "youngla.com", "theme": { … }, "apps": [ … ] },
+  "meta": {
+    "api_version": "v1",
+    "data_version": "2026-11-17.1",
+    "data_as_of": "2026-11-17",
+    "sources": {
+      "scan": { "label": "Store scan", "as_of": "2026-11-17", "url": "/methodology" }
+    },
+    "canonical": "/stores/youngla.com"
+  }
+}`;
+
+const ERROR = `{
+  "error": {
+    "code": "validation_error",
+    "message": "Invalid input for listStores",
+    "details": [{ "path": "limit", "message": "Too big: expected number to be <=100" }]
+  }
+}`;
+
+const MCP_TOOLS = [
+  { name: 'search', what: 'Find stores, themes, apps and section types by name.' },
+  { name: 'get_store_stack', what: 'A store’s theme, version and detected apps, with dates.' },
+  { name: 'list_stores', what: 'Stores filtered by theme, app, category or currency.' },
+  { name: 'get_theme / get_app', what: 'Facts, usage on our scanned stores and alternatives.' },
+  { name: 'get_screenshots', what: 'Full-page captures of a store by page type and device.' },
+  {
+    name: 'list_sections',
+    what: 'Section crops by type, theme or app, such as product page reviews.',
+  },
+];
+
+const NAV = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'quick-start', label: 'Quick start' },
+  {
+    id: 'endpoints',
+    label: 'Endpoints',
+    children: groups.map((g) => ({ id: g.id, label: g.tag })),
+  },
+  { id: 'responses', label: 'Responses' },
+  { id: 'pagination', label: 'Pagination' },
+  { id: 'caching', label: 'Caching' },
+  { id: 'versioning', label: 'Versioning' },
+  { id: 'fair-use', label: 'Fair use' },
+  { id: 'attribution', label: 'Attribution' },
+  { id: 'mcp', label: 'MCP server' },
+];
+---
+
+<BaseLayout
+  title="API & MCP"
+  description={`The public ${SITE_NAME} JSON API: stores, themes, apps, sections and screenshots, versioned and cacheable. Plus the upcoming MCP server for Claude and ChatGPT.`}
+  jsonLd={{
+    '@type': 'TechArticle',
+    headline: `${SITE_NAME} API & MCP`,
+    url: `${SITE_URL}/developers`,
+  }}
+>
+  <div class="dev container">
+    <header class="dev__head cols-12">
+      <div class="dev__statement">
+        <MonoLabel as="p" class="dev__eyebrow">
+          API & MCP · v1
+        </MonoLabel>
+        <h1 class="dev__title display">The library, as JSON.</h1>
+      </div>
+      <div class="dev__intro">
+        <p>
+          Every page on {SITE_NAME} reads from the same public API. Use it in your own tools now,
+          and soon from Claude or ChatGPT through our MCP server. No key needed.
+        </p>
+        <dl class="dev__spec">
+          <div>
+            <dt>
+              <MonoLabel>Base URL</MonoLabel>
+            </dt>
+            <dd class="mono">{BASE}</dd>
+          </div>
+          <div>
+            <dt>
+              <MonoLabel>Format</MonoLabel>
+            </dt>
+            <dd>JSON, OpenAPI 3.1</dd>
+          </div>
+          <div>
+            <dt>
+              <MonoLabel>Auth</MonoLabel>
+            </dt>
+            <dd>None for reading</dd>
+          </div>
+        </dl>
+        <div class="dev__actions">
+          <Button
+            href="/api/v1/openapi.json"
+            variant="secondary"
+            size="sm"
+            iconRight="arrow-up-right"
+          >
+            openapi.json
+          </Button>
+          <Button href="/api/v1" variant="ghost" size="sm">
+            API index
+          </Button>
+        </div>
+      </div>
+    </header>
+
+    <div class="dev__body">
+      <nav class="dev__nav" aria-label="On this page">
+        <div class="dev__nav-inner">
+          <MonoLabel as="p" class="dev__nav-title">
+            On this page
+          </MonoLabel>
+          <ul>
+            {NAV.map((item) => (
+              <li>
+                <a href={`#${item.id}`} data-toc-link={item.id}>
+                  {item.label}
+                </a>
+                {item.children && (
+                  <ul class="dev__nav-sub">
+                    {item.children.map((c) => (
+                      <li>
+                        <a href={`#${c.id}`} data-toc-link={c.id}>
+                          {c.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+
+      <article class="dev__main">
+        <section class="dev__sec" aria-labelledby="overview">
+          <h2 id="overview">Overview</h2>
+          <p>
+            The API serves the same data as the website: stores we scanned, the theme and apps we
+            detected on each, App Store facts, and the screenshot library sliced into sections.
+            Every response says where its numbers come from and the date they were true.
+          </p>
+          <ul>
+            <li>
+              Read-only and public. CORS is open for <code>GET</code>, so it works from a browser.
+            </li>
+            <li>
+              Stable under <code>/api/v1</code>. Changes are additive.
+            </li>
+            <li>
+              Screenshots are layout previews until our first capture run; responses mark them with{' '}
+              <code>is_placeholder</code>.
+            </li>
+          </ul>
+        </section>
+
+        <section class="dev__sec" aria-labelledby="quick-start">
+          <h2 id="quick-start">Quick start</h2>
+          <p>Get a store’s theme and apps:</p>
+          <CodeBlock code={`curl ${BASE}/stores/youngla.com`} prompt />
+          <p>Find stores running a theme and an app together:</p>
+          <CodeBlock code={`curl '${BASE}/stores?theme=prestige&app=judgeme'`} prompt />
+        </section>
+
+        <section class="dev__sec" aria-labelledby="endpoints">
+          <h2 id="endpoints">
+            Endpoints
+            <Count value={endpointCount} label="endpoints" />
+          </h2>
+          <p>
+            Parameters for each endpoint are in the{' '}
+            <a href="/api/v1/openapi.json">OpenAPI document</a>. List endpoints take{' '}
+            <code>limit</code> and <code>cursor</code>.
+          </p>
+          {groups.map((g) => (
+            <div class="eg">
+              <div class="eg__head">
+                <h3 id={g.id} class="eg__title">
+                  {g.tag}
+                </h3>
+                <p class="eg__note">{GROUP_NOTES[g.tag]}</p>
+              </div>
+              <ul class="eg__list">
+                {g.items.map((e) => (
+                  <li class="ep">
+                    <div class="ep__line">
+                      <span class:list={['ep__method', `ep__method--${e.method.toLowerCase()}`]}>
+                        {e.method}
+                      </span>
+                      <code class="ep__path">/api/v1{e.path}</code>
+                      <span class="ep__summary">{e.summary}</span>
+                    </div>
+                    <CodeBlock
+                      code={exampleFor(e.id, e.method, e.path)}
+                      variant="line"
+                      prompt
+                      class="ep__example"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+
+        <section class="dev__sec" aria-labelledby="responses">
+          <h2 id="responses">Responses</h2>
+          <p>
+            Every success has the same envelope: the resource in <code>data</code>, provenance in{' '}
+            <code>meta</code>. Numbers inside <code>data</code> name their source by key in{' '}
+            <code>meta.sources</code>.
+          </p>
+          <CodeBlock code={ENVELOPE} label="200 · application/json" />
+          <p>Errors use HTTP status codes and one shape:</p>
+          <CodeBlock code={ERROR} label="400 · application/json" />
+          <p>
+            Codes: <code>bad_request</code>, <code>validation_error</code>, <code>not_found</code>,{' '}
+            <code>method_not_allowed</code>, <code>payload_too_large</code>,{' '}
+            <code>unsupported_media_type</code>, <code>rate_limited</code> and{' '}
+            <code>internal_error</code>.
+          </p>
+        </section>
+
+        <section class="dev__sec" aria-labelledby="pagination">
+          <h2 id="pagination">Pagination</h2>
+          <p>
+            Lists return up to <code>limit</code> items. When there are more,{' '}
+            <code>meta.pagination.next_cursor</code> holds an opaque cursor: pass it back as{' '}
+            <code>?cursor=</code> with the same filters. A <code>null</code> cursor means you have
+            everything.
+          </p>
+        </section>
+
+        <section class="dev__sec" aria-labelledby="caching">
+          <h2 id="caching">Caching</h2>
+          <p>
+            Public responses are cacheable for a minute in browsers and ten minutes at the edge, and
+            carry a weak <code>ETag</code> tied to <code>data_version</code>. Send it back in{' '}
+            <code>If-None-Match</code> and you get a <code>304</code> until our data changes, which
+            happens when a scan is imported.
+          </p>
+          <CodeBlock
+            code={`Cache-Control: public, max-age=60, s-maxage=600, stale-while-revalidate=86400
+ETag: W/"…"`}
+            label="Response headers"
+          />
+        </section>
+
+        <section class="dev__sec" aria-labelledby="versioning">
+          <h2 id="versioning">Versioning</h2>
+          <p>
+            The version is in the path. Inside <code>v1</code> we only add: new endpoints, new
+            optional parameters and new fields. Ignore fields you don’t know. Anything that would
+            break a client ships as <code>v2</code>, with <code>v1</code> kept running alongside.
+          </p>
+        </section>
+
+        <section class="dev__sec" aria-labelledby="fair-use">
+          <h2 id="fair-use">Fair use</h2>
+          <ul>
+            <li>
+              No key is needed to read. Keep to a modest request rate and cache what you fetch.
+            </li>
+            <li>Removal requests are limited per connection and per domain.</li>
+            <li>
+              We may slow down or block clients that hammer the API or copy the data set in bulk.
+            </li>
+            <li>
+              Need more? Tell us what you’re building at{' '}
+              <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>.
+            </li>
+          </ul>
+          <p>
+            The full rules are in the <a href="/terms#api">terms</a>.
+          </p>
+        </section>
+
+        <section class="dev__sec" aria-labelledby="attribution">
+          <h2 id="attribution">Attribution</h2>
+          <p>
+            When you show our data to people, show where it came from: our name, linked to the page
+            the result describes. Each response has that page in <code>meta.canonical</code> (and a{' '}
+            <code>Link: rel="canonical"</code> header) as a path on {SITE_URL}.
+          </p>
+          <p>
+            Some app and theme links in responses are affiliate links (<code>cta.is_affiliate</code>
+            ). Keep them as they are and keep their label next to them.
+          </p>
+        </section>
+
+        <section class="dev__sec" aria-labelledby="mcp">
+          <h2 id="mcp">MCP server</h2>
+          <MonoLabel as="p" tone="accent" class="dev__status">
+            In development
+          </MonoLabel>
+          <p>
+            An MCP server will let Claude, ChatGPT and other assistants pull real store references
+            while they help someone build a Shopify store. Each tool calls the v1 endpoints above,
+            so answers carry the same sources, dates and links.
+          </p>
+          <ul class="tools">
+            {MCP_TOOLS.map((t) => (
+              <li class="tools__row">
+                <code class="tools__name">{t.name}</code>
+                <span class="tools__what">{t.what}</span>
+              </li>
+            ))}
+          </ul>
+          <p>Tool names may change before release.</p>
+        </section>
+      </article>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  // Scroll-spy for the docs nav (same behaviour as the legal pages).
+  const links = new Map<string, HTMLAnchorElement>();
+  document.querySelectorAll<HTMLAnchorElement>('.dev__nav [data-toc-link]').forEach((a) => {
+    links.set(a.dataset.tocLink ?? '', a);
+  });
+  const targets = [...links.keys()]
+    .map((id) => document.getElementById(id))
+    .filter((el): el is HTMLElement => !!el)
+    .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  let current = '';
+  let queued = false;
+  const update = () => {
+    queued = false;
+    const line = window.innerHeight * 0.3;
+    let id = '';
+    for (const t of targets) {
+      if (t.getBoundingClientRect().top <= line) id = t.id;
+      else break;
+    }
+    if (id === current) return;
+    current = id;
+    links.forEach((a, key) => {
+      if (key === id) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  };
+  if (targets.length) {
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!queued) {
+          queued = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true },
+    );
+    update();
+  }
+</script>
+
+<style>
+  .dev {
+    padding-top: var(--space-12);
+  }
+
+  /* ---------- Header ---------- */
+  .dev__head {
+    align-items: start;
+    padding-bottom: var(--space-12);
+    border-bottom: 1px solid var(--line);
+  }
+  .dev__head :global(.dev__eyebrow) {
+    display: flex;
+    margin-bottom: var(--space-6);
+  }
+  .dev__title {
+    font-size: clamp(2.5rem, 1.4rem + 4.6vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+  }
+  .dev__intro {
+    min-width: 0;
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+  }
+  .dev__spec {
+    margin-top: var(--space-5);
+    border-top: 1px solid var(--ink);
+  }
+  .dev__spec > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .dev__spec dd {
+    min-width: 0;
+    color: var(--ink);
+    font-size: var(--text-sm);
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .dev__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+  }
+
+  /* ---------- Body: nav + main ---------- */
+  .dev__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dev__nav {
+    display: none;
+  }
+  .dev__main {
+    min-width: 0;
+    max-width: 760px;
+  }
+  .dev__sec {
+    padding-top: var(--space-10);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+  }
+  .dev__sec > * + * {
+    margin-top: var(--space-4);
+  }
+  .dev__sec h2 {
+    color: var(--ink);
+    font-size: var(--text-2xl);
+    letter-spacing: var(--tracking-snug);
+  }
+  .dev__sec h2 + * {
+    margin-top: var(--space-3);
+  }
+  .dev__sec ul:not([class]) {
+    padding-left: 1.2em;
+    list-style: disc;
+  }
+  .dev__sec ul:not([class]) li + li {
+    margin-top: var(--space-1-5);
+  }
+  .dev__sec ul:not([class]) li::marker {
+    color: var(--ink-4);
+  }
+  .dev__sec p code,
+  .dev__sec ul:not([class]) li code {
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-xs);
+    background: var(--fill);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+  }
+  .dev__sec a:not(.btn) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+  .dev__sec :global(.dev__status) {
+    display: flex;
+    margin-top: var(--space-2);
+  }
+  .dev__sec > :global(.code) {
+    margin-block: var(--space-5) var(--space-6);
+  }
+
+  /* Endpoint groups and rows */
+  .eg {
+    margin-top: var(--space-8);
+  }
+  .eg__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--ink);
+  }
+  .eg__title {
+    color: var(--ink);
+    font-size: var(--text-lg);
+  }
+  .eg__note {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .ep {
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .ep__line {
+    display: grid;
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    gap: 2px var(--space-3);
+    align-items: baseline;
+  }
+  .ep__method {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+  .ep__method--post {
+    color: var(--accent-text);
+  }
+  .ep__path {
+    min-width: 0;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+  }
+  .ep__summary {
+    grid-column: 2;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .ep :global(.ep__example) {
+    margin-top: var(--space-2);
+    margin-left: calc(3.25rem + var(--space-3));
+  }
+
+  .tools {
+    border-top: 1px solid var(--ink);
+  }
+  .tools__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .tools__name {
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .tools__what {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+  }
+
+  @media (max-width: 639px) {
+    .ep :global(.ep__example) {
+      margin-left: 0;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .ep__line {
+      grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+    }
+    .ep__summary {
+      grid-column: 3;
+      text-align: right;
+    }
+    .tools__row {
+      grid-template-columns: 12rem minmax(0, 1fr);
+      gap: var(--space-4);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .dev {
+      padding-top: var(--space-16);
+    }
+    .dev__statement {
+      grid-column: 1 / span 7;
+    }
+    .dev__intro {
+      grid-column: 8 / -1;
+    }
+    .dev__body {
+      grid-template-columns: 200px minmax(0, 1fr);
+      column-gap: var(--space-16);
+    }
+    .dev__nav {
+      display: block;
+    }
+    .dev__nav-inner {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-8));
+      padding-top: var(--space-10);
+    }
+    .dev__nav :global(.dev__nav-title) {
+      display: flex;
+      margin-bottom: var(--space-3);
+    }
+    .dev__nav a {
+      display: block;
+      padding: 4px 0 4px var(--space-3);
+      border-left: 1px solid var(--line);
+      color: var(--ink-3);
+      font-size: var(--text-sm);
+      transition: color var(--dur-fast) var(--ease-out);
+    }
+    .dev__nav a:hover {
+      color: var(--ink);
+    }
+    .dev__nav a[aria-current='true'] {
+      border-left-color: var(--accent);
+      color: var(--ink);
+    }
+    .dev__nav-sub a {
+      padding-left: var(--space-6);
+      font-size: var(--text-xs);
+    }
+    .dev__main {
+      grid-column: 2;
+    }
+  }
+  @media (min-width: 1280px) {
+    .dev__body {
+      grid-template-columns: 220px minmax(0, 760px) minmax(0, 1fr);
+    }
+  }
+</style>

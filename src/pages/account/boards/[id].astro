@@ -1,0 +1,135 @@
+---
+/**
+ * Board detail — placeholder. Example boards (ids in EXAMPLE_BOARDS) show items from the
+ * sections library, labelled as an example; any other id shows the empty board a new account
+ * would see. Ids that aren't slugs are 404s.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import Button from '~/components/ui/Button.astro';
+import Count from '~/components/ui/Count.astro';
+import EmptyState from '~/components/ui/EmptyState.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import SectionCard from '~/components/domain/SectionCard.astro';
+import AccountShell from '~/components/static/AccountShell.astro';
+import { EXAMPLE_BOARDS, isBoardId } from '~/components/static/content';
+import { loadExampleItems } from '~/components/static/boards';
+import { pageTypeName } from '~/lib/taxonomy';
+
+const { id } = Astro.params;
+if (!isBoardId(id)) return Astro.rewrite('/404');
+
+const example = EXAMPLE_BOARDS.find((b) => b.id === id) ?? null;
+const items = example ? await loadExampleItems(example, 24) : [];
+const title = example ? example.name : 'Untitled board';
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<BaseLayout title={title} description="A board of saved stores, pages and sections." noindex>
+  <AccountShell current="boards">
+    <header class="bd__head">
+      <Breadcrumbs
+        items={[
+          { label: 'Account', href: '/account' },
+          { label: 'Boards', href: '/account/boards' },
+          { label: title },
+        ]}
+      />
+      <div class="bd__row">
+        <div class="bd__text">
+          <h1 class="bd__title">
+            {title}
+            <Count value={items.length} label="items" />
+          </h1>
+          {example ? (
+            <p class="bd__desc">{example.description}</p>
+          ) : (
+            <p class="bd__desc">Boards you create will live here.</p>
+          )}
+          {example && (
+            <MonoLabel as="p" tone="accent" class="bd__flag">
+              Example board · from the sections library · not saved
+            </MonoLabel>
+          )}
+        </div>
+        <div class="bd__actions">
+          <Button variant="secondary" size="sm" icon="link-simple" disabled>
+            Share
+          </Button>
+          <Button variant="secondary" size="sm" icon="download-simple" disabled>
+            Export CSV
+          </Button>
+        </div>
+      </div>
+    </header>
+
+    {items.length > 0 ? (
+      <div class="grid grid--sections">
+        {items.map((s, i) => (
+          <SectionCard
+            href={s.href}
+            crop={{ src: s.crop.src, width: s.crop.width, height: s.crop.height }}
+            device={s.device}
+            typeName={s.type.name}
+            storeLabel={s.store.display_name}
+            meta={`${s.theme?.name ?? 'Custom theme'} · ${pageTypeName(s.page_type)} · ${s.device}`}
+            app={s.app ? { name: s.app.name, iconUrl: s.app.icon_url } : null}
+            eager={i < 4}
+          />
+        ))}
+      </div>
+    ) : (
+      <EmptyState
+        title="Nothing on this board yet"
+        body="Use Save on any store, page or section to add it here. Saving opens with accounts."
+      >
+        <Button href="/sections" variant="primary" size="sm">
+          Browse sections
+        </Button>
+        <Button href="/account/boards" variant="secondary" size="sm">
+          All boards
+        </Button>
+      </EmptyState>
+    )}
+  </AccountShell>
+</BaseLayout>
+
+<style>
+  .bd__head {
+    padding-block: var(--space-6) var(--space-8);
+  }
+  .bd__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-8);
+    margin-top: var(--space-4);
+  }
+  .bd__text {
+    min-width: 0;
+  }
+  .bd__title {
+    font-size: var(--text-3xl);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+  }
+  .bd__desc {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--text-md);
+  }
+  .bd__text :global(.bd__flag) {
+    display: flex;
+    margin-top: var(--space-3);
+  }
+  .bd__actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+  @media (min-width: 1024px) {
+    .bd__head {
+      padding-top: var(--space-10);
+    }
+  }
+</style>

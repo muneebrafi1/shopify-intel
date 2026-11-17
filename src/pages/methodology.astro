@@ -1,0 +1,318 @@
+---
+/**
+ * How detection, numbers, dates and screenshots work. Linked from every SourceNote
+ * ("How we detect") and from the capture-preview notice (#screenshots).
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Stat from '~/components/ui/Stat.astro';
+import StatList from '~/components/ui/StatList.astro';
+import MonoLabel from '~/components/ui/MonoLabel.astro';
+import DocShell from '~/components/static/DocShell.astro';
+import AsideCard from '~/components/static/AsideCard.astro';
+import SlicedPlate from '~/components/static/SlicedPlate.astro';
+import { CONTACT, SITE_NAME } from '~/config/site';
+import { formatCount, formatDate } from '~/lib/format';
+import { loadMeta } from '~/components/static/meta';
+
+const meta = await loadMeta();
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+
+const scanned = meta?.counts.stores_scanned ?? null;
+const scannedPhrase = scanned ? `${formatCount(scanned)} scanned stores` : 'our scanned stores';
+const asOf = meta ? formatDate(meta.data_as_of) : null;
+const rules = meta?.rules_version ?? null;
+const checkedFrom = meta?.app_store_checked.from ?? null;
+const checkedTo = meta?.app_store_checked.to ?? null;
+const checkedRange =
+  checkedFrom && checkedTo
+    ? checkedFrom === checkedTo
+      ? formatDate(checkedTo)
+      : `${formatDate(checkedFrom)} – ${formatDate(checkedTo)}`
+    : null;
+
+const toc = [
+  { id: 'what-we-look-at', label: 'What we look at' },
+  { id: 'detection', label: 'How detection works' },
+  { id: 'numbers', label: 'What the numbers mean' },
+  { id: 'dates', label: 'Dates and history' },
+  { id: 'screenshots', label: 'Screenshots' },
+  { id: 'app-store', label: 'App Store facts' },
+  { id: 'never', label: 'What we never do' },
+  { id: 'corrections', label: 'Corrections and removal' },
+];
+---
+
+<BaseLayout
+  title="Methodology"
+  description={`How ${SITE_NAME} detects themes and apps on public Shopify storefronts, what every number means, how screenshots are made, and what we never estimate.`}
+  jsonLd={{
+    '@type': 'TechArticle',
+    headline: 'Methodology',
+    description:
+      'How themes and apps are detected on public Shopify storefronts, and what the numbers mean.',
+    ...(meta ? { dateModified: meta.data_as_of } : {}),
+  }}
+>
+  <DocShell
+    title="Methodology"
+    eyebrow="How it works"
+    lede="Where our data comes from, what each number means and where it falls short. If something looks wrong, tell us."
+    toc={toc}
+    current="/methodology"
+  >
+    <Fragment slot="head">
+      {meta && (
+        <div class="method-strip marks">
+          <StatList columns={3}>
+            <Stat
+              value={formatCount(meta.counts.stores_scanned)}
+              label="Stores scanned"
+              size="sm"
+              display
+            />
+            <Stat value={asOf ?? '—'} label="Data as of" size="sm" display />
+            <Stat value={rules ?? 'Not recorded'} label="Detection rules" size="sm" display />
+          </StatList>
+          <MonoLabel as="p" class="method-strip__source">
+            Source: {meta.source.label}
+          </MonoLabel>
+        </div>
+      )}
+    </Fragment>
+
+    <Fragment slot="summary">
+      <ul>
+        <li>
+          We read public storefront pages only, slowly, and we respect <code>robots.txt</code>.
+        </li>
+        <li>
+          Themes come from the theme metadata a storefront publishes; apps from the scripts and
+          assets they load.
+        </li>
+        <li>
+          Shares are of <strong>{scannedPhrase}</strong>, not of all Shopify stores. That set is
+          biased towards Theme Store examples.
+        </li>
+        <li>We never estimate revenue, traffic or sales.</li>
+      </ul>
+    </Fragment>
+
+    <h2 id="what-we-look-at">What we look at</h2>
+    <p>
+      Our crawler opens the same pages any shopper can: the home page, a collection, a product and
+      the cart, in a real browser. It never signs in, never enters a password-protected store, never
+      goes through checkout and never touches a store’s admin.
+    </p>
+    <ul>
+      <li>
+        It reads and respects each store’s <code>robots.txt</code>.
+      </li>
+      <li>
+        It works through stores one at a time with pauses between requests, so a scan is a light
+        load.
+      </li>
+      <li>
+        Stores that block automated visits are left alone; we don’t work around bot protection.
+      </li>
+    </ul>
+    <p>
+      The list of stores to scan started from the example stores that the Shopify Theme Store shows
+      for each theme, plus notable stores we chose by hand. It is not a random sample of Shopify.
+    </p>
+
+    <h2 id="detection">How detection works</h2>
+    <p>
+      Detection uses the rule set from StorePeek, our Chrome extension for inspecting Shopify
+      stores. The rules run on the HTML and network requests of each page.
+    </p>
+    <h3>Themes</h3>
+    <p>
+      Every Shopify storefront publishes metadata about its live theme: a name, a Theme Store ID
+      when it came from the Theme Store, and usually a version. We match the ID and name against the
+      Theme Store catalogue. Themes renamed by the merchant are still matched by ID. Themes without
+      an ID that we can’t match are shown as <em>Custom theme</em> with the name the store gave it.
+    </p>
+    <h3>Apps</h3>
+    <p>
+      Apps leave signatures on the storefront: script and stylesheet URLs, app embed blocks, element
+      classes and global JavaScript objects. Each app in the rule set has one or more of these
+      signatures. An app counts as detected when at least one matches.
+    </p>
+    <h3>Confidence</h3>
+    <p>
+      Signatures differ in strength. A script served from an app’s own domain is strong evidence; a
+      generic class name is weaker. Newer rules record a confidence level per detection.{' '}
+      {rules ? (
+        <>
+          The current data comes from a scan run with <strong>{rules}</strong> rules, which did not
+          record confidence, so detections are shown without a confidence label.
+        </>
+      ) : (
+        <>
+          The current data comes from an older scan that did not record confidence, so detections
+          are shown without a confidence label.
+        </>
+      )}
+    </p>
+    <h3>What detection can’t see</h3>
+    <ul>
+      <li>Apps that only work in the admin or the back office, with nothing on the storefront.</li>
+      <li>Apps that load only after a shopper interacts, or only at checkout.</li>
+      <li>Headless storefronts that don’t use a Shopify theme.</li>
+    </ul>
+    <p>So “not detected” means “we saw no signature”, not “not installed”.</p>
+
+    <h2 id="numbers">What the numbers mean</h2>
+    <p>Every number on the site has a source and a date next to it. This is what they mean.</p>
+    <div class="table-wrap method-table">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Number</th>
+            <th scope="col">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Seen on N stores</td>
+            <td>Active stores in our scanned set where we currently detect it.</td>
+          </tr>
+          <tr>
+            <td>Share</td>
+            <td>
+              Those stores divided by all active stores we scanned
+              {scanned ? ` (${formatCount(scanned)})` : ''}.
+            </td>
+          </tr>
+          <tr>
+            <td>Rank and N° numbers</td>
+            <td>Order within our scanned set, by stores. Labels, not market positions.</td>
+          </tr>
+          <tr>
+            <td>Rating, reviews, price</td>
+            <td>
+              Copied from the public App Store listing or Theme Store page, with the date we
+              checked.
+            </td>
+          </tr>
+          <tr>
+            <td>First seen, last seen</td>
+            <td>The first and the latest scan in which we detected it on that store.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <strong>Scan share is not market share.</strong> Because our list started from Theme Store
+      example stores, themes with long example lists show up more, and so do the apps their
+      merchants like. Read “Seen on 221 of 930 scanned stores” as exactly that.
+    </p>
+
+    <h2 id="dates">Dates and history</h2>
+    <p>
+      Nothing is overwritten. Each detection has a <strong>first seen</strong> and a{' '}
+      <strong>last seen</strong> date. When a store changes theme or drops an app, we close the old
+      record and open a new one. That history is what will power “recently switched” views and
+      trends.
+    </p>
+    <p>
+      {asOf ? (
+        <>
+          The current data set is dated <strong>{asOf}</strong>. Pages show the date of the data
+          they use.
+        </>
+      ) : (
+        <>Pages show the date of the data they use.</>
+      )}
+    </p>
+
+    <h2 id="screenshots">Screenshots</h2>
+    <p>
+      For curated stores we capture full pages, top to bottom, for each page type (home, collection,
+      product, cart and more) on desktop at 1440px wide and on mobile at 390px wide. Each capture is
+      then sliced into sections such as the header, hero, buy box, reviews and footer. Each section
+      is tagged with its type and, when we can tell, the app that renders it.
+    </p>
+    <SlicedPlate />
+    <p>
+      <strong>Today these are layout previews.</strong> Until our first capture run, every
+      “screenshot” is drawn from the sections we detected on that page, in the store’s colours, and
+      labelled as a preview. The detection data under them is real. When real captures land, the
+      previews are replaced and every capture shows the date it was taken.
+    </p>
+    <p>
+      Screenshots only show public pages, always name the store and link back to it. Store owners
+      can ask us to take them down.
+    </p>
+
+    <h2 id="app-store">App Store facts</h2>
+    <p>
+      An app’s rating, review count, pricing, developer and Built for Shopify status are copied from
+      its public Shopify App Store listing{checkedRange ? `, read between ${checkedRange}` : ''}.
+      Each app page shows the date its listing was checked. We don’t adjust or reweight them.
+    </p>
+
+    <h2 id="never">What we never do</h2>
+    <ul>
+      <li>Estimate a store’s revenue, orders, traffic or ad spend.</li>
+      <li>Guess best sellers or copy other tools’ estimates.</li>
+      <li>Collect anything about a store’s shoppers.</li>
+      <li>
+        Let an affiliate partnership change what we detect or how we rank. See the{' '}
+        <a href="/affiliate-disclosure">affiliate disclosure</a>.
+      </li>
+    </ul>
+
+    <h2 id="corrections">Corrections and removal</h2>
+    <p>
+      If we got something wrong, such as a theme, an app or a name, use the{' '}
+      <a href="/opt-out">removal form</a> and choose “Correct a detail”, or write to{' '}
+      <a href={`mailto:${CONTACT.hello}`}>{CONTACT.hello}</a>. If you own a store and want it gone,
+      the same form removes it from the site and deletes its screenshots. We keep only the domain on
+      a block list so the crawler never adds it back.
+    </p>
+
+    <Fragment slot="aside">
+      <AsideCard title="Spotted a mistake?">
+        <p>Tell us what’s wrong and we’ll fix it in the next scan.</p>
+        <p>
+          <a href="/opt-out">Correct a detail</a>
+        </p>
+      </AsideCard>
+      <AsideCard title="Use the data">
+        <p>
+          The same data is available as JSON. <a href="/developers">API & MCP</a>
+        </p>
+      </AsideCard>
+    </Fragment>
+  </DocShell>
+</BaseLayout>
+
+<style>
+  .method-strip {
+    margin-block: var(--space-10) var(--space-4);
+    padding: var(--space-5) var(--space-5) var(--space-4);
+  }
+  .method-strip :global(.method-strip__source) {
+    display: flex;
+    align-items: first baseline;
+    margin-top: var(--space-5);
+  }
+  .method-table {
+    margin-top: var(--space-4);
+  }
+  .method-table td:first-child {
+    width: 34%;
+    color: var(--ink);
+    font-weight: var(--weight-medium);
+  }
+  .method-table td {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    vertical-align: top;
+  }
+  .method-table tbody tr:hover {
+    background: none;
+  }
+</style>

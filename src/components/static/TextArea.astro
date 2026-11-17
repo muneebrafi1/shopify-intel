@@ -1,0 +1,47 @@
+---
+/**
+ * Textarea that can be server-filled. The shared Input renders <textarea /> self-closed, so a
+ * value can't survive a no-JS round trip (e.g. a form re-rendered with errors). Same look as
+ * Input's textarea variant.
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = Omit<HTMLAttributes<'textarea'>, 'value'> & { value?: string };
+const { value = '', class: className, ...rest } = Astro.props;
+---
+
+<textarea class:list={['ta', className]} {...rest}>{value}</textarea>
+
+<style>
+  .ta {
+    display: block;
+    width: 100%;
+    min-height: 120px;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    color: var(--ink);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    resize: vertical;
+    transition: box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .ta::placeholder {
+    color: var(--ink-4);
+  }
+  .ta:hover {
+    box-shadow: inset 0 0 0 1px var(--ink-4);
+  }
+  .ta:focus-visible {
+    outline: none;
+    border-radius: var(--radius-sm);
+    box-shadow:
+      inset 0 0 0 1px var(--ink),
+      0 0 0 3px var(--accent-wash);
+  }
+  .ta[aria-invalid='true'] {
+    box-shadow: inset 0 0 0 1px var(--critical);
+  }
+</style>
