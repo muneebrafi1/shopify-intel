@@ -203,7 +203,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 <BaseLayout {title} {description} {canonical} {noindex} {jsonLd} wide>
   <div class="container--wide ti">
     <PageHeader
-      eyebrow="Theme index"
       title={state.q ? 'Themes' : facetFiltered ? heading : 'Themes'}
       count={filtered ? total : allTotal}
       description={

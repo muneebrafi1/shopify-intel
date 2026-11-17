@@ -141,12 +141,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   jsonLd={jsonLd}
 >
   <div class="container cat">
-    <PageHeader
-      eyebrow="App category"
-      title={cat.name}
-      count={cat.app_count}
-      description={description}
-    >
+    <PageHeader title={cat.name} count={cat.app_count} description={description}>
       <Breadcrumbs slot="top" items={crumbs} />
       <Fragment slot="actions">
         {pairs.length > 0 && (

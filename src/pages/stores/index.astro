@@ -224,11 +224,23 @@ const title = hasFilters
 >
   <div class="container--wide stores" data-scope={q.scope}>
     <PageHeader
-      eyebrow={`Scan of ${asOf}`}
       title="Stores"
       count={counts.stores_scanned}
       description="Shopify stores with the theme and apps we detected on them. Curated stores are mapped page by page, section by section."
     >
+      <p slot="meta" class="stores__facts">
+        <span>{formatCount(facets.scope.curated)} curated</span>
+        <span class="stores__sep" aria-hidden="true">
+          ·
+        </span>
+        <span>{formatCount(counts.stores_scanned)} scanned</span>
+        <span class="stores__sep" aria-hidden="true">
+          ·
+        </span>
+        <span>
+          data <time datetime={meta.data_as_of}>{asOf}</time>
+        </span>
+      </p>
       <div slot="actions" class="stores__scope">
         <Segmented
           label="Which stores"
@@ -401,6 +413,19 @@ const title = hasFilters
 <style>
   .stores {
     padding-bottom: var(--space-16);
+  }
+  .stores__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px var(--space-2);
+    margin-top: var(--space-4);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.01em;
+  }
+  .stores__sep {
+    color: var(--ink-4);
   }
   .stores__scope {
     display: flex;
