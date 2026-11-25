@@ -338,7 +338,7 @@ const title = hasFilters
                 }
                 eager={i < 4}
               >
-                <span slot="aside" class="stores__facts">
+                <span slot="aside" class="stores__aside">
                   <span class:list={['stores__theme', { 'is-muted': !s.theme.name }]}>
                     {themeName(s.theme)}
                   </span>
@@ -445,7 +445,7 @@ const title = hasFilters
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
-  .stores__facts {
+  .stores__aside {
     display: flex;
     flex: none;
     flex-direction: column;
