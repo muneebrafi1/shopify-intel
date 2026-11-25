@@ -52,6 +52,7 @@ function expandSplit(
       {
         ...s,
         type: 'product-gallery',
+        appSlug: null, // app blocks in a product section (stars, badges) sit in the buy box
         ...(galleryLeft ? left : right),
         column: galleryLeft ? 'left' : 'right',
       },
@@ -66,7 +67,7 @@ function expandSplit(
   if (s.height < 200 || g.h < 50) return [s];
   const cut = Math.round(Math.min(Math.max(g.y + g.h, s.y + 50), s.y + s.height - 50));
   return [
-    { ...s, type: 'product-gallery', height: cut - s.y },
+    { ...s, type: 'product-gallery', appSlug: null, height: cut - s.y },
     { ...s, type: 'buy-box', y: cut, height: s.y + s.height - cut },
   ];
 }

@@ -56,6 +56,7 @@ describe('product gallery / buy box split', () => {
       gallery: { x: 40, y: 120, w: 820, h: 860 },
       buy: { x: 900, y: 120, w: 500, h: 700 },
     });
+    expect(s.map((x) => x.appSlug)).toEqual([null, null]);
     expect(s.map((x) => [x.type, x.x, x.w, x.y, x.height, x.column])).toEqual([
       ['product-gallery', 0, 900, 100, 900, 'left'],
       ['buy-box', 900, 540, 100, 900, 'right'],

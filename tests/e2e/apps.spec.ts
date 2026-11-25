@@ -163,7 +163,8 @@ test.describe('app categories', () => {
     await expect(page.locator('a[href^="/compare/"]').first()).toBeAttached();
     const capture = page.locator('#where a[href*="#section-"]').first();
     await expect(capture).toHaveAttribute('href', /device=desktop#section-\d+$/);
-    await expect(page.locator('#where .pin__tag').first()).toContainText('Reviews');
+    // Fixture: a reviews section. Real capture: whichever section carries a Judge.me block.
+    await expect(page.locator('#where .pin__tag').first()).toContainText(/Reviews|Judge\.me/);
   });
 
   test('background categories say why there is nothing to pin', async ({ page }) => {
@@ -207,7 +208,8 @@ test.describe('app detail', () => {
       'href',
       /^\/stores\/[^?]+\?page=\w+&device=desktop#section-\d+$/,
     );
-    await expect(page.locator('#where .pin__tag').first()).toContainText('Reviews');
+    // Fixture: a reviews section. Real capture: whichever section carries a Judge.me block.
+    await expect(page.locator('#where .pin__tag').first()).toContainText(/Reviews|Judge\.me/);
     // Stores running it, plans, relationships.
     expect(await page.locator('#stores tbody tr').count()).toBe(24);
     await expect(page.locator('.plan')).toHaveCount(2);
