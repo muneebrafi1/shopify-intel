@@ -31,6 +31,7 @@ const checkedRange =
       : `${formatDate(checkedFrom)} – ${formatDate(checkedTo)}`
     : null;
 
+const crawlOn = meta?.crawl_last_at ? formatDate(meta.crawl_last_at) : null;
 const themeStoreChecked = meta?.theme_store_checked ? formatDate(meta.theme_store_checked) : null;
 
 const toc = [
@@ -149,6 +150,12 @@ const toc = [
         <>
           The current data comes from an older scan that did not record confidence, so detections
           are shown without a confidence label.
+        </>
+      )}
+      {crawlOn && (
+        <>
+          {' '}
+          Stores refreshed by our own crawl (latest on {crawlOn}) do record it.
         </>
       )}
     </p>

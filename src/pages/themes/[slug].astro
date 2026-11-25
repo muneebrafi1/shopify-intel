@@ -349,7 +349,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           {moreFacts.map((f) => (
             <div class="facts__row">
               <dt>{f.label}</dt>
-              <dd class:list={[{ mono: f.label === 'Theme Store ID' }]}>{f.value}</dd>
+              <dd
+                class:list={[
+                  { mono: f.label === 'Theme Store ID' || f.label === 'Theme Store version' },
+                ]}
+              >
+                {f.value}
+              </dd>
             </div>
           ))}
           <p slot="footer" class="th-side__bias">
