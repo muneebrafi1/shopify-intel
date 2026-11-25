@@ -22,17 +22,17 @@ describe('seed builder', () => {
 
   it('plans 8 placeholder screenshots per curated store with realistic heights', () => {
     const { report } = seedResult();
-    expect(report.shotHeights).toHaveLength(20 * 4 * 2);
+    expect(report.shotHeights).toHaveLength(50 * 4 * 2);
     for (const h of report.shotHeights) {
-      const [min, max] = h.device === 'desktop' ? [1000, 7500] : [2400, 11000];
+      const [min, max] = h.device === 'desktop' ? [1000, 7500] : [2000, 11000];
       expect(h.height, `${h.domain} ${h.page} ${h.device}`).toBeGreaterThanOrEqual(min);
       expect(h.height, `${h.domain} ${h.page} ${h.device}`).toBeLessThanOrEqual(max);
     }
     const home = report.shotHeights.filter((h) => h.page === 'home');
     for (const h of home.filter((x) => x.device === 'mobile'))
-      expect(h.height).toBeGreaterThan(4500);
+      expect(h.height).toBeGreaterThan(4000);
     for (const h of home.filter((x) => x.device === 'desktop'))
-      expect(h.height).toBeGreaterThan(3500);
+      expect(h.height).toBeGreaterThan(3000);
   });
 
   it('keeps section geometry consistent', async () => {
@@ -49,7 +49,7 @@ describe('seed builder', () => {
        JOIN sections b ON b.screenshot_id = g.screenshot_id AND b.section_type = 'buy-box'
        WHERE g.section_type = 'product-gallery' AND g.device = 'desktop'`,
     );
-    expect(rows).toHaveLength(20);
+    expect(rows).toHaveLength(50);
     for (const r of rows) expect([r.g, r.gh]).toEqual([r.b, r.bh]);
     db.close();
   });

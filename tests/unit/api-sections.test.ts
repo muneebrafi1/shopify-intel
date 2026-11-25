@@ -76,7 +76,7 @@ describe('sections library', () => {
   it('lists section types with counts and previews', async () => {
     const { data } = await api.listSectionTypes();
     expect(data.items).toHaveLength(31);
-    expect(data.items.find((t) => t.slug === 'header')?.count).toBe(160);
+    expect(data.items.find((t) => t.slug === 'header')?.count).toBe(400);
     expect(data.groups.reduce((s, g) => s + g.count, 0)).toBe(SECTION_TOTAL);
     expect(data.items.find((t) => t.slug === 'hero')?.preview?.type.slug).toBe('hero');
   });

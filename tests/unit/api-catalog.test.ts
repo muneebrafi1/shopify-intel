@@ -10,9 +10,9 @@ describe('meta', () => {
     const { data, meta } = await api.getMeta();
     expect(data.data_as_of).toBe('2026-11-17');
     expect(data.counts.stores_scanned).toBe(930);
-    expect(data.counts.stores_curated).toBe(20);
+    expect(data.counts.stores_curated).toBe(50);
     expect(data.counts.stores_captured).toBe(0);
-    expect(data.counts.screenshots_placeholder).toBe(160);
+    expect(data.counts.screenshots_placeholder).toBe(400);
     expect(data.source.label).toContain('930 Shopify stores');
     expect(meta.api_version).toBe('v1');
     expect(meta.sources[data.source.id]?.as_of).toBe('2026-11-17');
@@ -22,9 +22,9 @@ describe('meta', () => {
 describe('stores', () => {
   it('defaults to the curated stores, with or without filters (owner decision)', async () => {
     const curated = await api.listStores({ limit: 60 });
-    expect(curated.meta.pagination?.total).toBe(20);
+    expect(curated.meta.pagination?.total).toBe(50);
     expect(curated.data.items.every((s) => s.is_curated)).toBe(true);
-    expect(curated.data.facets.scope).toEqual({ curated: 20, all: 930 });
+    expect(curated.data.facets.scope).toEqual({ curated: 50, all: 930 });
     // Filters keep the curated default; scope=all reaches every detected store.
     const dawn = await api.listStores({ theme: 'dawn' });
     expect(dawn.data.items.every((s) => s.is_curated)).toBe(true);
@@ -33,7 +33,7 @@ describe('stores', () => {
     expect((await api.listStores({ theme: 'dawn', scope: 'all' })).meta.pagination?.total).toBe(20);
     // An explicit curated flag overrides the scope.
     const rest = await api.listStores({ curated: false });
-    expect(rest.meta.pagination?.total).toBe(910);
+    expect(rest.meta.pagination?.total).toBe(880);
     expect(rest.data.items.some((s) => s.is_curated)).toBe(false);
   });
 
@@ -51,7 +51,7 @@ describe('stores', () => {
     const first = await api.listStores({ scope: 'all', limit: 24 });
     expect(first.meta.pagination?.total).toBe(930);
     expect(first.data.items[0]?.domain).toBe('youngla.com');
-    expect(first.data.facets.curated).toBe(20);
+    expect(first.data.facets.curated).toBe(50);
     const seen = new Set(first.data.items.map((s) => s.domain));
     let cursor = first.meta.pagination?.next_cursor ?? null;
     for (let i = 0; i < 3 && cursor; i++) {
@@ -131,8 +131,8 @@ describe('themes', () => {
     expect(data.items[0]?.price).toEqual({ cents: 0, label: 'Free', is_free: true });
     const prestige = data.items.find((t) => t.slug === 'prestige');
     expect(prestige?.price.cents).toBe(40000);
-    // One curated store: its desktop home capture, then its mobile one (cards pair devices).
-    expect(prestige?.previews.map((p) => p.device)).toEqual(['desktop', 'mobile']);
+    // Three curated stores: one desktop home capture each.
+    expect(prestige?.previews.map((p) => p.device)).toEqual(['desktop', 'desktop', 'desktop']);
     expect(data.facets.price_bands.find((b) => b.value === 'free')?.count).toBe(2);
     const free = await api.listThemes({ price: 'free' });
     expect(free.data.items.map((t) => t.slug).sort()).toEqual(['dawn', 'horizon']);
@@ -179,7 +179,18 @@ describe('themes', () => {
     expect(data.similar.map((s) => s.theme.slug)).toEqual(
       expect.arrayContaining(['impact', 'stretch']),
     );
-    expect(data.presets).toEqual([]);
+    // Theme Store facts (data/curation/theme-store.json), in published order.
+    expect(data.presets.map((p) => p.name)).toEqual([
+      'Prestige',
+      'Couture',
+      'Vogue',
+      'Strass',
+      'Signature',
+    ]);
+    expect(data.theme_store?.url).toBe('https://themes.shopify.com/themes/prestige');
+    expect(data.theme_store?.features[0]?.group).toBe('Cart and checkout');
+    expect(data.theme_store?.features.flatMap((g) => g.items)).toContain('Quick buy');
+    expect(data.tags).toEqual({ style: [], industry: [] });
     const rest = await api.listThemeStores({
       slug: 'prestige',
       cursor: data.stores.next_cursor ?? '',

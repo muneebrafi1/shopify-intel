@@ -38,6 +38,7 @@ import { THUMB_COLS, groupedSectionCards, toThumb, type ThumbRow } from './visua
 
 export const THEME_SELECT = `SELECT t.id, t.slug, t.name, t.vendor, t.vendor_slug, t.theme_store_id,
   t.price_cents, t.price_label, t.marketplace, t.official_url,
+  t.store_version, t.review_positive_pct, t.review_count, t.store_checked_at,
   COALESCE(ts.store_count, 0) AS store_count, ts.denominator, ts.rank_overall,
   COALESCE(ts.curated_store_count, 0) AS curated_store_count,
   COALESCE(ts.section_count, 0) AS section_count
@@ -54,6 +55,10 @@ export interface ThemeRow {
   price_label: string | null;
   marketplace: string | null;
   official_url: string | null;
+  store_version: string | null;
+  review_positive_pct: number | null;
+  review_count: number | null;
+  store_checked_at: string | null;
   store_count: number;
   denominator: number | null;
   rank_overall: number | null;
@@ -468,6 +473,17 @@ export async function getThemeDetail(
   return detail;
 }
 
+/** Feature rows (a = group, b = item; in published order) → groups in first-seen order. */
+function featureGroups(rows: ReadonlyArray<{ a: string; b: string }>) {
+  const groups = new Map<string, string[]>();
+  for (const r of rows) {
+    const items = groups.get(r.a) ?? [];
+    items.push(r.b);
+    groups.set(r.a, items);
+  }
+  return [...groups].map(([group, items]) => ({ group, items }));
+}
+
 const byTheme = <T extends { g_theme: number }>(rows: readonly T[]) =>
   groupBy(rows, (r) => r.g_theme);
 
@@ -538,10 +554,16 @@ export async function themeDetails(
       per: Math.max(0, Math.floor(opts.sectionsLimit ?? 12)),
     }),
     similarityInputs(ctx),
-    ctx.db.all<{ g_theme: number; slug: string; name: string }>(
-      `SELECT theme_id AS g_theme, slug, name FROM theme_presets WHERE theme_id ${inThemes}
-         ORDER BY theme_id, name`,
-      [ids],
+    // Presets and published features in one query (the detail's query budget).
+    ctx.db.all<{ g_theme: number; kind: 'preset' | 'feature'; a: string; b: string }>(
+      `SELECT g_theme, kind, a, b FROM (
+         SELECT theme_id AS g_theme, 'preset' AS kind, slug AS a, name AS b, 0 AS k, id AS pos
+           FROM theme_presets WHERE theme_id ${inThemes}
+         UNION ALL
+         SELECT theme_id, 'feature', feature_group, item, 1, position
+           FROM theme_features WHERE theme_id ${inThemes}
+       ) ORDER BY g_theme, k, pos`,
+      [ids, ids],
     ),
     ctx.db.all<{ g_theme: number; kind: 'style' | 'industry'; tag: string }>(
       `SELECT theme_id AS g_theme, kind, tag FROM theme_tags WHERE theme_id ${inThemes}
@@ -560,8 +582,9 @@ export async function themeDetails(
   const versionsOf = byTheme(versions);
   const topAppsOf = byTheme(topApps);
   const byTypeOf = byTheme(byType);
-  const presetsOf = byTheme(presets);
+  const presetsOf = byTheme(presets.filter((p) => p.kind === 'preset'));
   const tagsOf = byTheme(tags);
+  const featuresOf = byTheme(presets.filter((p) => p.kind === 'feature'));
   return rows.flatMap((row, i): ThemeDetail[] => {
     const item = itemById.get(row.id);
     if (!item) return [];
@@ -592,7 +615,18 @@ export async function themeDetails(
           scored,
           scored.flatMap((x) => itemById.get(x.row.id) ?? []),
         ),
-        presets: (presetsOf.get(row.id) ?? []).map((p) => ({ slug: p.slug, name: p.name })),
+        presets: (presetsOf.get(row.id) ?? []).map((p) => ({ slug: p.a, name: p.b })),
+        theme_store:
+          row.store_checked_at && row.official_url
+            ? {
+                url: row.official_url,
+                version: row.store_version,
+                review_positive_pct: row.review_positive_pct,
+                review_count: row.review_count,
+                checked_at: row.store_checked_at,
+                features: featureGroups(featuresOf.get(row.id) ?? []),
+              }
+            : null,
         tags: {
           style: themeTags.filter((t) => t.kind === 'style').map((t) => t.tag),
           industry: themeTags.filter((t) => t.kind === 'industry').map((t) => t.tag),

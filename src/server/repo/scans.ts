@@ -124,6 +124,13 @@ export async function ingestScan(db: Db, input: ScanInput): Promise<ScanResult> 
         }),
       ],
     },
+    // Provenance for meta.sources: the latest crawl date and the rules it ran.
+    {
+      sql: `INSERT INTO meta (key, value, updated_at) VALUES ('crawl_last_at', ?, ?), ('crawl_rules_version', ?, ?)
+            ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+            WHERE meta.key = 'crawl_rules_version' OR excluded.value > meta.value`,
+      params: [at, at, s.rules_version, at],
+    },
   ];
   if (s.platform === 'not-shopify') {
     await db.batch(stmts);

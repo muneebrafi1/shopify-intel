@@ -152,6 +152,23 @@ export const OverridesInput = z.object({
 });
 export type OverridesInput = z.infer<typeof OverridesInput>;
 
+/** data/curation/theme-store.json, written by scripts/crawl/theme-store.ts. Optional. */
+export const ThemeStoreInput = z.object({
+  _note: z.string(),
+  themes: z.record(
+    z.string(),
+    z.object({
+      url: z.url(),
+      checked_at: z.string(),
+      presets: z.array(z.string().min(1)),
+      features: z.array(z.object({ group: z.string().min(1), items: z.array(z.string().min(1)) })),
+      version: z.string().nullable(),
+      reviews: z.object({ positive_pct: z.number(), count: z.number() }).nullable(),
+    }),
+  ),
+});
+export type ThemeStoreInput = z.infer<typeof ThemeStoreInput>;
+
 const NO_OVERRIDES: OverridesInput = {
   _note: 'none',
   unmatchDetectionSlugs: [],
@@ -175,6 +192,7 @@ export interface SeedInputs {
   storeCuration: StoreCurationInput;
   appCuration: AppCurationInput;
   overrides: OverridesInput;
+  themeStore: ThemeStoreInput;
   teardowns: TeardownFile[];
   /** Raw bytes of every input, for the data_version hash. */
   rawFiles: Array<{ name: string; content: string }>;
@@ -217,6 +235,9 @@ export function loadSeedInputs(root: string): SeedInputs {
     overrides: existsSync(join(root, 'data/curation/overrides.json'))
       ? json('data/curation/overrides.json', OverridesInput)
       : NO_OVERRIDES,
+    themeStore: existsSync(join(root, 'data/curation/theme-store.json'))
+      ? json('data/curation/theme-store.json', ThemeStoreInput)
+      : { _note: 'none', themes: {} },
     teardowns,
     rawFiles,
   };

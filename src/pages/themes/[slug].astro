@@ -103,6 +103,11 @@ const sharePct = formatPercent(usage.share * 100);
 const themeCount = metaRes.data.counts.themes;
 const rank = usage.stores > 0 ? usage.rank : null;
 
+// Published on the theme's Theme Store page (read on store.checked_at).
+const store = detail.theme_store;
+const storeCheckedOn = store ? formatDate(store.checked_at) : null;
+const featureCount = store?.features.reduce((n, g) => n + g.items.length, 0) ?? 0;
+
 // Price and vendor lead the facts card; the rows with notes follow in its slot.
 const facts = [
   { label: 'Price', value: priceText },
@@ -117,6 +122,15 @@ const moreFacts = [
   ...(theme.marketplace ? [{ label: 'Listed on', value: theme.marketplace }] : []),
   ...(detail.presets.length
     ? [{ label: 'Presets', value: detail.presets.map((p) => p.name).join(', ') }]
+    : []),
+  ...(store?.version ? [{ label: 'Theme Store version', value: store.version }] : []),
+  ...(store?.review_count && store.review_positive_pct !== null
+    ? [
+        {
+          label: 'Theme Store reviews',
+          value: `${store.review_positive_pct}% positive of ${formatCount(store.review_count)}`,
+        },
+      ]
     : []),
 ];
 
@@ -341,6 +355,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <p slot="footer" class="th-side__bias">
             Stores were found through Theme Store example lists, so counts show reach in our scan,
             not market share.
+            {store && (
+              <>
+                {' '}
+                Presets, version and reviews: <a href={store.url}>Shopify Theme Store</a>, checked{' '}
+                {storeCheckedOn}.
+              </>
+            )}
           </p>
         </FactsCard>
       </aside>
@@ -433,6 +454,32 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         <VersionList versions={detail.versions} />
         <p class="th-note">Detected on storefronts · {asOf}.</p>
       </section>
+
+      {store && featureCount > 0 && (
+        <section class="th-main th-block" id="features" aria-labelledby="th-features-title">
+          <SectionHeader
+            id="th-features-title"
+            title="Published features"
+            count={featureCount}
+            description={`What ${theme.name}'s Theme Store page lists, in its own groups. Listed by the vendor, not tested by us.`}
+          />
+          <div class="th-features">
+            {store.features.map((g) => (
+              <div class="th-features__group">
+                <h3 class="th-features__title">{g.group}</h3>
+                <ul class="th-features__list">
+                  {g.items.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p class="th-note">
+            Source: <a href={store.url}>Shopify Theme Store</a> · checked {storeCheckedOn}.
+          </p>
+        </section>
+      )}
     </div>
 
     {sections.total > 0 && (
@@ -660,6 +707,34 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   .th-pager__buttons {
     display: flex;
     gap: var(--space-2);
+  }
+
+  .th-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-6) var(--space-8);
+    margin-top: var(--space-4);
+  }
+  .th-features__title {
+    margin-bottom: var(--space-2);
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+  }
+  .th-features__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+  }
+  .th-note a,
+  .th-side__bias a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
   }
 
   /* ---- Full-width related blocks ---- */
