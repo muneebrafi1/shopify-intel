@@ -39,10 +39,13 @@ function expandSplit(
   const g = split.gallery;
   if (!g) return [s];
   const b = split.buy;
-  const sideBySide = g.x + g.w <= b.x + 4 || g.x >= b.x + b.w - 4;
+  // Side by side only on wide pages (mobile always stacks), and only with a sane column cut:
+  // off-screen drawers or zero-width boxes keep the section whole.
+  const sideBySide = width >= 768 && (g.x + g.w <= b.x + 4 || g.x >= b.x + b.w - 4);
   if (sideBySide) {
     const galleryLeft = g.x < b.x;
     const mid = Math.round(galleryLeft ? b.x : g.x);
+    if (mid < width * 0.2 || mid > width * 0.8) return [s];
     const left = { x: 0, w: mid };
     const right = { x: mid, w: width - mid };
     return [
@@ -60,6 +63,7 @@ function expandSplit(
       },
     ];
   }
+  if (s.height < 200 || g.h < 50) return [s];
   const cut = Math.round(Math.min(Math.max(g.y + g.h, s.y + 50), s.y + s.height - 50));
   return [
     { ...s, type: 'product-gallery', height: cut - s.y },

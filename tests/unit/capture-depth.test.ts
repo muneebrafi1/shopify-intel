@@ -85,6 +85,31 @@ describe('product gallery / buy box split', () => {
     ]);
   });
 
+  it('never cuts columns on mobile or outside the page', () => {
+    const mobile = detectSections(
+      {
+        height: 4000,
+        width: 390,
+        sections: [
+          raw('main-product', 0, 1500, {
+            split: {
+              gallery: { x: 482, y: 0, w: 300, h: 400 },
+              buy: { x: 0, y: 0, w: 390, h: 900 },
+            },
+          }),
+        ],
+      },
+      [],
+      'product',
+    ).sections;
+    expect(mobile.every((x) => x.w === null)).toBe(true);
+    const drawer = product({
+      gallery: { x: 1400, y: 120, w: 300, h: 500 },
+      buy: { x: 40, y: 120, w: 1300, h: 700 },
+    });
+    expect(drawer.map((x) => x.type)).toEqual(['buy-box']);
+  });
+
   it('keeps one buy box when no gallery was found', () => {
     const s = product({ gallery: null, buy: { x: 900, y: 120, w: 500, h: 700 } });
     expect(s.map((x) => x.type)).toEqual(['buy-box']);
