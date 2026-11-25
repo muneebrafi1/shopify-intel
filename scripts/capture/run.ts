@@ -52,7 +52,16 @@ const settings = JSON.parse(readFileSync(join(ROOT, 'data/curation/capture.json'
 const stitchSet = new Set(settings.stitch);
 
 const local = await openLocalEnv();
-const browser = await chromium.launch();
+let browser = await chromium.launch();
+/** Chromium can crash on very long pages; relaunch instead of failing every later store. */
+const liveBrowser = async () => {
+  if (!browser.isConnected()) {
+    console.log('  (browser crashed; relaunching)');
+    await browser.close().catch(() => undefined);
+    browser = await chromium.launch();
+  }
+  return browser;
+};
 let manifest = readManifest();
 let ok = 0;
 let failed = 0;
@@ -95,7 +104,10 @@ try {
     );
     const needsDiscovery = pages.some((p) => p !== 'home');
     const found = needsDiscovery
-      ? await discoverPages(browser, t.url).catch(() => ({ collection: null, product: null }))
+      ? await discoverPages(await liveBrowser(), t.url).catch(() => ({
+          collection: null,
+          product: null,
+        }))
       : { collection: null, product: null };
     const urls: Record<CapturePageType, string | null> = {
       home: t.url,
@@ -112,9 +124,9 @@ try {
         }
         const started = Date.now();
         try {
-          const shoot = () =>
+          const shoot = async () =>
             withTimeout(
-              capturePage(browser, url, device, {
+              capturePage(await liveBrowser(), url, device, {
                 pageType,
                 stitch: values.stitch || stitchSet.has(t.domain),
                 productUrl: found.product,
