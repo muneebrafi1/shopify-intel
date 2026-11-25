@@ -20,6 +20,11 @@ export interface RawSection {
   height: number;
   /** ids of `.shopify-app-block` elements inside the section. */
   appBlocks: string[];
+  /** Product sections: the media gallery and buy-box boxes inside them (document CSS px). */
+  split?: {
+    gallery: { x: number; y: number; w: number; h: number } | null;
+    buy: { x: number; y: number; w: number; h: number };
+  } | null;
 }
 
 export type SectionGroupName = 'header' | 'footer' | 'overlay' | 'template' | 'other';
@@ -84,7 +89,31 @@ const RULES: Array<[SectionType, RegExp]> = [
   ['rich-text', /rich-text|(^|-)text($|-)|marquee|heading|intro|multicolumn|multi-column/],
 ];
 
-function matchRules(text: string): SectionType | null {
+/** Rules for the main sections of non-home templates, checked before the shared rules. */
+const PAGE_RULES: Record<string, Array<[SectionType, RegExp]>> = {
+  collection: [
+    ['collection-header', /collection-(banner|header|hero|title|intro)|main-collection-banner/],
+    ['filters', /(^|-)(facets|filters|filter)($|-)/],
+    [
+      'product-grid',
+      /main-collection|collection-product-grid|product-grid|collection-grid|(^|-)main($|-)/,
+    ],
+  ],
+  product: [
+    ['upsell', /recommend|related|complementary|also-like|upsell|cross-sell|pairs-with|bundle/],
+    ['recently-viewed', /recently-viewed/],
+    ['product-details', /collapsible|product-details|product-tabs|description|specs|accordion/],
+    ['buy-box', /main-product|product-template|product-main|featured-product|^main$|^product$/],
+  ],
+  cart: [
+    ['cart-summary', /cart-footer|cart-summary|cart-totals|subtotal/],
+    ['cart-items', /main-cart|cart-items|cart-template|(^|-)cart($|-)|(^|-)main($|-)/],
+    ['upsell', /recommend|related|complementary|upsell|cross-sell/],
+  ],
+};
+
+function matchRules(text: string, pageType = 'home'): SectionType | null {
+  for (const [type, re] of PAGE_RULES[pageType] ?? []) if (re.test(text)) return type;
   for (const [type, re] of RULES) if (re.test(text)) return type;
   return null;
 }
@@ -94,6 +123,8 @@ export const appBlockHandle = (id: string) =>
   cleanHandle(id.replace(/^shopify-block-[^_]+__/, '').replace(/_app_block.*$/, ''));
 
 export interface ClassifyContext {
+  /** Template the page renders ('home' when omitted). */
+  pageType?: string;
   /** Index of this section among the visible template sections (0 = first). */
   templateIndex: number;
   /** Slugs of the apps detected on the store (for app-block attribution). */
@@ -141,10 +172,11 @@ export function classifySection(raw: RawSection, ctx: ClassifyContext): Classifi
   }
 
   const isAppSection = /^\d+$/.test(parsed.handle) || parsed.typeClass === 'apps';
+  const page = ctx.pageType ?? 'home';
   if (!isAppSection) {
-    const byName = matchRules(parsed.handle);
+    const byName = matchRules(parsed.handle, page);
     if (byName) return done(byName, 'name');
-    const byClass = parsed.typeClass ? matchRules(parsed.typeClass) : null;
+    const byClass = parsed.typeClass ? matchRules(parsed.typeClass, page) : null;
     if (byClass) return done(byClass, 'class');
   }
   if (raw.appBlocks.length) {
@@ -152,7 +184,7 @@ export function classifySection(raw: RawSection, ctx: ClassifyContext): Classifi
     if (byBlock) return done(byBlock, 'app-block');
   }
   // The first tall template section on a home page is its hero, whatever the theme calls it.
-  if (!isAppSection && ctx.templateIndex === 0 && raw.height >= 280)
+  if (page === 'home' && !isAppSection && ctx.templateIndex === 0 && raw.height >= 280)
     return done('hero', 'position');
   return null;
 }

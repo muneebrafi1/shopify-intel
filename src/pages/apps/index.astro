@@ -327,7 +327,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
                     href={app.href}
                     label={s.type.name}
                     labelMuted={app.short_name}
-                    alt={`${app.short_name}: ${s.type.name.toLowerCase()} section on ${s.store.display_name}, ${pageName(s.page_type).toLowerCase()} page (layout preview)`}
+                    alt={`${app.short_name}: ${s.type.name.toLowerCase()} section on ${s.store.display_name}, ${pageName(s.page_type).toLowerCase()} page${s.is_placeholder ? ' (layout preview)' : ''}`}
                     title={app.short_name}
                     meta={`${app.usage.stores.toLocaleString('en-US')} stores · on ${s.store.display_name}`}
                     icon={{ kind: 'app', src: app.icon_url, name: app.short_name }}

@@ -25,7 +25,13 @@ export interface Manifest {
   version: 1;
   updated_at: string;
   entries: ManifestEntry[];
-  failures: Array<{ domain: string; device: string; reason: string; at: string }>;
+  failures: Array<{
+    domain: string;
+    page_type?: string;
+    device: string;
+    reason: string;
+    at: string;
+  }>;
 }
 
 const keyOf = (c: CaptureInput) => `${c.domain}|${c.page_type}|${c.device}`;
@@ -43,7 +49,7 @@ export function upsertEntry(m: Manifest, entry: ManifestEntry): Manifest {
   entries.push(entry);
   entries.sort((a, b) => keyOf(a.capture).localeCompare(keyOf(b.capture)));
   const failures = m.failures.filter(
-    (f) => `${f.domain}|${f.device}` !== `${entry.capture.domain}|${entry.capture.device}`,
+    (f) => `${f.domain}|${f.page_type ?? 'home'}|${f.device}` !== k,
   );
   return { ...m, updated_at: new Date().toISOString(), entries, failures };
 }

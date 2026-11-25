@@ -59,7 +59,8 @@ test.describe('teardowns', () => {
   test('note numbers match the section numbers on the capture', async ({ page }) => {
     await prepare(page);
     await page.goto('/teardowns/youngla');
-    const nums = page.locator('.tdnote__num');
+    // Notes whose section type is not on the current capture have no link (shown as "—").
+    const nums = page.locator('a.tdnote__num[href]');
     const count = await nums.count();
     expect(count).toBeGreaterThan(0);
     for (let i = 0; i < count; i++) {
@@ -77,7 +78,7 @@ test.describe('teardowns', () => {
   test('a note scrolls to its section and capture tabs switch the capture', async ({ page }) => {
     await prepare(page);
     await page.goto('/teardowns/youngla');
-    const first = page.locator('.tdnote__num').first();
+    const first = page.locator('a.tdnote__num[href]').first();
     const href = await first.getAttribute('href');
     await first.click();
     await expect(page.locator(href!)).toBeInViewport();

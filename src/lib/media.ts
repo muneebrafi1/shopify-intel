@@ -20,6 +20,24 @@ export function thumbCropHeight(width: number, height: number, device: Device): 
   return Math.min(height, Math.round(width * THUMB_CROP[device]));
 }
 
+/**
+ * Pre-cut top thumbnails. The capture pipeline writes `<key>.top.webp` next to every full-page
+ * capture: the top THUMB_TOP[device] × capture width (CSS px) at THUMB_TOP_PX wide. Grids that
+ * only show the top of a page use it instead of the full page (free, unlike Image Resizing).
+ * Keep in sync with scripts/capture/process.ts (it imports these constants).
+ */
+export const THUMB_TOP: Record<Device, number> = { desktop: 1, mobile: 2.9 };
+export const THUMB_TOP_PX: Record<Device, number> = { desktop: 960, mobile: 600 };
+const CAPTURE_W: Record<Device, number> = { desktop: 1440, mobile: 390 };
+
+/** `/media/shots/<domain>/<page>/<device>/<stamp>.webp` → its device, else null. */
+export function captureDevice(src: string): Device | null {
+  const m = /\/shots\/[^/]+\/[^/]+\/(desktop|mobile)\/[^/]+\.webp$/.exec(src.split('?')[0] ?? '');
+  return m ? (m[1] as Device) : null;
+}
+
+export const topThumbKey = (key: string) => key.replace(/\.webp$/, '.top.webp');
+
 export function thumbUrl(src: string, opts: { cropHeight: number; width?: number }): string {
   if (isPlaceholderSrc(src)) {
     const sep = src.includes('?') ? '&' : '?';
@@ -29,5 +47,12 @@ export function thumbUrl(src: string, opts: { cropHeight: number; width?: number
     const w = opts.width ?? 720;
     return `/cdn-cgi/image/width=${w},fit=crop,gravity=top,format=auto${src}`;
   }
+  const device = captureDevice(src);
+  if (
+    device &&
+    !src.endsWith('.top.webp') &&
+    opts.cropHeight <= CAPTURE_W[device] * THUMB_TOP[device]
+  )
+    return topThumbKey(src);
   return src;
 }

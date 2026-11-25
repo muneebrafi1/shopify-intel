@@ -39,7 +39,10 @@ export const DEVICE_PROFILES: Record<CaptureDevice, DeviceProfile> = {
 
 export interface PageCapture {
   url: string;
-  png: Buffer;
+  /** One full-page PNG, or viewport tiles to stitch (document y in CSS px) for `stitch`. */
+  png?: Buffer;
+  tiles?: Array<{ y: number; png: Buffer }>;
+  viewportHeight: number;
   /** CSS px of the stored capture (after the height cap). */
   width: number;
   height: number;
@@ -148,9 +151,52 @@ async function loadLazyContent(page: Page, maxHeight: number) {
   }, maxHeight);
 }
 
+/** Box of a sub-element in document CSS px. */
+export interface SubBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 function readSections(page: Page): Promise<RawSection[]> {
-  return page.evaluate(() =>
-    Array.from(document.querySelectorAll<HTMLElement>('.shopify-section[id^="shopify-section-"]'))
+  return page.evaluate(() => {
+    const box = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return { x: r.left, y: r.top + window.scrollY, w: r.width, h: r.height };
+    };
+    // Main product sections hold two regions we name separately: the media gallery and the
+    // buy box (the column with the add-to-cart form).
+    const productSplit = (sec: HTMLElement) => {
+      const form = sec.querySelector('form[action*="/cart/add"]');
+      if (!form) return null;
+      const s = box(sec);
+      let buy: Element = form;
+      for (let el = form.parentElement; el && el !== sec; el = el.parentElement) {
+        const b = box(el);
+        if (b.w > s.w * 0.72) break;
+        buy = el;
+      }
+      const buyBox = box(buy);
+      let gallery: Element | null = null;
+      let best = 0;
+      for (const el of Array.from(sec.querySelectorAll('*'))) {
+        if (el.contains(buy) || buy.contains(el) || !el.querySelector('img')) continue;
+        const b = box(el);
+        if (b.w < s.w * 0.3 || b.h < 150 || b.w > s.w * 0.8) continue;
+        const sideBySide = b.x + b.w <= buyBox.x + 4 || b.x >= buyBox.x + buyBox.w - 4;
+        const stacked = b.y + b.h <= buyBox.y + 4;
+        if (!sideBySide && !stacked) continue;
+        if (b.w * b.h > best) {
+          best = b.w * b.h;
+          gallery = el;
+        }
+      }
+      return gallery ? { gallery: box(gallery), buy: buyBox } : { gallery: null, buy: buyBox };
+    };
+    return Array.from(
+      document.querySelectorAll<HTMLElement>('.shopify-section[id^="shopify-section-"]'),
+    )
       .filter((el) => !el.parentElement?.closest('.shopify-section'))
       .map((el) => {
         const r = el.getBoundingClientRect();
@@ -160,15 +206,151 @@ function readSections(page: Page): Promise<RawSection[]> {
           y: r.top + window.scrollY,
           height: r.height,
           appBlocks: Array.from(el.querySelectorAll('.shopify-app-block[id]')).map((b) => b.id),
+          split: productSplit(el),
         };
-      }),
-  );
+      });
+  });
+}
+
+export type CapturePageType = 'home' | 'collection' | 'product' | 'cart';
+
+export interface DiscoveredPages {
+  collection: string | null;
+  product: string | null;
+}
+
+/** Finds a collection and a product page from the home page links (main content first). */
+export async function discoverPages(browser: Browser, homeUrl: string): Promise<DiscoveredPages> {
+  const context = await browser.newContext({
+    ...DEVICE_PROFILES.desktop.context,
+    viewport: DEVICE_PROFILES.desktop.viewport,
+    serviceWorkers: 'block',
+  });
+  try {
+    const page = await context.newPage();
+    await page.goto(homeUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.waitForTimeout(2500);
+    const found = await page.evaluate(() => {
+      const skip = new Set(['all', 'frontpage', 'vendors', 'types', 'sale', 'gift-card']);
+      const pick = (re: RegExp) => {
+        const anchors = [
+          ...Array.from(document.querySelectorAll<HTMLAnchorElement>('main a[href]')),
+          ...Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')),
+        ];
+        for (const a of anchors) {
+          if (a.origin !== location.origin) continue;
+          const m = re.exec(a.pathname);
+          if (m && !skip.has(m[1] ?? '')) return a.origin + a.pathname;
+        }
+        return null;
+      };
+      return {
+        collection: pick(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?collections\/([^/]+)\/?$/),
+        product: pick(
+          /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:collections\/[^/]+\/)?products\/([^/]+)\/?$/,
+        ),
+      };
+    });
+    if (!found.product) {
+      // Storefront JSON every Shopify store serves: the newest product.
+      const handle = await page.evaluate(async () => {
+        const r = await fetch('/products.json?limit=1').catch(() => null);
+        const j = r && r.ok ? ((await r.json()) as { products?: Array<{ handle: string }> }) : null;
+        return j?.products?.[0]?.handle ?? null;
+      });
+      if (handle) found.product = new URL(`/products/${handle}`, page.url()).href;
+    }
+    return {
+      collection: found.collection ?? new URL('/collections/all', page.url()).href,
+      product: found.product,
+    };
+  } finally {
+    await context.close();
+  }
+}
+
+/**
+ * Puts one item in the cart so the cart page shows its real layout. This uses the storefront
+ * cart API exactly like the theme's own "Add to cart" button: no checkout, no account, nothing
+ * personal; the cart lives only in this throwaway browser context.
+ */
+async function addOneToCart(page: Page, productUrl: string) {
+  await page.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  const ok = await page.evaluate(async (path) => {
+    type V = { id: number; available: boolean };
+    const add = async (v: V | undefined) => {
+      if (!v) return false;
+      const r = await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ items: [{ id: v.id, quantity: 1 }] }),
+      }).catch(() => null);
+      return !!r && r.ok;
+    };
+    const json = async <T>(url: string) => {
+      const r = await fetch(url).catch(() => null);
+      return r && r.ok ? ((await r.json().catch(() => null)) as T | null) : null;
+    };
+    const p = await json<{ variants?: V[] }>(`${path.replace(/\/$/, '')}.js`);
+    if (await add(p?.variants?.find((x) => x.available))) return true;
+    // The featured product is sold out (or its variant is restricted): any product in stock.
+    const list = await json<{ products?: Array<{ variants?: V[] }> }>('/products.json?limit=30');
+    for (const item of list?.products ?? []) {
+      const v = item.variants?.find((x) => x.available);
+      if (v) return add(v);
+    }
+    return add(p?.variants?.[0]);
+  }, new URL(productUrl).pathname);
+  if (!ok) throw new CaptureError('empty', 'could not put an item in the cart');
+}
+
+/**
+ * Viewport-by-viewport capture, stitched by the caller: for sites that only draw content while
+ * it is in the real viewport (scroll-driven reveals), where a one-shot full-page capture comes
+ * out partly blank. Fixed and sticky elements are hidden after the first tile so the header
+ * is not repeated down the page.
+ */
+async function captureTiles(page: Page, height: number, profile: DeviceProfile) {
+  const tiles: Array<{ y: number; png: Buffer }> = [];
+  const vh = profile.viewport.height;
+  const maxTiles = Math.ceil(height / vh) + 2;
+  let y = 0;
+  let last = -1;
+  while (y < height && tiles.length < maxTiles) {
+    const actual = await page.evaluate(async (target) => {
+      window.scrollTo(0, target);
+      await new Promise((r) => setTimeout(r, 450));
+      return Math.round(window.scrollY);
+    }, y);
+    if (actual <= last) break; // the page cannot scroll further
+    last = actual;
+    const png = await page.screenshot({
+      type: 'png',
+      animations: 'disabled',
+      caret: 'hide',
+      timeout: 30_000,
+    });
+    tiles.push({ y: actual, png });
+    if (tiles.length === 1)
+      await page.evaluate(() => {
+        for (const el of Array.from(document.body.querySelectorAll<HTMLElement>('*'))) {
+          const p = getComputedStyle(el).position;
+          if (p === 'fixed' || p === 'sticky')
+            el.style.setProperty('visibility', 'hidden', 'important');
+        }
+      });
+    if (actual + vh >= height) break; // reached the bottom of the capture
+    y = actual + vh;
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  return tiles;
 }
 
 export async function capturePage(
   browser: Browser,
   url: string,
   device: CaptureDevice,
+  opts: { pageType?: CapturePageType; stitch?: boolean; productUrl?: string | null } = {},
 ): Promise<PageCapture> {
   const profile = DEVICE_PROFILES[device];
   const context = await browser.newContext({
@@ -183,6 +365,10 @@ export async function capturePage(
   });
   try {
     const page = await context.newPage();
+    if (opts.pageType === 'cart') {
+      if (!opts.productUrl) throw new CaptureError('empty', 'no product to put in the cart');
+      await addOneToCart(page, opts.productUrl);
+    }
     const res = await page.goto(url, { waitUntil: 'load', timeout: 60_000 }).catch(async (e) => {
       // Pages with endless trackers never fire `load`; the DOM is enough to go on.
       if (!String(e).includes('Timeout')) throw e;
@@ -207,27 +393,34 @@ export async function capturePage(
     await dismissOverlays(page); // popups that open on scroll or after a delay
     await page.waitForTimeout(2500);
     await dismissOverlays(page); // consent tools that mount late (seen ~6 s after load)
+    // Themes open their cart drawer after an add; the page behind it is what we want.
+    if (opts.pageType === 'cart') await page.keyboard.press('Escape').catch(() => {});
 
     const fullHeight = await page.evaluate(() => document.documentElement.scrollHeight);
     if (fullHeight < 300) throw new CaptureError('empty', `page is ${fullHeight}px tall`);
     const height = Math.min(fullHeight, profile.maxHeight);
     const sections = await readSections(page);
-    const png = await page.screenshot({
-      fullPage: true,
-      clip: { x: 0, y: 0, width: profile.viewport.width, height },
-      animations: 'disabled',
-      caret: 'hide',
-      type: 'png',
-      timeout: 60_000,
-    });
+    const shot = opts.stitch
+      ? { tiles: await captureTiles(page, height, profile) }
+      : {
+          png: await page.screenshot({
+            fullPage: true,
+            clip: { x: 0, y: 0, width: profile.viewport.width, height },
+            animations: 'disabled',
+            caret: 'hide',
+            type: 'png',
+            timeout: 60_000,
+          }),
+        };
     return {
       url: page.url(),
-      png,
+      ...shot,
       width: profile.viewport.width,
       height,
       fullHeight,
       truncated: fullHeight > height,
       deviceScaleFactor: profile.deviceScaleFactor,
+      viewportHeight: profile.viewport.height,
       sections,
       title: probe.title,
     };

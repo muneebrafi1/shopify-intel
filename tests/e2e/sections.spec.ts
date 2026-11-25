@@ -73,9 +73,15 @@ test.describe('sections pages are healthy', () => {
 test.describe('library browsing', () => {
   test('the overview shows every type with a crop, only on the plain library', async ({ page }) => {
     await prepare(page);
+    // One card per section type that has at least one section (placeholder or captured).
+    const types = (await (await page.request.get('/api/v1/section-types')).json()) as {
+      data: { items: Array<{ count: number }> };
+    };
+    const withSections = types.data.items.filter((t) => t.count > 0).length;
+    expect(withSections).toBeGreaterThan(20);
     await page.goto('/sections');
     const cards = page.locator('.tov__grid .tcard');
-    await expect(cards).toHaveCount(31);
+    await expect(cards).toHaveCount(withSections);
     await expect(cards.first().locator('img')).toHaveCount(1);
     await expect(page.locator('.tov__grid a[href="/sections/reviews"]')).toHaveCount(1);
     await page.goto('/sections?device=mobile');

@@ -140,17 +140,24 @@ const storePlateHref = current
         <ol class="tdnotes">
           {legend.map(({ note, num }) => (
             <li class="tdnote">
-              <a
-                class="tdnote__num num"
-                href={note.section ? `#section-${note.section.id}` : undefined}
-                data-note-target={note.section ? String(note.section.id) : undefined}
-                aria-label={num ? `Section ${pad(num)} on the capture` : undefined}
-              >
-                {num ? pad(num) : '—'}
-              </a>
+              {note.section && num ? (
+                <a
+                  class="tdnote__num num"
+                  href={`#section-${note.section.id}`}
+                  data-note-target={String(note.section.id)}
+                  aria-label={`Section ${pad(num)} on the capture`}
+                >
+                  {pad(num)}
+                </a>
+              ) : (
+                <span class="tdnote__num tdnote__num--none num" aria-hidden="true">
+                  —
+                </span>
+              )}
               <div class="tdnote__text">
                 <p class="tdnote__where">
                   {note.section_type.name}
+                  {!note.section && <span class="tdnote__missing">Not on the current capture</span>}
                   {note.section?.app && (
                     <span class="tdnote__app">
                       <AppIcon
@@ -289,6 +296,13 @@ const storePlateHref = current
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .tdnote__num--none {
+    background: var(--surface-2);
+    color: var(--ink-3);
+  }
+  .tdnote__missing {
+    font-size: var(--text-xs);
   }
   a.tdnote__num:hover {
     background: var(--accent-btn-hover);

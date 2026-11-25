@@ -249,7 +249,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
                   href={sectionViewerHref(s)}
                   label={s.type.name}
                   labelMuted={s.app?.short_name}
-                  alt={`${s.app?.short_name ?? cat.name}: ${s.type.name.toLowerCase()} section on ${s.store.display_name}, ${pageName(s.page_type).toLowerCase()} page (${s.device}, layout preview)`}
+                  alt={`${s.app?.short_name ?? cat.name}: ${s.type.name.toLowerCase()} section on ${s.store.display_name}, ${pageName(s.page_type).toLowerCase()} page (${s.device}${s.is_placeholder ? ', layout preview' : ''})`}
                   title={s.app?.short_name ?? s.type.name}
                   meta={`${s.store.display_name} · ${pageName(s.page_type)}`}
                   icon={
@@ -263,7 +263,11 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
             ))}
           </ul>
           <div class="cat__foot">
-            <p>Layout previews drawn from each page’s detected sections until captures land.</p>
+            <p>
+              {sections.some((s) => s.is_placeholder)
+                ? 'Pages not captured yet are layout previews, drawn from their detected sections.'
+                : 'Crops from our page captures.'}
+            </p>
             {cat.surfaces[0] && (
               <a href={cat.surfaces[0].href} class="cat__more">
                 All {cat.surfaces[0].name.toLowerCase()} sections
