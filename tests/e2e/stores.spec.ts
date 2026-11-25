@@ -50,8 +50,8 @@ test.describe('stores index', () => {
     await prepare(page);
     await page.goto('/stores');
     const cards = page.locator('.stores__grid .store-card');
-    await expect(cards).toHaveCount(20);
-    expect(await total(page)).toBe(20);
+    await expect(cards).toHaveCount(50);
+    expect(await total(page)).toBe(50);
     const scope = page.locator('.stores__scope .seg__item');
     await expect(scope.first()).toHaveAttribute('aria-current', 'true');
     await expect(scope.first()).toContainText('Curated');
@@ -65,8 +65,8 @@ test.describe('stores index', () => {
   test('the curated list view is a table of the same stores', async ({ page }) => {
     await prepare(page);
     await page.goto('/stores?view=index');
-    expect(await total(page)).toBe(20);
-    await expect(rows(page)).toHaveCount(20);
+    expect(await total(page)).toBe(50);
+    await expect(rows(page)).toHaveCount(50);
     await expect(rows(page).first().locator('.srow__name')).toHaveText('YoungLA');
   });
 
@@ -79,7 +79,7 @@ test.describe('stores index', () => {
     await expect(rows(page).nth(59).locator('.srow__n')).toHaveText('60');
     // Curated stores lead the default order and are marked as such (or as captured).
     await expect(rows(page).first().locator('.srow__capture')).toContainText(/Curated|Captured/);
-    await expect(rows(page).nth(20).locator('.srow__capture')).toContainText('Detected');
+    await expect(rows(page).nth(50).locator('.srow__capture')).toContainText('Detected');
     expect(await page.locator('main').textContent()).not.toContain('N°');
   });
 

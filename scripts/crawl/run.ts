@@ -14,6 +14,7 @@ import { parseArgs } from 'node:util';
 import { isCaptureBlocked } from '../../src/server/repo/capture.ts';
 import { openLocalEnv } from '../capture/local-env.ts';
 import { crawlStore, loadEngine, STOREPEEK_DIR } from './collect.ts';
+import { robotsFor } from './robots.ts';
 
 import { SCANS_FILE } from './paths.ts';
 
@@ -58,7 +59,13 @@ const results: Record<string, Out> = { ...previous };
 const worker = async () => {
   for (let d = queue.shift(); d; d = queue.shift()) {
     try {
+      const robots = await robotsFor(d);
+      if (!robots.allows('/')) {
+        console.log(`  skip ${d}: robots.txt disallows the home page`);
+        continue;
+      }
       const out = await crawlStore(browser, engine, d);
+      if (robots.crawlDelay) await new Promise((r) => setTimeout(r, robots.crawlDelay! * 1000));
       results[d] = out;
       const s = out.scan;
       console.log(

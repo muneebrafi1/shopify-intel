@@ -1,11 +1,20 @@
 # Handoff
 
-_Last updated: 26 Nov 2026, capture-depth session (PR #14). Update this file before stopping
+_Last updated: 26 Nov 2026, data-depth session (PR #15). Update this file before stopping
 for any reason._
 
 ## Status
 
 - **Base build:** complete, as a stack of 11 focused PRs (#1–#11).
+- **Data depth:** in **PR #15** (`feat/15-data-depth`, stacked on #14).
+  - 50 curated stores (20 exported + 30 picked from the 930-store scan, one or two per theme);
+  - local storefront crawler on StorePeek's rules (`npm run crawl`) and a scan ingest endpoint
+    (`POST /api/v1/admin/scans`, `npm run crawl:ingest`, local base only);
+  - Theme Store facts per theme: presets, published features, version, reviews (migration
+    `0003_theme_store_facts.sql`, `npm run crawl:themes`), with source links and dates;
+  - `meta.sources` gains `shopify-theme-store` and `vitrine-crawl` (after a crawl is ingested);
+  - section detection by content and by header/footer group: far fewer unclassified sections;
+  - see `docs/CRAWL.md`. After pulling, run `npm run setup` (new migration and seed).
 - **Capture depth:** in **PR #14** (`feat/14-capture-depth`, stacked on #13). Collection,
   product and cart pages discovered from the home page; product gallery/buy box split; stitched
   viewport capture for lazy-drawn themes; pre-cut `.top.webp` grid thumbnails; e2e that pass on
@@ -89,6 +98,8 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
   - `npm run build && npm run size`
   - `npm run test:e2e` (Playwright, 562 tests at 390px and 1440px against `astro preview`)
   - `npm run budget:queries` (dev server up: fails if any route goes over 45 D1 statements)
+- Fresh store facts in dev: `npm run crawl -- --curated`, then (dev up) `npm run crawl:ingest`
+  with a local throwaway `ADMIN_API_TOKEN` (32+ chars) in `.dev.vars`. See `docs/CRAWL.md`.
 - Real captures in dev: `npm run capture` (Playwright → `.data/captures/`), then stop dev and
   `npm run capture:ingest` (local R2 + D1). Re-run `capture:ingest` after every `npm run setup`.
 - Screenshots of any routes: `npm run screens -- --base http://127.0.0.1:4321 / /themes`.
@@ -105,6 +116,7 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
 | Architecture + why it differs from the proposal            | `docs/ARCHITECTURE.md`                                                                   |
 | API (one definition → HTTP, in-process client, future MCP) | `docs/API.md`, `src/server/api/v1/`                                                      |
 | Schema + seed                                              | `migrations/0001_init.sql`, `scripts/build-seed.ts`, `scripts/seed/*`, `data/curation/*` |
+| Crawler + Theme Store facts                                | `docs/CRAWL.md`, `scripts/crawl/*`, `src/server/repo/scans.ts`                           |
 | Placeholder captures                                       | `src/server/media/placeholder-svg.ts`, `/media/placeholder/...`                          |
 | Pages                                                      | `src/pages/**`, area components in `src/components/<area>/`                              |
 | Admin + auth                                               | `src/middleware.ts`, `src/server/auth/`, `src/server/admin/`                             |
@@ -124,7 +136,8 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
 11. [#11](https://github.com/muneebrafi1/shopify-intel/pull/11) `feat/11-handoff` — this file
 12. [#12](https://github.com/muneebrafi1/shopify-intel/pull/12) `feat/12-saas-redesign` — SaaS redesign (light + dark), owner decisions, admin API, D1 query budget
 13. [#13](https://github.com/muneebrafi1/shopify-intel/pull/13) `feat/13-capture-pipeline` — local capture pipeline, DOM section detection, `ingestCapture()`
-14. `feat/14-capture-depth` — collection/product/cart capture, stitched mode, top thumbnails, data-independent e2e
+14. [#14](https://github.com/muneebrafi1/shopify-intel/pull/14) `feat/14-capture-depth` — collection/product/cart capture, stitched mode, top thumbnails, data-independent e2e
+15. `feat/15-data-depth` — 50 curated stores, crawler + scan ingest, Theme Store facts, content-based section rules
 
 `claude/busy-wright-i74iuv` holds the same final tree with the session's checkpoint history.
 PR screenshots live on the `pr-screenshots` branch (images only; never merge it).
@@ -132,7 +145,6 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
 ## Next
 
 1. **Capture pipeline, next steps** (local part done in #13 + #14):
-   - fewer unclassified sections (see `diagnostics.unclassified` in the manifest);
    - production: an admin ingest endpoint calling `ingestCapture()` + R2 upload, run from a
      box or GitHub Actions. **Needs the owner's go-ahead** (R2 bucket, uploading store
      screenshots publicly). Then set `SHOW_CAPTURE_PREVIEW_NOTICE = false`.
@@ -141,8 +153,9 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
    (`/sign-in`, `/account`, `/account/boards`, `SaveButton`).
 4. **MCP server**: wrap `endpointList` from `src/server/api/v1/registry.ts` (id → tool name, zod
    input → tool schema).
-5. Grow data: ingest endpoint for the crawler, theme presets, theme style/industry tags (left empty
-   on purpose — no invented data), Tranco source/date in `meta.sources`.
+5. Grow data further: production crawl schedule (needs the owner's go-ahead), theme
+   style/industry tags (the Theme Store publishes none; left empty on purpose), Tranco
+   source/date in `meta.sources`.
 6. API niceties the page engineers asked for: offset/page cursors for deep pagination, an optional
    preview section on app list items, a `listScreenshots` endpoint (the home wall makes 5 calls).
 
@@ -180,6 +193,15 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
 8. **Screendesign**: the connector needs its billing fixed to be usable.
 9. **Captures**: OK to publish real store screenshots (R2 + site) once the pipeline is ready,
    and to run it weekly? Removal requests and capture blocks are already honoured.
+10. **robots.txt and identity** (since #15 the crawl and the capture skip any page a store's
+    `robots.txt` disallows, as the methodology says):
+    - Shopify's current default file allows `/cart` but disallows `/cart/` and `/cart.js`
+      ("agents should use UCP/MCP instead"). Before the cart screenshot the capture adds one product
+      with a POST to `/cart/add.js` (and may read `/products.json` to find one in stock). Keep
+      that, or drop cart captures?
+    - The crawl and the capture send a desktop Chrome user agent. Shopify's file asks agents to
+      identify themselves (`/agents.md`). Switch to an identifying agent (`VitrineBot`, with a
+      contact URL)? Some stores may then show bot checks more often.
 
 ## Gotchas
 

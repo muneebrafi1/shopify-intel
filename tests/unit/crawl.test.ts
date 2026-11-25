@@ -88,3 +88,41 @@ describe('provenance in meta.sources', () => {
     db.close();
   });
 });
+
+describe('robots.txt', () => {
+  const ROBOTS = `# Shopify-style file
+User-agent: *
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /collections/*sort_by*
+Allow: /collections/*sort_by*keep$
+Crawl-delay: 2
+
+User-agent: OtherBot
+Disallow: /
+`;
+  it('uses the * group, longest match wins, Allow wins a tie', async () => {
+    const { parseRobots } = await import('../../scripts/crawl/robots.ts');
+    const r = parseRobots(ROBOTS);
+    expect(r.allows('/')).toBe(true);
+    expect(r.allows('/cart')).toBe(true);
+    expect(r.allows('/cart/add.js')).toBe(false);
+    expect(r.allows('/checkouts/abc')).toBe(false);
+    expect(r.allows('/collections/all?sort_by=price')).toBe(false);
+    expect(r.allows('/collections/all?sort_by=keep')).toBe(true);
+    expect(r.allows('/products/x')).toBe(true);
+    expect(r.crawlDelay).toBe(2);
+    expect(parseRobots('User-agent: *\nDisallow: /a\nDisallow: /a\nAllow: /a').allows('/a')).toBe(
+      true,
+    );
+  });
+
+  it('prefers a group naming our token, and treats an empty file as allow-all', async () => {
+    const { parseRobots } = await import('../../scripts/crawl/robots.ts');
+    expect(
+      parseRobots('User-agent: *\nDisallow: /\n\nUser-agent: VitrineBot\nAllow: /').allows('/x'),
+    ).toBe(true);
+    expect(parseRobots(ROBOTS, 'OtherBot').allows('/')).toBe(false);
+    expect(parseRobots('').allows('/anything')).toBe(true);
+  });
+});

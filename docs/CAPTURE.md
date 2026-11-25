@@ -85,6 +85,9 @@ from `/media/<key>`, and sections with an `r2_key_crop` show their real crop.
   store's empty-cart or drawer state; check `diagnostics` and the screenshot.
 - Stitched mode is per store (`data/curation/capture.json`): it is slower and can repeat
   elements that change position on scroll, so it is not the default.
-- Section detection still drops unnamed sections (listed in `diagnostics.unclassified`).
+- Sections without a recognisable theme name are classified by content (product cards, images,
+  email fields, text) or by their header/footer group since #15; the few left are listed in
+  `diagnostics.unclassified`. Captures taken before #15 have no `raw` sections, so
+  `npm run capture:reprocess` skips them: re-capture those stores instead.
 - Captured images are third-party store content: they stay out of git (`.data/` is ignored)
   and go to R2 only once the owner approves the production pipeline.

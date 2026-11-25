@@ -31,13 +31,15 @@ const checkedRange =
       : `${formatDate(checkedFrom)} – ${formatDate(checkedTo)}`
     : null;
 
+const themeStoreChecked = meta?.theme_store_checked ? formatDate(meta.theme_store_checked) : null;
+
 const toc = [
   { id: 'what-we-look-at', label: 'What we look at' },
   { id: 'detection', label: 'How detection works' },
   { id: 'numbers', label: 'What the numbers mean' },
   { id: 'dates', label: 'Dates and history' },
   { id: 'screenshots', label: 'Screenshots' },
-  { id: 'app-store', label: 'App Store facts' },
+  { id: 'app-store', label: 'App Store and Theme Store facts' },
   { id: 'never', label: 'What we never do' },
   { id: 'corrections', label: 'Corrections and removal' },
 ];
@@ -101,7 +103,7 @@ const toc = [
     </p>
     <ul>
       <li>
-        It reads and respects each store’s <code>robots.txt</code>.
+        It reads each store’s <code>robots.txt</code> first and skips any page the file disallows.
       </li>
       <li>
         It works through stores one at a time with pauses between requests, so a scan is a light
@@ -241,12 +243,19 @@ const toc = [
       can ask us to take them down.
     </p>
 
-    <h2 id="app-store">App Store facts</h2>
+    <h2 id="app-store">App Store and Theme Store facts</h2>
     <p>
       An app’s rating, review count, pricing, developer and Built for Shopify status are copied from
       its public Shopify App Store listing
       {checkedRange ? `, read ${checkedFrom === checkedTo ? 'on' : 'between'} ${checkedRange}` : ''}
       . Each app page shows the date its listing was checked. We don’t adjust or reweight them.
+    </p>
+    <p>
+      A theme’s presets, published feature list, current version and review summary come from its
+      public Shopify Theme Store page
+      {themeStoreChecked ? `, read on ${themeStoreChecked}` : ''}. Features are what the vendor
+      lists, not something we tested. The Theme Store publishes no style or industry tags, so we
+      show none rather than guess.
     </p>
 
     <h2 id="never">What we never do</h2>

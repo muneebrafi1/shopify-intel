@@ -25,6 +25,7 @@ import {
   type CaptureDevice,
   type CapturePageType,
 } from './browser.ts';
+import { robotsFor } from '../crawl/robots.ts';
 import { openLocalEnv } from './local-env.ts';
 import { readManifest, upsertEntry, writeManifest } from './manifest.ts';
 import { ROOT } from './paths.ts';
@@ -120,6 +121,11 @@ try {
       for (const device of devices) {
         if (!url) {
           fail(t.domain, pageType, device, `no ${pageType} page found from the home page`);
+          continue;
+        }
+        const target = new URL(url);
+        if (!(await robotsFor(target.hostname)).allows(target.pathname + target.search)) {
+          fail(t.domain, pageType, device, `robots.txt disallows ${target.pathname}`);
           continue;
         }
         const started = Date.now();
