@@ -1,11 +1,15 @@
 # Handoff
 
-_Last updated: 17 Nov 2026, end of the SaaS-redesign session. Update this file before stopping
+_Last updated: 25 Nov 2026, capture-pipeline session (PR #13). Update this file before stopping
 for any reason._
 
 ## Status
 
 - **Base build:** complete, as a stack of 11 focused PRs (#1–#11).
+- **Local capture pipeline:** in **PR #13** (`feat/13-capture-pipeline`, stacked on #12). Real
+  home-page captures (desktop 1440 + mobile 390) of all 20 curated stores, sections detected
+  from the DOM, loaded into the LOCAL R2 + D1 only. See `docs/CAPTURE.md`. Captured images are
+  third-party content and stay out of git (`.data/captures/`).
 - **SaaS redesign + owner decisions:** in **PR #12** (`feat/12-saas-redesign`, stacked on #11).
   - Every page is redesigned in the v2 "product-grade SaaS" direction: light by default, dark
     via the system setting or the header toggle, vermilion accent.
@@ -80,6 +84,8 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
   - `npm run build && npm run size`
   - `npm run test:e2e` (Playwright, 562 tests at 390px and 1440px against `astro preview`)
   - `npm run budget:queries` (dev server up: fails if any route goes over 45 D1 statements)
+- Real captures in dev: `npm run capture` (Playwright → `.data/captures/`), then stop dev and
+  `npm run capture:ingest` (local R2 + D1). Re-run `capture:ingest` after every `npm run setup`.
 - Screenshots of any routes: `npm run screens -- --base http://127.0.0.1:4321 / /themes`.
   Add `--theme dark` for dark mode.
 - Living styleguide: `/design-system`. Admin: `/admin` (local password lives in your own
@@ -112,17 +118,21 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
 10. [#10](https://github.com/muneebrafi1/shopify-intel/pull/10) `feat/10-admin` — protected admin
 11. [#11](https://github.com/muneebrafi1/shopify-intel/pull/11) `feat/11-handoff` — this file
 12. [#12](https://github.com/muneebrafi1/shopify-intel/pull/12) `feat/12-saas-redesign` — SaaS redesign (light + dark), owner decisions, admin API, D1 query budget
+13. [#13](https://github.com/muneebrafi1/shopify-intel/pull/13) `feat/13-capture-pipeline` — local capture pipeline, DOM section detection, `ingestCapture()`
 
 `claude/busy-wright-i74iuv` holds the same final tree with the session's checkpoint history.
 PR screenshots live on the `pr-screenshots` branch (images only; never merge it).
 
 ## Next
 
-1. **Capture pipeline** (outside the Worker): Playwright on a box/GitHub Actions → R2 keys
-   `shots/{domain}/{page_type}/{device}/{captured_at}.webp` + `screenshots`/`sections` rows. When a
-   row gets an `r2_key`, the UI switches from the drawn placeholder automatically. Then set
-   `SHOW_CAPTURE_PREVIEW_NOTICE = false` (`src/config/site.ts`) and enable Image Resizing
-   (`IMAGE_TRANSFORMS` in `src/lib/media.ts`).
+1. **Capture pipeline, next steps** (local part done in #13):
+   - collection, product and cart pages (URL discovery from the home page; cart with one item);
+   - thumbnails: grids load the full-page WebP for real captures until precut top crops exist
+     (or Image Resizing, `IMAGE_TRANSFORMS` in `src/lib/media.ts`, which may cost money);
+   - stitched viewport-by-viewport capture for sites with scroll-driven reveals;
+   - production: an admin ingest endpoint calling `ingestCapture()` + R2 upload, run from a
+     box or GitHub Actions. **Needs the owner's go-ahead** (R2 bucket, uploading store
+     screenshots publicly). Then set `SHOW_CAPTURE_PREVIEW_NOTICE = false`.
 2. **Mirror App Store icons to R2** (they are hotlinked from cdn.shopify.com today).
 3. **Accounts + Pro via Whop**: `users`, `collections`, `collection_items` exist; UI slots are routed
    (`/sign-in`, `/account`, `/account/boards`, `SaveButton`).
@@ -165,8 +175,15 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
    - editorial store names, categories and countries (`data/curation/stores.json`)
    - app short names (`data/curation/apps.json`)
 8. **Screendesign**: the connector needs its billing fixed to be usable.
+9. **Captures**: OK to publish real store screenshots (R2 + site) once the pipeline is ready,
+   and to run it weekly? Removal requests and capture blocks are already honoured.
 
 ## Gotchas
+
+- `npm run capture:ingest` writes the local D1 through wrangler's platform proxy: stop
+  `astro dev` first (or restart it afterwards) so it sees the new rows.
+- The local `admin` e2e test expecting 403 for a cross-site POST gets 401 when `.dev.vars` is
+  missing (admin not configured). CI writes throwaway credentials; do the same locally.
 
 - Astro ≥6 removed `Astro.locals.runtime`; use `import { env } from 'cloudflare:workers'`.
 - Astro 7 runs `astro dev`/`astro preview` as managed **background** processes when it detects an
