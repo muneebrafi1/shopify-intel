@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 import type { RawSection } from '../../scripts/capture/classify.ts';
-import { classifySection } from '../../scripts/capture/classify.ts';
+import { classifyByContent, classifySection } from '../../scripts/capture/classify.ts';
 import { readManifest, upsertEntry, type ManifestEntry } from '../../scripts/capture/manifest.ts';
 import { detectSections, topThumb } from '../../scripts/capture/process.ts';
 import { captureDevice, thumbUrl, topThumbKey } from '../../src/lib/media.ts';
@@ -40,6 +40,50 @@ describe('page-type section rules', () => {
   it('only guesses a hero from position on the home page', () => {
     expect(classifySection(raw('xyz_block', 100, 600), ctx('home'))?.type).toBe('hero');
     expect(classifySection(raw('xyz_block', 100, 600), ctx('collection'))).toBeNull();
+  });
+});
+
+describe('content rules (sections whose name says nothing)', () => {
+  const f = (o: Partial<Parameters<typeof classifyByContent>[0] & object>) => ({
+    products: 0,
+    collections: 0,
+    images: 0,
+    videos: 0,
+    email: false,
+    details: 0,
+    text: 0,
+    ...o,
+  });
+  it.each([
+    [f({ email: true, text: 80 }), 'home', 'newsletter'],
+    [f({ products: 4, images: 4 }), 'home', 'featured-collection'],
+    [f({ products: 4, images: 4 }), 'product', 'upsell'],
+    [f({ collections: 5, images: 5 }), 'home', 'collection-list'],
+    [f({ details: 4, text: 300 }), 'home', 'faq'],
+    [f({ details: 4, text: 300 }), 'product', 'product-details'],
+    [f({ videos: 1 }), 'home', 'video'],
+    [f({ images: 1, text: 200 }), 'home', 'image-with-text'],
+    [f({ text: 120 }), 'home', 'rich-text'],
+  ])('%o on %s → %s', (features, page, type) => {
+    expect(classifyByContent(features, 500, page)).toBe(type);
+  });
+
+  it('leaves ambiguous or tiny sections unnamed', () => {
+    expect(classifyByContent(f({ images: 8 }), 600, 'home')).toBeNull();
+    expect(classifyByContent(f({ text: 200 }), 20, 'home')).toBeNull();
+    expect(classifyByContent(undefined, 600, 'home')).toBeNull();
+  });
+
+  it('uses content only when the name says nothing', () => {
+    const custom = raw('custom_liquid_mAQXmK', 900, 500, {
+      features: f({ products: 6, images: 6 }),
+    });
+    expect(classifySection(custom, ctx('home', 2))).toMatchObject({
+      type: 'featured-collection',
+      by: 'content',
+    });
+    const named = raw('faq', 900, 500, { features: f({ products: 6 }) });
+    expect(classifySection(named, ctx('home', 2))?.type).toBe('faq');
   });
 });
 

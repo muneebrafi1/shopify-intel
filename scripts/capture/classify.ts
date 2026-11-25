@@ -20,11 +20,28 @@ export interface RawSection {
   height: number;
   /** ids of `.shopify-app-block` elements inside the section. */
   appBlocks: string[];
+  /** What the section contains, for sections whose name says nothing (custom_liquid, ids). */
+  features?: SectionFeatures;
   /** Product sections: the media gallery and buy-box boxes inside them (document CSS px). */
   split?: {
     gallery: { x: number; y: number; w: number; h: number } | null;
     buy: { x: number; y: number; w: number; h: number };
   } | null;
+}
+
+export interface SectionFeatures {
+  /** Distinct /products/ and /collections/ links. */
+  products: number;
+  collections: number;
+  /** Visible images (≥ 40 px) and videos / video iframes. */
+  images: number;
+  videos: number;
+  /** An email input (signup form). */
+  email: boolean;
+  /** <details> or accordion toggles. */
+  details: number;
+  /** Visible text length (characters, whitespace collapsed). */
+  text: number;
 }
 
 export type SectionGroupName = 'header' | 'footer' | 'overlay' | 'template' | 'other';
@@ -134,7 +151,7 @@ export interface ClassifyContext {
 export interface Classified {
   type: SectionType;
   appSlug: string | null;
-  by: 'name' | 'class' | 'app-block' | 'position';
+  by: 'name' | 'class' | 'app-block' | 'content' | 'group' | 'position';
   parsed: ParsedSection;
 }
 
@@ -152,6 +169,27 @@ export function attributeApp(appBlocks: readonly string[], storeApps: readonly s
   return null;
 }
 
+/**
+ * What a section is from what it contains: only for sections whose name, class and app blocks
+ * say nothing. Thresholds are conservative; anything ambiguous stays unclassified.
+ */
+export function classifyByContent(
+  f: SectionFeatures | undefined,
+  height: number,
+  pageType: string,
+): SectionType | null {
+  if (!f || height < 40) return null;
+  if (f.email && f.products < 3) return 'newsletter';
+  if (f.products >= 3)
+    return pageType === 'product' || pageType === 'cart' ? 'upsell' : 'featured-collection';
+  if (f.collections >= 3) return 'collection-list';
+  if (f.details >= 3) return pageType === 'product' ? 'product-details' : 'faq';
+  if (f.videos >= 1 && f.images <= 2 && height >= 200) return 'video';
+  if (f.images >= 1 && f.images <= 3 && f.text >= 60 && height >= 200) return 'image-with-text';
+  if (f.images === 0 && f.videos === 0 && f.text >= 40) return 'rich-text';
+  return null;
+}
+
 export function classifySection(raw: RawSection, ctx: ClassifyContext): Classified | null {
   const parsed = parseSection(raw);
   if (parsed.group === 'overlay') return null;
@@ -163,12 +201,18 @@ export function classifySection(raw: RawSection, ctx: ClassifyContext): Classifi
   if (parsed.group === 'header') {
     const t = matchRules(parsed.handle) ?? matchRules(parsed.typeClass ?? '');
     if (t === 'announcement-bar' || t === 'header') return done(t, 'name');
-    return raw.height <= 64 ? done('announcement-bar', 'position') : null;
+    // Marquees and promo strips above the header are announcement bars whatever their name.
+    if (raw.height <= 90 && (raw.features?.text ?? 0) < 400)
+      return done('announcement-bar', 'position');
+    return null;
   }
   if (parsed.group === 'footer') {
     const t = matchRules(parsed.handle) ?? matchRules(parsed.typeClass ?? '');
     if (t === 'footer' || t === 'newsletter' || t === 'trust-badges') return done(t, 'name');
-    return null;
+    if (raw.features?.email) return done('newsletter', 'content');
+    // Everything else in the footer group (copyright bars, pre-footers, payment icons) is
+    // part of the footer.
+    return raw.height >= 20 ? done('footer', 'group') : null;
   }
 
   const isAppSection = /^\d+$/.test(parsed.handle) || parsed.typeClass === 'apps';
@@ -183,6 +227,9 @@ export function classifySection(raw: RawSection, ctx: ClassifyContext): Classifi
     const byBlock = matchRules(raw.appBlocks.map(appBlockHandle).join(' '));
     if (byBlock) return done(byBlock, 'app-block');
   }
+  const byContent = classifyByContent(raw.features, raw.height, page);
+  if (byContent && !(page === 'home' && ctx.templateIndex === 0 && byContent === 'rich-text'))
+    return done(byContent, 'content');
   // The first tall template section on a home page is its hero, whatever the theme calls it.
   if (page === 'home' && !isAppSection && ctx.templateIndex === 0 && raw.height >= 280)
     return done('hero', 'position');

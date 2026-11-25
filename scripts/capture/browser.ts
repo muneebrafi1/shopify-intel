@@ -194,6 +194,31 @@ function readSections(page: Page): Promise<RawSection[]> {
       }
       return gallery ? { gallery: box(gallery), buy: buyBox } : { gallery: null, buy: buyBox };
     };
+    const visible = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return r.width >= 40 && r.height >= 40;
+    };
+    const features = (sec: HTMLElement) => {
+      const links = (re: RegExp) =>
+        new Set(
+          Array.from(sec.querySelectorAll<HTMLAnchorElement>('a[href]'))
+            .map((a) => a.pathname.replace(/\/$/, ''))
+            .filter((p) => re.test(p)),
+        ).size;
+      return {
+        products: links(/\/products\/[^/]+$/),
+        collections: links(/\/collections\/[^/]+$/),
+        images: Array.from(sec.querySelectorAll('img, picture')).filter(
+          (i) => !(i.tagName === 'IMG' && i.closest('picture')) && visible(i),
+        ).length,
+        videos: Array.from(
+          sec.querySelectorAll('video, iframe[src*="youtube"], iframe[src*="vimeo"]'),
+        ).filter(visible).length,
+        email: !!sec.querySelector('input[type="email"], input[name*="email" i]'),
+        details: sec.querySelectorAll('details, [aria-expanded]').length,
+        text: (sec.innerText || '').replace(/\s+/g, ' ').trim().length,
+      };
+    };
     return Array.from(
       document.querySelectorAll<HTMLElement>('.shopify-section[id^="shopify-section-"]'),
     )
@@ -207,6 +232,7 @@ function readSections(page: Page): Promise<RawSection[]> {
           height: r.height,
           appBlocks: Array.from(el.querySelectorAll('.shopify-app-block[id]')).map((b) => b.id),
           split: productSplit(el),
+          features: features(el),
         };
       });
   });
