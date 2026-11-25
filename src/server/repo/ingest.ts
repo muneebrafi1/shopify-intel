@@ -235,7 +235,8 @@ export async function ingestCapture(db: Db, input: CaptureInput): Promise<Ingest
   });
 
   await db.batch(stmts);
-  if (sameShot) return { status: 'resectioned', screenshot_id: shotId, sections: c.sections.length };
+  if (sameShot)
+    return { status: 'resectioned', screenshot_id: shotId, sections: c.sections.length };
   return {
     status: 'ingested',
     screenshot_id: shotId,

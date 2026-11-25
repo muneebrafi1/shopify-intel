@@ -4,6 +4,7 @@
  * registry and served only behind the admin guard (/api/v1/admin/openapi.json).
  */
 import { z } from 'zod';
+import { scanInputSchema } from '../../repo/scans.ts';
 
 export const adminSchemaRegistry = z.registry<{ id: string; description?: string }>();
 
@@ -323,5 +324,33 @@ export const AdminIndexOutput = z.object({
   principal: z.object({ actor: z.string(), method: z.enum(['access', 'password', 'token']) }),
   endpoints: z.array(
     z.object({ id: z.string(), method: z.string(), path: z.string(), summary: z.string() }),
+  ),
+});
+
+// ---------------------------------------------------------------------------------------------
+// Scans (crawler ingest)
+// ---------------------------------------------------------------------------------------------
+export const IngestScansInput = z.object({
+  /** One scan per request keeps a request well inside D1's 50-statement budget. */
+  scans: z.array(adminNamed('ScanInput', scanInputSchema)).min(1).max(1),
+  /** Rebuild derived counts after this scan (send false for all but the last of a batch). */
+  rebuild: z.boolean().default(true),
+});
+
+export const IngestScansOutput = z.object({
+  results: z.array(
+    adminNamed(
+      'ScanResult',
+      z.object({
+        domain: z.string(),
+        status: z.enum(['ingested', 'not-shopify', 'opted-out', 'unknown-store']),
+        scan_id: z.number().int().optional(),
+        theme: z.enum(['unchanged', 'changed', 'new', 'none']).optional(),
+        apps_added: z.number().int().optional(),
+        apps_seen: z.number().int().optional(),
+        unresolved: z.number().int().optional(),
+        pixels_added: z.number().int().optional(),
+      }),
+    ),
   ),
 });
