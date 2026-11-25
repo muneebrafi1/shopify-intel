@@ -277,17 +277,29 @@ export async function discoverPages(browser: Browser, homeUrl: string): Promise<
 async function addOneToCart(page: Page, productUrl: string) {
   await page.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   const ok = await page.evaluate(async (path) => {
-    const r = await fetch(`${path.replace(/\/$/, '')}.js`).catch(() => null);
-    if (!r || !r.ok) return false;
-    const p = (await r.json()) as { variants?: Array<{ id: number; available: boolean }> };
-    const v = p.variants?.find((x) => x.available) ?? p.variants?.[0];
-    if (!v) return false;
-    const add = await fetch('/cart/add.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ items: [{ id: v.id, quantity: 1 }] }),
-    }).catch(() => null);
-    return !!add && add.ok;
+    type V = { id: number; available: boolean };
+    const add = async (v: V | undefined) => {
+      if (!v) return false;
+      const r = await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ items: [{ id: v.id, quantity: 1 }] }),
+      }).catch(() => null);
+      return !!r && r.ok;
+    };
+    const json = async <T>(url: string) => {
+      const r = await fetch(url).catch(() => null);
+      return r && r.ok ? ((await r.json().catch(() => null)) as T | null) : null;
+    };
+    const p = await json<{ variants?: V[] }>(`${path.replace(/\/$/, '')}.js`);
+    if (await add(p?.variants?.find((x) => x.available))) return true;
+    // The featured product is sold out (or its variant is restricted): any product in stock.
+    const list = await json<{ products?: Array<{ variants?: V[] }> }>('/products.json?limit=30');
+    for (const item of list?.products ?? []) {
+      const v = item.variants?.find((x) => x.available);
+      if (v) return add(v);
+    }
+    return add(p?.variants?.[0]);
   }, new URL(productUrl).pathname);
   if (!ok) throw new CaptureError('empty', 'could not put an item in the cart');
 }
