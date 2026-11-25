@@ -18,6 +18,8 @@
     "size": "node scripts/size-budget.mjs",
     "budget:queries": "node scripts/query-budget.mjs",
     "screens": "node scripts/capture-screens.mjs",
+    "capture": "node scripts/capture/run.ts",
+    "capture:ingest": "node scripts/capture/ingest-local.ts",
     "test": "vitest run",
     "db:build-seed": "node scripts/build-seed.ts",
     "db:reset": "node scripts/db-reset.ts",
@@ -39,6 +41,7 @@
     "@types/node": "^22.20.5",
     "prettier": "^3.10.1",
     "prettier-plugin-astro": "^1.1.2",
+    "sharp": "0.35.5",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0",
     "yaml": "^2.9.1"

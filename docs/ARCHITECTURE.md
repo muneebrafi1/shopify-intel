@@ -40,6 +40,11 @@ definitions (or call the HTTP API from elsewhere).
   writing its R2 key and section rows; no UI change.**
 - A slim sitewide notice (`SHOW_CAPTURE_PREVIEW_NOTICE` in `src/config/site.ts`) says
   screenshots are previews until the first capture run.
+- **Local capture pipeline (PR #13):** `npm run capture` takes real home-page captures of the
+  curated stores (desktop + mobile, sections detected from the DOM) into `.data/captures/`, and
+  `npm run capture:ingest` loads them into the local R2 + D1 through `ingestCapture()`
+  (`src/server/repo/ingest.ts`), which a future admin ingest endpoint can reuse. See
+  `docs/CAPTURE.md`.
 
 ### Capture blocks: the contract the capture pipeline must follow
 

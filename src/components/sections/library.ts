@@ -289,9 +289,15 @@ export function pageLabel(page: string) {
 /** Where the crops come from, for the source line under counts. */
 export function cropSource(meta: ResponseMeta, items: SectionCard[]) {
   const planned = items.length === 0 || items.some((s) => s.is_placeholder);
+  const captured = items.some((s) => !s.is_placeholder);
   const plan = meta.sources['capture-plan'];
   return {
-    label: planned ? 'Planned capture layouts (previews, not screenshots)' : 'Our page captures',
+    label:
+      planned && captured
+        ? 'Our page captures, plus planned layouts (previews) for pages not captured yet'
+        : planned
+          ? 'Planned capture layouts (previews, not screenshots)'
+          : 'Our page captures',
     asOf: formatDate((planned ? plan?.as_of : null) ?? meta.data_as_of),
   };
 }
