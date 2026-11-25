@@ -1,0 +1,4 @@
+{
+  "_note": "Capture pipeline settings per store (scripts/capture/run.ts). stitch: capture viewport by viewport and stitch, for sites that only draw parts of the page while they are in the real viewport (a one-shot full-page capture comes out partly blank).",
+  "stitch": ["thesill.com"]
+}

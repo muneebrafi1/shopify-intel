@@ -13,6 +13,24 @@ const total = async (page: Page) => {
 };
 const rows = (page: Page) => page.locator('[data-store-index] tbody tr');
 
+interface ApiShot {
+  is_placeholder: boolean;
+  sections: Array<{ id: number; type: { name: string }; app: { short_name: string } | null }>;
+}
+interface ApiStore {
+  pages: Array<{
+    page_type: { slug: string };
+    screenshots: { desktop: ApiShot | null; mobile: ApiShot | null };
+  }>;
+}
+/** The store as the API sees it, so tests hold with placeholder fixtures or real captures. */
+const storeDetail = async (page: Page, domain: string) =>
+  ((await (await page.request.get(`/api/v1/stores/${domain}`)).json()) as { data: ApiStore }).data;
+const homeShot = async (page: Page, domain: string) => {
+  const home = (await storeDetail(page, domain)).pages.find((p) => p.page_type.slug === 'home');
+  return home!.screenshots.desktop!;
+};
+
 test.describe('stores index', () => {
   for (const path of [
     '/stores',
@@ -59,8 +77,8 @@ test.describe('stores index', () => {
     await expect(rows(page)).toHaveCount(60);
     await expect(rows(page).first().locator('.srow__n')).toHaveText('1');
     await expect(rows(page).nth(59).locator('.srow__n')).toHaveText('60');
-    // Curated stores lead the default order and are marked as such.
-    await expect(rows(page).first().locator('.srow__capture')).toContainText('Curated');
+    // Curated stores lead the default order and are marked as such (or as captured).
+    await expect(rows(page).first().locator('.srow__capture')).toContainText(/Curated|Captured/);
     await expect(rows(page).nth(20).locator('.srow__capture')).toContainText('Detected');
     expect(await page.locator('main').textContent()).not.toContain('N°');
   });
@@ -140,7 +158,8 @@ test.describe('stores index', () => {
 
   test('an empty filter result explains itself', async ({ page }) => {
     await prepare(page);
-    await page.goto('/stores?capture=captured');
+    // Empty whether or not a capture run has happened locally.
+    await page.goto('/stores?scope=all&capture=captured&q=zzzz-no-such-store');
     await expect(page.locator('.empty')).toContainText('No stores match');
   });
 });
@@ -192,7 +211,10 @@ test.describe('store detail', () => {
     await page.goto('/stores/youngla.com');
     const img = page.locator('.viewer .fp__canvas > img');
     await expect(img).toHaveAttribute('alt', /home page on desktop/);
-    await expect(page.locator('.viewer__state')).toContainText('Layout preview');
+    const home = await homeShot(page, 'youngla.com');
+    await expect(page.locator('.viewer__state')).toContainText(
+      home.is_placeholder ? 'Layout preview' : 'Captured',
+    );
 
     await page.locator('.viewer__tabs a', { hasText: 'Product' }).click();
     await expect(page).toHaveURL(/[?&]page=product/);
@@ -212,11 +234,18 @@ test.describe('store detail', () => {
 
   test('rail items scroll the capture to their section and show its app', async ({ page }) => {
     await prepare(page);
-    await page.goto('/stores/youngla.com');
-    const item = page.locator('.viewer .fp__item', { hasText: 'Reviews' }).first();
-    await expect(item).toContainText('Loox');
+    // The first page of the store with an app-attributed section (fixture or real capture).
+    const store = await storeDetail(page, 'youngla.com');
+    const hit = store.pages
+      .map((p) => ({ p, s: p.screenshots.desktop?.sections.find((x) => x.app) }))
+      .find((x) => x.s);
+    expect(hit, 'a section attributed to an app').toBeTruthy();
+    const { p: withApp, s: section } = hit!;
+    await page.goto(`/stores/youngla.com?page=${withApp.page_type.slug}`);
+    const item = page.locator(`.viewer .fp__item[data-target="${section!.id}"]`);
+    await expect(item).toContainText(section!.app!.short_name);
     const id = await item.getAttribute('data-target');
-    await expect(page.locator(`#section-${id} .fp__tag`)).toContainText('Reviews');
+    await expect(page.locator(`#section-${id} .fp__tag`)).toContainText(section!.type.name);
     await item.click();
     await expect(page.locator(`#section-${id}`)).toBeInViewport();
     await expect(page).toHaveURL(new RegExp(`#section-${id}$`));

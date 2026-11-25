@@ -464,7 +464,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           title={`Stores running ${name}`}
           id="stores-title"
           count={storesTotal}
-          description={`Found on ${storesTotal.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')} scanned stores (${sharePct(app.usage.share)}). Curated stores have page-by-page layout previews.`}
+          description={`Found on ${storesTotal.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')} scanned stores (${sharePct(app.usage.share)}). Curated stores are mapped page by page.`}
         />
         <div class="table-wrap stores-wrap">
           <table class="table stores">
@@ -512,8 +512,12 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
                   </td>
                   <td class="is-num stores__apps">{row.app_count}</td>
                   <td class="is-num">
-                    {row.store.is_curated ? (
+                    {row.is_captured ? (
                       <Badge size="sm" tone="positive" dot>
+                        Captured
+                      </Badge>
+                    ) : row.store.is_curated ? (
+                      <Badge size="sm" tone="neutral">
                         Layout preview
                       </Badge>
                     ) : (

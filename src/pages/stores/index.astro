@@ -312,7 +312,7 @@ const title = hasFilters
           <EmptyState
             title="No stores match these filters"
             body={
-              q.filters.capture === 'captured'
+              q.filters.capture === 'captured' && facets.captured === 0
                 ? 'No store has real screenshots yet: the first capture run hasn’t happened. Curated stores show layout previews until then.'
                 : 'Try a shorter search or remove a filter.'
             }

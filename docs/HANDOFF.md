@@ -1,11 +1,16 @@
 # Handoff
 
-_Last updated: 25 Nov 2026, capture-pipeline session (PR #13). Update this file before stopping
+_Last updated: 26 Nov 2026, capture-depth session (PR #14). Update this file before stopping
 for any reason._
 
 ## Status
 
 - **Base build:** complete, as a stack of 11 focused PRs (#1–#11).
+- **Capture depth:** in **PR #14** (`feat/14-capture-depth`, stacked on #13). Collection,
+  product and cart pages discovered from the home page; product gallery/buy box split; stitched
+  viewport capture for lazy-drawn themes; pre-cut `.top.webp` grid thumbnails; e2e that pass on
+  placeholder and real data; teardown notes without a matching section say so instead of
+  linking nowhere; "layout preview" wording only where a page really is a preview.
 - **Local capture pipeline:** in **PR #13** (`feat/13-capture-pipeline`, stacked on #12). Real
   home-page captures (desktop 1440 + mobile 390) of all 20 curated stores, sections detected
   from the DOM, loaded into the LOCAL R2 + D1 only. See `docs/CAPTURE.md`. Captured images are
@@ -119,17 +124,15 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
 11. [#11](https://github.com/muneebrafi1/shopify-intel/pull/11) `feat/11-handoff` — this file
 12. [#12](https://github.com/muneebrafi1/shopify-intel/pull/12) `feat/12-saas-redesign` — SaaS redesign (light + dark), owner decisions, admin API, D1 query budget
 13. [#13](https://github.com/muneebrafi1/shopify-intel/pull/13) `feat/13-capture-pipeline` — local capture pipeline, DOM section detection, `ingestCapture()`
+14. `feat/14-capture-depth` — collection/product/cart capture, stitched mode, top thumbnails, data-independent e2e
 
 `claude/busy-wright-i74iuv` holds the same final tree with the session's checkpoint history.
 PR screenshots live on the `pr-screenshots` branch (images only; never merge it).
 
 ## Next
 
-1. **Capture pipeline, next steps** (local part done in #13):
-   - collection, product and cart pages (URL discovery from the home page; cart with one item);
-   - thumbnails: grids load the full-page WebP for real captures until precut top crops exist
-     (or Image Resizing, `IMAGE_TRANSFORMS` in `src/lib/media.ts`, which may cost money);
-   - stitched viewport-by-viewport capture for sites with scroll-driven reveals;
+1. **Capture pipeline, next steps** (local part done in #13 + #14):
+   - fewer unclassified sections (see `diagnostics.unclassified` in the manifest);
    - production: an admin ingest endpoint calling `ingestCapture()` + R2 upload, run from a
      box or GitHub Actions. **Needs the owner's go-ahead** (R2 bucket, uploading store
      screenshots publicly). Then set `SHOW_CAPTURE_PREVIEW_NOTICE = false`.
@@ -179,6 +182,12 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
    and to run it weekly? Removal requests and capture blocks are already honoured.
 
 ## Gotchas
+
+- e2e reads the data it asserts on from `/api/v1/...` (placeholder or captured), so it passes
+  on a fresh `npm run setup` and after `npm run capture:ingest`. Admin e2e needs
+  `ADMIN_PASSWORD` exported from `.dev.vars` locally.
+- Run the capture scripts with `node` (type stripping): no TypeScript parameter properties or
+  enums in `scripts/capture/`.
 
 - `npm run capture:ingest` writes the local D1 through wrangler's platform proxy: stop
   `astro dev` first (or restart it afterwards) so it sees the new rows.
