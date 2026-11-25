@@ -112,14 +112,22 @@ try {
         }
         const started = Date.now();
         try {
-          const capture = await withTimeout(
-            capturePage(browser, url, device, {
-              pageType,
-              stitch: values.stitch || stitchSet.has(t.domain),
-              productUrl: found.product,
-            }),
-            240_000,
-          );
+          const shoot = () =>
+            withTimeout(
+              capturePage(browser, url, device, {
+                pageType,
+                stitch: values.stitch || stitchSet.has(t.domain),
+                productUrl: found.product,
+              }),
+              240_000,
+            );
+          // One retry for transient browser errors (a redirect mid-script, a slow first load);
+          // CaptureErrors (bot check, password page, not Shopify…) are final.
+          const capture = await shoot().catch((e: unknown) => {
+            if (e instanceof CaptureError) throw e;
+            console.log(`  retry ${t.domain} ${pageType} ${device}: ${String(e).split('\n')[0]}`);
+            return shoot();
+          });
           const entry = await processCapture({
             domain: t.domain,
             device,
