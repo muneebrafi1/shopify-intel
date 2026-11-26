@@ -8,6 +8,8 @@ npm run setup                       # once: local D1 with the placeholder plan
 npm run capture                     # all curated stores × 4 pages × desktop 1440 + mobile 390
 npm run capture -- --only youngla.com,thesill.com --devices desktop
 npm run capture -- --pages product,cart --stitch   # some pages, force stitched mode
+npm run capture -- --resume         # skip pages already captured with the current rules
+nohup npm run capture -- --resume > .data/capture.log 2>&1 &   # long runs: background + log
 npm run capture:ingest              # stop `astro dev` first; restart it afterwards
 ```
 

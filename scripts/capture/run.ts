@@ -39,6 +39,10 @@ const { values } = parseArgs({
     devices: { type: 'string', default: 'desktop,mobile' },
     limit: { type: 'string' },
     stitch: { type: 'boolean', default: false },
+    /** Skip pages already captured with the current rules (manifest entries with `raw`). */
+    resume: { type: 'boolean', default: false },
+    /** With --resume: only skip captures taken after this ISO date. */
+    since: { type: 'string' },
   },
 });
 const list = (v: string) => v.split(',').map((d) => d.trim());
@@ -103,6 +107,20 @@ try {
        JOIN stores s ON s.id = sa.store_id WHERE s.domain = ? AND sa.removed_at IS NULL`,
       [t.domain],
     );
+    const done = (pageType: string, device: string) =>
+      values.resume &&
+      manifest.entries.some(
+        (e) =>
+          e.raw &&
+          e.capture.domain === t.domain &&
+          e.capture.page_type === pageType &&
+          e.capture.device === device &&
+          (!values.since || e.capture.captured_at >= values.since),
+      );
+    if (pages.every((p) => devices.every((d) => done(p, d)))) {
+      console.log(`  done ${t.domain}: already captured`);
+      continue;
+    }
     const needsDiscovery = pages.some((p) => p !== 'home');
     const found = needsDiscovery
       ? await discoverPages(await liveBrowser(), t.url).catch(() => ({
@@ -119,6 +137,7 @@ try {
     for (const pageType of pages) {
       const url = urls[pageType];
       for (const device of devices) {
+        if (done(pageType, device)) continue;
         if (!url) {
           fail(t.domain, pageType, device, `no ${pageType} page found from the home page`);
           continue;
