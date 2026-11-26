@@ -166,7 +166,13 @@ const title = name || domain;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 4 / 3;
+    background:
+      linear-gradient(var(--surface-2), var(--surface-2)),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px),
+      linear-gradient(var(--line) 1px, transparent 1px);
+    background-size: auto, 16px 16px, 16px 16px;
+    background-position: 0 0, -1px -1px, -1px -1px;
   }
   .store-card__empty-domain {
     color: var(--ink-2);

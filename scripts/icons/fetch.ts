@@ -80,7 +80,9 @@ function icoToPng(buf: Buffer): Buffer | null {
 async function toWebp(buf: Buffer): Promise<{ data: Buffer; w: number } | null> {
   try {
     const meta = await sharp(buf).metadata();
-    if (!meta.width || !meta.height || meta.width < 32 || meta.height < 32) return null;
+    if (!meta.width || !meta.height) return null;
+    // Wordmarks are often wide and short (e.g. 112×22); accept if the long side is ≥ 32.
+    if (Math.max(meta.width, meta.height) < 32) return null;
     const side = Math.min(128, Math.max(meta.width, meta.height));
     const data = await sharp(buf)
       .resize(side, side, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
@@ -141,33 +143,100 @@ const attr = (tag: string, name: string) =>
     ?.slice(2, 5)
     .find(Boolean);
 
-function iconCandidates(html: string, base: string): string[] {
+function absUrl(href: string, base: string): string | null {
+  try {
+    let url = new URL(href.replace(/&amp;/g, '&').replace(/\\u0026/g, '&'), base).href;
+    // Shopify's image CDN, including the store's own /cdn/shop/ host.
+    if (/cdn\.shopify\.com|\/cdn\/shop\//.test(url)) {
+      const u = new URL(url);
+      u.searchParams.set('width', '256');
+      u.searchParams.delete('height');
+      u.searchParams.delete('crop');
+      url = u.href;
+    }
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function logoCandidates(html: string, base: string): Array<{ url: string; score: number }> {
   const out: Array<{ url: string; score: number }> = [];
+  const add = (href: string | undefined | null, score: number) => {
+    if (!href || href.startsWith('data:')) return;
+    const url = absUrl(href, base);
+    if (url) out.push({ url, score });
+  };
+
   for (const m of html.matchAll(/<link\b[^>]*>/gi)) {
     const tag = m[0];
     const rel = (attr(tag, 'rel') ?? '').toLowerCase();
     const href = attr(tag, 'href');
+    if (href && /manifest/.test(rel)) add(href, -1); // scored later after the manifest is fetched
     if (!href || !/icon/.test(rel) || /mask-icon/.test(rel)) continue;
     const sizes = Math.max(
       0,
       ...[...(attr(tag, 'sizes') ?? '').matchAll(/(\d+)x\d+/g)].map((x) => +x[1]!),
     );
-    let url: string;
-    try {
-      url = new URL(href.replace(/&amp;/g, '&'), base).href;
-    } catch {
-      continue;
-    }
-    // Shopify's image CDN resizes on request: ask for a crisp square.
-    if (/cdn\.shopify\.com/.test(url)) {
-      const u = new URL(url);
-      u.searchParams.set('width', '256');
-      u.searchParams.delete('height');
-      url = u.href;
-    }
-    out.push({ url, score: (rel.includes('apple-touch') ? 1000 : 0) + (sizes || 16) });
+    add(href, (rel.includes('apple-touch') ? 1000 : 0) + (sizes || 16));
   }
-  return [...new Set(out.sort((a, b) => b.score - a.score).map((x) => x.url))].slice(0, 4);
+
+  for (const m of html.matchAll(
+    /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
+  )) {
+    try {
+      const raw = JSON.parse(m[1]!.replace(/^\s*\/\*/, '').replace(/\*\/\s*$/, ''));
+      const nodes = Array.isArray(raw) ? raw : raw?.['@graph'] ? raw['@graph'] : [raw];
+      const walk = (n: unknown) => {
+        if (!n || typeof n !== 'object') return;
+        const o = n as Record<string, unknown>;
+        const typ = String(o['@type'] ?? '').toLowerCase();
+        if (typ.includes('organization') || typ.includes('brand') || typ.includes('webstore')) {
+          const logo = o.logo as unknown;
+          const href =
+            typeof logo === 'string'
+              ? logo
+              : logo && typeof logo === 'object'
+                ? String(
+                    (logo as { url?: string; contentUrl?: string }).url ??
+                      (logo as { contentUrl?: string }).contentUrl ??
+                      '',
+                  )
+                : '';
+          if (href) add(href, 2000);
+        }
+        if (Array.isArray(o['@graph'])) o['@graph'].forEach(walk);
+      };
+      (Array.isArray(nodes) ? nodes : [nodes]).forEach(walk);
+    } catch {
+      /* ignore broken JSON-LD */
+    }
+  }
+
+  for (const m of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const tag = m[0];
+    const prop = (attr(tag, 'property') ?? attr(tag, 'name') ?? '').toLowerCase();
+    const content = attr(tag, 'content');
+    if (!content) continue;
+    if (prop === 'og:logo' || prop === 'twitter:image' && /logo/i.test(content)) add(content, 1600);
+    if ((prop === 'og:image' || prop === 'og:image:url') && /logo/i.test(content)) add(content, 1500);
+  }
+
+  const head = html.slice(0, 250_000);
+  for (const m of head.matchAll(/<img\b[^>]*>/gi)) {
+    const tag = m[0];
+    const src =
+      attr(tag, 'src') ??
+      attr(tag, 'data-src') ??
+      (attr(tag, 'srcset') ?? attr(tag, 'data-srcset') ?? '').split(/[\s,]/).find(Boolean);
+    const blob = `${src ?? ''} ${attr(tag, 'alt') ?? ''} ${attr(tag, 'class') ?? ''} ${attr(tag, 'id') ?? ''}`;
+    if (src && /logo|brandmark|site-title|wordmark/i.test(blob)) add(src, 1300);
+  }
+
+  const seen = new Set<string>();
+  return out
+    .sort((a, b) => b.score - a.score)
+    .filter((x) => (seen.has(x.url) ? false : (seen.add(x.url), true)));
 }
 
 async function storeLogo(domain: string, url: string | null): Promise<string | null> {
@@ -178,19 +247,59 @@ async function storeLogo(domain: string, url: string | null): Promise<string | n
   const res = await get(home, 'text/html').catch(() => null);
   if (!res?.ok) return null;
   const html = (await res.text()).slice(0, 400_000);
-  const cands = iconCandidates(html, res.url || home);
-  cands.push(new URL('/apple-touch-icon.png', res.url || home).href);
-  cands.push(new URL('/favicon.ico', res.url || home).href);
+  const base = res.url || home;
+  const scored = logoCandidates(html, base);
+  const manifestLink = scored.find((x) => x.score === -1);
+  const cands = scored.filter((x) => x.score >= 0).map((x) => x.url);
+  if (manifestLink) {
+    try {
+      const mu = new URL(manifestLink.url);
+      const sameHost = mu.hostname === new URL(home).hostname;
+      if (!(robots && sameHost && !robots.allows(mu.pathname + mu.search))) {
+        const mr = await get(manifestLink.url, 'application/manifest+json, application/json');
+        if (mr.ok) {
+          const man = (await mr.json()) as { icons?: Array<{ src?: string; sizes?: string }> };
+          for (const icon of man.icons ?? []) {
+            if (!icon.src) continue;
+            const sizes = Math.max(
+              0,
+              ...[...(icon.sizes ?? '').matchAll(/(\d+)x\d+/g)].map((x) => +x[1]!),
+            );
+            const url = absUrl(icon.src, manifestLink.url);
+            if (url) cands.unshift(url); // largest first after we sort below; just prepend
+            void sizes;
+          }
+        }
+      }
+    } catch {
+      /* ignore a broken manifest */
+    }
+  }
+  cands.push(new URL('/apple-touch-icon.png', base).href);
+  cands.push(new URL('/favicon.ico', base).href);
+  const tried = new Set<string>();
   for (const c of cands) {
+    if (tried.has(c)) continue;
+    tried.add(c);
     const cu = new URL(c);
     if (robots && cu.hostname === new URL(home).hostname && !robots.allows(cu.pathname + cu.search))
       continue;
     try {
       const r = await get(c, 'image/*');
-      if (!r.ok || !(r.headers.get('content-type') ?? '').startsWith('image/')) continue;
+      const type = r.headers.get('content-type') ?? '';
+      if (!r.ok || !(type.startsWith('image/') || type.includes('octet-stream') || /\.ico(\?|$)/i.test(c)))
+        continue;
       let body: Buffer = Buffer.from(await r.arrayBuffer());
-      if (/\.ico(\?|$)/i.test(c) || (r.headers.get('content-type') ?? '').includes('icon')) {
+      if (/\.ico(\?|$)/i.test(c) || type.includes('icon')) {
         body = icoToPng(body) ?? body;
+      }
+      // Skip obvious og-style wide photos used as a fallback when the URL isn't a logo.
+      const meta = await sharp(body).metadata().catch(() => null);
+      if (meta?.width && meta.height) {
+        const ratio = meta.width / meta.height;
+        const looksLikePhoto = ratio > 1.6 || ratio < 0.5;
+        const namedLogo = /logo|icon|brand/i.test(c);
+        if (looksLikePhoto && !namedLogo && (meta.width > 400 || meta.height > 400)) continue;
       }
       const out = await toWebp(body);
       if (!out) continue;
