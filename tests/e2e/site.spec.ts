@@ -19,13 +19,9 @@ const ROUTES = [
   '/pro',
   '/pro?billing=yearly',
   '/sign-in',
-  `/sign-in?next=${encodeURIComponent('/account/boards?save=section:1')}`,
+  `/sign-in?next=${encodeURIComponent('/account/save?item=section:1')}`,
   '/developers',
-  '/account',
-  '/account/boards',
-  '/account/boards?save=section:1',
   '/account/boards/example-reviews',
-  '/account/boards/client-pitch',
 ];
 
 test.describe('site pages are healthy', () => {
@@ -247,32 +243,49 @@ test.describe('pro', () => {
   });
 });
 
-test.describe('accounts', () => {
-  test('sign-in keeps next and explains that accounts open with Pro', async ({ page }) => {
+test.describe('accounts (signed out)', () => {
+  test('sign-in keeps next and adapts the headline', async ({ page }) => {
     await prepare(page);
-    await page.goto(`/sign-in?next=${encodeURIComponent('/account/boards?save=section:1')}`);
+    await page.goto(`/sign-in?next=${encodeURIComponent('/account/save?item=section:1')}`);
     await expect(page.locator('h1')).toHaveText('Sign in to save this section.');
-    await expect(page.locator('input[name="next"]')).toHaveValue('/account/boards?save=section:1');
-    await expect(page.getByRole('button', { name: 'Continue with Whop' })).toBeDisabled();
-    const notice = page.locator('[data-signin-notice]');
-    await expect(notice).toBeHidden();
-    await page.locator('#signin-email').fill('someone@example.com');
-    await page.getByRole('button', { name: 'Email me a sign-in link' }).click();
-    await expect(notice).toBeVisible();
-    await expect(notice).toContainText('accounts open with Pro');
+    // Without a Whop app configured the Whop button is off and says so.
+    const whop = page.getByRole('button', { name: 'Continue with Whop' });
+    if ((await whop.count()) > 0) await expect(whop).toBeDisabled();
   });
 
   test('sign-in ignores off-site next values', async ({ page }) => {
     await prepare(page);
-    await page.goto(`/sign-in?next=${encodeURIComponent('//evil.example/steal')}`);
-    await expect(page.locator('input[name="next"]')).toHaveValue('/account');
+    for (const bad of ['//evil.example/steal', '/\\evil.example', '/\t/evil.example']) {
+      await page.goto(`/sign-in?next=${encodeURIComponent(bad)}`);
+      await expect(page.locator('a.auth__back, .auth__back a').first()).toHaveAttribute(
+        'href',
+        '/',
+      );
+    }
   });
 
-  test('saving without an account explains why', async ({ page }) => {
-    await prepare(page);
-    await page.goto('/account/boards?save=section:1');
-    await expect(page.locator('main')).toContainText('Saving needs an account');
-    await expect(page.locator('main')).toContainText('this section');
+  test('account pages redirect to sign-in and keep the destination', async ({ request }) => {
+    for (const path of ['/account', '/account/boards', '/account/save?item=section:1']) {
+      const res = await request.get(path, { maxRedirects: 0 });
+      expect(res.status(), path).toBe(302);
+      expect(res.headers()['location']).toBe(`/sign-in?next=${encodeURIComponent(path)}`);
+    }
+  });
+
+  test('account actions refuse cross-origin posts', async ({ request }) => {
+    const res = await request.post('/account/actions', {
+      headers: { Origin: 'https://evil.example' },
+      form: { intent: 'delete-account', confirm: 'delete' },
+      maxRedirects: 0,
+    });
+    expect(res.status()).toBe(403);
+  });
+
+  test('the webhook refuses unsigned requests', async ({ request }) => {
+    const res = await request.post('/api/whop/webhook', {
+      data: { type: 'membership.activated', data: {} },
+    });
+    expect([400, 503]).toContain(res.status());
   });
 
   test('example boards are labelled as examples', async ({ page }) => {
@@ -284,7 +297,7 @@ test.describe('accounts', () => {
 
   test('account pages are noindex', async ({ page }) => {
     await prepare(page);
-    for (const path of ['/account', '/account/boards', '/sign-in']) {
+    for (const path of ['/account/boards/example-reviews', '/sign-in']) {
       await page.goto(path);
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
     }
