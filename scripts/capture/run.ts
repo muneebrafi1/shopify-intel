@@ -1,7 +1,7 @@
 /// <reference types="node" />
 /**
  * npm run capture [-- --only youngla.com,thesill.com] [--pages home,collection,product,cart]
- *                 [--devices desktop,mobile] [--limit 5] [--stitch]
+ *                 [--devices desktop,mobile] [--limit 5] [--stitch] [--resume] [--concurrency 3]
  *
  * Captures the curated stores (desktop 1440 px and mobile 390 px) into .data/captures/: WebP
  * objects laid out like the R2 bucket plus manifest.json. Collection and product pages are
@@ -44,6 +44,8 @@ const { values } = parseArgs({
     resume: { type: 'boolean', default: false },
     /** With --resume: only skip captures taken after this ISO date. */
     since: { type: 'string' },
+    /** Stores captured in parallel (one page at a time per store, so each store sees one visitor). */
+    concurrency: { type: 'string', default: '1' },
   },
 });
 const list = (v: string) => v.split(',').map((d) => d.trim());
@@ -98,10 +100,10 @@ try {
     console.warn('Some --only domains are not capture targets (not curated, blocked or unknown).');
   console.log(`Capturing ${targets.length} store(s): ${pages.join('+')} × ${devices.join('+')}`);
 
-  for (const t of targets) {
+  const captureStore = async (t: (typeof targets)[number]) => {
     if (await isCaptureBlocked(local.db, t.domain)) {
       console.log(`  skip ${t.domain}: capture blocked`);
-      continue;
+      return;
     }
     const apps = await local.db.all<{ slug: string }>(
       `SELECT a.slug FROM store_apps sa JOIN apps a ON a.id = sa.app_id
@@ -120,7 +122,7 @@ try {
       );
     if (pages.every((p) => devices.every((d) => done(p, d)))) {
       console.log(`  done ${t.domain}: already captured`);
-      continue;
+      return;
     }
     const needsDiscovery = pages.some((p) => p !== 'home');
     const found = needsDiscovery
@@ -192,7 +194,13 @@ try {
         }
       }
     }
-  }
+  };
+  const queue = [...targets];
+  await Promise.all(
+    Array.from({ length: Math.max(1, Number(values.concurrency)) }, async () => {
+      for (let t = queue.shift(); t; t = queue.shift()) await captureStore(t);
+    }),
+  );
 } finally {
   await browser.close();
   await local.dispose();

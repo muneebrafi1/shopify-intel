@@ -45,8 +45,8 @@
     },
     {
       "domain": "wearicy.com",
-      "name": null,
-      "category": null,
+      "name": "Icy",
+      "category": "Apparel",
       "country": null
     },
     {
@@ -57,8 +57,8 @@
     },
     {
       "domain": "ncf.co.uk",
-      "name": null,
-      "category": null,
+      "name": "NCF Living",
+      "category": "Home & garden",
       "country": "GB"
     },
     {
@@ -75,31 +75,31 @@
     },
     {
       "domain": "blacksheepniagara.com",
-      "name": null,
-      "category": null,
+      "name": "Black Sheep Coffee Roasters",
+      "category": "Food & drink",
       "country": null
     },
     {
       "domain": "flexfit.com.au",
-      "name": null,
-      "category": null,
+      "name": "Flexfit",
+      "category": "Bags & accessories",
       "country": "AU"
     },
     {
       "domain": "guestsonearth.com",
-      "name": null,
-      "category": null,
+      "name": "Guests on Earth",
+      "category": "Home & garden",
       "country": null
     },
     {
       "domain": "hikeepebike.com",
-      "name": null,
-      "category": null,
+      "name": "Hikeep",
+      "category": "Sports & outdoors",
       "country": null
     },
     {
       "domain": "hofstrawagner.dk",
-      "name": null,
+      "name": "Hofstra & Wagner ApS",
       "category": null,
       "country": "DK"
     },
@@ -111,8 +111,8 @@
     },
     {
       "domain": "shopcolorgame.com",
-      "name": null,
-      "category": null,
+      "name": "Color Game",
+      "category": "Toys & hobbies",
       "country": null
     },
     {
@@ -136,7 +136,7 @@
     {
       "domain": "nyangear.com",
       "name": "Nyan Gear",
-      "category": null,
+      "category": "Bags & accessories",
       "country": null
     },
     {
@@ -184,7 +184,7 @@
     {
       "domain": "libertysafe.com",
       "name": "Liberty Safe",
-      "category": null,
+      "category": "Home & garden",
       "country": null
     },
     {
@@ -220,7 +220,7 @@
     {
       "domain": "donsje.com",
       "name": "Donsje Amsterdam",
-      "category": null,
+      "category": "Kids & baby",
       "country": null
     },
     {
@@ -244,7 +244,7 @@
     {
       "domain": "standartmag.com",
       "name": "Standart",
-      "category": null,
+      "category": "Food & drink",
       "country": null
     },
     {
@@ -292,13 +292,769 @@
     {
       "domain": "edgeeyewear.com",
       "name": "Edge Eyewear",
-      "category": null,
+      "category": "Bags & accessories",
       "country": null
     },
     {
       "domain": "islandoasis.com",
       "name": "Island Oasis",
       "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "iliabeauty.com",
+      "name": "ILIA Beauty",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "parachutehome.com",
+      "name": "Parachute Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "tennisgiant.com",
+      "name": "Tennis Giant",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "kyliecosmetics.com",
+      "name": "Kylie Cosmetics",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "threadwallets.com",
+      "name": "Thread®",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "ekster.com",
+      "name": "Ekster®",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "beistravel.com",
+      "name": "Béis",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "yellowboxshoes.com",
+      "name": "Yellow Box Footwear",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "knix.com",
+      "name": "Knix",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "tower28beauty.com",
+      "name": "Tower 28 Beauty",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "thirdlove.com",
+      "name": "Thirdlove",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "coppolahome.com.au",
+      "name": "Coppola Home",
+      "category": "Home & garden",
+      "country": "AU"
+    },
+    {
+      "domain": "colourpop.com",
+      "name": "ColourPop",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "besamecosmetics.com",
+      "name": "Besame Cosmetics",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "hulken.com",
+      "name": "Hulken®",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "deathwishcoffee.com",
+      "name": "Death Wish Coffee",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "rags.com",
+      "name": "RAGS.com",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "phyba.com.au",
+      "name": "Phyba",
+      "category": "Health & wellness",
+      "country": "AU"
+    },
+    {
+      "domain": "kosas.com",
+      "name": "Kosas Cosmetics",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "supergoop.com",
+      "name": "Supergoop!",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "leospaw.com",
+      "name": "Leos paw",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "fablepets.com",
+      "name": "Fable",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "ettitude.com",
+      "name": "ettitude",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "dessertgallery.com",
+      "name": "Dessert Gallery Bakery & Cafe",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "cozyearth.com",
+      "name": "Cozy Earth",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "tonymoly.us",
+      "name": "Tonymoly Usa",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "republichome.com",
+      "name": "Republic Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "vanna.la",
+      "name": "Vanna",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "representclo.com",
+      "name": "Represent | Us",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "oyoskincare.com",
+      "name": "Oyo Skincare",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "newyorkerbagels.com",
+      "name": "New Yorker Bagels",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "meritbeauty.com",
+      "name": "MERIT Beauty",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "1stphorm.com",
+      "name": "1st Phorm",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "tefal.com.au",
+      "name": "Tefal",
+      "category": "Home & garden",
+      "country": "AU"
+    },
+    {
+      "domain": "sunbutter.com.au",
+      "name": "SunButter Skincare",
+      "category": "Beauty",
+      "country": "AU"
+    },
+    {
+      "domain": "rothys.com",
+      "name": "Rothy's",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "katemarkerhome.com",
+      "name": "Kate Marker Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "jonessportsco.com",
+      "name": "Jones Golf Bags",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "grundig-auto.com",
+      "name": "Grundig-auto",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "calpaktravel.com",
+      "name": "Calpak",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "bypariah.com",
+      "name": "By Pariah",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "bushbalm.com",
+      "name": "Bushbalm",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "beginningboutique.com",
+      "name": "Beginning Boutique US",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "bcbg.com",
+      "name": "Bcbgmaxazria",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "wildone.com",
+      "name": "Wild One",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "ultraviolette.com.au",
+      "name": "Ultra Violette",
+      "category": "Beauty",
+      "country": "AU"
+    },
+    {
+      "domain": "nudebarre.com",
+      "name": "Nude Barre",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "noevalleybakery.com",
+      "name": "Noe Valley Bakery",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "misssixty.com",
+      "name": "Miss Sixty",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "ivankyo.com",
+      "name": "Vankyo",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "bamboounderwear.com",
+      "name": "Bamboo Underwear",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "au.danielwellington.com",
+      "name": "Daniel Wellington",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "wellnesspathstudio.com",
+      "name": "Wellness Path Studio",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "vitalproteins.com",
+      "name": null,
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "summerfridays.com",
+      "name": "Summer Fridays",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "sowakanyc.com",
+      "name": "Sowaka",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "noirnoirfashion.com",
+      "name": "Noir Noir Fashion",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "nativecos.com",
+      "name": "Native",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "lucyandyak.com",
+      "name": "Lucy & Yak",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "graza.co",
+      "name": "Graza",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "floydhome.com",
+      "name": "Floyd Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "brooklinen.com",
+      "name": "Brooklinen",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "squeezm.net",
+      "name": "Squeez'M Toys",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "noahny.com",
+      "name": "Noah",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "mentari.toys",
+      "name": "Mentari",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "littlebigbikes.com",
+      "name": "LittleBig Bikes",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "kidznbaby.com",
+      "name": "Kidznbaby",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "dashbrick.com",
+      "name": "Dashbrick",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "blackblaze.com.au",
+      "name": "Black Blaze",
+      "category": "Home & garden",
+      "country": "AU"
+    },
+    {
+      "domain": "badshirt.club",
+      "name": "Bad Shirt Club",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "stussy.com",
+      "name": "Stüssy",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "proteinco.ca",
+      "name": "ProteinCo",
+      "category": "Health & wellness",
+      "country": "CA"
+    },
+    {
+      "domain": "playcali.com",
+      "name": "Cali",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "mooresfurniture.com",
+      "name": "Moore's Furniture",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "mansome.eu",
+      "name": "MANSOME Europe",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "littlesaints.com",
+      "name": "Little Saints",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "heyumanos.com",
+      "name": "umanos",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "de.baleaf.com",
+      "name": "DE-Baleaf",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "cardigang.com.au",
+      "name": "Cardigang",
+      "category": "Toys & hobbies",
+      "country": "AU"
+    },
+    {
+      "domain": "bigfootkick.com",
+      "name": "Bigfoot Kick",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "apparel.onepeloton.com",
+      "name": "Peloton Apparel",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "albenlane.com",
+      "name": "Alben Lane Candle Co.",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "4ywn.com",
+      "name": "4 Your Wellness",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "sooo.me",
+      "name": "Sooo.me™",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "shoesandlemons.com",
+      "name": "Shoes and Lemons",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "rawls.in",
+      "name": "Rawls Essentials",
+      "category": "Beauty",
+      "country": "IN"
+    },
+    {
+      "domain": "radiantrobes.com",
+      "name": "Radiant1Robes",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "olly.com",
+      "name": "Olly Pbc",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "mitzi.com",
+      "name": "Mitzi",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "matadorequipment.com",
+      "name": "Matador",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "carnivorebar.com",
+      "name": "The Carnivore Bar",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "sunbleachedswim.com",
+      "name": "Sun Bleached",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "siesta-co.com",
+      "name": "Siesta Co",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "sandsociety.com.au",
+      "name": "Sand Society",
+      "category": "Home & garden",
+      "country": "AU"
+    },
+    {
+      "domain": "mynooci.com",
+      "name": "Nooci",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "lobofootwear.com",
+      "name": "Lobo Footwear",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "girlfriend.com",
+      "name": "Girlfriend Collective",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "beziergames.com",
+      "name": "Bezier Games",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "affinityinc.ca",
+      "name": "Affinityoutdoorlivingproducts",
+      "category": "Sports & outdoors",
+      "country": "CA"
+    },
+    {
+      "domain": "toscablu.com",
+      "name": "Tosca Blu",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "swell.com",
+      "name": "S'well",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "shopeitheror.com",
+      "name": "E I T H E R / O R",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "segafredocoffee.com",
+      "name": "Segafredo",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "miesherk.com",
+      "name": "Miesherk",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "collectivco.com",
+      "name": "Collectiv Co.",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "clicgearusa.com",
+      "name": "Clicgear",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "buzzclear.com",
+      "name": "BuzzClear",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "bulletproof.com",
+      "name": "Bulletproof",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "bouloworld.com",
+      "name": "Boulo",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "alaglow.com",
+      "name": "À La Glow",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "sophiehome.com",
+      "name": "sophiehome",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "snowehome.com",
+      "name": "Snowe",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "plantkos.co",
+      "name": "Plantkos®",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "nvgtn.com",
+      "name": "Nvgtn",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "mvmt.com",
+      "name": "MVMT",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "meanblvd.com",
+      "name": "Mean Blvd",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "magicspoon.com",
+      "name": null,
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "liquiddeath.com",
+      "name": "Liquid Death",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "evolisproducts.com",
+      "name": "évolis® USA",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "burnside360.com",
+      "name": "Burnside 360",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "alileowines.com",
+      "name": "Alileo Wines",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "aede.com.au",
+      "name": "Aéde",
+      "category": "Health & wellness",
+      "country": "AU"
+    },
+    {
+      "domain": "sprinkler.net.au",
+      "name": "Sprinkler",
+      "category": "Bags & accessories",
+      "country": "AU"
+    },
+    {
+      "domain": "minisovip.com",
+      "name": "Minisovip",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "charles-simon.com",
+      "name": "Charles Simon",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "saunass.com",
+      "name": "Saunass",
+      "category": "Home & garden",
       "country": null
     }
   ]

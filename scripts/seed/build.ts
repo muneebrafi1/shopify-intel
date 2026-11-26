@@ -98,7 +98,7 @@ export function buildSeedFromRoot(root: string): SeedResult {
 
 export function buildSeed(
   inputs: SeedInputs,
-  ledger: IdLedger = { stores: {}, apps: {}, themes: {} },
+  ledger: IdLedger = { stores: {}, apps: {}, themes: {}, app_categories: {} },
 ): SeedResult {
   const idOf = (kind: IdKind, key: string) => assignIds(ledger, kind, [key]).get(key)!;
   const warnings: string[] = [];
@@ -163,7 +163,7 @@ export function buildSeed(
   // Curation overrides (data/curation/overrides.json): wrong App Store matches are dropped, so
   // their detections stay unresolved, and unwanted affiliate links are skipped.
   const unmatched = new Set(inputs.overrides.unmatchDetectionSlugs.map((o) => o.slug));
-  const appInputsRaw = [...inputs.apps, ...inputs.appsExtra];
+  const appInputsRaw = [...inputs.apps, ...inputs.appsExtra, ...inputs.appsStorePeek];
   for (const slug of unmatched) {
     const stores = detections.filter((d) => d.apps.includes(slug)).length;
     if (!appInputsRaw.some((a) => a.slug === slug) && stores === 0)
@@ -214,11 +214,16 @@ export function buildSeed(
   const categoryNames = [
     ...new Set([...inputs.categories, ...allAppInputs.map((a) => a.category)]),
   ].sort((a, b) => a.localeCompare(b));
-  const categoryId = new Map(categoryNames.map((name, i) => [name, i + 1]));
+  const categoryId = new Map(categoryNames.map((name) => [name, idOf('app_categories', name)]));
   w.comment('app_categories');
   w.insert(
     'app_categories',
-    categoryNames.map((name, i) => ({ id: i + 1, slug: slugify(name), name, position: i })),
+    categoryNames.map((name, i) => ({
+      id: categoryId.get(name)!,
+      slug: slugify(name),
+      name,
+      position: i,
+    })),
   );
 
   // Two detection rules can point at the same App Store listing. Keep the most-detected slug
@@ -243,7 +248,11 @@ export function buildSeed(
 
   const apps: AppRecord[] = [];
   const appBySlug = new Map<string, AppRecord>();
-  const fullSlugs = new Set(inputs.apps.map((a) => a.slug));
+  const fullSlugs = new Set([
+    ...inputs.apps.map((a) => a.slug),
+    // Imported listings are complete (plans or features on file) → full profiles.
+    ...inputs.appsStorePeek.filter((a) => a.plans?.length || a.features?.length).map((a) => a.slug),
+  ]);
   for (const input of allAppInputs) {
     if (aliasOf.has(input.slug) || appBySlug.has(input.slug)) continue;
     const rec: AppRecord = {

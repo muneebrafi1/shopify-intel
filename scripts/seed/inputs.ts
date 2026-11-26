@@ -183,6 +183,8 @@ export interface TeardownFile {
 export interface SeedInputs {
   apps: AppInput[];
   appsExtra: AppInput[];
+  /** Detected apps with a full listing from StorePeek's App Store crawl (seed:import-apps). */
+  appsStorePeek: AppInput[];
   themes: ThemeInput[];
   curatedStores: CuratedStoreInput[];
   detections: DetectionInput[];
@@ -224,6 +226,9 @@ export function loadSeedInputs(root: string): SeedInputs {
   return {
     apps: json('data/seed/apps.json', z.array(AppInput)),
     appsExtra: json('data/seed/apps-extra.json', z.array(AppInput)),
+    appsStorePeek: existsSync(join(root, 'data/seed/apps-storepeek.json'))
+      ? json('data/seed/apps-storepeek.json', z.array(AppInput))
+      : [],
     themes: json('data/seed/themes.json', z.array(ThemeInput)),
     curatedStores: json('data/seed/stores.json', z.array(CuratedStoreInput)),
     detections: json('data/seed/detections-930.json', z.array(DetectionInput)),

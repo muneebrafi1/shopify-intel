@@ -29,7 +29,8 @@
     "crawl:ingest": "node scripts/crawl/ingest.ts",
     "crawl:themes": "node scripts/crawl/theme-store.ts",
     "ops:preflight": "node scripts/ops/preflight.ts",
-    "ops:smoke": "node scripts/ops/preflight.ts --smoke"
+    "ops:smoke": "node scripts/ops/preflight.ts --smoke",
+    "seed:import-apps": "node scripts/seed/import-storepeek-apps.ts"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.8",

@@ -1,6 +1,6 @@
 /// <reference types="node" />
 /**
- * Stable ids for seeded entities (stores, apps, themes), kept in data/curation/ids.json.
+ * Stable ids for seeded entities (stores, apps, themes, app categories), kept in data/curation/ids.json.
  *
  * Why: the remote D1 is updated with row diffs (scripts/ops/d1-sync.ts) to stay inside the free
  * plan's 100k rows written per day. With sequential ids, curating one more store or adding one
@@ -11,14 +11,14 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export type IdKind = 'stores' | 'apps' | 'themes';
+export type IdKind = 'stores' | 'apps' | 'themes' | 'app_categories';
 export type IdLedger = Record<IdKind, Record<string, number>>;
 
 export const LEDGER_PATH = 'data/curation/ids.json';
 
 export function readLedger(root: string): IdLedger {
   const p = join(root, LEDGER_PATH);
-  const empty: IdLedger = { stores: {}, apps: {}, themes: {} };
+  const empty: IdLedger = { stores: {}, apps: {}, themes: {}, app_categories: {} };
   if (!existsSync(p)) return empty;
   const raw = JSON.parse(readFileSync(p, 'utf8')) as Partial<IdLedger>;
   return { ...empty, ...raw };
@@ -49,6 +49,7 @@ export function writeLedger(root: string, ledger: IdLedger) {
     stores: sorted(ledger.stores),
     apps: sorted(ledger.apps),
     themes: sorted(ledger.themes),
+    app_categories: sorted(ledger.app_categories),
   };
   writeFileSync(join(root, LEDGER_PATH), `${JSON.stringify(body, null, 2)}\n`);
 }
