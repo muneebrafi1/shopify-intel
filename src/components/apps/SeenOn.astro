@@ -56,7 +56,10 @@ const appSectionsHref = `/sections?app=${encodeURIComponent(app.slug)}`;
 const mobile = activeDevice === 'mobile';
 // Stage frame: desktop pages in a 4:3 frame filling the stage; phones in a 9:16 frame.
 const ratio = mobile ? 9 / 16 : 4 / 3;
-const storeCount = storesWithSections.length;
+// Distinct stores among the pinned sections; the curated-store list above is only its first 12
+// stores by position, which need not be the ones with a pinned section.
+const storeCount = new Set(all.map((s) => s.store.domain)).size || storesWithSections.length;
+const partial = seen.section_total > all.length;
 const altFor = (s: (typeof all)[number]) =>
   `${name}: ${s.type.name.toLowerCase()} section on ${s.store.display_name}, ${pageName(s.page_type).toLowerCase()} page, ${s.device} (layout preview)`;
 ---
@@ -67,7 +70,9 @@ const altFor = (s: (typeof all)[number]) =>
       {variant === 'pinned' && (
         <>
           <h2 class="seen__title" id="where-title">
-            Seen on {storeCount} curated {storeCount === 1 ? 'store' : 'stores'}
+            {partial
+              ? `Seen in ${seen.section_total.toLocaleString('en-US')} sections on curated stores`
+              : `Seen on ${storeCount} curated ${storeCount === 1 ? 'store' : 'stores'}`}
           </h2>
           <p class="seen__lede">
             {name} renders as {surfaceList || 'its own section'} on {pages.join(' and ')} pages.
