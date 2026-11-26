@@ -175,7 +175,17 @@ export async function ingestScan(db: Db, input: ScanInput): Promise<ScanResult> 
           ));
     // A missing version on either side is "not observed", not a change.
     const sameVersion = !open?.version || !t.version || open.version === t.version;
-    if (open && sameTheme && sameVersion) {
+    // An open row that never named a theme (seeded from a scan that could not read it) is filled
+    // in place: learning the name is not a theme switch.
+    const blank = open && open.theme_id === null && !open.raw_name;
+    if (open && blank) {
+      themeState = 'new';
+      stmts.push({
+        sql: `UPDATE store_themes SET theme_id = ?, raw_name = ?, version = ?, is_custom = ?,
+                last_seen = MAX(last_seen, ?) WHERE id = ?`,
+        params: [themeId, t.raw_name ?? t.name, t.version, t.is_custom ? 1 : 0, at, open.id],
+      });
+    } else if (open && sameTheme && sameVersion) {
       themeState = 'unchanged';
       stmts.push({
         sql: `UPDATE store_themes SET last_seen = MAX(last_seen, ?), version = COALESCE(version, ?)

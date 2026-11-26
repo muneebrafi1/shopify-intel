@@ -63,8 +63,8 @@
     },
     {
       "domain": "4wks.com",
-      "name": null,
-      "category": null,
+      "name": "4WKS Coffee",
+      "category": "Food & drink",
       "country": "ZA"
     },
     {
@@ -1055,6 +1055,732 @@
       "domain": "saunass.com",
       "name": "Saunass",
       "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "karabags.com",
+      "name": "Kara",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "silverconnection.com",
+      "name": "The Silver Connection",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "mackweldon.com",
+      "name": "Mack Weldon",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "walkergolfthings.com",
+      "name": "Walker Golf Things",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "toysrus.com.au",
+      "name": "Toys\"R\"Us Australia",
+      "category": "Toys & hobbies",
+      "country": "AU"
+    },
+    {
+      "domain": "robags.com",
+      "name": "Ro Bags",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "prettygarden.com",
+      "name": "PrettyGarden",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "simplydresses.com",
+      "name": "Simply Dresses",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "mariaeluisa.com",
+      "name": "Maria e Luisa Jewels",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "kiyohome.com",
+      "name": "Kiyo Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "heonjewelry.com",
+      "name": "Heon Jewelry",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "spectrausa.net",
+      "name": "SpectraUSA",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "rivieraseafoodclub.com",
+      "name": "Riviera Seafood Club",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "publicbikes.com",
+      "name": "Public Bikes",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "misfitpanda.in",
+      "name": "Misfit Panda",
+      "category": "Bags & accessories",
+      "country": "IN"
+    },
+    {
+      "domain": "ginasnailssupplies.com",
+      "name": "Gina's Nails Supplies",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "supakit.co",
+      "name": "Supakit",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "promgirl.com",
+      "name": "PromGirl",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "ellehomekitchen.in",
+      "name": "ELLE Home",
+      "category": "Home & garden",
+      "country": "IN"
+    },
+    {
+      "domain": "drink-vibes.com",
+      "name": "Vibes Beverages",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "muvucacoffee.com",
+      "name": "Muvuca Coffee",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "kissmyacidgoodbye.com",
+      "name": "Kiss My Acid Goodbye",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "jurlique.com",
+      "name": "Jurlique",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "judydoll.com",
+      "name": "Judydoll",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "gaia-baby.com.au",
+      "name": "Gaia Baby",
+      "category": "Kids & baby",
+      "country": "AU"
+    },
+    {
+      "domain": "slidejewels.com",
+      "name": "Slide Jewelry",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "papanicholas.com",
+      "name": "PapaNicholas Coffee",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "meritcoffee.com",
+      "name": "Merit Coffee",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "mackage.com",
+      "name": "Mackage",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "homeartrugs.co.uk",
+      "name": "Home Art",
+      "category": "Home & garden",
+      "country": "GB"
+    },
+    {
+      "domain": "figforkids.com",
+      "name": "Fig For Kids",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "conzuri.com",
+      "name": "Conzuri",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "taylorstitch.com",
+      "name": "Taylor Stitch",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "tallsize.com",
+      "name": "Tall Size",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "prontopet.com.au",
+      "name": "Pronto Pet",
+      "category": "Pets",
+      "country": "AU"
+    },
+    {
+      "domain": "optionblend.com",
+      "name": "Option Blends",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "nivvshop.com",
+      "name": "Nivv",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "neptune.com",
+      "name": "Neptune",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "luminalighting.com",
+      "name": "Lumina Lighting",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "hardnheavy.style",
+      "name": "Hard'N'Heavy",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "doittennis.com",
+      "name": "Do It Tennis",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "xisvel.com",
+      "name": "Xisvel",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "sweetyhome.us",
+      "name": "Sweety Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "no2.co.nz",
+      "name": "No.2 Good Gut Fibre",
+      "category": "Health & wellness",
+      "country": "NZ"
+    },
+    {
+      "domain": "natileggings.com",
+      "name": "Nati Leggings",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "muttsdoggoods.com",
+      "name": "MUTTS Dog Goods",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "littlecupcoffee.com",
+      "name": "Little Cup Coffee",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "littleampscoffee.com",
+      "name": "Little Amps",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "hudstonehome.com",
+      "name": "Hudstone Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "hoodieflags.com",
+      "name": "Hoodieflags",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "herbaledge.ca",
+      "name": "Herbal Edge Canada",
+      "category": "Beauty",
+      "country": "CA"
+    },
+    {
+      "domain": "drinknolow.com",
+      "name": "No & Low",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "beantownbrand.us",
+      "name": "Beantown Brand Apparel",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "woodturnerscatalog.com",
+      "name": "Craft Supplies USA",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "us.esteem-clothing.com",
+      "name": "ESTEEM Clothing",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "studs.com",
+      "name": "Studs",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "pravi.pe",
+      "name": "Pravi",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "pinkngreens.com",
+      "name": "Pink'n Green",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "petplanet.co.uk",
+      "name": "Petplanet",
+      "category": "Pets",
+      "country": "GB"
+    },
+    {
+      "domain": "mudbeancoffee.com",
+      "name": "Mudbean Coffee Company",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "marmaladefreshclothing.com",
+      "name": "Marmalade",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "knitato.com",
+      "name": "Knitato",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "kith.com",
+      "name": "Kith",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "happenstence.com",
+      "name": "Happenstence",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "growgokids.com",
+      "name": "GrowGo Kids",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "dosfoxes.com",
+      "name": "Dos Foxes Coffee Roasters",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "bumbede.com",
+      "name": "Bumbédé",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "aswegrowiceland.com",
+      "name": "As We Grow",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "2stjewellery.com",
+      "name": "2ST Jewellery",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "zoologistperfumes.com",
+      "name": "Zoologist",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "thebalconygarden.eu",
+      "name": "The Balcony Garden EU",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "microplaynewmarket.com",
+      "name": "Microplay Newmarket",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "merekrishna.in",
+      "name": "Mere Krishna",
+      "category": "Jewelry",
+      "country": "IN"
+    },
+    {
+      "domain": "jusstennis.com.au",
+      "name": "JUSS Tennis",
+      "category": "Sports & outdoors",
+      "country": "AU"
+    },
+    {
+      "domain": "junaidjamshed.com",
+      "name": "J. (Junaid Jamshed)",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "hyggedesignhouse.ca",
+      "name": "Hygge Design House",
+      "category": "Home & garden",
+      "country": "CA"
+    },
+    {
+      "domain": "glossier.com",
+      "name": "Glossier",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "dlginternationaltrading.com",
+      "name": "DLG International Trading",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "casaziki.com",
+      "name": "Casa Ziki",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "benchmark.cx",
+      "name": "Benchmark",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "azuretan.com.au",
+      "name": "Azure Tan",
+      "category": "Beauty",
+      "country": "AU"
+    },
+    {
+      "domain": "asturiaskincare.com",
+      "name": "Asturia Skincare",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "wulliewear.com",
+      "name": "Wullie Wear",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "wovenwoven.com.au",
+      "name": "Woven Woven",
+      "category": "Home & garden",
+      "country": "AU"
+    },
+    {
+      "domain": "wehve.com",
+      "name": "Wehve",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "theessential.com",
+      "name": "The Essential",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "sunglasscurator.com",
+      "name": "Sunglass Curator",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "monsieur-paris.com",
+      "name": "Monsieur Paris",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "koiyu.ch",
+      "name": "Koiyu",
+      "category": "Beauty",
+      "country": "CH"
+    },
+    {
+      "domain": "hellokicks.in",
+      "name": "Hello Kicks",
+      "category": "Footwear",
+      "country": "IN"
+    },
+    {
+      "domain": "heidiandhart.com",
+      "name": "Heidi & Hart",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "haute.store",
+      "name": "Haute",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "graedance.com",
+      "name": "Graedance",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "goodboybob.com",
+      "name": "Goodboybob Coffee",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "glacierpcgaming.com",
+      "name": "Glacier PC Gaming",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "flurglassware.com",
+      "name": "FLUR",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "dosfemmes.com",
+      "name": "Dos Femmes",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "workoutforless.co.uk",
+      "name": "Workout For Less",
+      "category": "Sports & outdoors",
+      "country": "GB"
+    },
+    {
+      "domain": "wildertoys.com",
+      "name": "WilderToys",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "suflet.in",
+      "name": "Suflet",
+      "category": "Beauty",
+      "country": "IN"
+    },
+    {
+      "domain": "studiopacific.art",
+      "name": "Studio Pacific Art",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "pupcuppup.com",
+      "name": "Pup Cup",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "mixedgrounds.com",
+      "name": "Mixed Grounds",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "meolaindia.com",
+      "name": "Meola",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "kevinthorne.com",
+      "name": "Kevin Thorne",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "jerkliciousbbq.com",
+      "name": "Jerk-Licious",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "drinkfussie.com",
+      "name": "Fussie Wines",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "doodlesinkdesigns.com",
+      "name": "Doodles Ink",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "deargrain.com",
+      "name": "Dear Grain",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "crickstore.com",
+      "name": "Crickstore",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "coralheat.com",
+      "name": "Coral Heat",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "ballisticsupps.ca",
+      "name": "Ballistic Supps",
+      "category": "Health & wellness",
+      "country": "CA"
+    },
+    {
+      "domain": "ausfindr.com.au",
+      "name": "AusFindr",
+      "category": "Electronics",
+      "country": "AU"
+    },
+    {
+      "domain": "ahed.ae",
+      "name": "AHED",
+      "category": "Activewear",
+      "country": "AE"
+    },
+    {
+      "domain": "shop.goldsgym.com",
+      "name": "Gold's Gym",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "qimacafe.com",
+      "name": "Qima Cafe",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "publicthread.org",
+      "name": "Public Thread",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "next9months.com",
+      "name": "Next9Months",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "marcatousa.com",
+      "name": "Marcato USA",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "claypurple.com",
+      "name": "ClayPurple",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "bakeyy.com",
+      "name": "Bakeyy",
+      "category": "Food & drink",
       "country": null
     }
   ]

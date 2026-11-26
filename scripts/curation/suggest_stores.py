@@ -79,6 +79,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--add", type=int, default=250)
     ap.add_argument("--per-category", type=int, default=30)
+    ap.add_argument("--min-apps", type=int, default=3)
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
@@ -116,7 +117,7 @@ def main():
         if not lang.startswith("en"):
             continue  # English storefronts first: the site's copy and search are English.
         apps = len(sc.get("apps") or [])
-        if apps < 3 or not sc.get("theme"):
+        if apps < a.min_apps or not sc.get("theme"):
             continue  # Thin pages teach little; a known theme + a few apps make a useful page.
         c, margin = classify(sc.get("site_name"), p.get("title"), p.get("description"))
         if not c or margin < 2:
