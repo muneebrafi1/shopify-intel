@@ -24,6 +24,15 @@ import { parseArgs } from 'node:util';
 type Value = string | number | null;
 type Row = Record<string, Value>;
 
+/** Written by the Worker's scheduled crawler once it runs: the remote copy is the truth. */
+export const CRAWL_TABLES = new Set([
+  'scans',
+  'store_themes',
+  'store_apps',
+  'store_unresolved_apps',
+  'store_pixels',
+]);
+
 export const RUNTIME_TABLES = new Set([
   'admin_audit',
   'capture_blocks',
@@ -195,6 +204,8 @@ async function main() {
       apply: { type: 'boolean', default: false },
       tables: { type: 'string' },
       'max-writes': { type: 'string', default: '90000' },
+      /** Also skip the crawl history tables (set once the scheduled crawler is live). */
+      'keep-remote-crawl': { type: 'boolean', default: false },
       /** A copy of the local D1 sqlite file to sync from (default: the live local D1). */
       'local-file': { type: 'string' },
     },
@@ -211,7 +222,12 @@ async function main() {
       .all() as Array<{ name: string }>
   ).map((r) => r.name);
   const wanted = values.tables ? new Set(values.tables.split(',')) : null;
-  const tables = all.filter((t) => !RUNTIME_TABLES.has(t) && (!wanted || wanted.has(t)));
+  const tables = all.filter(
+    (t) =>
+      !RUNTIME_TABLES.has(t) &&
+      !(values['keep-remote-crawl'] && CRAWL_TABLES.has(t)) &&
+      (!wanted || wanted.has(t)),
+  );
 
   // Opt-outs on the remote win over anything local.
   const blocked = new Set(
