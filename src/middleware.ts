@@ -24,15 +24,16 @@ import {
   isSameOrigin,
   jsonError,
   withAdminHeaders,
+  withSecurityHeaders,
   type AdminArea,
 } from './server/auth/guard.ts';
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  if (!import.meta.env.DEV) return route(context, next);
+  if (!import.meta.env.DEV) return withSecurityHeaders(await route(context, next));
   // Dev only: report D1 usage per request (free plan limit: 50 queries per invocation).
   queryMeter.calls = 0;
   queryMeter.statements = 0;
-  const response = await route(context, next);
+  const response = withSecurityHeaders(await route(context, next));
   const used = `${queryMeter.calls}/${queryMeter.statements}`;
   try {
     response.headers.set('x-d1-queries', used);
@@ -65,13 +66,28 @@ function userAreaFor(pathname: string): UserArea | null {
   return null;
 }
 
+function withUserHeaders(response: Response): Response {
+  try {
+    response.headers.set('Cache-Control', 'no-store');
+    response.headers.set('X-Robots-Tag', 'noindex');
+    return response;
+  } catch {
+    const out = new Response(response.body, response);
+    out.headers.set('Cache-Control', 'no-store');
+    out.headers.set('X-Robots-Tag', 'noindex');
+    return out;
+  }
+}
+
 async function guardUser(context: Ctx, next: Next, area: UserArea): Promise<Response> {
   const { request, url, cookies, locals } = context;
   if (!isSafeMethod(request.method) && !isSameOrigin(request, url)) {
-    return new Response('Cross-origin request blocked.', {
-      status: 403,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    });
+    return withUserHeaders(
+      new Response('Cross-origin request blocked.', {
+        status: 403,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      }),
+    );
   }
   // Loaded lazily so the public fast path never touches account code or bindings.
   const [{ accountDb }, { userForSession, SESSION_COOKIE, SIGNED_IN_COOKIE }] = await Promise.all([
@@ -85,18 +101,11 @@ async function guardUser(context: Ctx, next: Next, area: UserArea): Promise<Resp
     cookies.delete(SIGNED_IN_COOKIE, { path: '/' });
   }
   if (area === 'account' && !locals.user) {
-    if (!isSafeMethod(request.method)) return context.redirect('/sign-in', 303);
+    if (!isSafeMethod(request.method)) return withUserHeaders(context.redirect('/sign-in', 303));
     const target = `${url.pathname}${url.search}`;
-    return context.redirect(`/sign-in?next=${encodeURIComponent(target)}`, 302);
+    return withUserHeaders(context.redirect(`/sign-in?next=${encodeURIComponent(target)}`, 302));
   }
-  const response = await next();
-  try {
-    response.headers.set('Cache-Control', 'no-store');
-    response.headers.set('X-Robots-Tag', 'noindex');
-  } catch {
-    // Immutable headers (redirects): nothing to add.
-  }
-  return response;
+  return withUserHeaders(await next());
 }
 
 type Ctx = Parameters<Parameters<typeof defineMiddleware>[0]>[0];

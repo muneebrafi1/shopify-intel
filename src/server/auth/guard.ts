@@ -119,6 +119,36 @@ export function withAdminHeaders(response: Response): Response {
   return out;
 }
 
+/** Baseline security headers applied to every non-admin response unless already set. */
+export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Frame-Options': 'SAMEORIGIN',
+};
+
+export function withSecurityHeaders(response: Response): Response {
+  let missing = false;
+  for (const name of Object.keys(SECURITY_HEADERS)) {
+    if (!response.headers.has(name)) {
+      missing = true;
+      break;
+    }
+  }
+  if (!missing) return response;
+  try {
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      if (!response.headers.has(name)) response.headers.set(name, value);
+    }
+    return response;
+  } catch {
+    const out = new Response(response.body, response);
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      if (!out.headers.has(name)) out.headers.set(name, value);
+    }
+    return out;
+  }
+}
+
 export interface AuthInput {
   config: AuthConfig;
   request: Request;

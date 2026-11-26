@@ -15,5 +15,18 @@ declare namespace Cloudflare {
     ADMIN_SESSION_SECRET?: string;
     CF_ACCESS_TEAM_DOMAIN?: string;
     CF_ACCESS_AUD?: string;
+    /** Accounts + Pro via Whop (docs/ACCOUNTS.md). */
+    USER_SESSION_SECRET?: string;
+    DEV_SIGN_IN?: string;
+    WHOP_CLIENT_ID?: string;
+    WHOP_CLIENT_SECRET?: string;
+    WHOP_ENVIRONMENT?: string;
+    WHOP_WEBHOOK_SECRET?: string;
+    WHOP_PRO_PRODUCT_ID?: string;
+    WHOP_TEAM_PRODUCT_ID?: string;
+    WHOP_CHECKOUT_PRO_MONTHLY?: string;
+    WHOP_CHECKOUT_PRO_YEARLY?: string;
+    WHOP_CHECKOUT_TEAM_MONTHLY?: string;
+    WHOP_CHECKOUT_TEAM_YEARLY?: string;
   }
 }
