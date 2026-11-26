@@ -301,7 +301,12 @@ async function main() {
       .prepare(`SELECT ${cols.map((c) => `"${c}"`).join(', ')} FROM "${t}" ${where}`)
       .all() as Row[];
     const remoteRows = remoteTable(config, values.db!, t, cols, where);
-    const skip = sc ? (r: Row) => protectedIds.has(Number(r[sc])) : undefined;
+    // The Worker's crawler owns its cursor and last-run keys in meta once it is live.
+    const skip = sc
+      ? (r: Row) => protectedIds.has(Number(r[sc]))
+      : t === 'meta' && values['keep-remote-crawl']
+        ? (r: Row) => String(r.key).startsWith('crawl_')
+        : undefined;
     const d = diffRows(t, localRows, remoteRows, key, skip);
     const indexList = local.prepare(`PRAGMA index_list("${t}")`).all() as Array<{
       unique: number;
