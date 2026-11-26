@@ -3,6 +3,7 @@
  * noindex, never opted-out/inactive, never query-filtered). Queries stay well inside D1's free
  * 50-statement request limit.
  */
+import { PRO_ENABLED } from '../../config/flags.ts';
 import { hrefs } from '../api/v1/hrefs.ts';
 import type { Db } from '../db/types.ts';
 
@@ -21,7 +22,6 @@ const STATIC_PATHS = [
   '/teardowns',
   '/compare',
   '/alternatives',
-  '/pro',
   '/about',
   '/methodology',
   '/developers',
@@ -152,7 +152,10 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
 
   const dataDay = isoDay(metaRow?.value);
   const entries: SitemapUrl[] = [
-    ...STATIC_PATHS.map((path) => ({ path, lastmod: dataDay })),
+    ...[...STATIC_PATHS, ...(PRO_ENABLED ? ['/pro'] : [])].map((path) => ({
+      path,
+      lastmod: dataDay,
+    })),
     ...stores.map((s) => ({
       path: hrefs.store(s.domain),
       lastmod: isoDay(s.last_seen) ?? dataDay,

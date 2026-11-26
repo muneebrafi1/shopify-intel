@@ -1,0 +1,3427 @@
+{
+ "apps": {
+  "a-b-convert-price-a-b-test": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/446faf1a81db1c597bffd22b366d7258/icon/CMa11NCKkowDEAE=.png",
+   "key": "icons/apps/a-b-convert-price-a-b-test.b6f6cf52.webp"
+  },
+  "ab-genius": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/187f9eb648ea8998474cd936987ec2f7/icon/CJaa2umOvJcDEAE=.png",
+   "key": "icons/apps/ab-genius.406f4372.webp"
+  },
+  "accessibilityspark": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/13220c451d632c726c5e239ce0e8130e/icon/CKnck4aQrPICEAE=.jpeg",
+   "key": "icons/apps/accessibilityspark.de00713a.webp"
+  },
+  "accessibly-app": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/eaa87116bccafa4ba6349f0628498edb/icon/CJX_77f0lu8CEAE=.png",
+   "key": "icons/apps/accessibly-app.158e1418.webp"
+  },
+  "accesswidget": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9d8c36f388b9b8b17cfd52b4d714a49c/icon/CIuDzYW975ADEAE=.png",
+   "key": "icons/apps/accesswidget.320ed736.webp"
+  },
+  "activecampaign": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/94d9a63cdec09cb686ef3df19493797e/icon/CLKCjZebro4DEAE=.png",
+   "key": "icons/apps/activecampaign.77a54fb8.webp"
+  },
+  "adcell-tracking": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/06bc048545219a94463265b0f6c215b6/icon/CJWi8LH0lu8CEAE=.png",
+   "key": "icons/apps/adcell-tracking.aa143994.webp"
+  },
+  "addingwell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/762d034a086a38e165204b5ea511da01/icon/CIGF-8Pw6ogDEAE=.png",
+   "key": "icons/apps/addingwell.fb9579b5.webp"
+  },
+  "adroll-retargeting": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6ebaf39a3592a11d95d4436f522e6bc0/icon/CI3h88L0lu8CEAE=.png",
+   "key": "icons/apps/adroll-retargeting.4126cb01.webp"
+  },
+  "adtrace-facebook-pixel-conversion-api": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f990d93273ab26e101c219ddd2288e4f/icon/CKSumJeclIcDEAE=.png",
+   "key": "icons/apps/adtrace-facebook-pixel-conversion-api.75ef1121.webp"
+  },
+  "advanced-product-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4f23360ac39f13f06928dbd237c07084/icon/CPfb8uPv24ADEAE=.png",
+   "key": "icons/apps/advanced-product-options.965b88da.webp"
+  },
+  "adwords-conversion-pixel": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2445590e1563d688025d1e3553b3e9cd/icon/CKXp9quxh_wCEAE=.jpeg",
+   "key": "icons/apps/adwords-conversion-pixel.520bbfe4.webp"
+  },
+  "aeo-llms-txt": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bd45887e7ee9bf60eadf2c4433337925/icon/CNbH77DFnJUDEAE=.png",
+   "key": "icons/apps/aeo-llms-txt.648fd477.webp"
+  },
+  "affirm": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a168fcd0af66cb9f37313599c4cd9511/icon/CMSs2dX_6vACEAE=.png",
+   "key": "icons/apps/affirm.88ee1df4.webp"
+  },
+  "affliate-by-secomapp": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9c2f67b482aeae04937fd544c0bfe6a8/icon/CMjv-JmUpv0CEAE=.png",
+   "key": "icons/apps/affliate-by-secomapp.1fabac69.webp"
+  },
+  "afterpay-messaging": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/884b82b320ee4979360a376405752942/icon/CNe00YP80fwCEAE=.jpeg",
+   "key": "icons/apps/afterpay-messaging.9a3fbf49.webp"
+  },
+  "aftersell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0a188ac0a2531baa73ee90cffa03529b/icon/CJObxtit7pEDEAE=.png",
+   "key": "icons/apps/aftersell.65cffd3c.webp"
+  },
+  "aftership": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2b1e15082bfdc3b29c516461be6bd261/icon/CL6z7PWxkv8CEAE=.png",
+   "key": "icons/apps/aftership.46b2405f.webp"
+  },
+  "aftership-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/505a3762bb36def119e5a94c67efd1f3/icon/CLScx-ONwv4CEAE=.png",
+   "key": "icons/apps/aftership-reviews.ed971421.webp"
+  },
+  "ai-intent-popup-by-stream": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a3b31f6ea7916343dc68df34f5e2f00c/icon/COX58cTG1_oCEAE=.jpeg",
+   "key": "icons/apps/ai-intent-popup-by-stream.f65aca45.webp"
+  },
+  "ai-search-llms-txt-generator": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6d1d15e49532e5b917090c55c4a03a03/icon/CJvAoJ2LqJIDEAE=.png",
+   "key": "icons/apps/ai-search-llms-txt-generator.ea9e1a66.webp"
+  },
+  "aimerce": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0decadbed7811576c5273f2b5a0a5987/icon/CJ_ayN2Q3JYDEAE=.png",
+   "key": "icons/apps/aimerce.963970aa.webp"
+  },
+  "airreviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d636d73c74c4684a910d23211e0e6ddf/icon/CKrnvPGt_pMDEAE=.png",
+   "key": "icons/apps/airreviews.0a1f0103.webp"
+  },
+  "airwallex-fraud-prevention": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/15a6041a2c672b15d3615d25637d132a/icon/CP-Zxru2tYkDEAE=.png",
+   "key": "icons/apps/airwallex-fraud-prevention.3ccc8342.webp"
+  },
+  "ako-retargeting": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/950b5f2fbc4e63124712da075f8e78a2/icon/CPnU1LL0lu8CEAE=.jpg",
+   "key": "icons/apps/ako-retargeting.a91340f4.webp"
+  },
+  "algolia-search": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/df5eea6375c938fb30ff095238fd154e/icon/CLmzsKjGjfsCEAE=.png",
+   "key": "icons/apps/algolia-search.ad977c7b.webp"
+  },
+  "alia": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ec5421f209a29b78e4ebb5f38ff37d86/icon/CIy1yJSj4o4DEAE=.png",
+   "key": "icons/apps/alia.69e94fe2.webp"
+  },
+  "alireviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1ff5e1954776a87c29b55388172a662f/icon/CN-n0K7RtI4DEAE=.png",
+   "key": "icons/apps/alireviews.ee3a7e5a.webp"
+  },
+  "also-bought": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/55a595d2413473dd0c6e6a315690886a/icon/CITkod-6vf0CEAE=.png",
+   "key": "icons/apps/also-bought.51b7640f.webp"
+  },
+  "amp-back-in-stock": {
+   "url": "https://useamp.com/apple-touch-icon.png",
+   "key": "icons/apps/useamp.com.9388e273.webp"
+  },
+  "analyzely-google-analytics-4": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/393b3b4bb69acc2f58835a02f4aaa14b/icon/CMu5kdbU3vkCEAE=.png",
+   "key": "icons/apps/analyzely-google-analytics-4.8d154343.webp"
+  },
+  "analyzify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d5d99bac6d89b63358b502ba8247505e/icon/COGE0oXPi_4CEAE=.png",
+   "key": "icons/apps/analyzify.549ff210.webp"
+  },
+  "announcement-bar-maker-by-apphero": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8403a56247e301cd3036a72139b9c44b/icon/CIWm-r_EloQDEAE=.png",
+   "key": "icons/apps/announcement-bar-maker-by-apphero.f2bae041.webp"
+  },
+  "announcement-bar-with-slider": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b0dd7bc60bc7f254faf141d9b02d7472/icon/CMLFge3KwJUDEAE=.png",
+   "key": "icons/apps/announcement-bar-with-slider.35569de7.webp"
+  },
+  "announcements-bar-boost-sales": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7ac92602e83364f03e2dfcfb4ec55fbd/icon/CMvap5PXmokDEAE=.png",
+   "key": "icons/apps/announcements-bar-boost-sales.29a13b8c.webp"
+  },
+  "aov-cart-drawer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a210c3369803ddb40aad01e707e744cb/icon/CL-A9uzou44DEAE=.png",
+   "key": "icons/apps/aov-cart-drawer.fa4a0e82.webp"
+  },
+  "app10199": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5bf1150f0c9f469961781812197bda1a/icon/COvAmoa6xPsCEAE=.png",
+   "key": "icons/apps/app10199.205a01a5.webp"
+  },
+  "applovin": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/04a4ab01ee2c268d09a30a1da9e5c4c6/icon/CNbCjpDj_5QDEAE=.png",
+   "key": "icons/apps/applovin.48216afb.webp"
+  },
+  "appointly": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/883122886ab7faa62c87a8519152d0c5/icon/CNLD0dqi6_4CEAE=.jpeg",
+   "key": "icons/apps/appointly.dc1b2b00.webp"
+  },
+  "appstle-bundles": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/855ee74552c1cca133c12a4364890912/icon/CNTAy5TS8ZQDEAE=.png",
+   "key": "icons/apps/appstle-bundles.8abc8bbe.webp"
+  },
+  "appstle-loyalty": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/96443d68c3eaa36c43a8b7d0afa5eada/icon/CPq18q7S8ZQDEAE=.png",
+   "key": "icons/apps/appstle-loyalty.8abc8bbe.webp"
+  },
+  "appstle-memberships": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8b7082369736e8cbbbfc46dd11fb1409/icon/CLeR2YT165QDEAE=.png",
+   "key": "icons/apps/appstle-memberships.8abc8bbe.webp"
+  },
+  "appstlesubscriptions": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/80b36c79c341ba709db28b0a5294fda0/icon/COeuk9_065QDEAE=.png",
+   "key": "icons/apps/appstlesubscriptions.8abc8bbe.webp"
+  },
+  "aris-product-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5ee1f244b087cfbec9b19c8b3f62c8f6/icon/CJvLhp3Y_pQDEAE=.png",
+   "key": "icons/apps/aris-product-options.0a45412f.webp"
+  },
+  "assortion": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0df3ce6f1fb8aadee20334bfd8cf0d3c/icon/CI-Ut6PL8_4CEAE=.jpeg",
+   "key": "icons/apps/assortion.dd42642f.webp"
+  },
+  "attentive": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5da194592c59cd145b825b53019db33c/icon/CIKipOGl7-8CEAE=.png",
+   "key": "icons/apps/attentive.92f11ae3.webp"
+  },
+  "automizely-messages": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b8bc9d365792ea16185361099864182c/icon/COb3zP2Pwv4CEAE=.png",
+   "key": "icons/apps/automizely-messages.29025bf3.webp"
+  },
+  "automizely-personalization": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1b7b760e3d53f7a11b2ce7058ed3dd29/icon/CKXK952Iv_4CEAE=.png",
+   "key": "icons/apps/automizely-personalization.dceb0371.webp"
+  },
+  "autoschema-google-structures": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bcc5928b013778611c032d68dc7ae410/icon/COqNx77sq5IDEAE=.png",
+   "key": "icons/apps/autoschema-google-structures.d4e48ef0.webp"
+  },
+  "avada-cookie-bar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/dbe1ee81b6f653d56dda3d95474bdb33/icon/CMbj4-nJ-ZQDEAE=.png",
+   "key": "icons/apps/avada-cookie-bar.0a1f0103.webp"
+  },
+  "avada-order-limit": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c4b6ba87763777f561db30bc6260698e/icon/CLiJyovK-ZQDEAE=.png",
+   "key": "icons/apps/avada-order-limit.0a1f0103.webp"
+  },
+  "avada-seo-suite": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/12c5f7113c40f4e4e5a57cad4ff6464f/icon/CMaK_M_ntJADEAE=.jpeg",
+   "key": "icons/apps/avada-seo-suite.707fcb75.webp"
+  },
+  "avada-size-chart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c61037bcc2d05f89edf8e9b125068fa4/icon/CMrw2K_l0o4DEAE=.png",
+   "key": "icons/apps/avada-size-chart.d41bc983.webp"
+  },
+  "avcsp": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a4923e52c1d944c3744d83cbc8edca27/icon/CJHzs5GCyIEDEAE=.png",
+   "key": "icons/apps/avcsp.88ab9acd.webp"
+  },
+  "awin-advertiser-tracking": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9ab3c980a74d239f036b8e81aecb790d/icon/CKT-4sPF3pYDEAE=.png",
+   "key": "icons/apps/awin-advertiser-tracking.81a64092.webp"
+  },
+  "awtomic": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c53bae80ae00e73820400529127291b0/icon/CNuZuYD50JcDEAE=.png",
+   "key": "icons/apps/awtomic.76a0d141.webp"
+  },
+  "b2b-solution-custom-pricing": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f406cf0e469d052e1fb506a0898d801f/icon/CMn5zMuggpEDEAE=.png",
+   "key": "icons/apps/b2b-solution-custom-pricing.c4e11020.webp"
+  },
+  "b2b-wholesale-lock-hide-price": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1e02a14675761945ae9f5f9280a74f55/icon/CO-cjsmUkv8CEAE=.png",
+   "key": "icons/apps/b2b-wholesale-lock-hide-price.842b1d49.webp"
+  },
+  "backinstock": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/08346a36a0a313120feec14003bedbc3/icon/CJbKmrvYgYwDEAE=.png",
+   "key": "icons/apps/backinstock.ea88ca17.webp"
+  },
+  "bazaarvoice": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/16e28f7698fddac56db2a803783cf974/icon/CN_DsfeR8voCEAE=.png",
+   "key": "icons/apps/bazaarvoice.63c7afcc.webp"
+  },
+  "beansid-verification": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f7f1ec49813b4d462b58641ff5e1c836/icon/CL2EhMff3YUDEAE=.png",
+   "key": "icons/apps/beansid-verification.085c34b9.webp"
+  },
+  "best-fit-size-charts-size-guides": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/022ba73148820196cc39ae7ac1667ec0/icon/CLqQkc30lu8CEAE=.png",
+   "key": "icons/apps/best-fit-size-charts-size-guides.b2094fa4.webp"
+  },
+  "bestcurrencyconverter": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0acf71ea227f225b08ce559a9b6ee9ec/icon/CI_nsbT40vsCEAE=.png",
+   "key": "icons/apps/bestcurrencyconverter.cca63ee5.webp"
+  },
+  "bitly": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/291a9d42aad64accd3decefd13478105/icon/CMXmwayn75ADEAE=.png",
+   "key": "icons/apps/bitly.23d1c81c.webp"
+  },
+  "bixgrow-affiliate-marketing": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/652129686e0fe8128d9f8a6a06d551de/icon/CLGXzPGdoZQDEAE=.png",
+   "key": "icons/apps/bixgrow-affiliate-marketing.26d433ce.webp"
+  },
+  "black-crow-ai": {
+   "url": "https://framerusercontent.com/images/PBJ1cxehvwcz0y1yzmSuUCYFBE.png",
+   "key": "icons/apps/blackcrow.ai.31d40194.webp"
+  },
+  "blockify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1fea2c06cad29a7a2ff47ed9c5b1b5cc/icon/CKv3zsyr-vcCEAE=.png",
+   "key": "icons/apps/blockify.30c2ed61.webp"
+  },
+  "blocky-simple-country-blocker": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/908a9a0f9edb5844acb3b5a15e537f4a/icon/CI6Oqd_p75MDEAE=.png",
+   "key": "icons/apps/blocky-simple-country-blocker.a348f22f.webp"
+  },
+  "bloomreach-discovery-v2": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9743ee39eb325a36313284d832b97945/icon/CNa624mk4oYDEAE=.png",
+   "key": "icons/apps/bloomreach-discovery-v2.d54a9635.webp"
+  },
+  "bloy-loyalty": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/eb1dd8939bb7b954d714a5344a78df08/icon/CITe8tmBxYoDEAE=.png",
+   "key": "icons/apps/bloy-loyalty.39bd377b.webp"
+  },
+  "bold-subscriptions": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ce6794be6752d5cccc7cc432f7deafc7/icon/CK_7qejTuPsCEAE=.jpeg",
+   "key": "icons/apps/bold-subscriptions.fd5d1c7d.webp"
+  },
+  "bon-loyalty-rewards": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f367f56199c88dba9296f532dfc5b383/icon/CJTU5Y2ivZADEAE=.png",
+   "key": "icons/apps/bon-loyalty-rewards.b31a0689.webp"
+  },
+  "bora-ip-blocker-country-block": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2229fbb428d64da58acbaef638f7f839/icon/CMToucmztoIDEAE=.png",
+   "key": "icons/apps/bora-ip-blocker-country-block.3a66b763.webp"
+  },
+  "bss-banner-pop-up": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/90b63c25793ee6c310dd9e70c3736b98/icon/COTQxe7KxpEDEAE=.png",
+   "key": "icons/apps/bss-banner-pop-up.e4341a1b.webp"
+  },
+  "bucks-currency-converter": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/711119d0bf4a6aaa500abe82a4c593af/icon/CL6H9rabmJcDEAE=.png",
+   "key": "icons/apps/bucks-currency-converter.054ab8c9.webp"
+  },
+  "buddha-mega-menu": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1f2048e3e855cf4cfd55ccfc3eabbb3c/icon/CMinqIKRu5MDEAE=.png",
+   "key": "icons/apps/buddha-mega-menu.5071fd3f.webp"
+  },
+  "bundle-deals": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/74f3a88ca9004748ce9210ea2cda82ca/icon/CMKZ_Z_RoowDEAE=.png",
+   "key": "icons/apps/bundle-deals.ad57caaf.webp"
+  },
+  "bundler-product-bundles": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d9d0cab92dc90366549d3dddaef00f84/icon/CLi92uraqI8DEAE=.png",
+   "key": "icons/apps/bundler-product-bundles.02e278dd.webp"
+  },
+  "candyrack": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4053cc5063e1ba6f735695ab645e7b88/icon/CKH10fvejosDEAE=.png",
+   "key": "icons/apps/candyrack.1c111825.webp"
+  },
+  "captain-shipping-protection": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2a7c539e2631cce35e5538f42a86d220/icon/CJuw1cWyyIMDEAE=.jpeg",
+   "key": "icons/apps/captain-shipping-protection.ce7c2d2e.webp"
+  },
+  "cart-insights": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a891df7759b02d42e6f614ca40731b4d/icon/CNDE9ve13v0CEAE=.png",
+   "key": "icons/apps/cart-insights.977e6cd8.webp"
+  },
+  "cartbite": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/41ee878ae878378038e125b03310ced2/icon/CMPE3LTl2vYCEAE=.png",
+   "key": "icons/apps/cartbite.befa60f5.webp"
+  },
+  "cartbot-auto-add-to-cart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c125fc845c27a40d4e84b897a24c924d/icon/CMj7xtnD-vgCEAE=.png",
+   "key": "icons/apps/cartbot-auto-add-to-cart.257c4bf5.webp"
+  },
+  "carthike-recovery": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8fc5f6d4d41f33cfcf0ebc61d01b572a/icon/CN2aot70lu8CEAE=.png",
+   "key": "icons/apps/carthike-recovery.d68c21d1.webp"
+  },
+  "cash-on-delivery-fee": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8b74d91953ae6d5dbe5e63c3f50ca810/icon/CN6h5bXI8_ECEAE=.png",
+   "key": "icons/apps/cash-on-delivery-fee.a6eb4933.webp"
+  },
+  "chatra": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e411b8c413d38cab4b7f529d6a421d26/icon/CO3N1L-s-fsCEAE=.png",
+   "key": "icons/apps/chatra.f7df4d19.webp"
+  },
+  "chatty": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/eb2a46ad62a4a49e462b8e400524ca91/icon/CLiW3vrdrZEDEAE=.png",
+   "key": "icons/apps/chatty.861dc92c.webp"
+  },
+  "chatway": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/17e2a61657104d2ffed4486981037b5b/icon/CPqo3LDFs4EDEAE=.png",
+   "key": "icons/apps/chatway.40c1845d.webp"
+  },
+  "chaty": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0dcf8a954268976191679efe5e8d1441/icon/COfu0qHKx5ADEAE=.png",
+   "key": "icons/apps/chaty.4368ec2d.webp"
+  },
+  "clevertapapp": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fb1a9fa78640333428420e4c1467c952/icon/CPOuvIHwp_oCEAE=.png",
+   "key": "icons/apps/clevertapapp.f484ba27.webp"
+  },
+  "cloudsearch": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d19d722c35711ba56241cdaf7e68631c/icon/CPW4lMj0lu8CEAE=.png",
+   "key": "icons/apps/cloudsearch.dde7a19a.webp"
+  },
+  "cmp-insert-code": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/34976c4cbd0af753a5bce14f926caddf/icon/CLyw-Mqq4YsDEAE=.png",
+   "key": "icons/apps/cmp-insert-code.01735a09.webp"
+  },
+  "collections-add-to-cart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/423af5c4af8c41da5e58337323d394f2/icon/CIShnbf2yf4CEAE=.png",
+   "key": "icons/apps/collections-add-to-cart.71dafc77.webp"
+  },
+  "complianz-gdpr-cookie-consent": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e2020b4b7a227fb0868086f233e711ef/icon/CPulxaiz9o0DEAE=.png",
+   "key": "icons/apps/complianz-gdpr-cookie-consent.c09cea61.webp"
+  },
+  "constructor-connect": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c1fa20066fb49b03d4ead48f053df529/icon/CPfTpZGk6IcDEAE=.jpeg",
+   "key": "icons/apps/constructor-connect.f2d56c05.webp"
+  },
+  "content-translation": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fdc796485b6462ec4b5071f81d2613bf/icon/CPDn58HO74cDEAE=.png",
+   "key": "icons/apps/content-translation.4da620d6.webp"
+  },
+  "cookie-first": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4692d841e5a67776969ce4fdae8a22e0/icon/CKis9orbqPwCEAE=.png",
+   "key": "icons/apps/cookie-first.b6820a25.webp"
+  },
+  "cookiebot-cmp-gdpr-compliance": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/56546b33bc8c78d817b7a59c6628cfa6/icon/CKzNouyHl5ADEAE=.png",
+   "key": "icons/apps/cookiebot-cmp-gdpr-compliance.b0c536b7.webp"
+  },
+  "cookieyes": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a6bc234e6aaeab96c8da21ef051b09b7/icon/COvB1uqvnP0CEAE=.jpeg",
+   "key": "icons/apps/cookieyes.cbd71d4c.webp"
+  },
+  "cornercart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/722ae3fa84628e08b7851d15d20bb028/icon/CK2or6rnr44DEAE=.png",
+   "key": "icons/apps/cornercart.d0e26aa8.webp"
+  },
+  "corso-crew": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/73e12a0f7ab3967ec1a6b65245edc78d/icon/CIvHksjfmYUDEAE=.png",
+   "key": "icons/apps/corso-crew.6ab5d4b6.webp"
+  },
+  "coupon-stacker": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a06ee9af2667de30c167ab83af6b7e0d/icon/CPqF_JuilfsCEAE=.png",
+   "key": "icons/apps/coupon-stacker.ed636492.webp"
+  },
+  "coupon-x-discount-codes": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f184ad0547fb0a4f90d94fcec3f03c18/icon/CK3Ms7e_3fwCEAE=.png",
+   "key": "icons/apps/coupon-x-discount-codes.f18be2e0.webp"
+  },
+  "cowlendar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e297c43d07c087a231c656afcdca283f/icon/CMnisvit1pADEAE=.jpeg",
+   "key": "icons/apps/cowlendar.7e8d8033.webp"
+  },
+  "cozy-antitheft-for-images-and-more": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e5e370109cacc4bb3cda48b45f37a86b/icon/CKrto4K2nYMDEAE=.png",
+   "key": "icons/apps/cozy-antitheft-for-images-and-more.f9bf895c.webp"
+  },
+  "creatorcommerce": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f79b6e79340cae38b55ea1a1cdf64e6c/icon/CPKN7KzK4okDEAE=.png",
+   "key": "icons/apps/creatorcommerce.ac42d7c3.webp"
+  },
+  "curivo": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6b53dba9b66d9e062218dcd7de7915be/icon/CM_YlYLGopcDEAE=.png",
+   "key": "icons/apps/curivo.4592ec54.webp"
+  },
+  "currency-converter-plus": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e415e0786f63be8e176d3b037572ace8/icon/CP3ImrH0lu8CEAE=.png",
+   "key": "icons/apps/currency-converter-plus.2070c8c7.webp"
+  },
+  "custom-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/52dd8791d661a97a8215f93347889de6/icon/CNGpqrO6r5YDEAE=.png",
+   "key": "icons/apps/custom-options.fccf6e98.webp"
+  },
+  "custom-scroll-to-top": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/aee67a8f9cbb188d9b9a591553bf2593/icon/CPuQsams6ZcDEAE=.png",
+   "key": "icons/apps/custom-scroll-to-top.21212de9.webp"
+  },
+  "customer-account-deluxe": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a7655c6929c8103d6292296c6ae46aed/icon/CNyywtvdkJQDEAE=.png",
+   "key": "icons/apps/customer-account-deluxe.51b60b20.webp"
+  },
+  "customer-support": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c9308d01d0e596807cd697bab16009a1/icon/COXAs-O_ioQDEAE=.png",
+   "key": "icons/apps/customer-support.fc283846.webp"
+  },
+  "customerhub": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5d0a1dd0d8941b2b8b888667411d4532/icon/CMnWj4HV1_MCEAE=.png",
+   "key": "icons/apps/customerhub.94997353.webp"
+  },
+  "customr": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/be9f46fe70870efa191a9c0eab91d5f4/icon/CMrsg8CTw5IDEAE=.png",
+   "key": "icons/apps/customr.8625b6e7.webp"
+  },
+  "dealer-store-locator": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b06e16e7494aedab999b8b4f0298e7d2/icon/CKGGkomC2ZQDEAE=.png",
+   "key": "icons/apps/dealer-store-locator.661cb512.webp"
+  },
+  "depict": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5880491310e94364f75b526ce4688a9b/icon/COm7tt7FgYwDEAE=.jpeg",
+   "key": "icons/apps/depict.3aecfbc2.webp"
+  },
+  "dondy-marketing-ai": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/3c2941147afa6bf42cc28f8033d21af0/icon/CMiHg6DXxZcDEAE=.png",
+   "key": "icons/apps/dondy-marketing-ai.df7864c1.webp"
+  },
+  "doofinder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4bd2ff62bd25c82e2138b6ef6fc1b59c/icon/CKufxt70lu8CEAE=.png",
+   "key": "icons/apps/doofinder.ce5dac9d.webp"
+  },
+  "doran-back-in-stock-preorder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0b0d25de5b212191213948f8ca9e8419/icon/CMTIy-rNyZQDEAE=.png",
+   "key": "icons/apps/doran-back-in-stock-preorder.fe58427e.webp"
+  },
+  "dynamic-yield-v2": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/adffb4509fd0f2f5cfc9e03c1e115e42/icon/COWHodCWnIQDEAE=.png",
+   "key": "icons/apps/dynamic-yield-v2.bdc96674.webp"
+  },
+  "ea-image-page-speed-booster": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b433fb4a44e9f80ccb03a220b8b741b1/icon/CL78yvTNhY8DEAE=.png",
+   "key": "icons/apps/ea-image-page-speed-booster.12563013.webp"
+  },
+  "easify-box-builder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bffefc20b369c36e4b74545ec311c81f/icon/CKLfgNK64YwDEAE=.png",
+   "key": "icons/apps/easify-box-builder.91826bf5.webp"
+  },
+  "easify-product-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1821fa19e077535bf0b6c962de9bd6c3/icon/CMORnf6l_IoDEAE=.png",
+   "key": "icons/apps/easify-product-options.7a189ec7.webp"
+  },
+  "easy-block-customer-ip-country": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/43ea03b695359dca637342beede4a09b/icon/CIyntYe7p_4CEAE=.png",
+   "key": "icons/apps/easy-block-customer-ip-country.33c650ca.webp"
+  },
+  "eaze-chat-button": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a5e7af2559d27412fc034d0501daabe7/icon/CKn6gfzCx5ADEAE=.png",
+   "key": "icons/apps/eaze-chat-button.a34011a3.webp"
+  },
+  "ecom-verified-seller": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/526bfb12ea117c549bc36ee504aa220c/icon/CPncl7Gh6JADEAE=.png",
+   "key": "icons/apps/ecom-verified-seller.25771562.webp"
+  },
+  "ecomposer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/253c9864fe7cc4ba163511830f085a0f/icon/CMDy86i0zJcDEAE=.png",
+   "key": "icons/apps/ecomposer.be3d76f0.webp"
+  },
+  "ecomsend": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bda73e80e3a30463cb353d7ee7aa3edc/icon/CIj8-qCylZcDEAE=.png",
+   "key": "icons/apps/ecomsend.2c07be2a.webp"
+  },
+  "edgetag": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2d271308bcb2be468da3ebf694b73e07/icon/CLmmrunQsZYDEAE=.png",
+   "key": "icons/apps/edgetag.9696c206.webp"
+  },
+  "elfsight-google-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a60f5ec4ed84bec76fa916b6bb9edb0f/icon/CIbKo7H0lu8CEAE=.jpg",
+   "key": "icons/apps/elfsight-google-reviews.207919fe.webp"
+  },
+  "essential-announcement-bar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/15e8255158a042a1eab34a4c45c72aa5/icon/CMK1jPv9uoADEAE=.png",
+   "key": "icons/apps/essential-announcement-bar.b020ece7.webp"
+  },
+  "essential-cart-drawer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0894536c0cf874789689c47615252990/icon/CInwkdul9YsDEAE=.png",
+   "key": "icons/apps/essential-cart-drawer.c3cbf777.webp"
+  },
+  "essential-countdown-timer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f84bf9e49eca8bd84c2af7488461363b/icon/CPzKxLTD4_UCEAE=.png",
+   "key": "icons/apps/essential-countdown-timer.e676ef79.webp"
+  },
+  "essential-grid-gallery": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8d87bd0a0d4d7e42311c1323e1dadf00/icon/CJjcre2m6IEDEAE=.png",
+   "key": "icons/apps/essential-grid-gallery.1351f18c.webp"
+  },
+  "essential-icon-badge-banners": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/447aa873cb88a7ec294e5b0963f7f12e/icon/CMng8b353f4CEAE=.png",
+   "key": "icons/apps/essential-icon-badge-banners.361d921b.webp"
+  },
+  "essential-loyalty-rewards-program": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0f331d7dd3c9d099e10afa0b347a5fcb/icon/CMXQg9i5gpgDEAE=.png",
+   "key": "icons/apps/essential-loyalty-rewards-program.ee7e20d8.webp"
+  },
+  "essential-post-purchase-upsell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ddc901de538fba4cee75f53bf6c0832e/icon/COncqaiPv4YDEAE=.jpeg",
+   "key": "icons/apps/essential-post-purchase-upsell.a21035c3.webp"
+  },
+  "essential-pre-order": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4bf19f58b7906eb76b0459be6312ef09/icon/CJL24PCb_ogDEAE=.jpeg",
+   "key": "icons/apps/essential-pre-order.f2e37e0c.webp"
+  },
+  "essentialwolf-upsell-crosssell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b744bbd62e2a30a74c82994acc4c1051/icon/CMfmuJ3ViY8DEAE=.png",
+   "key": "icons/apps/essentialwolf-upsell-crosssell.7ba5c775.webp"
+  },
+  "estimated-delivery-date-plus": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e4733a4cb318126885ef06c1a11c2c35/icon/COTnt4SChPkCEAE=.jpeg",
+   "key": "icons/apps/estimated-delivery-date-plus.d780d0a4.webp"
+  },
+  "eu-cookie-bar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/56e3847f6992e05a68032562b35608e0/icon/CIq9rLmuw_4CEAE=.png",
+   "key": "icons/apps/eu-cookie-bar.51ee7819.webp"
+  },
+  "eu-cookies-notification": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6b2b8ff7415c82eba60cc5446d15596c/icon/CNid8uGQp4wDEAE=.png",
+   "key": "icons/apps/eu-cookies-notification.de79bc22.webp"
+  },
+  "event-promotion-bar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/904be13e4bba460880341eba1a5579e1/icon/CKCYtc2d5oYDEAE=.png",
+   "key": "icons/apps/event-promotion-bar.9ebe126f.webp"
+  },
+  "evlop-app-builder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bdd27a5d7e38f4ba1ad8e4ccce229145/icon/CKW2w-3ekvUCEAE=.png",
+   "key": "icons/apps/evlop-app-builder.40fc00bb.webp"
+  },
+  "exemptify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b469c19c0c5830327c71b494e5d5df9e/icon/CP-TssP0lu8CEAE=.png",
+   "key": "icons/apps/exemptify.76ab26d1.webp"
+  },
+  "ez-product-image-translate": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/270176a4529eb9c7822ac25eb2e53f53/icon/CJqitNvngZQDEAE=.png",
+   "key": "icons/apps/ez-product-image-translate.421b8ee3.webp"
+  },
+  "ez-terms-and-conditions-checkbox": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6fbcd0307f83631cb484dc9ba12caa6f/icon/CL3ry7nkrvwCEAE=.png",
+   "key": "icons/apps/ez-terms-and-conditions-checkbox.0945c188.webp"
+  },
+  "facebook-chat-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4d5c4e1411c21a7e51df4f06eed328b9/icon/CJjx3KjMpowDEAE=.png",
+   "key": "icons/apps/facebook-chat-1.82de28bc.webp"
+  },
+  "facebook-messenger-live-chat": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ef5c89f0ad75f83e0e1c897903ee5015/icon/CNb5r96pxpADEAE=.png",
+   "key": "icons/apps/facebook-messenger-live-chat.22264344.webp"
+  },
+  "facebook-multiple-pixel": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c4c30100185aa284d06ac94857e3e1fd/icon/CMqToYnxpokDEAE=.png",
+   "key": "icons/apps/facebook-multiple-pixel.9cf716ae.webp"
+  },
+  "fast-product-colors": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6be806dc21880584226841ac7ea64ef9/icon/CMDphr6OqJADEAE=.png",
+   "key": "icons/apps/fast-product-colors.d2b98161.webp"
+  },
+  "fastbundle": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ea091c2ab1d4650a55e0b783691fab16/icon/CJbZvMSX64wDEAE=.png",
+   "key": "icons/apps/fastbundle.d572d1b9.webp"
+  },
+  "fera": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4b6b591765c9b36332c4e599aea727c6/icon/CP6IkZWLwIYDEAE=.png",
+   "key": "icons/apps/fera.00ef1a3b.webp"
+  },
+  "fin": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f35a727bbf8a7939bce649bc2bd15457/icon/CKGj3NKO_pcDEAE=.png",
+   "key": "icons/apps/fin.11d87558.webp"
+  },
+  "firework": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0de25c9708757125ecdccc48c5b2e2ef/icon/CPGgpfWK4PoCEAE=.png",
+   "key": "icons/apps/firework.4a8a6feb.webp"
+  },
+  "flyweight-chatbot": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/85f6260889ddb6d8f0e79980e2e5f589/icon/COK2xMm5uZUDEAE=.png",
+   "key": "icons/apps/flyweight-chatbot.34e000ab.webp"
+  },
+  "fomo": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ca5007ab44658f3d201b0cf21c195a7b/icon/COTcpbi11vsCEAE=.png",
+   "key": "icons/apps/fomo.77a69751.webp"
+  },
+  "fondue-cashback-promotions": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/256c123483855bb15c70abb8ea8d97fb/icon/CP2P86CQ-Y4DEAE=.png",
+   "key": "icons/apps/fondue-cashback-promotions.abf3a955.webp"
+  },
+  "font-io": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/19c7513bea9e6576b0a14b18fa0b8e8a/icon/CLDh3anK54sDEAE=.png",
+   "key": "icons/apps/font-io.dc2b308d.webp"
+  },
+  "font-picker": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/67629071911a4b80993b3351675646a4/icon/CL-765OkmO8CEAE=.png",
+   "key": "icons/apps/font-picker.ab41be1a.webp"
+  },
+  "fontify-change-customize-font-for-your-store": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/882f68aac7edf55a4ba456d5aae6e978/icon/CODFzd7v5pEDEAE=.jpeg",
+   "key": "icons/apps/fontify-change-customize-font-for-your-store.b67ff8cf.webp"
+  },
+  "form-builder-by-hulkapps": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5f594019010246ebf55d691bd099265f/icon/CPLUib3Tpv0CEAE=.png",
+   "key": "icons/apps/form-builder-by-hulkapps.98a55bf8.webp"
+  },
+  "form-builder-contact-form": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7919647ec002bc41691875d798fc4339/icon/COmlwLH0lu8CEAE=.png",
+   "key": "icons/apps/form-builder-contact-form.087d383e.webp"
+  },
+  "foursixty": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/43b401d6bc9caa05ff0f555ee2643f79/icon/CLS3urz0lu8CEAE=.jpg",
+   "key": "icons/apps/foursixty.593dbe13.webp"
+  },
+  "free-shipping-bar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/999f9fea413c682a9ef65825272813e8/icon/CJGbwPjx24YDEAE=.png",
+   "key": "icons/apps/free-shipping-bar.5fdaeede.webp"
+  },
+  "freegifts": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/181c217c862c543710a39e03910a2c86/icon/CNfm2b_S3YcDEAE=.png",
+   "key": "icons/apps/freegifts.c9e6830c.webp"
+  },
+  "frequently-bought-together": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c445f0f56cab256cf45aae9a6ae4566c/icon/CP3fjLj0lu8CEAE=.png",
+   "key": "icons/apps/frequently-bought-together.0c28acf4.webp"
+  },
+  "friendbuy-lite": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7b319f2b8a8aded0e793f68942cabf55/icon/CK_D8v_d3vwCEAE=.jpeg",
+   "key": "icons/apps/friendbuy-lite.356a4bde.webp"
+  },
+  "fulbix-variant-images": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bd51695851dcbb21887db5c513725371/icon/CNvX4dWPy5MDEAE=.png",
+   "key": "icons/apps/fulbix-variant-images.4d2c9c30.webp"
+  },
+  "functions-app": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5f62463682fdc914c8babaab0694f6f3/icon/CPaUt5Or_5EDEAE=.png",
+   "key": "icons/apps/functions-app.a993672e.webp"
+  },
+  "galaxio": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7c46088bd3010b239f2c9bb4689c1cdd/icon/COe2tOPv1_QCEAE=.png",
+   "key": "icons/apps/galaxio.6d14407b.webp"
+  },
+  "gdpr-backpack": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/63ef59b872952601351925e45905ae6e/icon/CPfuk--TuJEDEAE=.png",
+   "key": "icons/apps/gdpr-backpack.bc2f1dad.webp"
+  },
+  "gdpr-cookie-consent": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/3f0b68db732b6704928d685690b753c8/icon/CNyiwYaTi_wCEAE=.png",
+   "key": "icons/apps/gdpr-cookie-consent.fb3bef70.webp"
+  },
+  "gelacy": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e80ac2880a6c2c2bdf7c9ca82b80d74e/icon/CJrPkdC22pEDEAE=.png",
+   "key": "icons/apps/gelacy.91e04f10.webp"
+  },
+  "gelato-print-on-demand": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/890f9dbf95b5214ae1450b50cfd537bb/icon/CIH9_O7ojPwCEAE=.png",
+   "key": "icons/apps/gelato-print-on-demand.62c9d584.webp"
+  },
+  "gempages": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6d72140e25d3f444e352738033321b98/icon/CJCIkdONi_UCEAE=.jpeg",
+   "key": "icons/apps/gempages.4fa5d5e9.webp"
+  },
+  "geolizr": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/855665eb92c09bcb2ecdff78c824d92f/icon/CNnohr70lu8CEAE=.jpg",
+   "key": "icons/apps/geolizr.df13208a.webp"
+  },
+  "geos": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4d64920c96064b44ba00e0da027104dd/icon/CNftmPnetYgDEAE=.jpeg",
+   "key": "icons/apps/geos.95c88e35.webp"
+  },
+  "get-response": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/17fb13e65d27edcd1a654c4a28de0192/icon/CIPj68_d8pUDEAE=.png",
+   "key": "icons/apps/get-response.dcd61602.webp"
+  },
+  "getsitecontrol": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/834ed0c998efcf085708f32c19f75de1/icon/CLjG-ZuAzZYDEAE=.png",
+   "key": "icons/apps/getsitecontrol.2a72b116.webp"
+  },
+  "getsitecontrol-countdown-timer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0fc1b40b3c1e4a9fad5442615c5f8da7/icon/CPrS8PKProYDEAE=.png",
+   "key": "icons/apps/getsitecontrol-countdown-timer.b5e9dd67.webp"
+  },
+  "gift-box": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a2e8c6bdbfcd0d0fdd7645abdcc42266/icon/CIORs9T0lu8CEAE=.png",
+   "key": "icons/apps/gift-box.c31706f7.webp"
+  },
+  "gift-card-hero": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e63442339b3cc54c5ebf1b6732d7c043/icon/COL1zJLqnvICEAE=.png",
+   "key": "icons/apps/gift-card-hero.3c59b655.webp"
+  },
+  "gift-card-loyalty-program": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7040e1b6bfce598796f505cf07f1682f/icon/CMLOsJeX-JUDEAE=.png",
+   "key": "icons/apps/gift-card-loyalty-program.c73230c5.webp"
+  },
+  "gift-reggie-by-eshop-admin": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6a3a5a274330daede60140f594746a52/icon/CNXR18z0lu8CEAE=.png",
+   "key": "icons/apps/gift-reggie-by-eshop-admin.dbcf0f06.webp"
+  },
+  "gifter-cart-auto-include": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2ebbc8b520f25528dbc6c4906b5e8263/icon/CJWw-9mD-e8CEAE=.png",
+   "key": "icons/apps/gifter-cart-auto-include.d34e65b9.webp"
+  },
+  "giftkart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/cb710f35881872b7171cb6fdd69182f3/icon/CLadovWKmpIDEAE=.png",
+   "key": "icons/apps/giftkart.d7948555.webp"
+  },
+  "giftnote": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/aafcd2d7a7e2a91499a62e4892e0c051/icon/COnc9NTHsvsCEAE=.png",
+   "key": "icons/apps/giftnote.4d87f4b8.webp"
+  },
+  "gladly": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/dc0206eb3f7e21ad81659511b2df86f7/icon/CO3d15_D7f4CEAE=.png",
+   "key": "icons/apps/gladly.214478bb.webp"
+  },
+  "global-e-crossborder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c63271db421bfd98e71d2424c385970b/icon/CL_22M_tuvUCEAE=.png",
+   "key": "icons/apps/global-e-crossborder.f219c93f.webp"
+  },
+  "globo-color-swatches": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9995b073cfe955d98eb8e9961e8dd7be/icon/CM-Kw8-05_4CEAE=.png",
+   "key": "icons/apps/globo-color-swatches.fa140fdb.webp"
+  },
+  "globo-mega-menu": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/abda3a043b7a4d6c80daf1ca40a0c372/icon/CNHSmMP0lu8CEAE=.png",
+   "key": "icons/apps/globo-mega-menu.e680cc41.webp"
+  },
+  "globy-product-image-translator": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/788e6e1721ff6490846a51047b95c561/icon/COXRkd22gZQDEAE=.png",
+   "key": "icons/apps/globy-product-image-translator.ff3bc972.webp"
+  },
+  "glopal-translate": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/15874e3359d1a10e4d0a27569cfb0790/icon/CMzxjNaG-JYDEAE=.png",
+   "key": "icons/apps/glopal-translate.57524fe1.webp"
+  },
+  "glow-loyalty": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/62f3966f16a41ef36e8c0e7ec6cd97c5/icon/CNTbiNr0lu8CEAE=.png",
+   "key": "icons/apps/glow-loyalty.569567b0.webp"
+  },
+  "goaffpro": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/eda11fcd576a556494594ddd4660db71/icon/CLXQoaeknv0CEAE=.png",
+   "key": "icons/apps/goaffpro.afa14e3d.webp"
+  },
+  "google-review-plus-by-entangle-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5304bcb9e74f9f49b0e22d99aeccb521/icon/COCt_Ymh0pcDEAE=.png",
+   "key": "icons/apps/google-review-plus-by-entangle-1.ac89b315.webp"
+  },
+  "google-reviews-importer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/21878ca913d14238051e5aa44b58942e/icon/CIuC2-q8mZIDEAE=.png",
+   "key": "icons/apps/google-reviews-importer.9dc67ce1.webp"
+  },
+  "google-reviews-trust-badge": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/02390e57cc10c164770a62f5ff798ec9/icon/CNytmoeEjooDEAE=.png",
+   "key": "icons/apps/google-reviews-trust-badge.35551858.webp"
+  },
+  "google-shopping-feed": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/02b5709becbcc8cb72e7853b282ccbec/icon/CLe36pCU6okDEAE=.png",
+   "key": "icons/apps/google-shopping-feed.366a456c.webp"
+  },
+  "green-shipping-protection": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/dcc20de7197824afea53edd48253b735/icon/CIKHoo7J9YMDEAE=.png",
+   "key": "icons/apps/green-shipping-protection.4e08934a.webp"
+  },
+  "gropulse-gtm-data-layer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/29ae53b3b51f0c8439bc21cab5c28004/icon/CPjMuJa-_5YDEAE=.png",
+   "key": "icons/apps/gropulse-gtm-data-layer.1d1d3823.webp"
+  },
+  "grouptify-combined-listings": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f3c7e2f5de24101b794516ae2211c449/icon/CPbO6JXT84gDEAE=.png",
+   "key": "icons/apps/grouptify-combined-listings.8f5bc5fa.webp"
+  },
+  "growave": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/59da3ad107e08fd5430db47cc4e0a75c/icon/CP6GuOOMn4sDEAE=.png",
+   "key": "icons/apps/growave.65219290.webp"
+  },
+  "gs-change-image-on-hover": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a0fe9aa8d9658d832ee0a96f61d4d148/icon/CI2jspuBuP4CEAE=.png",
+   "key": "icons/apps/gs-change-image-on-hover.023b927f.webp"
+  },
+  "gsc-affiliate-external-links": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4410c79c831c6e16341c530deb023202/icon/CLCwspP8goUDEAE=.png",
+   "key": "icons/apps/gsc-affiliate-external-links.98f7de92.webp"
+  },
+  "gsc-instagram-feed-instafeed": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b157f2172f24bb33c5f645893fcbf094/icon/CJbR9bvI-YkDEAE=.png",
+   "key": "icons/apps/gsc-instagram-feed-instafeed.4607c126.webp"
+  },
+  "gtm-datalayer-by-elevar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e6748a47b626678883beaf91f28ca7e3/icon/CI3ysb2XyZcDEAE=.png",
+   "key": "icons/apps/gtm-datalayer-by-elevar.55c5bb97.webp"
+  },
+  "helpdesk": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d783d0d0ded4ab7a13c20f47533819a3/icon/CNOe1Y-4vocDEAE=.png",
+   "key": "icons/apps/helpdesk.e01210d9.webp"
+  },
+  "helpfulcrowd": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/836ada86f154be661c9afa0180193162/icon/CKzA6L30lu8CEAE=.jpeg",
+   "key": "icons/apps/helpfulcrowd.0fcc9d65.webp"
+  },
+  "hide-price-access-control": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/67077c3f802151cb320e6b5eb0e0a306/icon/CPnqs4m6iY8DEAE=.png",
+   "key": "icons/apps/hide-price-access-control.55b0e62e.webp"
+  },
+  "hide-price-add-to-cart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ce6b881ec6a8e32274baff2dbeb1bffc/icon/COTcmMWnk_YCEAE=.png",
+   "key": "icons/apps/hide-price-add-to-cart.695a5914.webp"
+  },
+  "hide-price-and-add-to-cart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8885268e3dbd1684191a8b6fbc66a035/icon/CNnbrJff0oQDEAE=.png",
+   "key": "icons/apps/hide-price-and-add-to-cart.58280b3b.webp"
+  },
+  "hitsy-progress-bar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/81bad69adb2bbe0609b40494394a1e58/icon/CO3Dt6iR_ZcDEAE=.png",
+   "key": "icons/apps/hitsy-progress-bar.7e57e3ef.webp"
+  },
+  "honeycombupsell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a27f1e8ca39288fda15f98bb00d59bdd/icon/CICBgPTW5O8CEAE=.png",
+   "key": "icons/apps/honeycombupsell.4310d58a.webp"
+  },
+  "hoppy-currency-converter": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/57183e80919d71429469c8ab098c5890/icon/CP2fz9_7x5MDEAE=.png",
+   "key": "icons/apps/hoppy-currency-converter.96a59bc1.webp"
+  },
+  "hoppy-free-shipping": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/851f062d8cf0df900bb0de5558208b38/icon/CMHmzMP7x5MDEAE=.png",
+   "key": "icons/apps/hoppy-free-shipping.035ff896.webp"
+  },
+  "hotjar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c6f30291dfaf8c85f8c6bd7787b0a91c/icon/CPKcla_ij48DEAE=.png",
+   "key": "icons/apps/hotjar.b62a49a1.webp"
+  },
+  "hubspot-2": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e4d465ef040f358f41065cc71e218071/icon/CK3a0u3Ntv8CEAE=.png",
+   "key": "icons/apps/hubspot-2.be897e23.webp"
+  },
+  "hue-cart-drawer-cart-upsell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2a82d14ff0908b4b11a67b003ee37313/icon/COO4xcyJmJcDEAE=.png",
+   "key": "icons/apps/hue-cart-drawer-cart-upsell.4b49e79e.webp"
+  },
+  "iadvize": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b3c17e4481e021eb04d8f3c42903d11a/icon/CPqpkcmUpJEDEAE=.png",
+   "key": "icons/apps/iadvize.958b6fa2.webp"
+  },
+  "id-within-simple-password-lock": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1c68e2eed77b811e9a9d73b1914df03e/icon/CNeyp5uCpZcDEAE=.png",
+   "key": "icons/apps/id-within-simple-password-lock.3f5462c8.webp"
+  },
+  "image-sitemap": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bd896c72dced029f05b5a2a7bdec6bc0/icon/CKSZt-P9yvwCEAE=.png",
+   "key": "icons/apps/image-sitemap.4f7c9c2f.webp"
+  },
+  "imapi-infinite-scroll": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/08fd8b2fdb97c9929e72fe26d48d3cc2/icon/CLq--ev_4Y0DEAE=.jpeg",
+   "key": "icons/apps/imapi-infinite-scroll.3b4ac31e.webp"
+  },
+  "impact-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6f3a1ed4069a8ad92504e6d39360469b/icon/CLT9m_6RvpcDEAE=.png",
+   "key": "icons/apps/impact-1.8f5a3ce9.webp"
+  },
+  "inbox": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5c413ee331721e49374ce06d0a7edc1b/icon/CPrw4d6I5fECEAE=.png",
+   "key": "icons/apps/inbox.1bd63991.webp"
+  },
+  "insert-code-to-header-and-footer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fba3df502555e21e8681ef03da9adef2/icon/CJiU3oaMufoCEAE=.png",
+   "key": "icons/apps/insert-code-to-header-and-footer.9a2ad89e.webp"
+  },
+  "insider": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/027852670801695da55f09813aa1e6e6/icon/CI_By5_21ZEDEAE=.png",
+   "key": "icons/apps/insider.2d750fdf.webp"
+  },
+  "instafeed": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ff3b61a8718cbdeb80d3a8dcf0b25014/icon/CMuQhfjG05EDEAE=.png",
+   "key": "icons/apps/instafeed.c8c60544.webp"
+  },
+  "instafeed-socialwidget": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/78c7d846fe4892fb9f338d208c8e9e6e/icon/CKOcpfzRzYMDEAE=.png",
+   "key": "icons/apps/instafeed-socialwidget.7994ac1a.webp"
+  },
+  "instant-builder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c5f07372a6bbc4238b8476dedc8713cc/icon/CMbPpNedyoADEAE=.png",
+   "key": "icons/apps/instant-builder.3fdedfeb.webp"
+  },
+  "instant-search": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2fdf165bce6a41670dd95ec05375b66f/icon/CP7LvZjv_JcDEAE=.png",
+   "key": "icons/apps/instant-search.a117ca92.webp"
+  },
+  "intelligems": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/63fb68ea6dcc0f2694c656e6dd5a895f/icon/CMeOqL2y3Y8DEAE=.png",
+   "key": "icons/apps/intelligems.a983bab0.webp"
+  },
+  "inveterate": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/69b939a17f3130869b45f8b73a30f23d/icon/CM_gwNXn3fcCEAE=.jpeg",
+   "key": "icons/apps/inveterate.3a363f12.webp"
+  },
+  "itable": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/086c3b9f003d334ddbe895f7ad4bf015/icon/CPWZ6sz0lu8CEAE=.png",
+   "key": "icons/apps/itable.c425c512.webp"
+  },
+  "joyio": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1c76cf8a2c51f2fcf7a52ae3db9b0d6f/icon/CK6DxNDQsZYDEAE=.png",
+   "key": "icons/apps/joyio.4653c46d.webp"
+  },
+  "judgeme": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8cada0f5da411a64e756606bb036f1ed/icon/CIfp9fWd34sDEAE=.png",
+   "key": "icons/apps/judgeme.b288e1b9.webp"
+  },
+  "juicy": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1351af2d9f1fe6d0749b973704618e94/icon/CP3out--3owDEAE=.png",
+   "key": "icons/apps/juicy.3ac71838.webp"
+  },
+  "junip": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/96f1afce30a67cdc7d9ac627db24ff70/icon/CKbw46nFy_YCEAE=.png",
+   "key": "icons/apps/junip.806b2b83.webp"
+  },
+  "justuno": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f68d217d1bd4ab41909557332d744d44/icon/CI_UvcCVzpYDEAE=.png",
+   "key": "icons/apps/justuno.2d2890cc.webp"
+  },
+  "kaching-subscriptions": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/3106aa86015e60ee5723b1aa7317ebb3/icon/CP2dtM_hto0DEAE=.png",
+   "key": "icons/apps/kaching-subscriptions.cab43fec.webp"
+  },
+  "keepcart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8fbeca00e303aba414b26184579e3889/icon/COvF_NvH-pMDEAE=.png",
+   "key": "icons/apps/keepcart.ee70abe3.webp"
+  },
+  "ketch": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/af47d772840756ae7bfa7a4ed340061c/icon/CIHArvvfxZQDEAE=.png",
+   "key": "icons/apps/ketch.cf8a73fe.webp"
+  },
+  "king-product-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fc200c02e077b0475fb054ba8549dc98/icon/CPTV0ZrvhfICEAE=.jpeg",
+   "key": "icons/apps/king-product-options.85b635bf.webp"
+  },
+  "kiwi-sizing": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d3885e152c3d7c1a0526f5f916b5d61e/icon/CJDcxMP0lu8CEAE=.png",
+   "key": "icons/apps/kiwi-sizing.be66402a.webp"
+  },
+  "klarnaosm": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4439684aa13a71f0befb66b3a308e7d4/icon/CLWCxKPQuYwDEAE=.png",
+   "key": "icons/apps/klarnaosm.5744c2a9.webp"
+  },
+  "klaviyo": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5edd9000b933a8fa88c152d1e498531f/icon/CP6B2OOv3PYCEAE=.png",
+   "key": "icons/apps/klaviyo.f84f0aab.webp"
+  },
+  "klaviyo-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8c8e0c8b87fd02ccf30e1a6de052e0ca/icon/CM384_2n0v8CEAE=.png",
+   "key": "icons/apps/klaviyo-reviews.675189c6.webp"
+  },
+  "klevu-smart-search": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/21a9df5710f533bed5c0bd66f913f8f4/icon/CIuDr7Hur_ACEAE=.jpeg",
+   "key": "icons/apps/klevu-smart-search.daadee30.webp"
+  },
+  "klip-product-page-coupons": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/673be8e7f45f72310db884aaf190eb6c/icon/COr1wpn715cDEAE=.jpeg",
+   "key": "icons/apps/klip-product-page-coupons.b0bc6dd9.webp"
+  },
+  "kustomer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9643859e21d4fb31c303770ff0dde57b/icon/COrdgcOt540DEAE=.png",
+   "key": "icons/apps/kustomer.df5d7feb.webp"
+  },
+  "kutoku-affiliate": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/42a5f699650019de0db38bcbb9a78379/icon/CL21jMLQ4_wCEAE=.png",
+   "key": "icons/apps/kutoku-affiliate.342fd2bc.webp"
+  },
+  "kwik-cart-slide-cart-drawer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/25fc26c8f7e9549196d39f5c7b8c2a3f/icon/CJTuhJKogYoDEAE=.png",
+   "key": "icons/apps/kwik-cart-slide-cart-drawer.1b1aacce.webp"
+  },
+  "kwikcheckout": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/509c0e3ecf92e8d6173a577e5309561d/icon/CNTevJWHkoYDEAE=.png",
+   "key": "icons/apps/kwikcheckout.dc423d3b.webp"
+  },
+  "lai-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c2fde25432c44d6aeefb31ba06bbb974/icon/CMry4dSL_YIDEAE=.png",
+   "key": "icons/apps/lai-reviews.7091b5d8.webp"
+  },
+  "langify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/344ae6f99e62cc3fad362ee029642583/icon/CLyYu7mwvvQCEAE=.jpeg",
+   "key": "icons/apps/langify.d391b9f0.webp"
+  },
+  "langshop": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/36881f6a4f1818cb5cffe1d6cf5cb302/icon/COXvkqeKlZQDEAE=.png",
+   "key": "icons/apps/langshop.9a992eab.webp"
+  },
+  "limespot": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/585dcceb7085c6659ef2df8adb5f1e79/icon/CM7EyK-XpYkDEAE=.png",
+   "key": "icons/apps/limespot.6a48261e.webp"
+  },
+  "linked-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d0901db9b016e80256d281cf38b42432/icon/CPPpnIb_ifwCEAE=.png",
+   "key": "icons/apps/linked-options.dce3019a.webp"
+  },
+  "lipscore-real-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d7d7e6501dd8a7a2060a3bbc66a81a06/icon/CKHfuMu0_fkCEAE=.png",
+   "key": "icons/apps/lipscore-real-reviews.3296a209.webp"
+  },
+  "live-chat-and-cloud-api": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c83a995961f8c66fbfbd42f1f908c942/icon/CN-G6sGYm5ADEAE=.png",
+   "key": "icons/apps/live-chat-and-cloud-api.72afb4a9.webp"
+  },
+  "livechat": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9f13f3e31111ad18b77be06bd33c1879/icon/CMqJj9en6vgCEAE=.png",
+   "key": "icons/apps/livechat.6f604473.webp"
+  },
+  "localiser": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/3c87b0179bad81cd5b2a0b6f0c595df1/icon/CMPck5e7iZcDEAE=.png",
+   "key": "icons/apps/localiser.3178e43f.webp"
+  },
+  "login-to-access-pages": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/71e0457d8c941b7fc38a02cdc972a022/icon/CIGrr-ahgpEDEAE=.png",
+   "key": "icons/apps/login-to-access-pages.c4e11020.webp"
+  },
+  "loloyal": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/90c0cbb40b9748b853b2851473234440/icon/CPK2_PWa6JUDEAE=.png",
+   "key": "icons/apps/loloyal.8fe7dc61.webp"
+  },
+  "lookfy-lookbook-gallery-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/cc0700095e2a9a27bb802eada906338e/icon/CIT4vb-rtIEDEAE=.png",
+   "key": "icons/apps/lookfy-lookbook-gallery-1.d03bd55d.webp"
+  },
+  "loop-returns": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fb481cc20acd47c8418668393630e4b8/icon/CPTi4piCp5MDEAE=.png",
+   "key": "icons/apps/loop-returns.41e386c6.webp"
+  },
+  "loop-subscriptions": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/afedc08b31165df4c41d3d60cc6051dc/icon/CNOn0PuJnJIDEAE=.jpeg",
+   "key": "icons/apps/loop-subscriptions.db161135.webp"
+  },
+  "loot": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ba6fe51859fee0d46d6488a7a41fbf9a/icon/CMfZm73j6ZUDEAE=.png",
+   "key": "icons/apps/loot.670e2907.webp"
+  },
+  "loox": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/252ae7c55fa0e8a35df7f6ff3c8c1596/icon/CPLp1Kb0lu8CEAE=.jpg",
+   "key": "icons/apps/loox.b43d9155.webp"
+  },
+  "loyaltylion": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/98fe3014a0ddc555aa03aef1fc14d5b2/icon/CNf3ypb775IDEAE=.png",
+   "key": "icons/apps/loyaltylion.fd68a734.webp"
+  },
+  "madgic-order-limits": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2b1c1dd5dbc823c8539a27f7396b1fa4/icon/CPfVz6iFjZIDEAE=.jpeg",
+   "key": "icons/apps/madgic-order-limits.6525785f.webp"
+  },
+  "mailchimp": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5a5385cf8a756c3fc55c4fb80706f9f6/icon/CLa98_yf6PMCEAE=.png",
+   "key": "icons/apps/mailchimp.6b824878.webp"
+  },
+  "mailmunch": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/af2044d8130f0eb2d6e0609617046463/icon/CNSp7r-GuvwCEAE=.png",
+   "key": "icons/apps/mailmunch.6904f3b4.webp"
+  },
+  "marqo-search-and-recs": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/75ad5af1e0621f61e0fb5c6fd560652e/icon/CNW7odnXmJQDEAE=.png",
+   "key": "icons/apps/marqo-search-and-recs.f24541fe.webp"
+  },
+  "massy-b2b-wholesale-pricing-discount": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fe6551af2451bbfe51a4079e674aadcd/icon/CKqvjLzNz4sDEAE=.png",
+   "key": "icons/apps/massy-b2b-wholesale-pricing-discount.ee069232.webp"
+  },
+  "meety-appointment-booking": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b951a800586a400c245b5d4d91ea5189/icon/CNj71Le9pZEDEAE=.png",
+   "key": "icons/apps/meety-appointment-booking.8661c4a1.webp"
+  },
+  "meteor-mega-menus": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/114dc2b1d7b44c05ad182e1f8381130b/icon/CJPi7L352ZMDEAE=.png",
+   "key": "icons/apps/meteor-mega-menus.8fad5a0f.webp"
+  },
+  "mf-feed-builder-remix": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4a99f3c34130979406eefc8e288332fc/icon/CJOpxffP0Y8DEAE=.jpeg",
+   "key": "icons/apps/mf-feed-builder-remix.1df0c156.webp"
+  },
+  "microsoft-clarity": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f0038feda3e0f0db8cdb4ce3f29bf187/icon/COGUtNbTvo4DEAE=.png",
+   "key": "icons/apps/microsoft-clarity.82a2a215.webp"
+  },
+  "mida-fraud-ip-blocker": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1188f0cb74707478f04a7ab4f9563933/icon/CMqW-bav1ZEDEAE=.png",
+   "key": "icons/apps/mida-fraud-ip-blocker.258cf9e3.webp"
+  },
+  "mida-session-recording-replay": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8343da90e26315eae7a92d0980eedacc/icon/CIWv2pSs1ZEDEAE=.png",
+   "key": "icons/apps/mida-session-recording-replay.258cf9e3.webp"
+  },
+  "minifier": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/39dd4b1e8eecca471f47c9f21c356114/icon/CLaF27CSqZQDEAE=.png",
+   "key": "icons/apps/minifier.49ad5345.webp"
+  },
+  "mlvautocurrencyswitcher": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9ff83e6c203eb21c15fa9ec651290378/icon/CNGAu8f0lu8CEAE=.png",
+   "key": "icons/apps/mlvautocurrencyswitcher.910478d5.webp"
+  },
+  "monk-free-gift-with-purchase": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/31a67b74175808b89b146d03a5cd8580/icon/CJqht4TCl4kDEAE=.png",
+   "key": "icons/apps/monk-free-gift-with-purchase.fcf251a1.webp"
+  },
+  "moonbundle": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f4d9216993442170f692b51c48f18496/icon/CNSGxfvb0JADEAE=.png",
+   "key": "icons/apps/moonbundle.de2523ee.webp"
+  },
+  "moose-whatsapp-chat-button": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/da09758e66a76f17fba6a457e1131b42/icon/CPCAju-58IwDEAE=.jpeg",
+   "key": "icons/apps/moose-whatsapp-chat-button.a6719921.webp"
+  },
+  "moosedesk": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d2676c33fa9d7ec9e2284b03d6a4d0bb/icon/CMiP-dXQ9v8CEAE=.png",
+   "key": "icons/apps/moosedesk.9232fa6a.webp"
+  },
+  "mouseflow": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9aab2c8d9be0639868dc3142c4e0b8fa/icon/CM3iruCArfkCEAE=.png",
+   "key": "icons/apps/mouseflow.af4d7afb.webp"
+  },
+  "mps-sales-notification": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4c58eca6a3e208fe6f5d1b495d26295b/icon/CObC-Kf0lu8CEAE=.png",
+   "key": "icons/apps/mps-sales-notification.53d6c883.webp"
+  },
+  "ms-order-printers": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/36ff48b68a3b15bbc9370ec386f379e8/icon/CNWM05iEqZMDEAE=.png",
+   "key": "icons/apps/ms-order-printers.4d6fac94.webp"
+  },
+  "multilingual-shop-by-gtranslate": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fd363fa0e1e3704b97e546e5a07e4210/icon/CK_o17z0lu8CEAE=.png",
+   "key": "icons/apps/multilingual-shop-by-gtranslate.94820335.webp"
+  },
+  "multilocation": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a9b4f9cb3a3309e64c632ca085e19ce7/icon/CJ_k1vOStooDEAE=.jpeg",
+   "key": "icons/apps/multilocation.f5cfb2fc.webp"
+  },
+  "multivariants": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8bd94c23dd747d81fc3d843cfbd14e01/icon/CInQwsL0lu8CEAE=.png",
+   "key": "icons/apps/multivariants.c1a1c62d.webp"
+  },
+  "mulwi-shopping-feeds": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c9bd5ab35ded02cc1cd728ca2cf81581/icon/CLSt77Wm3oEDEAE=.png",
+   "key": "icons/apps/mulwi-shopping-feeds.545193a9.webp"
+  },
+  "mycustomizer-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1278d9891c0d6a53ce32403ed963ba94/icon/CK6JxcbP9ZMDEAE=.png",
+   "key": "icons/apps/mycustomizer-1.3156cee8.webp"
+  },
+  "navidium-shipping-protection": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ceb3cf4a79ead6d9b1b117d1b80533e1/icon/CNjSo-DfwJUDEAE=.png",
+   "key": "icons/apps/navidium-shipping-protection.b00518ed.webp"
+  },
+  "nofraud": {
+   "url": "https://wyllo.ai/wp-content/uploads/2026/02/wyllo-300x300.png",
+   "key": "icons/apps/nofraud.com.56be5e76.webp"
+  },
+  "nosto-personalization-for-shopify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7dcd5d67bc1a80f90a95094296d29d71/icon/CIDO29HXloUDEAE=.png",
+   "key": "icons/apps/nosto-personalization-for-shopify.4a723afd.webp"
+  },
+  "notify-me": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/33e3f30d7a80786e5e8559995280e8d9/icon/CMGO2pmTiZEDEAE=.png",
+   "key": "icons/apps/notify-me.97c9d71e.webp"
+  },
+  "nudgify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f867899dd526322b1165183064f9f5a5/icon/CJ7Pm7P0lu8CEAE=.png",
+   "key": "icons/apps/nudgify.61cef4f5.webp"
+  },
+  "octane-ai-quiz-personalization": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/660d02b21dc203afa3147b8a84d27cf3/icon/CPi6_-Sg3pADEAE=.png",
+   "key": "icons/apps/octane-ai-quiz-personalization.520453a1.webp"
+  },
+  "okendo-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fe55626671bd5da73785c606c2b0752f/icon/CNKRrIWatfoCEAE=.png",
+   "key": "icons/apps/okendo-reviews.a1524c53.webp"
+  },
+  "omnise": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/3db283686bdf064c04e98e5cf61875ee/icon/CIGxi6nhspUDEAE=.png",
+   "key": "icons/apps/omnise.3b197ec6.webp"
+  },
+  "omnisend": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9b0c952ebdfd9d278f559665ecf48f5c/icon/CI_zwN7rmpYDEAE=.png",
+   "key": "icons/apps/omnisend.988eeb7d.webp"
+  },
+  "one-click-popup-by-wcs": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a10ce9eed6b44f3f59aa2c2d9ce255e3/icon/CIPI-OXI0v4CEAE=.png",
+   "key": "icons/apps/one-click-popup-by-wcs.efb7c67d.webp"
+  },
+  "opinew": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2652696f8cd7357ce591f2b6217cd918/icon/CIS2jICqov8CEAE=.png",
+   "key": "icons/apps/opinew.b64968de.webp"
+  },
+  "optimonk": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e536008af724e81915b7952135759406/icon/CK_lpf6G3foCEAE=.png",
+   "key": "icons/apps/optimonk.4108a232.webp"
+  },
+  "opus-cart-drawer-cart-upsell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/746bae31e0af131572c1e523d0144978/icon/CNeSlfyi2ZQDEAE=.png",
+   "key": "icons/apps/opus-cart-drawer-cart-upsell.fbb7de5c.webp"
+  },
+  "orbe": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/300c7396da3de51b6c2a5df448979f2a/icon/CN3Jo8iivpcDEAE=.png",
+   "key": "icons/apps/orbe.e8ea925d.webp"
+  },
+  "order-delivery-date-time": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ffb8ff71052b49a683519d83cc498da0/icon/COKo_KnXuIADEAE=.png",
+   "key": "icons/apps/order-delivery-date-time.404b9f0f.webp"
+  },
+  "order-limits-minmaxify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a04c143bd308483d7a0f055ee1be9d64/icon/CLjmhfDv2vACEAE=.png",
+   "key": "icons/apps/order-limits-minmaxify.534cee3c.webp"
+  },
+  "ordergroove": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c80efc596de4e965acb3773cd1ac118c/icon/CKiV16-NhvkCEAE=.png",
+   "key": "icons/apps/ordergroove.c95b2268.webp"
+  },
+  "orderify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d7c794978cbd8a2db20ab294c0fea0a3/icon/CMWNkbP0lu8CEAE=.png",
+   "key": "icons/apps/orderify.5f566227.webp"
+  },
+  "orderlogic": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d629c9d5f66d3aa5cad24c581b1a35c3/icon/CNzj-sj0lu8CEAE=.png",
+   "key": "icons/apps/orderlogic.310bae28.webp"
+  },
+  "osano-cmp": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0d5d2553bdd3e99d0cd2f24d718c73dc/icon/CIXOnKXaqYcDEAE=.png",
+   "key": "icons/apps/osano-cmp.21865c8c.webp"
+  },
+  "ot-theme-sections-store-page-builder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d1fbe4acf738bfaa4fa03ef985d8477e/icon/CM_PravDr4YDEAE=.png",
+   "key": "icons/apps/ot-theme-sections-store-page-builder.87927ed4.webp"
+  },
+  "oxi-social-login": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/98d4ebe63b6eceffd7cf5445d5c80ff5/icon/COSkwLr6_JUDEAE=.png",
+   "key": "icons/apps/oxi-social-login.310aa752.webp"
+  },
+  "page-speed-optimizer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/43fd9d738ee38bec9addc99c01b9fd9d/icon/CLP4toSuw_4CEAE=.png",
+   "key": "icons/apps/page-speed-optimizer.ab7cbe08.webp"
+  },
+  "pagefly": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f85ee597169457da8ee70b6652cae768/icon/CKmsycCOx_YCEAE=.png",
+   "key": "icons/apps/pagefly.132c4c12.webp"
+  },
+  "pareto-limit-purchase": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8a2e7afa34251cea5eca3a7535b17bb9/icon/CK7lvO-304kDEAE=.png",
+   "key": "icons/apps/pareto-limit-purchase.7bd43c5f.webp"
+  },
+  "parkour-pixel": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/771000a57e2485563238bb8edbb21e1b/icon/CPSRzJDm-ooDEAE=.png",
+   "key": "icons/apps/parkour-pixel.43e32181.webp"
+  },
+  "paywhirl": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/30abf5874699cb1609bd85dafb7f6aca/icon/CPKloLP0lu8CEAE=.png",
+   "key": "icons/apps/paywhirl.0fc24367.webp"
+  },
+  "pieeye": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e2b2ca4a93ba89ebf0d56de2126ba071/icon/CPqs6eb125YDEAE=.png",
+   "key": "icons/apps/pieeye.aecec7d3.webp"
+  },
+  "pify-order-purchase-limit": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/374a67092cd5d895ad2fbf3ae595c5ea/icon/CMO6uLa-sY0DEAE=.png",
+   "key": "icons/apps/pify-order-purchase-limit.dea5de1a.webp"
+  },
+  "pify-size-charts-size-guide": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6d36c5751112eebf337aa92bf58e5cd7/icon/CO7By4Pjs44DEAE=.png",
+   "key": "icons/apps/pify-size-charts-size-guide.def79b36.webp"
+  },
+  "pixeltok-pixel-installer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f39d6de1e89c9273af0d509624fd1c82/icon/CM-xruWZ5IoDEAE=.png",
+   "key": "icons/apps/pixeltok-pixel-installer.c3c4c48a.webp"
+  },
+  "polar-analytics": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/168e780c1bd063b97d507417cc056c89/icon/CKeDyNC1m4EDEAE=.png",
+   "key": "icons/apps/polar-analytics.385dc7d9.webp"
+  },
+  "pop-convert": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e82bdaff7229567e7e63797dd3d20776/icon/CIfhsIzX2PsCEAE=.png",
+   "key": "icons/apps/pop-convert.2dbfd367.webp"
+  },
+  "popups-promos-banners-pixelpop": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ea2f3f77c72047d67dc1f08378c3cd5e/icon/CJWewoOprPwCEAE=.png",
+   "key": "icons/apps/popups-promos-banners-pixelpop.3208b8d2.webp"
+  },
+  "postscript": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/54fb9eb4e59e94fa0e3b1b173de78ca4/icon/CPDanN66poUDEAE=.jpeg",
+   "key": "icons/apps/postscript.0fe5e641.webp"
+  },
+  "powr-popup": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/91ab22ba9470462aea9405a5c70eb423/icon/CP2tisaV85YDEAE=.png",
+   "key": "icons/apps/powr-popup.6f29431d.webp"
+  },
+  "product-ads-by-criteo": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6cca7cd848166f80531b72d1aaf646e0/icon/CLGSyJqp6_cCEAE=.png",
+   "key": "icons/apps/product-ads-by-criteo.f9d4f8ee.webp"
+  },
+  "product-bundles-discounts-by-revy": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f401504ede69023ced1a51c93ad57152/icon/CPuO_JmopPsCEAE=.png",
+   "key": "icons/apps/product-bundles-discounts-by-revy.fed5f9ac.webp"
+  },
+  "product-customizer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8e319abfd8696f17d53ffb83c2e9dead/icon/CI_IhL70lu8CEAE=.png",
+   "key": "icons/apps/product-customizer.b5429116.webp"
+  },
+  "product-filter-and-search": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f44b43e81ef89598c0de05c8ea6dcf80/icon/CIe83cL0lu8CEAE=.png",
+   "key": "icons/apps/product-filter-and-search.3aedba29.webp"
+  },
+  "product-filter-search": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d4172f8181a20b56ade67cc448fac594/icon/CMKjgqn00YwDEAE=.png",
+   "key": "icons/apps/product-filter-search.37d50d92.webp"
+  },
+  "product-labels": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/13484bd181d58bce4fa70e4baa708e2f/icon/CKn2zKW7zZcDEAE=.png",
+   "key": "icons/apps/product-labels.72e53dd0.webp"
+  },
+  "product-labels-badges": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d3bb3faab3c4978acd795795f9434cdb/icon/CL_YrJ6jjZIDEAE=.png",
+   "key": "icons/apps/product-labels-badges.1ca36ff6.webp"
+  },
+  "product-labels-by-bss": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8ff87511bcdffd3dfc280f3600a78695/icon/CPKEgKfNxpEDEAE=.png",
+   "key": "icons/apps/product-labels-by-bss.09ef910f.webp"
+  },
+  "product-options-4": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f08acbb1474e3d8959abb778fb2dd664/icon/CNDnsqfFiIoDEAE=.png",
+   "key": "icons/apps/product-options-4.50613df7.webp"
+  },
+  "product-options-addons": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/19d3c4f2ddc1df5f1bfa5e279872245b/icon/CKHEoK_W05EDEAE=.png",
+   "key": "icons/apps/product-options-addons.12ed370e.webp"
+  },
+  "product-options-by-bss": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5e7100d6dd8a25eae7b75d50f0d897df/icon/COWZ0fD0zosDEAE=.png",
+   "key": "icons/apps/product-options-by-bss.8b8574d7.webp"
+  },
+  "product-options-by-hulkapps-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4a60d8b5eaf751b3d02d0dc8c28a23b4/icon/COfb5p7_lP4CEAE=.png",
+   "key": "icons/apps/product-options-by-hulkapps-1.dbd3f531.webp"
+  },
+  "product-options-pro": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/75a3a42f9b230bf56ca785dc5677afa8/icon/CNmi6eePj4UDEAE=.png",
+   "key": "icons/apps/product-options-pro.e38405bf.webp"
+  },
+  "product-recommendation-quiz-revenuehunt": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/66c8f4d8af29534c6f3d5888d7d93e9e/icon/CO3IwMP0lu8CEAE=.png",
+   "key": "icons/apps/product-recommendation-quiz-revenuehunt.8d55659d.webp"
+  },
+  "product-upsell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ad48625f75f509b7fec5de894a62d003/icon/CMm2js3guPsCEAE=.jpeg",
+   "key": "icons/apps/product-upsell.fd5d1c7d.webp"
+  },
+  "product-warnings": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/73f409bed64ad92de15f0b514e54ee38/icon/CJOWxaz0lu8CEAE=.png",
+   "key": "icons/apps/product-warnings.d5304624.webp"
+  },
+  "progress-bar-shipping-gift": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c70c5d439f79c3970f4c81c6f086d256/icon/CPnqm9mUjpcDEAE=.png",
+   "key": "icons/apps/progress-bar-shipping-gift.c9eb7f25.webp"
+  },
+  "progressify-me-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0f45351b7dabdd2fec80fb03701e7f4f/icon/CLOut93uzZcDEAE=.png",
+   "key": "icons/apps/progressify-me-1.d43042fc.webp"
+  },
+  "progus-store-locator": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8822af58a85bc5d26e3c77ebd8fccf59/icon/CKr82YTty_wCEAE=.png",
+   "key": "icons/apps/progus-store-locator.935e7225.webp"
+  },
+  "pumper-quantity-breaks-product-bundles-discounts": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d68f550a51b900b4cb25b46d9098b496/icon/CIumv63twf4CEAE=.png",
+   "key": "icons/apps/pumper-quantity-breaks-product-bundles-discounts.e2b68cd3.webp"
+  },
+  "purchase-limit": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d060d9451224d22e3b5185617595c380/icon/COjPkuqYwIsDEAE=.png",
+   "key": "icons/apps/purchase-limit.4fefa122.webp"
+  },
+  "push-down-out-of-stock-items": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/af97a940fb0eccc2e7fcd1c564841166/icon/COTu4_Tp0ZcDEAE=.png",
+   "key": "icons/apps/push-down-out-of-stock-items.1bf9d828.webp"
+  },
+  "pusher-sections-builder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5a1479e431df4989c4aad0af02604271/icon/CPyokdXGq4UDEAE=.png",
+   "key": "icons/apps/pusher-sections-builder.257c3647.webp"
+  },
+  "pushowl": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/62a4f829cd277d0296259f678226ae19/icon/CMTe68iT-5EDEAE=.png",
+   "key": "icons/apps/pushowl.0620552d.webp"
+  },
+  "qikify-popup-social-proof": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f6bc812d12df383028eaf0bd40a71423/icon/CIzk8ez18fQCEAE=.png",
+   "key": "icons/apps/qikify-popup-social-proof.b4598f42.webp"
+  },
+  "quantity-price-breaks-limit-purchase": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/aeca27f78916a0b6c0916b621906aaf3/icon/CIyWqe704YgDEAE=.png",
+   "key": "icons/apps/quantity-price-breaks-limit-purchase.63b8e89f.webp"
+  },
+  "quinn-shoppable-videos": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ec90483ecc1ac2bc5da2c63a67d0bd85/icon/CNOiktD3kooDEAE=.png",
+   "key": "icons/apps/quinn-shoppable-videos.2ac6d234.webp"
+  },
+  "rakuten-advertising": {
+   "url": "https://rakutenadvertising.com/wp-content/uploads/sites/2/2023/03/cropped-RakRewards-favicon-1.png?w=180",
+   "key": "icons/apps/rakutenadvertising.com.1caec62b.webp"
+  },
+  "rapid-insite": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/414b1ea602409212c339e1dec27fd0a1/icon/CI3cqIzirIgDEAE=.png",
+   "key": "icons/apps/rapid-insite.40252d8d.webp"
+  },
+  "reamaze": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7bd5351210db75d8e573f1cc454d2236/icon/CI-65rz0lu8CEAE=.png",
+   "key": "icons/apps/reamaze.a898b11f.webp"
+  },
+  "rebuy": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/68fb141894d97ac3b012640f6ff95529/icon/CJ_q-6z-_okDEAE=.png",
+   "key": "icons/apps/rebuy.28845c1e.webp"
+  },
+  "recart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/00d1725603ef779b9b9c74fffd60a7e5/icon/CNmP-8L0lu8CEAE=.png",
+   "key": "icons/apps/recart.41ffb98d.webp"
+  },
+  "recent-sales-popup-notifications-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b40b566cff7cff84be1b458d929b1642/icon/CKyEjcnFzvwCEAE=.png",
+   "key": "icons/apps/recent-sales-popup-notifications-1.916b0bd2.webp"
+  },
+  "recharge": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0009de8c024a6126315f5dcd4250fd61/icon/CK6otpbp4PwCEAE=.jpeg",
+   "key": "icons/apps/recharge.09aa0d2b.webp"
+  },
+  "reconvert-upsell-cross-sell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/66d9956edf807b697e7f539e5e9bbaf3/icon/CPzHv72IuZQDEAE=.png",
+   "key": "icons/apps/reconvert-upsell-cross-sell.2ee7c0ba.webp"
+  },
+  "recurly-commerce": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/262c6fc78a431fc7f15e89bcd4e5959d/icon/CIGAuImzkY0DEAE=.png",
+   "key": "icons/apps/recurly-commerce.0c59758a.webp"
+  },
+  "recurpay-subscriptions": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9bca29f0edc5338403c84a5ba3c90efe/icon/CMnN0vfWx5MDEAE=.png",
+   "key": "icons/apps/recurpay-subscriptions.44f58da6.webp"
+  },
+  "redirect-hero": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ea3d0531e53d925d90c9dc5fc631800d/icon/CN6r0OCqmoYDEAE=.png",
+   "key": "icons/apps/redirect-hero.bcddacf2.webp"
+  },
+  "redo": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0b8778a11e8f31ccf0ccc703a398f917/icon/COnBipby-5cDEAE=.png",
+   "key": "icons/apps/redo.28bff001.webp"
+  },
+  "reelup": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e33c6f1f10211017e6869b1f0eb4ded8/icon/CKuViIfbvo8DEAE=.jpeg",
+   "key": "icons/apps/reelup.e9177f00.webp"
+  },
+  "referralcandy": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/79887e6752b8e806cc8490d1878d7807/icon/CLakyeb9p5YDEAE=.png",
+   "key": "icons/apps/referralcandy.2063db4b.webp"
+  },
+  "refersion": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b021799cb411d24623b60612a6228f1b/icon/CNifi_rFxZIDEAE=.png",
+   "key": "icons/apps/refersion.f1c336ed.webp"
+  },
+  "regios-automatic-discounts": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5497bb252877ece77f138ebee31429bd/icon/CIS-5OHCv4MDEAE=.png",
+   "key": "icons/apps/regios-automatic-discounts.a917c74d.webp"
+  },
+  "releasit-bundle": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5f49b32298b89d994b63a574cbd02491/icon/CM_A5ODPzpMDEAE=.png",
+   "key": "icons/apps/releasit-bundle.74f4c163.webp"
+  },
+  "reputon-amazon-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f8120c111282415b3e2c708b8c141e0b/icon/CLK0x-zO1pIDEAE=.png",
+   "key": "icons/apps/reputon-amazon-reviews.5bd9319f.webp"
+  },
+  "reputon-store-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/62a1c5740288be138ec5af5753eb8392/icon/CJ7T19_0lu8CEAE=.png",
+   "key": "icons/apps/reputon-store-reviews.7ea1fb08.webp"
+  },
+  "request-for-quote": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f9d9fb303f0c27b71bb5b43b0ec0fb3c/icon/CJT4maqlgIYDEAE=.jpeg",
+   "key": "icons/apps/request-for-quote.3802c951.webp"
+  },
+  "restock-rocket-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ff903058f2f23a8dd55e4708964cbd85/icon/CJfX9OmsqJYDEAE=.png",
+   "key": "icons/apps/restock-rocket-1.2ef0eeeb.webp"
+  },
+  "retail-cloud-connect": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fae02cdcc4134d8aafd8d25cfb9e75ca/icon/CJeG366CsoIDEAE=.png",
+   "key": "icons/apps/retail-cloud-connect.f7ed4168.webp"
+  },
+  "retention-com": {
+   "url": "https://www.retention.com/favicon.ico",
+   "key": "icons/apps/retention.com.0d1816f4.webp"
+  },
+  "return-assurance": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0195578f6b9dbe0abd78b027600dd448/icon/CMicrtmF5f4CEAE=.png",
+   "key": "icons/apps/return-assurance.0ad18522.webp"
+  },
+  "returngo": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9b4ed6054e48dbff51077265060d311f/icon/CKKshq-6s_ACEAE=.png",
+   "key": "icons/apps/returngo.35b5e20f.webp"
+  },
+  "returns-center-by-aftership": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0b88e190195c8c444bc7d5b7a2e3c2c0/icon/CK7E7K_Fv_4CEAE=.png",
+   "key": "icons/apps/returns-center-by-aftership.ee64e26e.webp"
+  },
+  "reviewsio": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/44cb5bd17e364d5ee92d03477c740756/icon/CKf_rrmo9IcDEAE=.png?height=600&width=600",
+   "key": "icons/apps/reviewsio.1c6e0e99.webp"
+  },
+  "revlifter-app": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b040e909fe076e9a732cb3fe430f6d7f/icon/CKzrsvrKg5MDEAE=.png",
+   "key": "icons/apps/revlifter-app.de20a44c.webp"
+  },
+  "revolution-slider": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/cf716ca0d3f77f6b3abc075d0e360836/icon/CKvh9LTK0P0CEAE=.png",
+   "key": "icons/apps/revolution-slider.2483d8ee.webp"
+  },
+  "rez-back-in-stock-notify-me": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/040637739bdc638f2f0807b7fe9b7d70/icon/CPDmtIiL7ZYDEAE=.png",
+   "key": "icons/apps/rez-back-in-stock-notify-me.25aa2a90.webp"
+  },
+  "riskified": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1102c97bdfba3e856439cc14ed03db87/icon/CNSL6LL92o8DEAE=.png",
+   "key": "icons/apps/riskified.2098305f.webp"
+  },
+  "rivo-loyalty": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b96869f381aa0371ff39dd2c7aa3cb52/icon/CMXC_YXqmoYDEAE=.png",
+   "key": "icons/apps/rivo-loyalty.6a3008dd.webp"
+  },
+  "rivyo-product-review": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8ffc62c9384b2409ac15e49c6da0f804/icon/CNbgxs-gjI4DEAE=.png",
+   "key": "icons/apps/rivyo-product-review.0d2b4b04.webp"
+  },
+  "rockit-sales-discounts": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/14915f7ad52cdf81280ab4ecd93351ae/icon/COnVt5bjooIDEAE=.png",
+   "key": "icons/apps/rockit-sales-discounts.b23d11c5.webp"
+  },
+  "route": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7115601f61e3feae998d828bd6f6ecf3/icon/CNal4f7ZwZMDEAE=.png",
+   "key": "icons/apps/route.60ed41be.webp"
+  },
+  "ryzo-search": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/13c3194ffbb0fa55c6500b556c4b5e1b/icon/CNe4mK2U0I4DEAE=.png",
+   "key": "icons/apps/ryzo-search.0fc94488.webp"
+  },
+  "s-loyalty": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c600b8f4ff4af75fc6b1b60c0080b336/icon/CMXkhL30lu8CEAE=.png",
+   "key": "icons/apps/s-loyalty.c2ae1513.webp"
+  },
+  "sale-discount-manager": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/dd9d48ee95b78ac44969c0aee7ca1085/icon/COTb1NikkZgDEAE=.png",
+   "key": "icons/apps/sale-discount-manager.e97dede3.webp"
+  },
+  "sam-shipping-protection": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7fd143b41c803e6471c1d499493363c0/icon/CPPOjLCzm44DEAE=.png",
+   "key": "icons/apps/sam-shipping-protection.488f160d.webp"
+  },
+  "sc-product-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9a0bf1159f79c6ab0660ec422f350445/icon/CP2Uwo_GuYIDEAE=.png",
+   "key": "icons/apps/sc-product-options.77ed27b2.webp"
+  },
+  "schema-plus": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e1548ddee303ba520aa7e5ad46d5083a/icon/CKLYz9KH45MDEAE=.png",
+   "key": "icons/apps/schema-plus.fe361966.webp"
+  },
+  "sea-survey": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bf3e2226fa53b6c8a983d1d689961067/icon/CIejiYbi_pMDEAE=.png",
+   "key": "icons/apps/sea-survey.9cb1e843.webp"
+  },
+  "sealapps-product-review": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/88d8c68b44115c8ca0ed9eba8c945b2c/icon/CIKMvsf97ZUDEAE=.png",
+   "key": "icons/apps/sealapps-product-review.d14f0e64.webp"
+  },
+  "sealsubscriptions": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/2238eba39a98da1ae85cfb8a609b4cbe/icon/CPiyy56YvZMDEAE=.png",
+   "key": "icons/apps/sealsubscriptions.6e53d0a1.webp"
+  },
+  "section-factory": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9379d0b061b8a54c2b057c1fa14544c8/icon/COmvw8en_vYCEAE=.png",
+   "key": "icons/apps/section-factory.b62fe0e4.webp"
+  },
+  "sectionhub-theme-sections": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a287eeb3e56923ed6bd7b9c9fa1b2740/icon/CPOXj7D9y4kDEAE=.png",
+   "key": "icons/apps/sectionhub-theme-sections.cafcf092.webp"
+  },
+  "segment-com-by-littledata": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/99e3c9bfcb034026869d460db3c99633/icon/CNyevcTSpY0DEAE=.jpeg",
+   "key": "icons/apps/segment-com-by-littledata.02bcdc3e.webp"
+  },
+  "selectors": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/babf4e3edeb9a5c9d84b6ae5ae3b1e2e/icon/CPjL9f_EjIMDEAE=.png",
+   "key": "icons/apps/selectors.847578ec.webp"
+  },
+  "selly": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c467075f4670f6d3f86982713f5af1ac/icon/CNyv9cf0lu8CEAE=.jpg",
+   "key": "icons/apps/selly.f30d25db.webp"
+  },
+  "seo-master": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/89f080b72a27e71e4d48c9ad2493e78d/icon/CJe604Pr8ZUDEAE=.png",
+   "key": "icons/apps/seo-master.cd5d7c82.webp"
+  },
+  "seo-meta-manager": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e25cad72cc45fa9d0365e1c4b216428a/icon/CLW8jsG_1P4CEAE=.png",
+   "key": "icons/apps/seo-meta-manager.c2c7940f.webp"
+  },
+  "seolab": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/acb1fbe613ef6d2662d344958db973f5/icon/CKXo2ciop5cDEAE=.png",
+   "key": "icons/apps/seolab.7cf8eeb7.webp"
+  },
+  "server-gtm": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6ad17d7651df903803b7a1c47669abb5/icon/CLOriKCLyv0CEAE=.png",
+   "key": "icons/apps/server-gtm.8ab87ed8.webp"
+  },
+  "sezzle-widget": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/79c8c55261eca72ff7f439df15f626ee/icon/COSzlrL5yvcCEAE=.png",
+   "key": "icons/apps/sezzle-widget.4aa3dd02.webp"
+  },
+  "shogun": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0ca2c1526ec07b9f52021bd42651b1fd/icon/CIPT6ti6u5MDEAE=.png",
+   "key": "icons/apps/shogun.777617be.webp"
+  },
+  "shop-guard-app": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/caeb9fb3b50132cea5964f1d665db856/icon/CIG1so77vY0DEAE=.png",
+   "key": "icons/apps/shop-guard-app.bed3f146.webp"
+  },
+  "shopify-forms": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4f9f6772986151b160e59ae5d34ba8dd/icon/CObsj-qpiYADEAE=.png",
+   "key": "icons/apps/shopify-forms.f69ac425.webp"
+  },
+  "shopify-mobile-apps": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a228b831b4225be070d5a592528374db/icon/CKP--cqDk_YCEAE=.png",
+   "key": "icons/apps/shopify-mobile-apps.dde64087.webp"
+  },
+  "shopmy": {
+   "url": "https://shopmy.us/logo192.png",
+   "key": "icons/apps/shopmy.us.abd9a5c4.webp"
+  },
+  "shopvid-shoppable-videos": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/332d76d48f224e8f3c21ecddb1a3783e/icon/CKLbgM-q_pMDEAE=.png",
+   "key": "icons/apps/shopvid-shoppable-videos.0a1f0103.webp"
+  },
+  "simple-affiliate": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e314b0ded401b1ee997a05300f1fc9b5/icon/CJCandC1spYDEAE=.png",
+   "key": "icons/apps/simple-affiliate.47e26838.webp"
+  },
+  "simple-bundles": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4c3cd7ab28afff36325f4f5b9d765077/icon/CKODj7uQtoYDEAE=.png",
+   "key": "icons/apps/simple-bundles.3b73ea75.webp"
+  },
+  "sitemap-noindex-seo-tools": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f8de556eb1ffcec474cc7a34a71f1158/icon/CI_x45X73JcDEAE=.png",
+   "key": "icons/apps/sitemap-noindex-seo-tools.26deaf28.webp"
+  },
+  "size-chart-guide-by-jotly": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b2b90f9883f326c39fffbf203ecedd2a/icon/CLLw0YHTrpUDEAE=.png",
+   "key": "icons/apps/size-chart-guide-by-jotly.7032abeb.webp"
+  },
+  "size-charts-by-clean-canvas": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f5b52460f12678a7728b7740bc7ddfd9/icon/CIrK0tn0lu8CEAE=.jpg",
+   "key": "icons/apps/size-charts-by-clean-canvas.27538de5.webp"
+  },
+  "skio": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8dd0dfb789ffd9e447e7eb98210ccde7/icon/CP2F-4-blpQDEAE=.png",
+   "key": "icons/apps/skio.cbb78411.webp"
+  },
+  "sledge": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/98ed0e2e10e0888acfec3d821fe334de/icon/COSY8Oa0_IEDEAE=.png",
+   "key": "icons/apps/sledge.a7534f16.webp"
+  },
+  "slide-cart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a6756a825196236acbd97e15b7ef7f36/icon/CJGP4vDKz5YDEAE=.png",
+   "key": "icons/apps/slide-cart.946a656e.webp"
+  },
+  "smart-automatic-discounts": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e6425e64ddc09fe84f1ca739f44635b5/icon/CInd2endupMDEAE=.jpeg",
+   "key": "icons/apps/smart-automatic-discounts.2afafba2.webp"
+  },
+  "smart-menu": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/04108b4f825e790fb3fddaf54c9d6a3a/icon/CKnJ3uKO8foCEAE=.png",
+   "key": "icons/apps/smart-menu.039c9367.webp"
+  },
+  "smart-preorder-back-in-stock": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0fc11510d5e7c2973f987698ac2088a2/icon/CKvlt9r385cDEAE=.png",
+   "key": "icons/apps/smart-preorder-back-in-stock.ca811566.webp"
+  },
+  "smart-seo": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8f4a21f1020c0448bf74213052d39b70/icon/CMDun-Oqk_cCEAE=.png",
+   "key": "icons/apps/smart-seo.e46234fd.webp"
+  },
+  "smartbot": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/58580df7131281634528bbefe897ef82/icon/CKT4rbeQz5QDEAE=.png",
+   "key": "icons/apps/smartbot.f2b421d2.webp"
+  },
+  "smartsize": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b2da60e8d35cac324d4c12ee7f8c8902/icon/CPi4gZO8z5UDEAE=.png",
+   "key": "icons/apps/smartsize.5cb20407.webp"
+  },
+  "smile-io": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/439617d93d452f065b8cd6122493ccc3/icon/CPHVlb70lu8CEAE=.png",
+   "key": "icons/apps/smile-io.42b2d3c0.webp"
+  },
+  "smind": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/743be843531c2cd62567d51c4e0e6669/icon/COvRn5XdmIMDEAE=.jpeg",
+   "key": "icons/apps/smind.a621df81.webp"
+  },
+  "snap-cart-drawer-cart-upsell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7a1da1688faa4c4ba89f98f69ebb194e/icon/CNGHoqfempYDEAE=.png",
+   "key": "icons/apps/snap-cart-drawer-cart-upsell.94251261.webp"
+  },
+  "social-photos": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0edd2ea7aadb4f297ccd9a8c0988658c/icon/CNTzqb30lu8CEAE=.png",
+   "key": "icons/apps/social-photos.567f7ea8.webp"
+  },
+  "social-snowball": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/072534c7bf6f4db65ce2b5d494ced571/icon/CMvo-sP0lu8CEAE=.png",
+   "key": "icons/apps/social-snowball.f28944ba.webp"
+  },
+  "sparklayer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f30ee981e524cbecf29ceee1f084fe87/icon/CJDYgMue-5ADEAE=.png",
+   "key": "icons/apps/sparklayer.b410cebd.webp"
+  },
+  "special-offers": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8803fe21fb477d80adccd6ef54fdbb51/icon/COTYsumIlv0CEAE=.png",
+   "key": "icons/apps/special-offers.7c7bd550.webp"
+  },
+  "stamped": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/00f756e9e94e8c3cfb14266ae483d0f0/icon/CN_Vw8LTppADEAE=.png",
+   "key": "icons/apps/stamped.47883ccc.webp"
+  },
+  "stayai-subscriptions": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4afca2f22e9701d57f8ff8921bbf9f34/icon/CP7Xr43U5YYDEAE=.jpeg",
+   "key": "icons/apps/stayai-subscriptions.784ed15f.webp"
+  },
+  "sticky-add-to-cart-bar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7f74f91351c757f966b42f4382e29dbb/icon/CNrU4oTC6vsCEAE=.png",
+   "key": "icons/apps/sticky-add-to-cart-bar.958bd6a9.webp"
+  },
+  "sticky-cart-and-sticky-add-to-cart-button": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f82a9141398ad48da65639c1baeff141/icon/CI2yuPHs8ZUDEAE=.png",
+   "key": "icons/apps/sticky-cart-and-sticky-add-to-cart-button.cd5d7c82.webp"
+  },
+  "sticky-cart-by-qikify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bbad554a18a68ef92fb949bb6c3fafb7/icon/CP6Z-9u1_oADEAE=.png",
+   "key": "icons/apps/sticky-cart-by-qikify.2f78f8e1.webp"
+  },
+  "stock-app": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/06508637004c80c9f5f731440fb36242/icon/COWWtYzgjI0DEAE=.png",
+   "key": "icons/apps/stock-app.9ded9b27.webp"
+  },
+  "subi-subscriptions-memberships": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f2eeada6125f0c80de832c2ab3799c0d/icon/CKSvuOmakZUDEAE=.png",
+   "key": "icons/apps/subi-subscriptions-memberships.6810abdd.webp"
+  },
+  "super-trust-badges": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a968d3b20e05afa355636a879a3c9ef1/icon/CJzl3dH7x5MDEAE=.png",
+   "key": "icons/apps/super-trust-badges.e165e2e8.webp"
+  },
+  "swell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f693caaaf4c437600611eb42fc8da5d3/icon/CI_cy9bMiocDEAE=.png",
+   "key": "icons/apps/swell.29654037.webp"
+  },
+  "syncerize": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/285cec5e17aece8c9d4060250c440d19/icon/COvk9JXvk_kCEAE=.png",
+   "key": "icons/apps/syncerize.03159d46.webp"
+  },
+  "tabs-by-station": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/861da965b47ea66d2b05e5e6808006d9/icon/CLzAgM7W7pcDEAE=.png",
+   "key": "icons/apps/tabs-by-station.de8eac59.webp"
+  },
+  "tagtiles-blog-search-filter": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/bd351d184fe37e55b5699d4ab09f6d9f/icon/CNKktbS3rocDEAE=.png",
+   "key": "icons/apps/tagtiles-blog-search-filter.f7b6dfed.webp"
+  },
+  "tapita-ai-seo-blog-builder": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9481aac3954438e83c5d5d57e9d2fd8e/icon/CJDW-qrIuogDEAE=.png",
+   "key": "icons/apps/tapita-ai-seo-blog-builder.34ce636a.webp"
+  },
+  "tawkto": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/377387c5d34625a5a245473a06d09750/icon/CPO60eeEkPwCEAE=.png",
+   "key": "icons/apps/tawkto.96048fad.webp"
+  },
+  "teeinblue": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d047a670d0122d1b57b3421cf7149114/icon/CKr52fuwoJADEAE=.png",
+   "key": "icons/apps/teeinblue.2457597a.webp"
+  },
+  "tepo-product-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/67395c84b1c08186de0d6e68885ac6f1/icon/CNCHoaPviYQDEAE=.png",
+   "key": "icons/apps/tepo-product-options.2939b386.webp"
+  },
+  "textfield": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/70f5c8606b573dc6070f8ad9f4872491/icon/CP75g-CSve8CEAE=.png",
+   "key": "icons/apps/textfield.09e75083.webp"
+  },
+  "tidio-chat": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c9308d01d0e596807cd697bab16009a1/icon/COXAs-O_ioQDEAE=.png",
+   "key": "icons/apps/tidio-chat.fc283846.webp"
+  },
+  "timesact-discount-pre-order": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1f557804be966078c1ca12ca6a0f9006/icon/CLPGr63imJYDEAE=.png",
+   "key": "icons/apps/timesact-discount-pre-order.0c096878.webp"
+  },
+  "tinycookie": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/3edd7c253289f0a3ade7668fdefc4456/icon/CKzAj5iKr4MDEAE=.png",
+   "key": "icons/apps/tinycookie.8681ff8c.webp"
+  },
+  "tipo-appointment-booking": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/318ce1b300f9be5a8b50dac838f13a43/icon/CMX7v4mw-PwCEAE=.png",
+   "key": "icons/apps/tipo-appointment-booking.414647ba.webp"
+  },
+  "tolstoy": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8bd7122773fa7246870cdd8376857423/icon/CMO26ZC3qIMDEAE=.png",
+   "key": "icons/apps/tolstoy.e31f4e71.webp"
+  },
+  "trackbee": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/59573f6fd712c3ae8bb0fb8a559493ed/icon/CKW5gN6tq_0CEAE=.png",
+   "key": "icons/apps/trackbee.6a8c74d1.webp"
+  },
+  "trackify-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/3df01b35b86d0c78f72eb9adf1f476f1/icon/CM7kp5S40oQDEAE=.png",
+   "key": "icons/apps/trackify-1.4bbe09dd.webp"
+  },
+  "transcy-multiple-languages": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ca153fbdb5d5bc9bb3402f61073dbcb2/icon/CLOVkZCGgf0CEAE=.png",
+   "key": "icons/apps/transcy-multiple-languages.712c9a5a.webp"
+  },
+  "translate-my-store": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/12c9b1ae63fd3ed111295d72b162f548/icon/CPb84IGo2YYDEAE=.png",
+   "key": "icons/apps/translate-my-store.b6740901.webp"
+  },
+  "transtore-language-and-currency": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ae0c66bf70ba73592fdf83cdeef87f99/icon/CNP7vuKwlJEDEAE=.png",
+   "key": "icons/apps/transtore-language-and-currency.ddfa258e.webp"
+  },
+  "trueprofit": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/0647f39e6b0a6d67b1f06204b829ec7b/icon/CJyUlLKRvoQDEAE=.png",
+   "key": "icons/apps/trueprofit.0a6c783d.webp"
+  },
+  "truevault-polaris": {
+   "url": "https://cdn.prod.website-files.com/666211c512ed2a3e157e5f25/6aa4394d5b8f45f7ddc45483_TrueVault%20Icon%20(3).png",
+   "key": "icons/apps/truevault.com.ba2e98ed.webp"
+  },
+  "trustify": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8086a640c26b0f1a50682c9334730f58/icon/CNHeop3J-JEDEAE=.png",
+   "key": "icons/apps/trustify.ff1206e1.webp"
+  },
+  "trustshop": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/97bd740ed0597c4d5220e15ae930308d/icon/CKub0pnr1okDEAE=.png",
+   "key": "icons/apps/trustshop.fbb062d6.webp"
+  },
+  "tvalue-wishlist": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6c6d2ae7f22bb92edd54a07694a4b557/icon/CNqlh9ir4pYDEAE=.png",
+   "key": "icons/apps/tvalue-wishlist.abacbdd7.webp"
+  },
+  "unicorn": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ff416c48f1759c47e4038d3046dc3604/icon/CM7Wz4X9lIkDEAE=.png",
+   "key": "icons/apps/unicorn.62fd2845.webp"
+  },
+  "upcart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/8cce16328fae7303f55e346b8a81ec07/icon/CJToupK6yJIDEAE=.png",
+   "key": "icons/apps/upcart.527a7d5a.webp"
+  },
+  "uploadery": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c16d594d80c7653ba7a1d1ee9670000b/icon/CIvRpe-szpYDEAE=.png",
+   "key": "icons/apps/uploadery.3140d40e.webp"
+  },
+  "uppush-order-limit": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/6d65cbb2e0a50141f3911dd4a86ac574/icon/COCeyMGzy48DEAE=.png",
+   "key": "icons/apps/uppush-order-limit.ecdd33b8.webp"
+  },
+  "upsell-cross-sell-kit-1": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/50d1becb99d333549c4316fc695bc00e/icon/CJGWisGV0oADEAE=.png",
+   "key": "icons/apps/upsell-cross-sell-kit-1.3239353b.webp"
+  },
+  "upsell-funnel-engine-upsells": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4ae53327b3afd36c9972e851101392c6/icon/CKyv8MKzmJcDEAE=.png",
+   "key": "icons/apps/upsell-funnel-engine-upsells.323c150e.webp"
+  },
+  "userway-accessibility": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4ffdc3994bdf18c0a9378834e112724d/icon/CMy64rDT7_0CEAE=.png",
+   "key": "icons/apps/userway-accessibility.97e0b9cc.webp"
+  },
+  "variant-image-automator": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4001363d6af25ac80753053c650d1117/icon/CImiqbD08PACEAE=.png",
+   "key": "icons/apps/variant-image-automator.e6789f47.webp"
+  },
+  "variant-image-wizard": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fb525efdc6b69fe8d2da4128c473cd99/icon/CJqziI7b8fACEAE=.png",
+   "key": "icons/apps/variant-image-wizard.4ee1b076.webp"
+  },
+  "variant-king-combined-listings": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c52af6e573940b439d13090d027ab541/icon/COLA-dTB94oDEAE=.png",
+   "key": "icons/apps/variant-king-combined-listings.9e2e42c9.webp"
+  },
+  "variant-option-product-options": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/87de98472933292768e9633a005e80a8/icon/CIy1_Z7N6_sCEAE=.png",
+   "key": "icons/apps/variant-option-product-options.06d12878.webp"
+  },
+  "variant-swatch-king": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/7d3df61e3b10a919377190ffca8b5af8/icon/COi-l-jg9vECEAE=.png",
+   "key": "icons/apps/variant-swatch-king.a8fd7f87.webp"
+  },
+  "variant-title-king-app": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c14cfbe463a9a1d4fbdce42f6e5b9b6c/icon/CLXR8OaBgPoCEAE=.png",
+   "key": "icons/apps/variant-title-king-app.793f8e73.webp"
+  },
+  "veeper-app": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c925213204fc243290ac8ee327edb5dc/icon/CI3QzZ6W__ACEAE=.png",
+   "key": "icons/apps/veeper-app.184c2678.webp"
+  },
+  "vex-auto-add-to-cart-free-gift": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/27a3d99c64c17db0a005e87ea3fb1804/icon/CIScspiDnYkDEAE=.png",
+   "key": "icons/apps/vex-auto-add-to-cart-free-gift.6d6f69c9.webp"
+  },
+  "video-shopping": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/5b82a31db34eea0009b3444e3c2b4f9f/icon/CMr1meWNz5UDEAE=.png",
+   "key": "icons/apps/video-shopping.9b5a8b4b.webp"
+  },
+  "vify-order-printer": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/c162e01b4102134e35abffc3194cb4f8/icon/COWvxo7Fo_QCEAE=.png",
+   "key": "icons/apps/vify-order-printer.4ad1a097.webp"
+  },
+  "visually-io": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/12c2e6b6444619458dc086ada26a8e68/icon/CIPh97vaiZgDEAE=.jpeg",
+   "key": "icons/apps/visually-io.fb5b2d88.webp"
+  },
+  "vitals": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/90600ebf22ca801b5fc543ad9b7553f0/icon/CPGxj-7H6IcDEAE=.png",
+   "key": "icons/apps/vitals.325744d0.webp"
+  },
+  "volume-discount-by-hulkapps": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4e727b116c52124e8c7d108f44618e11/icon/CK3b2KPnlP4CEAE=.png",
+   "key": "icons/apps/volume-discount-by-hulkapps.3d1395be.webp"
+  },
+  "volume-discounts-dealeasy": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/03e2757162e7829527df06c44cf0dfbc/icon/COP94o_zlYADEAE=.png",
+   "key": "icons/apps/volume-discounts-dealeasy.c7c0064d.webp"
+  },
+  "watermelon": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9398581f1b4505d1b7655906421fbffc/icon/CNCX2OPuyI4DEAE=.png",
+   "key": "icons/apps/watermelon.f2825270.webp"
+  },
+  "wati-abandonedcart-recovery": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/51dd2ce975aa853857d4051d2c676f31/icon/CIeIhLbToIUDEAE=.png",
+   "key": "icons/apps/wati-abandonedcart-recovery.ff7b0ec4.webp"
+  },
+  "weglot": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/1100dfd67203a3b26b660c0e006b7c9c/icon/CMvr27n0lu8CEAE=.png",
+   "key": "icons/apps/weglot.913018d4.webp"
+  },
+  "wetracked-io-connect": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4c26fdc06fe25e721bfc4454700202b5/icon/CJW-q8C_kJADEAE=.png",
+   "key": "icons/apps/wetracked-io-connect.90285141.webp"
+  },
+  "whatconverts-marketing-attribution": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/04d14886da49776f0606c2081f3ab031/icon/CIGI45Pap4QDEAE=.jpeg",
+   "key": "icons/apps/whatconverts-marketing-attribution.2af23e0b.webp"
+  },
+  "whatmore-live": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/92e9823511a71a34d577dc3d006abc4d/icon/CIuznZvgu4QDEAE=.png",
+   "key": "icons/apps/whatmore-live.118d4b56.webp"
+  },
+  "whatsapp-chat-button": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/9f753b7cdac01ee81beaeb9b1e52bf09/icon/CKWHrdK8lPsCEAE=.jpeg",
+   "key": "icons/apps/whatsapp-chat-button.8694b4b7.webp"
+  },
+  "whatsapp-chat-button-squadkin": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d74d6a634300d5f8d425a3addcbc6370/icon/CNSlwsfXy5EDEAE=.jpeg",
+   "key": "icons/apps/whatsapp-chat-button-squadkin.74847542.webp"
+  },
+  "wholesale-gorilla": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/326d3092e8c11d3e7b0e1d64c91fa653/icon/COPi36_3mv0CEAE=.png",
+   "key": "icons/apps/wholesale-gorilla.f53d6841.webp"
+  },
+  "widebundle": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/efb576398335c85130f098281637500c/icon/CJ-2wdqzhokDEAE=.png",
+   "key": "icons/apps/widebundle.6393d407.webp"
+  },
+  "winehub-wine-club": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/e444e4746d599a79b5cd053ca9aa3117/icon/CJznlduXvIEDEAE=.jpeg",
+   "key": "icons/apps/winehub-wine-club.6c97189d.webp"
+  },
+  "wise-reviews": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/3f7c11df16244f9b6193006684ea9a19/icon/CK2p3ZOzuvwCEAE=.png",
+   "key": "icons/apps/wise-reviews.f186736f.webp"
+  },
+  "wisepops": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d7bd8b482284d7592c7bfe757e557298/icon/CIzEl47m5ZIDEAE=.png",
+   "key": "icons/apps/wisepops.33533b2f.webp"
+  },
+  "wishlist-by-square": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/17967d7dfd249524bc089d97a9903fd5/icon/CPmbh7SwjJgDEAE=.png",
+   "key": "icons/apps/wishlist-by-square.968eec7e.webp"
+  },
+  "wishlist-engine": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/987a9e2ba434637682021cb1219893e0/icon/CKP_rcWbkPsCEAE=.png",
+   "key": "icons/apps/wishlist-engine.0ec195f4.webp"
+  },
+  "wishlist-expert": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/f7cd2b71964479f769af5f5d76f5fea0/icon/CPj1t4vA0I0DEAE=.png",
+   "key": "icons/apps/wishlist-expert.2ba1bc48.webp"
+  },
+  "wishlist-king": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/4d45c9492efce6b4965d75eb55be0252/icon/CKqw1bCh65cDEAE=.png",
+   "key": "icons/apps/wishlist-king.a39b09ec.webp"
+  },
+  "wishlistplus": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d612f58ce0decfaba38849af3396fb5b/icon/CKKXmdzFx_MCEAE=.jpeg",
+   "key": "icons/apps/wishlistplus.ac3af883.webp"
+  },
+  "wrapped": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/190cfaf59e02bb4c93500c0028a981b5/icon/COrH18GwrvICEAE=.png",
+   "key": "icons/apps/wrapped.2227d214.webp"
+  },
+  "wunderkind": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/b6002ac9675eb4c5e6c98baec7e6adbc/icon/CP7J_4S49IMDEAE=.png",
+   "key": "icons/apps/wunderkind.aa048201.webp"
+  },
+  "xb-announcement-bar": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/ab5eab9e067e2de3be6800a18644a22d/icon/CMGJr6uGtZEDEAE=.png",
+   "key": "icons/apps/xb-announcement-bar.a3328980.webp"
+  },
+  "xb-sticky-add-to-cart": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/edabbed48a01625202cfc55bbcb959eb/icon/CK-ltMnEipEDEAE=.png",
+   "key": "icons/apps/xb-sticky-add-to-cart.a3328980.webp"
+  },
+  "xflow": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/fb635ebff80f1fbfcf699cf0ac32993f/icon/CJOitojZk5EDEAE=.png",
+   "key": "icons/apps/xflow.650e9833.webp"
+  },
+  "yotpo": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/659062da3dcade1068da9e28c3d120c5/icon/CIzTtYS0i4cDEAE=.png",
+   "key": "icons/apps/yotpo.29654037.webp"
+  },
+  "yuko-order-limits": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/eaf796cb5102ff10773108d29ca56ccc/icon/COr6ycHvmZADEAE=.png",
+   "key": "icons/apps/yuko-order-limits.4b85c2eb.webp"
+  },
+  "zendesk": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/d315fe70bcb98753afbe6aed7a9bffcd/icon/CLHzxd_0lu8CEAE=.png",
+   "key": "icons/apps/zendesk.4ede2181.webp"
+  },
+  "zigpoll": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/03b0ee31c378e592b1c5c9da3dbe6651/icon/CN6KptDZyJYDEAE=.png",
+   "key": "icons/apps/zigpoll.ba2f5fe4.webp"
+  },
+  "zipchat": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/a888a4091469a73df4128d9e1d5dfd79/icon/CJ3btdjNqZYDEAE=.png",
+   "key": "icons/apps/zipchat.9fdc17f8.webp"
+  },
+  "zipify-oneclickupsell": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/aabc0942fb57526ee1fe892775edab52/icon/CPrvkNr0lu8CEAE=.png",
+   "key": "icons/apps/zipify-oneclickupsell.549cbf5d.webp"
+  },
+  "zipifypages": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/030fe401789c6f84cc38805e7965669b/icon/CKee5Kv1yP4CEAE=.jpeg",
+   "key": "icons/apps/zipifypages.66b778ac.webp"
+  },
+  "zoorix": {
+   "url": "https://cdn.shopify.com/app-store/listing_images/878ee40e7b3300a1eea9cbb74df480fb/icon/CJHU096Uno4DEAE=.png",
+   "key": "icons/apps/zoorix.261a3b63.webp"
+  }
+ },
+ "stores": {
+  "1stphorm.com": {
+   "from": "https://1stphorm.com/cdn/shop/files/1st_Phorm_Logo_1f647b08-280e-40be-9f8b-f370f755d573.png?crop=center&height=32&v=1675721983&width=32",
+   "key": "icons/stores/1stphorm.com.e25275c6.webp"
+  },
+  "2stjewellery.com": {
+   "from": "https://2stjewellery.com/cdn/shop/files/2ST_LOGO-FAVICON-32x32-01.png?crop=center&height=32&v=1719803762&width=32",
+   "key": "icons/stores/2stjewellery.com.cb96ccb6.webp"
+  },
+  "4wks.com": {
+   "from": "https://4wks.com/cdn/shop/files/4WKS_Logo_7116e637-306d-4b3d-9660-e79c6af007b4_32x32.svg?v=1772613720",
+   "key": "icons/stores/4wks.com.9256b7ce.webp"
+  },
+  "4ywn.com": {
+   "from": "https://4ywn.com/cdn/shop/files/4yourwellnesslogo.jpg?crop=center&height=32&v=1779952363&width=32",
+   "key": "icons/stores/4ywn.com.42034627.webp"
+  },
+  "acefixings.com": {
+   "from": "https://acefixings.com/cdn/shop/files/Ace_Fixings_Favicon.jpg?crop=center&height=32&v=1743170724&width=32",
+   "key": "icons/stores/acefixings.com.8a3cbd36.webp"
+  },
+  "achillesheel.co.uk": {
+   "from": "https://www.achillesheel.co.uk/cdn/shop/files/AH_Display_White.png?v=1756725293&width=180",
+   "key": "icons/stores/achillesheel.co.uk.fa53a53e.webp"
+  },
+  "acmecups.nz": {
+   "from": "https://acmecups.nz/cdn/shop/files/favicon-acme.png?crop=center&height=32&v=1722602772&width=32",
+   "key": "icons/stores/acmecups.nz.e2c95ec5.webp"
+  },
+  "aede.com.au": {
+   "from": "https://aede.com.au/cdn/shop/files/Round_Favicon_1_32x32.svg?v=1759816293",
+   "key": "icons/stores/aede.com.au.8bcb62b7.webp"
+  },
+  "affinityinc.ca": {
+   "from": "https://www.affinityinc.ca/cdn/shop/files/Affinity_BrandMark_RBG_Navy.png?crop=center&height=32&v=1664558545&width=32",
+   "key": "icons/stores/affinityinc.ca.243cf948.webp"
+  },
+  "agnestoth.com": {
+   "from": "https://agnestoth.com/cdn/shop/t/2/assets/apple-touch-icon.png?v=53908244266399080541789642568",
+   "key": "icons/stores/agnestoth.com.b07c0b80.webp"
+  },
+  "ahed.ae": {
+   "from": "https://ahed.ae/cdn/shop/files/Untitled_design-removebg-preview.png?crop=center&height=32&v=1702919657&width=32",
+   "key": "icons/stores/ahed.ae.26e74ac9.webp"
+  },
+  "albenlane.com": {
+   "from": "https://albenlane.com/cdn/shop/files/A_1.png?v=1670003897&width=192",
+   "key": "icons/stores/albenlane.com.95c52bcb.webp"
+  },
+  "alfheimbeauty.com": {
+   "from": "https://alfheimbeauty.com/cdn/shop/files/20261019-114126.png?crop=center&height=32&v=1792381508&width=32",
+   "key": "icons/stores/alfheimbeauty.com.28932f34.webp"
+  },
+  "alileowines.com": {
+   "from": "https://alileowines.com/cdn/shop/files/favicon_1.png?crop=center&height=32&v=1743106906&width=32",
+   "key": "icons/stores/alileowines.com.8e692066.webp"
+  },
+  "almadalabel.com": {
+   "from": "https://almadalabel.com/cdn/shop/files/ALMADA_logo.svg?crop=center&height=32&v=1786458577&width=32",
+   "key": "icons/stores/almadalabel.com.0d2c5be6.webp"
+  },
+  "aoiofficial.com": {
+   "from": "https://cdn.sanity.io/images/gpcykai7/production/824f8eebb6a5bcd6d534bb4a8a5edbbbeccf1751-96x96.png?w=180&h=180&q=90&auto=format",
+   "key": "icons/stores/aoiofficial.com.d34b2dab.webp"
+  },
+  "apinistudio.com": {
+   "from": "https://apinistudio.com/cdn/shop/files/Favicon_1.png?v=1772450273&width=180",
+   "key": "icons/stores/apinistudio.com.c267276f.webp"
+  },
+  "apparel.onepeloton.com": {
+   "from": "https://apparel.onepeloton.com/cdn/shop/files/favicon-2026.png?crop=center&height=32&v=1777388119&width=32",
+   "key": "icons/stores/apparel.onepeloton.com.45d00ec0.webp"
+  },
+  "asturiaskincare.com": {
+   "from": "https://asturiaskincare.com/cdn/shop/files/WhiteArtboard_4_4x_11be74f0-744c-4a83-88ef-b8ab4dc84282.jpg?crop=center&height=32&v=1770750254&width=32",
+   "key": "icons/stores/asturiaskincare.com.e045ecd3.webp"
+  },
+  "aswegrowiceland.com": {
+   "from": "https://aswegrowiceland.com/cdn/shop/files/as-we-grow-favicon-dark_1_430x_6e8a07d1-e091-497d-a67b-69552bdf7066.webp?crop=center&height=180&v=1718967859&width=180",
+   "key": "icons/stores/aswegrowiceland.com.b2fea86d.webp"
+  },
+  "atticusfinchclothing.com.au": {
+   "from": "https://atticusfinchclothing.com.au/cdn/shop/files/Bird_Black.png?crop=center&height=32&v=1614310741&width=32",
+   "key": "icons/stores/atticusfinchclothing.com.au.877a0634.webp"
+  },
+  "au.danielwellington.com": {
+   "from": "https://au.danielwellington.com/cdn/shop/files/black_dw_logo.png?crop=center&height=32&v=1675860275&width=32",
+   "key": "icons/stores/au.danielwellington.com.ee8825b2.webp"
+  },
+  "ausfindr.com.au": {
+   "from": "https://ausfindr.com.au/cdn/shop/files/favicon-512.png?crop=center&height=180&v=1781412319&width=180",
+   "key": "icons/stores/ausfindr.com.au.4c53b7ec.webp"
+  },
+  "azuretan.com.au": {
+   "from": "https://www.azuretan.com.au/cdn/shop/files/AzureTan.tiles-falicon.png?crop=center&height=32&v=1738120487&width=32",
+   "key": "icons/stores/azuretan.com.au.5f8e90ea.webp"
+  },
+  "badshirt.club": {
+   "from": "https://badshirt.club/cdn/shop/files/Bad-Shirt-Club-Pink-Icon.png?crop=center&height=96&v=1751867764&width=96",
+   "key": "icons/stores/badshirt.club.b2cbac08.webp"
+  },
+  "bakeyy.com": {
+   "from": "https://bakeyy.com/cdn/shop/files/Original_app-modified.png?crop=center&height=180&v=1773043691&width=180",
+   "key": "icons/stores/bakeyy.com.0e482157.webp"
+  },
+  "ballisticsupps.ca": {
+   "from": "https://ballisticsupps.ca/cdn/shop/files/Ballistic_Supps_favicon_image_d44e05ca-c7c8-4a8f-b11c-3ac428ee7f06.png?crop=center&height=32&v=1733352242&width=32",
+   "key": "icons/stores/ballisticsupps.ca.b360fe67.webp"
+  },
+  "balmoralrunning.com": {
+   "from": "https://www.balmoralrunning.com/cdn/shop/files/Favicon_FW26_b8c6024d-f2f8-4672-9114-0884a9f50e42.png?crop=center&height=32&v=1788189402&width=32",
+   "key": "icons/stores/balmoralrunning.com.741c5aa9.webp"
+  },
+  "bcbg.com": {
+   "from": "https://bcbg.com/cdn/shop/files/favicon_2.png?crop=center&height=32&v=1629324390&width=32",
+   "key": "icons/stores/bcbg.com.99b47d20.webp"
+  },
+  "beantownbrand.us": {
+   "from": "https://beantownbrand.us/cdn/shop/files/beantown-favicon.png?crop=center&height=32&v=1769473400&width=32",
+   "key": "icons/stores/beantownbrand.us.18e3857c.webp"
+  },
+  "becore.se": {
+   "from": "https://becore.se/cdn/shop/files/Becore_symbol_black_mini_52a57060-7aa0-4d51-9f75-0eba4112941d.png?v=1715942842&width=180",
+   "key": "icons/stores/becore.se.bd232a99.webp"
+  },
+  "beginningboutique.com": {
+   "from": "https://www.beginningboutique.com/cdn/shop/files/500px_x_500px.png?crop=center&height=32&v=1770601558&width=32",
+   "key": "icons/stores/beginningboutique.com.7cafc68d.webp"
+  },
+  "beistravel.com": {
+   "from": "https://beistravel.com/cdn/shop/files/favicon_2_9b5dd349-96d3-489a-8369-3f8422471633.png?crop=center&height=32&v=1789502321&width=32",
+   "key": "icons/stores/beistravel.com.8c97f023.webp"
+  },
+  "benchmark.cx": {
+   "from": "https://benchmark.cx/cdn/shop/files/Benchmark_-_Social_Launch.jpg?crop=center&height=32&v=1739898253&width=32",
+   "key": "icons/stores/benchmark.cx.1bd56c96.webp"
+  },
+  "bigfootkick.com": {
+   "from": "https://www.bigfootkick.com/cdn/shop/files/BFK_Logo.png?crop=center&height=48&v=1723839493&width=48",
+   "key": "icons/stores/bigfootkick.com.6e12ea6f.webp"
+  },
+  "birdies.com": {
+   "from": "https://birdies.com/cdn/shop/files/Birdies_Logo_Symbol_StichFix.png?v=1665445737&width=180",
+   "key": "icons/stores/birdies.com.08ce3ea8.webp"
+  },
+  "blackblaze.com.au": {
+   "from": "https://www.blackblaze.com.au/cdn/shop/files/ico.svg?crop=center&height=32&v=1773614498&width=32",
+   "key": "icons/stores/blackblaze.com.au.c1003785.webp"
+  },
+  "blacksheepniagara.com": {
+   "from": "https://blacksheepniagara.com/cdn/shop/files/Black_Sheep_Favicon.png?crop=center&height=48&v=1781723006&width=48",
+   "key": "icons/stores/blacksheepniagara.com.e6bf2bef.webp"
+  },
+  "bluntumbrellas.com": {
+   "from": "https://bluntumbrellas.com/cdn/shop/files/Blunt_Favicon.png?crop=center&height=32&v=1689540262&width=32",
+   "key": "icons/stores/bluntumbrellas.com.81ca4dd4.webp"
+  },
+  "bodicine.com": {
+   "from": "https://bodicine.com/cdn/shop/files/favico-Bodicine.png?crop=center&height=512&v=1777453614&width=512",
+   "key": "icons/stores/bodicine.com.5bad2e36.webp"
+  },
+  "bouloworld.com": {
+   "from": "https://bouloworld.com/cdn/shop/files/fav_32x32.png?v=1619413053",
+   "key": "icons/stores/bouloworld.com.720a9ca7.webp"
+  },
+  "brigadeoverland.com": {
+   "from": "https://brigadeoverland.com/cdn/shop/files/brigade-overland-favicon.png?crop=center&height=32&v=1758018618&width=32",
+   "key": "icons/stores/brigadeoverland.com.b86c26d5.webp"
+  },
+  "brightland.co": {
+   "from": "https://brightland.co/cdn/shop/files/favicon.png?v=1614788804&width=180",
+   "key": "icons/stores/brightland.co.d9b2bb8e.webp"
+  },
+  "bulletproof.com": {
+   "from": "https://www.bulletproof.com/cdn/shop/files/favicon-bp.jpg?crop=center&height=32&v=1748850660&width=32",
+   "key": "icons/stores/bulletproof.com.141918a0.webp"
+  },
+  "bushbalm.com": {
+   "from": "https://bushbalm.com/cdn/shop/files/Favicon-white-background-bushbalm_64x64.png?v=1646403176",
+   "key": "icons/stores/bushbalm.com.9032ab6e.webp"
+  },
+  "buzzclear.com": {
+   "from": "https://www.buzzclear.com/cdn/shop/files/BuzzClearfav_47d2024b-8c9c-4e25-8222-2d6561f9423e.png?crop=center&height=32&v=1673725532&width=32",
+   "key": "icons/stores/buzzclear.com.8aee67fd.webp"
+  },
+  "bypariah.com": {
+   "from": "https://bypariah.com/cdn/shop/files/by-pariah-favicon.png?v=1715262517&width=180",
+   "key": "icons/stores/bypariah.com.5117c657.webp"
+  },
+  "cafebinocle.com": {
+   "from": "https://www.cafebinocle.com/cdn/shop/files/Jumelles_square.png?crop=center&height=32&v=1745424615&width=32",
+   "key": "icons/stores/cafebinocle.com.c5029f71.webp"
+  },
+  "caffemilani.it": {
+   "from": "https://caffemilani.it/cdn/shop/files/Favicon_-_CaffeMilani.png?v=1767868095&width=180",
+   "key": "icons/stores/caffemilani.it.840bf90c.webp"
+  },
+  "calpaktravel.com": {
+   "from": "https://www.calpaktravel.com/cdn/shop/files/favicon_dc3a819d-7bb4-417a-8564-c3c9166fc5c8_32x32.png?v=1668601237",
+   "key": "icons/stores/calpaktravel.com.117ecb7e.webp"
+  },
+  "cardigang.com.au": {
+   "from": "https://cardigang.com.au/cdn/shop/files/CARDIGANG_FLAV_32x32_CG.png?crop=center&height=32&v=1753317767&width=32",
+   "key": "icons/stores/cardigang.com.au.5509204d.webp"
+  },
+  "carnivorebar.com": {
+   "from": "https://carnivorebar.com/cdn/shop/t/70/assets/cb-cow-muted-ring-favicon-v3-180.png?v=146148364715103367091794578619",
+   "key": "icons/stores/carnivorebar.com.68871b7f.webp"
+  },
+  "casaziki.com": {
+   "from": "https://casaziki.com/cdn/shop/files/Group_3_1_32x32.png?v=1763575169",
+   "key": "icons/stores/casaziki.com.c659fe69.webp"
+  },
+  "ceciliebahnsen.com": {
+   "from": "https://ceciliebahnsen.com/cdn/shop/t/102/assets/favicon.png?v=118403019562710942321779126055",
+   "key": "icons/stores/ceciliebahnsen.com.b4afa291.webp"
+  },
+  "charles-simon.com": {
+   "from": "https://charles-simon.com/cdn/shop/files/Charles-Simon_favicon.png?v=1756379992&width=180",
+   "key": "icons/stores/charles-simon.com.7116c0c8.webp"
+  },
+  "chromeindustries.com": {
+   "from": "https://chromeindustries.com/cdn/shop/files/Chrome_favicon.png?v=1681148171&width=180",
+   "key": "icons/stores/chromeindustries.com.e915e069.webp"
+  },
+  "claypurple.com": {
+   "from": "https://www.claypurple.com/cdn/shop/files/Favicon_32x32.png?v=1739438213",
+   "key": "icons/stores/claypurple.com.368b428c.webp"
+  },
+  "clicgearusa.com": {
+   "from": "https://www.clicgearusa.com/cdn/shop/files/CG-favicon_bcad7b68-f98a-4351-a248-8fc1fe974f90_32x32.png?v=1765502041",
+   "key": "icons/stores/clicgearusa.com.24ba9abd.webp"
+  },
+  "cocoonblanket.com": {
+   "from": "https://www.cocoonblanket.com/cdn/shop/files/favicon_3_dark_bg.png?crop=center&height=32&v=1782949347&width=32",
+   "key": "icons/stores/cocoonblanket.com.e06737c8.webp"
+  },
+  "colourpop.com": {
+   "from": "https://colourpop.com/cdn/shop/files/CP_Favicon_Logo.png?crop=center&height=32&v=1788377851&width=32",
+   "key": "icons/stores/colourpop.com.3030888c.webp"
+  },
+  "coppolahome.com.au": {
+   "from": "https://coppolahome.com.au/cdn/shop/files/logo_720a6750-6cc0-4483-ad5e-77ee3f1cb006.jpg?crop=center&height=32&v=1716521003&width=32",
+   "key": "icons/stores/coppolahome.com.au.30be8052.webp"
+  },
+  "coralheat.com": {
+   "from": "https://www.coralheat.com/cdn/shop/files/Coral_Heat_-_Plain_logo_Oversized.png?crop=center&height=32&v=1780058915&width=32",
+   "key": "icons/stores/coralheat.com.2e0135af.webp"
+  },
+  "coutumes.com": {
+   "from": "https://coutumes.com/cdn/shop/t/44/assets/apple-touch-icon.png?v=159019483372383896281783332036",
+   "key": "icons/stores/coutumes.com.7f0e5174.webp"
+  },
+  "cozyearth.com": {
+   "from": "https://cozyearth.com/cdn/shop/files/Group_568_e409510e-1b66-4e2f-a74c-d748f308b70d.svg?crop=center&height=32&v=1781295244&width=32",
+   "key": "icons/stores/cozyearth.com.a1ab090b.webp"
+  },
+  "crickstore.com": {
+   "from": "https://crickstore.com/cdn/shop/files/favicon-32x32.png?v=1724652280&width=32",
+   "key": "icons/stores/crickstore.com.b4440ce2.webp"
+  },
+  "dashbrick.com": {
+   "from": "https://dashbrick.com/cdn/shop/files/DandBrick_32.png?crop=center&height=32&v=1614296767&width=32",
+   "key": "icons/stores/dashbrick.com.c4635c6b.webp"
+  },
+  "dbdrive.net": {
+   "from": "https://dbdrive.net/cdn/shop/files/32.png?crop=center&height=32&v=1710349293&width=32",
+   "key": "icons/stores/dbdrive.net.6c79f14b.webp"
+  },
+  "de.baleaf.com": {
+   "from": "https://de.baleaf.com/cdn/shop/files/Baleaf_Markicon.png?crop=center&height=32&v=1749203082&width=32",
+   "key": "icons/stores/de.baleaf.com.53dfc22b.webp"
+  },
+  "deadlyponies.com": {
+   "from": "https://deadlyponies.com/cdn/shop/files/Favicon_D_0e9cde42-77c2-496c-9c7d-2fb92488ef22.png?crop=center&height=32&v=1776557763&width=32",
+   "key": "icons/stores/deadlyponies.com.2c3586ed.webp"
+  },
+  "deadstockcoffee.com": {
+   "from": "https://deadstockcoffee.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1613768058&width=32",
+   "key": "icons/stores/deadstockcoffee.com.34d2d81a.webp"
+  },
+  "deargrain.com": {
+   "from": "https://deargrain.com/cdn/shop/files/DG-Stamp_1x1-01_600x200_72991709-9bec-4900-a152-a6f769669c46_32x32.png?v=1630549992",
+   "key": "icons/stores/deargrain.com.13816ffa.webp"
+  },
+  "deathwishcoffee.com": {
+   "from": "https://www.deathwishcoffee.com/cdn/shop/files/death_wish_coffee_logo_784207b6-ec6d-43c5-8126-ceef765f8937.png?crop=center&height=32&v=1642685806&width=32",
+   "key": "icons/stores/deathwishcoffee.com.c6845046.webp"
+  },
+  "dessertgallery.com": {
+   "from": "https://dessertgallery.com/cdn/shop/files/DessertGallery_EBU_Filled_CMYK_copy_32x32.png?v=1700245420",
+   "key": "icons/stores/dessertgallery.com.dd11984e.webp"
+  },
+  "doittennis.com": {
+   "from": "https://doittennis.com/cdn/shop/files/2022_Do_It_Tennis_Avatar_1_to_1_ratio.png?v=1758226983&width=32",
+   "key": "icons/stores/doittennis.com.1b8fff05.webp"
+  },
+  "donsje.com": {
+   "from": "https://donsje.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1692712631&width=32",
+   "key": "icons/stores/donsje.com.7202ffe7.webp"
+  },
+  "doodlesinkdesigns.com": {
+   "from": "https://doodlesinkdesigns.com/cdn/shop/files/doodlesink_Logo2019_NEW-11.png?crop=center&height=32&v=1677812151&width=32",
+   "key": "icons/stores/doodlesinkdesigns.com.51cdca04.webp"
+  },
+  "drink-vibes.com": {
+   "from": "https://www.drink-vibes.com/cdn/shop/files/Vibes_Black.png?crop=center&height=32&v=1776833774&width=32",
+   "key": "icons/stores/drink-vibes.com.3684b12f.webp"
+  },
+  "drinkfussie.com": {
+   "from": "https://drinkfussie.com/cdn/shop/files/Untitled_design_14.png?crop=center&height=32&v=1781904856&width=32",
+   "key": "icons/stores/drinkfussie.com.261f23e7.webp"
+  },
+  "drinknolow.com": {
+   "from": "https://drinknolow.com/cdn/shop/files/N_L_SecondaryLogo-red_dc955c2e-1254-4140-9898-729e33ad6e21.png?crop=center&height=180&v=1661243918&width=180",
+   "key": "icons/stores/drinknolow.com.463e734d.webp"
+  },
+  "eatfishwife.com": {
+   "from": "https://eatfishwife.com/cdn/shop/files/Favicon_32x32_2.png?v=1705515272&width=180",
+   "key": "icons/stores/eatfishwife.com.124208cb.webp"
+  },
+  "ekster.com": {
+   "from": "https://www.ekster.com/cdn/shop/t/1295/assets/apple-touch-icon.png?v=68191618903918257681794330023",
+   "key": "icons/stores/ekster.com.724ed6d0.webp"
+  },
+  "ellehomekitchen.in": {
+   "from": "https://ellehomekitchen.in/cdn/shop/files/elle_homes_favicon-32x32.png?crop=center&height=32&v=1792220670&width=32",
+   "key": "icons/stores/ellehomekitchen.in.c1e62b8b.webp"
+  },
+  "elverys.ie": {
+   "from": "https://www.elverys.ie/cdn/shop/files/icon_1_430x_284bdd35-aeaf-4bf2-8919-38966841b28f.png?crop=center&height=180&v=1710247469&width=180",
+   "key": "icons/stores/elverys.ie.14684118.webp"
+  },
+  "estudioniksen.com": {
+   "from": "https://estudioniksen.com/cdn/shop/t/42/assets/favicon.svg?v=119530499419930142741773941724",
+   "key": "icons/stores/estudioniksen.com.78f512c8.webp"
+  },
+  "eternalblue.co.nz": {
+   "from": "https://eternalblue.co.nz/cdn/shop/files/favicon-eb-sml.jpg?v=1781129453&width=180",
+   "key": "icons/stores/eternalblue.co.nz.289af9aa.webp"
+  },
+  "ettitude.com": {
+   "from": "https://www.ettitude.com/cdn/shop/files/ettitude_favicon_2.png?crop=center&height=32&v=1613665447&width=32",
+   "key": "icons/stores/ettitude.com.3122addf.webp"
+  },
+  "everlane.com": {
+   "from": "https://www.everlane.com/cdn/shop/files/EverlaneFavicon_2025-01.png?crop=center&height=32&v=1757958640&width=32",
+   "key": "icons/stores/everlane.com.18c37b08.webp"
+  },
+  "evolisproducts.com": {
+   "from": "https://www.evolisproducts.com/cdn/shop/files/evolis_mark_black.svg?crop=center&height=32&v=1739311099&width=32",
+   "key": "icons/stores/evolisproducts.com.23b3305c.webp"
+  },
+  "fctrylab.com": {
+   "from": "https://fctrylab.com/cdn/shop/files/F_Logo_white.png?crop=center&height=32&v=1748607850&width=32",
+   "key": "icons/stores/fctrylab.com.1271f601.webp"
+  },
+  "feelreformed.com": {
+   "from": "https://www.feelreformed.com/cdn/shop/files/LOGO_BLACK.png?crop=center&height=180&v=1692790314&width=180",
+   "key": "icons/stores/feelreformed.com.5a2b8de5.webp"
+  },
+  "fermliving.com": {
+   "from": "https://fermliving.com/cdn/shop/t/172/assets/apple-touch-icon.png?v=126663806182155740411795176303",
+   "key": "icons/stores/fermliving.com.1ea7ee61.webp"
+  },
+  "flexfit.com.au": {
+   "from": "https://flexfit.com.au/cdn/shop/files/Flexfit-YP_Favicon_Bl_90cc4ec1-3d79-4430-ab1f-0cd1b0200c9f.png?crop=center&height=32&v=1749594165&width=32",
+   "key": "icons/stores/flexfit.com.au.9319e61d.webp"
+  },
+  "floydhome.com": {
+   "from": "https://floydhome.com/cdn/shop/files/favicon_2aedd7d4-69f4-43a9-a942-41734948e40c.png?crop=center&height=32&v=1739906090&width=32",
+   "key": "icons/stores/floydhome.com.aa19e3df.webp"
+  },
+  "flurglassware.com": {
+   "from": "https://flurglassware.com/cdn/shop/files/FLUR_MONOGRAM_1-01-01_1.png?crop=center&height=32&v=1730755529&width=32",
+   "key": "icons/stores/flurglassware.com.7490b745.webp"
+  },
+  "flybyjing.com": {
+   "from": "https://flybyjing.com/cdn/shop/files/favicon.png?v=1741389583&width=32",
+   "key": "icons/stores/flybyjing.com.d16514a8.webp"
+  },
+  "gaia-baby.com.au": {
+   "from": "https://www.gaia-baby.com.au/cdn/shop/files/GaiaBaby-Logomark-Colour-Favicon_965b469c-246e-4139-8b4a-9e8abbc1d22b.png?crop=center&height=32&v=1760573236&width=32",
+   "key": "icons/stores/gaia-baby.com.au.713f31b6.webp"
+  },
+  "ginasnailssupplies.com": {
+   "from": "https://ginasnailssupplies.com/cdn/shop/files/GNS-LOGO_Trabsparent.svg?crop=center&height=32&v=1740392706&width=32",
+   "key": "icons/stores/ginasnailssupplies.com.8aac4000.webp"
+  },
+  "glacierpcgaming.com": {
+   "from": "https://glacierpcgaming.com/cdn/shop/files/glacier_pc_gaming_logo.png?crop=center&height=32&v=1727405520&width=32",
+   "key": "icons/stores/glacierpcgaming.com.e786197c.webp"
+  },
+  "glossier.com": {
+   "from": "https://www.glossier.com/cdn/shop/files/favicon-light_180x180.webp?v=1681821719",
+   "key": "icons/stores/glossier.com.8494ae79.webp"
+  },
+  "goondiwindicotton.com.au": {
+   "from": "https://goondiwindicotton.com.au/cdn/shop/files/Goondiwindi-Cotton-GC.png?crop=center&height=180&v=1780984024&width=180",
+   "key": "icons/stores/goondiwindicotton.com.au.39addd8b.webp"
+  },
+  "graedance.com": {
+   "from": "https://graedance.com/cdn/shop/files/ae_logomark_favicon.png?crop=center&height=250&v=1649252439&width=250",
+   "key": "icons/stores/graedance.com.f9827266.webp"
+  },
+  "graza.co": {
+   "from": "https://www.graza.co/cdn/shop/t/38/assets/favicon-32x32.static_small.png?v=97222300656985941251682500131",
+   "key": "icons/stores/graza.co.a130a445.webp"
+  },
+  "growgokids.com": {
+   "from": "https://growgokids.com/cdn/shop/files/favicon-growgo_724657c1-e1a2-4f74-8dc5-4660d3407d88.jpg?crop=center&height=32&v=1669009399&width=32",
+   "key": "icons/stores/growgokids.com.14eeeecd.webp"
+  },
+  "grundig-auto.com": {
+   "from": "https://grundig-auto.com/cdn/shop/files/GRUNDIG_icon_73ec31b2-c982-4fb3-b0c2-3c55be96a616.webp?crop=center&height=32&v=1743135153&width=32",
+   "key": "icons/stores/grundig-auto.com.a0ad2b5b.webp"
+  },
+  "guestsonearth.com": {
+   "from": "https://www.guestsonearth.com/cdn/shop/files/GoE-favicon.png?crop=center&height=32&v=1625328508&width=32",
+   "key": "icons/stores/guestsonearth.com.748a4db1.webp"
+  },
+  "halcyon.co.nz": {
+   "from": "https://www.halcyon.co.nz/cdn/shop/files/Halcyon_Lighting_1982.png?v=1762747648&width=180",
+   "key": "icons/stores/halcyon.co.nz.84e92562.webp"
+  },
+  "happenstence.com": {
+   "from": "https://happenstence.com/cdn/shop/files/Favicon_1.13.26.png?crop=center&height=32&v=1768342482&width=32",
+   "key": "icons/stores/happenstence.com.3599d9a6.webp"
+  },
+  "haute.store": {
+   "from": "https://haute.store/cdn/shop/files/IMG_0550.jpg?crop=center&height=32&v=1764165622&width=32",
+   "key": "icons/stores/haute.store.4ce75d7b.webp"
+  },
+  "heidiandhart.com": {
+   "from": "https://heidiandhart.com/cdn/shop/files/H_H-Favicon_1.png?crop=center&height=32&v=1733642934&width=32",
+   "key": "icons/stores/heidiandhart.com.97ee2bab.webp"
+  },
+  "heirest.com": {
+   "from": "https://heirest.com/cdn/shop/files/heirest-fav-burg.png?crop=center&height=32&v=1785976394&width=32",
+   "key": "icons/stores/heirest.com.809e828b.webp"
+  },
+  "hellokicks.in": {
+   "from": "https://hellokicks.in/cdn/shop/files/Final_logo_assests_color_Hello_kicks-03.jpg?crop=center&height=32&v=1786096799&width=32",
+   "key": "icons/stores/hellokicks.in.bdc370b2.webp"
+  },
+  "heonjewelry.com": {
+   "from": "https://heonjewelry.com/cdn/shop/files/heon-favicon-hj.png?crop=center&height=180&v=1790952154&width=180",
+   "key": "icons/stores/heonjewelry.com.b5f4a74b.webp"
+  },
+  "herbaledge.ca": {
+   "from": "https://herbaledge.ca/cdn/shop/files/Layer_5.png?crop=center&height=32&v=1725516852&width=32",
+   "key": "icons/stores/herbaledge.ca.d67a06e6.webp"
+  },
+  "hexpens.com": {
+   "from": "https://www.hexpens.com/cdn/shop/files/Hex-Pens-favicon.png?crop=center&height=32&v=1765313944&width=32",
+   "key": "icons/stores/hexpens.com.9b1ea1b9.webp"
+  },
+  "heybike.com": {
+   "from": "https://www.heybike.com/cdn/shop/files/32X32_icon_5a2b84f0-6ab5-446c-b40d-cd8f96324570.png?crop=center&height=32&v=1728962627&width=32",
+   "key": "icons/stores/heybike.com.a651a12e.webp"
+  },
+  "heyumanos.com": {
+   "from": "https://heyumanos.com/cdn/shop/files/umanos_social_icon_transparent_background_32x32.jpg?v=1660346538",
+   "key": "icons/stores/heyumanos.com.55fcb587.webp"
+  },
+  "hikeepebike.com": {
+   "from": "https://www.hikeepebike.com/cdn/shop/files/hikeep_bcak.png?crop=center&height=32&v=1773109439&width=32",
+   "key": "icons/stores/hikeepebike.com.ec902243.webp"
+  },
+  "hofstrawagner.dk": {
+   "from": "https://hofstrawagner.dk/cdn/shop/files/Favikon_2.png?crop=center&height=32&v=1775026358&width=32",
+   "key": "icons/stores/hofstrawagner.dk.9f34ab3d.webp"
+  },
+  "homeartrugs.co.uk": {
+   "from": "https://homeartrugs.co.uk/cdn/shop/files/Homeart_favicon.png?crop=center&height=32&v=1624617649&width=32",
+   "key": "icons/stores/homeartrugs.co.uk.3aa57678.webp"
+  },
+  "hoodieflags.com": {
+   "from": "https://hoodieflags.com/cdn/shop/files/Hoodie_Favicon.png?crop=center&height=32&v=1614294746&width=32",
+   "key": "icons/stores/hoodieflags.com.6a9c34c2.webp"
+  },
+  "hudstonehome.com": {
+   "from": "https://hudstonehome.com/cdn/shop/files/Black_866216eb-0ac7-4932-8cbe-db0861dce5f7.png?crop=center&height=32&v=1630533586&width=32",
+   "key": "icons/stores/hudstonehome.com.32a7d888.webp"
+  },
+  "hueylightshop.com": {
+   "from": "https://www.hueylightshop.com/cdn/shop/files/favicon-huey_396db400-4abe-4ee1-9fd1-41547ba77d1a.png?crop=center&height=32&v=1785551383&width=32",
+   "key": "icons/stores/hueylightshop.com.6d402d5e.webp"
+  },
+  "hulken.com": {
+   "from": "https://hulken.com/cdn/shop/files/hulken_favicon_copy.jpg?crop=center&height=32&v=1629792995&width=32",
+   "key": "icons/stores/hulken.com.9f15dc2c.webp"
+  },
+  "hyggedesignhouse.ca": {
+   "from": "https://hyggedesignhouse.ca/cdn/shop/files/hygge-logo-light.png?crop=center&height=32&v=1749016198&width=32",
+   "key": "icons/stores/hyggedesignhouse.ca.2f33e361.webp"
+  },
+  "iginusa.com": {
+   "from": "https://iginusa.com/cdn/shop/files/LOGO-IGIN_USA_SNS_Profile.png?crop=center&height=32&v=1790719703&width=32",
+   "key": "icons/stores/iginusa.com.227ae0d2.webp"
+  },
+  "iliabeauty.com": {
+   "from": "https://iliabeauty.com/cdn/shop/files/ILIA_favicon.jpg?crop=center&height=32&v=1753300854&width=32",
+   "key": "icons/stores/iliabeauty.com.e9d1aa7a.webp"
+  },
+  "islandoasis.com": {
+   "from": "https://islandoasis.com/cdn/shop/files/Island_Oasis_Logo_8ae62a8b-ba40-4337-9f6f-7190f11dcf35.png?crop=center&height=48&v=1755790024&width=48",
+   "key": "icons/stores/islandoasis.com.4d583383.webp"
+  },
+  "ivankyo.com": {
+   "from": "https://ivankyo.com/cdn/shop/files/4_d9991c14-c2a8-4704-aedb-db307f38c100_228x228.png?v=1728878880",
+   "key": "icons/stores/ivankyo.com.48025df2.webp"
+  },
+  "jerkliciousbbq.com": {
+   "from": "https://jerkliciousbbq.com/cdn/shop/files/OfficialLogo_5e994f18-a9e4-40f5-ac74-3f0a2c04c9f0.png?crop=center&height=32&v=1749314629&width=32",
+   "key": "icons/stores/jerkliciousbbq.com.d5d54c5c.webp"
+  },
+  "jonessportsco.com": {
+   "from": "https://www.jonessportsco.com/cdn/shop/files/Utility-Favicon-96x96px_32x32.png?v=1643407049",
+   "key": "icons/stores/jonessportsco.com.e57577dd.webp"
+  },
+  "judydoll.com": {
+   "from": "https://judydoll.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1770708542&width=32",
+   "key": "icons/stores/judydoll.com.25a490d3.webp"
+  },
+  "junaidjamshed.com": {
+   "from": "https://www.junaidjamshed.com/cdn/shop/files/favicon.svg?crop=center&height=48&v=1765461191&width=48",
+   "key": "icons/stores/junaidjamshed.com.cb5a1def.webp"
+  },
+  "jurlique.com": {
+   "from": "https://jurlique.com/cdn/shop/files/jurlique-favicon-svg_4fe278fd-85f9-4d47-831f-c71df1a232b0.png?crop=center&height=32&v=1767577252&width=32",
+   "key": "icons/stores/jurlique.com.60621310.webp"
+  },
+  "jusstennis.com.au": {
+   "from": "https://jusstennis.com.au/cdn/shop/files/Untitled_design_1_82893036-3660-4873-9331-5d30a5777378.png?crop=center&height=32&v=1740365194&width=32",
+   "key": "icons/stores/jusstennis.com.au.3d42e1a9.webp"
+  },
+  "karabags.com": {
+   "from": "https://karabags.com/cdn/shop/files/ChatGPT_Image_Apr_2_2025_07_38_13_PM.png?crop=center&height=180&v=1743647916&width=180",
+   "key": "icons/stores/karabags.com.025a811d.webp"
+  },
+  "kidznbaby.com": {
+   "from": "https://kidznbaby.com/cdn/shop/files/KIDZNBABY_Official_Favicon_726ebeee-d218-48b7-a21e-9e97fb1c912d.png?crop=center&height=32&v=1725904811&width=32",
+   "key": "icons/stores/kidznbaby.com.08d85b3a.webp"
+  },
+  "killstar.com": {
+   "from": "https://us.killstar.com/cdn/shop/files/K-LOGO-FAVICON_128x128_crop_center.png?v=1761049519",
+   "key": "icons/stores/killstar.com.75ec440e.webp"
+  },
+  "kindredofireland.com": {
+   "from": "https://kindredofireland.com/cdn/shop/files/Untitled_design_53_32x32.png?v=1781801422",
+   "key": "icons/stores/kindredofireland.com.419eb46f.webp"
+  },
+  "kissmyacidgoodbye.com": {
+   "from": "https://kissmyacidgoodbye.com/cdn/shop/files/kmag-favicon.png?crop=center&height=32&v=1748569580&width=32",
+   "key": "icons/stores/kissmyacidgoodbye.com.57c9dd6f.webp"
+  },
+  "kith.com": {
+   "from": "https://kith.com/cdn/shop/files/favicon3_32x32.png?v=1613503289",
+   "key": "icons/stores/kith.com.4ce496f9.webp"
+  },
+  "kiyohome.com": {
+   "from": "https://kiyohome.com/cdn/shop/files/Favicon_Logo_3.png?crop=center&height=32&v=1736456618&width=32",
+   "key": "icons/stores/kiyohome.com.eef60b3a.webp"
+  },
+  "knix.com": {
+   "from": "https://knix.com/cdn/shop/files/knixlogo-sm_192x192_c6add9a6-f316-4042-b521-600c7da81c1f.avif?crop=center&height=32&v=1756875926&width=32",
+   "key": "icons/stores/knix.com.69f549a9.webp"
+  },
+  "koh.com": {
+   "from": "https://koh.com/cdn/shop/files/android-chrome-512x512.png?v=1752733725&width=180",
+   "key": "icons/stores/koh.com.0376f75f.webp"
+  },
+  "koiyu.ch": {
+   "from": "https://www.koiyu.ch/cdn/shop/files/Untitled_design-22.png?crop=center&height=32&v=1777489989&width=32",
+   "key": "icons/stores/koiyu.ch.343401ee.webp"
+  },
+  "korff.it": {
+   "from": "https://www.korff.it/cdn/shop/files/Monogram_Favicon_SVG_1.1_32x32.svg?v=1732098189",
+   "key": "icons/stores/korff.it.6a110d0f.webp"
+  },
+  "kosas.com": {
+   "from": "https://kosas.com/cdn/shop/files/icon_180x180.png?v=1613704526",
+   "key": "icons/stores/kosas.com.d61533ad.webp"
+  },
+  "kyliecosmetics.com": {
+   "from": "https://kyliecosmetics.com/cdn/shop/files/Favicon_V2_200px.png?crop=center&height=32&v=1677026183&width=32",
+   "key": "icons/stores/kyliecosmetics.com.102a25fa.webp"
+  },
+  "leospaw.com": {
+   "from": "https://leospaw.com/cdn/shop/files/Icon.png?crop=center&height=48&v=1738580601&width=48",
+   "key": "icons/stores/leospaw.com.950d2d53.webp"
+  },
+  "lesacsulpice.com": {
+   "from": "https://www.lesacsulpice.com/cdn/shop/files/LeSacSulpice-Logo-Icon.png?v=1781578417&width=180",
+   "key": "icons/stores/lesacsulpice.com.f48327df.webp"
+  },
+  "libertysafe.com": {
+   "from": "https://libertysafe.com/cdn/shop/files/Liberty-Logo-favicon-A.png?crop=center&height=32&v=1737857421&width=32",
+   "key": "icons/stores/libertysafe.com.083e0c01.webp"
+  },
+  "liquiddeath.com": {
+   "from": "https://liquiddeath.com/cdn/shop/files/Liquiddeath-Skull-Favicon_32x32.png?v=1682460908",
+   "key": "icons/stores/liquiddeath.com.3b229800.webp"
+  },
+  "littleampscoffee.com": {
+   "from": "https://littleampscoffee.com/cdn/shop/files/Favicon_747e7267-382f-4b65-886a-88bac25f07fb_32x32.png?v=1763499947",
+   "key": "icons/stores/littleampscoffee.com.720e3f13.webp"
+  },
+  "littlebigbikes.com": {
+   "from": "https://www.littlebigbikes.com/cdn/shop/files/littlebig_logo_square_favicon_full.png?crop=center&height=32&v=1795120265&width=32",
+   "key": "icons/stores/littlebigbikes.com.d8b6a9d4.webp"
+  },
+  "littlecupcoffee.com": {
+   "from": "https://littlecupcoffee.com/cdn/shop/files/cup_favicon.png?crop=center&height=180&v=1743348413&width=180",
+   "key": "icons/stores/littlecupcoffee.com.fccec3c9.webp"
+  },
+  "littlesaints.com": {
+   "from": "https://littlesaints.com/cdn/shop/files/LS_Favicon_1c8d66c9-bfa2-4119-8c13-f078ac607695_32x32.png?v=1654875562",
+   "key": "icons/stores/littlesaints.com.cff039fa.webp"
+  },
+  "lobofootwear.com": {
+   "from": "https://www.lobofootwear.com/cdn/shop/files/LOB008_Lobo_Shopify_Website_Favicon_066d5e21-6183-407b-b92c-1ce9f35e25e5_32x32.jpg?v=1713939883",
+   "key": "icons/stores/lobofootwear.com.f0c275a5.webp"
+  },
+  "lofliballs.com": {
+   "from": "https://lofliballs.com/cdn/shop/t/2/assets/lofli-favicon.png?v=40353926075709864321792683031",
+   "key": "icons/stores/lofliballs.com.b08ea69a.webp"
+  },
+  "loveandpebble.com": {
+   "from": "https://loveandpebble.com/cdn/shop/files/penguin-logo_600x600_a6911b86-23da-41d4-856c-65e399c091f9.png?crop=center&height=32&v=1655353176&width=32",
+   "key": "icons/stores/loveandpebble.com.a1e6a93c.webp"
+  },
+  "lskd.co": {
+   "from": "https://www.lskd.co/cdn/shop/files/LSKD-Favicon-v2.jpg?crop=center&height=32&v=1656480983&width=32",
+   "key": "icons/stores/lskd.co.89cdc534.webp"
+  },
+  "lucyandyak.com": {
+   "from": "https://lucyandyak.com/cdn/shop/files/Lucy-and-yak-logo-2-150x150.png?crop=center&height=32&v=1664993064&width=32",
+   "key": "icons/stores/lucyandyak.com.2253396a.webp"
+  },
+  "lujoliving.com": {
+   "from": "https://lujoliving.com/cdn/shop/files/logo-black.svg?v=1765409501&width=180",
+   "key": "icons/stores/lujoliving.com.5ea075e2.webp"
+  },
+  "lulaoil.com": {
+   "from": "https://lulaoil.com/cdn/shop/files/Asset_3.png?crop=center&height=32&v=1765396601&width=32",
+   "key": "icons/stores/lulaoil.com.23b740ee.webp"
+  },
+  "luminalighting.com": {
+   "from": "https://luminalighting.com/cdn/shop/files/L_1_32x32.jpg?v=1704394300",
+   "key": "icons/stores/luminalighting.com.99836f2f.webp"
+  },
+  "mackage.com": {
+   "from": "https://www.mackage.com/cdn/shop/files/favicon.svg?v=1676482266&width=180",
+   "key": "icons/stores/mackage.com.036718ad.webp"
+  },
+  "mackweldon.com": {
+   "from": "https://mackweldon.com/cdn/shop/files/mw-favicon_57x57.png?v=1614317458",
+   "key": "icons/stores/mackweldon.com.fc2e19f3.webp"
+  },
+  "magicspoon.com": {
+   "from": "https://magicspoon.com/cdn/shop/t/667/assets/favicon.ico?v=107415939221661537011748358445",
+   "key": "icons/stores/magicspoon.com.cbb77a5d.webp"
+  },
+  "mansome.eu": {
+   "from": "https://www.mansome.eu/cdn/shop/files/favicon3.png?crop=center&height=48&v=1706021292&width=48",
+   "key": "icons/stores/mansome.eu.9d6d4ad6.webp"
+  },
+  "marcatousa.com": {
+   "from": "https://marcatousa.com/cdn/shop/files/EH_Avatar_9_32x32.png?v=1698343770",
+   "key": "icons/stores/marcatousa.com.992cb95e.webp"
+  },
+  "mariaeluisa.com": {
+   "from": "https://mariaeluisa.com/cdn/shop/files/AA0005_32x32.jpg?v=1710946481",
+   "key": "icons/stores/mariaeluisa.com.93ca0b4e.webp"
+  },
+  "marinelayer.com": {
+   "from": "https://www.marinelayer.com/cdn/shop/files/favicon_small.avif?v=1755804018",
+   "key": "icons/stores/marinelayer.com.32f56731.webp"
+  },
+  "marmaladefreshclothing.com": {
+   "from": "https://marmaladefreshclothing.com/cdn/shop/files/Marmalade_Favicon_333f89d0-02c0-4f5a-8812-7a1389ba5830_32x32.png?v=1753128009",
+   "key": "icons/stores/marmaladefreshclothing.com.89a32728.webp"
+  },
+  "matadorequipment.com": {
+   "from": "https://www.matadorequipment.com/cdn/shop/files/favicon-32x32_32x32.png?v=1614328313",
+   "key": "icons/stores/matadorequipment.com.e1cd74b3.webp"
+  },
+  "mayatea.com": {
+   "from": "https://www.mayatea.com/cdn/shop/files/Untitled-2-01.png?crop=center&height=180&v=1636997916&width=180",
+   "key": "icons/stores/mayatea.com.0dfab202.webp"
+  },
+  "meanblvd.com": {
+   "from": "https://meanblvd.com/cdn/shop/files/Favicon.png?crop=center&height=32&v=1766552072&width=32",
+   "key": "icons/stores/meanblvd.com.2501e36d.webp"
+  },
+  "meindlusa.com": {
+   "from": "https://meindlusa.com/cdn/shop/files/favicon.jpg?crop=center&height=180&v=1614299674&width=180",
+   "key": "icons/stores/meindlusa.com.eb036b79.webp"
+  },
+  "mentari.toys": {
+   "from": "https://mentari.toys/cdn/shop/files/Mentari-Favicon_32x32.png?v=1679480838",
+   "key": "icons/stores/mentari.toys.e7dcdaa4.webp"
+  },
+  "meolaindia.com": {
+   "from": "https://meolaindia.com/cdn/shop/files/favicon-32x32.png?crop=center&height=32&v=1750772759&width=32",
+   "key": "icons/stores/meolaindia.com.b32761ed.webp"
+  },
+  "merekrishna.in": {
+   "from": "https://merekrishna.in/cdn/shop/files/latest.png?crop=center&height=32&v=1787140628&width=32",
+   "key": "icons/stores/merekrishna.in.fd68eab7.webp"
+  },
+  "meritbeauty.com": {
+   "from": "https://www.meritbeauty.com/cdn/shop/files/Merit_Favicon_2_32x32.png?v=1614765862",
+   "key": "icons/stores/meritbeauty.com.e24affd3.webp"
+  },
+  "meritcoffee.com": {
+   "from": "https://meritcoffee.com/cdn/shop/files/FAVICON_Merit_22_640566b3-0390-4f17-83e7-ee7822e5aa49.png?crop=center&height=32&v=1666041594&width=32",
+   "key": "icons/stores/meritcoffee.com.b28ff590.webp"
+  },
+  "microplaynewmarket.com": {
+   "from": "https://microplaynewmarket.com/cdn/shop/files/3_9ae2e511-1ab0-4b05-b422-185dca14f22d_152x152.jpg?v=1710184539",
+   "key": "icons/stores/microplaynewmarket.com.abf72006.webp"
+  },
+  "miesherk.com": {
+   "from": "https://miesherk.com/cdn/shop/files/miesherk_logo_web_e83ec7b6-247c-4e8e-904b-d915f4a7253d.jpg?crop=center&height=32&v=1722244054&width=32",
+   "key": "icons/stores/miesherk.com.bbf71242.webp"
+  },
+  "minisovip.com": {
+   "from": "https://minisovip.com/cdn/shop/files/LOGO.png?crop=center&height=32&v=1775031853&width=32",
+   "key": "icons/stores/minisovip.com.03275677.webp"
+  },
+  "misfitpanda.in": {
+   "from": "https://misfitpanda.in/cdn/shop/files/monogram.jpg?crop=center&height=32&v=1672897485&width=32",
+   "key": "icons/stores/misfitpanda.in.9fa52e1f.webp"
+  },
+  "missionworkshop.com": {
+   "from": "https://missionworkshop.com/cdn/shop/files/favicon_96x96_59aba67c-0c77-47f6-8629-3bbe49eb4bf7.png?v=1706745338&width=180",
+   "key": "icons/stores/missionworkshop.com.46422e88.webp"
+  },
+  "misssixty.com": {
+   "from": "https://misssixty.com/cdn/shop/files/1_305a0bd7-fff0-4aec-8ef8-418b41dc868b.jpg?crop=center&height=250&v=1767512567&width=250",
+   "key": "icons/stores/misssixty.com.5aac2cab.webp"
+  },
+  "mitzi.com": {
+   "from": "https://mitzi.com/cdn/shop/files/Favicon_9c12c460-8dbe-45fe-9f17-b3b0de48eab9_32x32.png?v=1738774665",
+   "key": "icons/stores/mitzi.com.1fe86b3d.webp"
+  },
+  "mixedgrounds.com": {
+   "from": "https://mixedgrounds.com/cdn/shop/files/MG_LOGO-yellow.jpg?crop=center&height=32&v=1704342836&width=32",
+   "key": "icons/stores/mixedgrounds.com.c01d3bff.webp"
+  },
+  "monsieur-paris.com": {
+   "from": "https://www.monsieur-paris.com/cdn/shop/files/favicon_Monsieur_paris.png?crop=center&height=32&v=1748336552&width=32",
+   "key": "icons/stores/monsieur-paris.com.8fda69f3.webp"
+  },
+  "mooresfurniture.com": {
+   "from": "https://mooresfurniture.com/cdn/shop/files/M.png?crop=center&height=32&v=1793811567&width=32",
+   "key": "icons/stores/mooresfurniture.com.d58e28fe.webp"
+  },
+  "mudbeancoffee.com": {
+   "from": "https://mudbeancoffee.com/cdn/shop/files/Frame_1525.svg?crop=center&height=32&v=1775761574&width=32",
+   "key": "icons/stores/mudbeancoffee.com.94ba3c00.webp"
+  },
+  "muttsdoggoods.com": {
+   "from": "https://www.muttsdoggoods.com/cdn/shop/files/Mutts_Marque.jpg?crop=center&height=32&v=1743498096&width=32",
+   "key": "icons/stores/muttsdoggoods.com.853c4932.webp"
+  },
+  "muvucacoffee.com": {
+   "from": "https://muvucacoffee.com/cdn/shop/files/Muvuca_IGProfilePic_option2_32x32.png?v=1707329446",
+   "key": "icons/stores/muvucacoffee.com.547d3cee.webp"
+  },
+  "mvmt.com": {
+   "from": "https://mvmt.com/cdn/shop/files/mvmt_favicon.png?v=1787061100&width=180",
+   "key": "icons/stores/mvmt.com.74b1e10b.webp"
+  },
+  "mynooci.com": {
+   "from": "https://mynooci.com/cdn/shop/t/511/assets/nooci-favicon.webp?v=95868229523439659901795421229",
+   "key": "icons/stores/mynooci.com.447cc2a7.webp"
+  },
+  "ncf.co.uk": {
+   "from": "https://ncf.co.uk/cdn/shop/files/favicon_91c0c9ad-b1b0-4b4b-9c8b-66f89247115e.png?crop=center&height=180&v=1783600855&width=180",
+   "key": "icons/stores/ncf.co.uk.c1c9d3ea.webp"
+  },
+  "negativeunderwear.com": {
+   "from": "https://negativeunderwear.com/cdn/shop/files/NegativeDash_2.png?crop=center&height=32&v=1738700243&width=32",
+   "key": "icons/stores/negativeunderwear.com.31d88245.webp"
+  },
+  "neptune.com": {
+   "from": "https://www.neptune.com/cdn/shop/t/12/assets/favicon-180.png?v=16024308013225158621689345827",
+   "key": "icons/stores/neptune.com.ba61f513.webp"
+  },
+  "next9months.com": {
+   "from": "https://next9months.com/cdn/shop/files/Next9Months_Favicon.png?crop=center&height=180&v=1790181236&width=180",
+   "key": "icons/stores/next9months.com.38c241ab.webp"
+  },
+  "nextsense.io": {
+   "from": "https://nextsense.io/cdn/shop/files/Favicon.png?crop=center&height=32&v=1757613683&width=32",
+   "key": "icons/stores/nextsense.io.ce4b88c6.webp"
+  },
+  "nivvshop.com": {
+   "from": "https://nivvshop.com/cdn/shop/files/favicon-2.png?crop=center&height=32&v=1777705270&width=32",
+   "key": "icons/stores/nivvshop.com.e5e5b1a9.webp"
+  },
+  "no2.co.nz": {
+   "from": "https://no2.co.nz/cdn/shop/files/No2-smile-magenta-386-RGB.png?crop=center&height=512&v=1669842019&width=512",
+   "key": "icons/stores/no2.co.nz.c31562a0.webp"
+  },
+  "noahny.com": {
+   "from": "https://noahny.com/cdn/shop/t/582/assets/favicon.static.ico?v=12653293928974899351795038443",
+   "key": "icons/stores/noahny.com.10fd2730.webp"
+  },
+  "noevalleybakery.com": {
+   "from": "https://noevalleybakery.com/cdn/shop/files/37006044_10156579142693966_244211634292129792_n_32x32.jpg?v=1614288508",
+   "key": "icons/stores/noevalleybakery.com.f741986b.webp"
+  },
+  "noirnoirfashion.com": {
+   "from": "https://noirnoirfashion.com/cdn/shop/files/IMG_0565_32x32.jpg?v=1767856634",
+   "key": "icons/stores/noirnoirfashion.com.002135b0.webp"
+  },
+  "nudebarre.com": {
+   "from": "https://nudebarre.com/cdn/shop/files/NudeBarre_PrimaryWordmark_Black_32x32.png?v=1613571474",
+   "key": "icons/stores/nudebarre.com.3f09c645.webp"
+  },
+  "nvgtn.com": {
+   "from": "https://nvgtn.com/cdn/shop/files/favi_N2_32x32.png?v=1694982782",
+   "key": "icons/stores/nvgtn.com.d0c4625b.webp"
+  },
+  "nyangear.com": {
+   "from": "https://nyangear.com/cdn/shop/files/1_2.png?crop=center&height=32&v=1723915346&width=32",
+   "key": "icons/stores/nyangear.com.38a25398.webp"
+  },
+  "nymphaicosmetics.com": {
+   "from": "https://nymphaicosmetics.com/cdn/shop/files/apple-touch-icon.png?crop=center&height=32&v=1780483904&width=32",
+   "key": "icons/stores/nymphaicosmetics.com.f52c06eb.webp"
+  },
+  "objectandarchive.com": {
+   "from": "https://objectandarchive.com/cdn/shop/files/oa-icon2.png?crop=center&height=32&v=1782999173&width=32",
+   "key": "icons/stores/objectandarchive.com.01efc8e6.webp"
+  },
+  "olly.com": {
+   "from": "https://www.olly.com/cdn/shop/t/319/assets/apple-icon-180x180.png?v=5&v=24677483267002611191793846143",
+   "key": "icons/stores/olly.com.6bc2cae6.webp"
+  },
+  "optionblend.com": {
+   "from": "https://optionblend.com/cdn/shop/files/op-fav_50f8f85e-3a3e-434f-be7e-afdb353ad1db.png?crop=center&height=32&v=1727793470&width=32",
+   "key": "icons/stores/optionblend.com.eebd9d59.webp"
+  },
+  "oyoskincare.com": {
+   "from": "https://oyoskincare.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1723152285&width=32",
+   "key": "icons/stores/oyoskincare.com.5f451cb1.webp"
+  },
+  "palaceskateboards.com": {
+   "from": "https://usa.palaceskateboards.com/icons/apple-touch-icon.png",
+   "key": "icons/stores/palaceskateboards.com.75fabdbe.webp"
+  },
+  "papanicholas.com": {
+   "from": "https://www.papanicholas.com/cdn/shop/files/papa-favicon2_32x32.png?v=1742335817",
+   "key": "icons/stores/papanicholas.com.6e041b8a.webp"
+  },
+  "parachutehome.com": {
+   "from": "https://parachutehome.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1744225262&width=32",
+   "key": "icons/stores/parachutehome.com.a560afc4.webp"
+  },
+  "partakefoods.com": {
+   "from": "https://partakefoods.com/cdn/shop/files/cookie_2x_6918a931-4bf4-4368-b675-410dbdb8661a.png?crop=center&height=32&v=1690910144&width=32",
+   "key": "icons/stores/partakefoods.com.bebf2226.webp"
+  },
+  "petplanet.co.uk": {
+   "from": "https://petplanet.co.uk/cdn/shop/files/Petplanet_Icon_Brand_Colour_whitebackground.png?crop=center&height=32&v=1795457201&width=32",
+   "key": "icons/stores/petplanet.co.uk.db4c2edb.webp"
+  },
+  "pinkngreens.com": {
+   "from": "https://www.pinkngreens.com/cdn/shop/files/36a0138e1dbe8c261282627c255444f3.png?crop=center&height=32&v=1774185240&width=32",
+   "key": "icons/stores/pinkngreens.com.629f0f23.webp"
+  },
+  "plantkos.co": {
+   "from": "https://www.plantkos.co/cdn/shop/files/plantkos_logo_short.png?crop=center&height=32&v=1733922699&width=32",
+   "key": "icons/stores/plantkos.co.191fc247.webp"
+  },
+  "playcali.com": {
+   "from": "https://playcali.com/cdn/shop/files/Cali_Favicon.svg?crop=center&height=180&v=1788287764&width=180",
+   "key": "icons/stores/playcali.com.cf91cd36.webp"
+  },
+  "pravi.pe": {
+   "from": "https://www.pravi.pe/cdn/shop/files/logo_sin_urban_2515c367-7432-492b-833c-de47804e6031_32x32.png?v=1613724869",
+   "key": "icons/stores/pravi.pe.92211218.webp"
+  },
+  "prettygarden.com": {
+   "from": "https://prettygarden.com/cdn/shop/files/LOGO_3.png?crop=center&height=32&v=1613532072&width=32",
+   "key": "icons/stores/prettygarden.com.5d5a2eac.webp"
+  },
+  "promgirl.com": {
+   "from": "https://www.promgirl.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1662448155&width=32",
+   "key": "icons/stores/promgirl.com.e720f14e.webp"
+  },
+  "prontopet.com.au": {
+   "from": "https://www.prontopet.com.au/cdn/shop/files/Pronto_Pet_-_Favicon.png?crop=center&height=32&v=1789448703&width=32",
+   "key": "icons/stores/prontopet.com.au.c62cdd58.webp"
+  },
+  "proteinbolaget.se": {
+   "from": "https://proteinbolaget.se/cdn/shop/files/proteinbolaget-favicon-512x512.png?crop=center&height=32&v=1782823673&width=32",
+   "key": "icons/stores/proteinbolaget.se.30dbc934.webp"
+  },
+  "proteinco.ca": {
+   "from": "https://proteinco.ca/cdn/shop/files/PROTEINCO_branding024-06.png?crop=center&height=32&v=1728650041&width=32",
+   "key": "icons/stores/proteinco.ca.f35ffe43.webp"
+  },
+  "publicbikes.com": {
+   "from": "https://publicbikes.com/cdn/shop/files/P-icon-web.jpg?crop=center&height=32&v=1614765049&width=32",
+   "key": "icons/stores/publicbikes.com.3d79ffd0.webp"
+  },
+  "publicthread.org": {
+   "from": "https://www.publicthread.org/cdn/shop/files/PublicThread_Favicon_32x32_f4fd0026-43e3-4372-b3ae-b08ac6332b3d.png?crop=center&height=180&v=1613548630&width=180",
+   "key": "icons/stores/publicthread.org.ccef8035.webp"
+  },
+  "pupcuppup.com": {
+   "from": "https://www.pupcuppup.com/cdn/shop/files/PC_PUP_WEB.png?crop=center&height=48&v=1702321296&width=48",
+   "key": "icons/stores/pupcuppup.com.fab7bfe0.webp"
+  },
+  "qimacafe.com": {
+   "from": "https://qimacafe.com/cdn/shop/files/favicon_02.png?crop=center&height=32&v=1780829555&width=32",
+   "key": "icons/stores/qimacafe.com.adb9cc24.webp"
+  },
+  "rags.com": {
+   "from": "https://rags.com/cdn/shop/files/RAGS_LOGO_BLACK-SQUARE_4.png?crop=center&height=180&v=1676423350&width=180",
+   "key": "icons/stores/rags.com.b394a694.webp"
+  },
+  "ranchogordo.com": {
+   "from": "https://www.ranchogordo.com/cdn/shop/files/rg-icon.png?crop=center&height=32&v=1652104713&width=32",
+   "key": "icons/stores/ranchogordo.com.7b4af7a1.webp"
+  },
+  "rawls.in": {
+   "from": "https://rawls.in/cdn/shop/files/favicon-32x32.png?crop=center&height=32&v=1760597297&width=32",
+   "key": "icons/stores/rawls.in.bb830fa7.webp"
+  },
+  "representclo.com": {
+   "from": "https://scdn.speedsize.com/fbaf6506-81e1-43a2-bcc1-80e18c7b0146/https://representclo.com/cdn/shop/files/represent-favicon_c9635f61-2f1f-4a3a-8c8c-7b31359cf5aa.jpg?crop=center&height=32&v=1675968324&width=32",
+   "key": "icons/stores/representclo.com.475863da.webp"
+  },
+  "republichome.com": {
+   "from": "https://republichome.com/cdn/shop/files/Republic_favicon_-_300x300_383f3737-3a59-421d-bd1e-2d4cfb1b9ed3_32x32.png?v=1691982156",
+   "key": "icons/stores/republichome.com.f4ebb8a9.webp"
+  },
+  "rivieraseafoodclub.com": {
+   "from": "https://rivieraseafoodclub.com/cdn/shop/files/Riviera-seafood-club-fav-icon-05_32x32.png?v=1724790392",
+   "key": "icons/stores/rivieraseafoodclub.com.1133db2d.webp"
+  },
+  "robertocollina.it": {
+   "from": "https://www.robertocollina.it/cdn/shop/files/apple-touch-icon.png?crop=center&height=32&v=1770291232&width=32",
+   "key": "icons/stores/robertocollina.it.47fdd848.webp"
+  },
+  "rothys.com": {
+   "from": "https://rothys.com/cdn/shop/files/Favicon-Reflex-BG-32x32.png?crop=center&height=32&v=1719817406&width=32",
+   "key": "icons/stores/rothys.com.f6494771.webp"
+  },
+  "ruthgriffioen.art": {
+   "from": "https://ruthgriffioen.art/cdn/shop/t/2/assets/apple-touch-icon.png?v=31814786948908419781792697816",
+   "key": "icons/stores/ruthgriffioen.art.c0db1d3d.webp"
+  },
+  "saltandstone.com": {
+   "from": "https://www.saltandstone.com/cdn/shop/files/favicon_9abaf557-5cb1-4366-8926-3c32e3343f5f.png?crop=center&height=32&v=1649181448&width=32",
+   "key": "icons/stores/saltandstone.com.f208192d.webp"
+  },
+  "sandsociety.com.au": {
+   "from": "https://www.sandsociety.com.au/cdn/shop/files/SS-Favicon.png?v=1742520353&width=180",
+   "key": "icons/stores/sandsociety.com.au.a1d07faf.webp"
+  },
+  "saunass.com": {
+   "from": "https://saunass.com/cdn/shop/files/Saunass_Favicon.svg?crop=center&height=32&v=1762418616&width=32",
+   "key": "icons/stores/saunass.com.24158699.webp"
+  },
+  "seedjewelry.com": {
+   "from": "https://seedjewelry.com/cdn/shop/files/Seed_Favicon.svg?v=1786374942&width=180",
+   "key": "icons/stores/seedjewelry.com.37d2d8c1.webp"
+  },
+  "segafredocoffee.com": {
+   "from": "https://segafredocoffee.com/cdn/shop/files/segafredo-favicon_430x_f96bbbe4-6758-4eff-b8d8-2d40696233a7.png?v=1718211730&width=180",
+   "key": "icons/stores/segafredocoffee.com.e8d8c79c.webp"
+  },
+  "sharge.com": {
+   "from": "https://sharge.com/cdn/shop/files/31a0784cce3883498068716cffd3264c.jpg?crop=center&height=32&v=1761224223&width=32",
+   "key": "icons/stores/sharge.com.d2cb2588.webp"
+  },
+  "shoesandlemons.com": {
+   "from": "https://shoesandlemons.com/cdn/shop/files/FAVICON_S_L.png?crop=center&height=32&v=1755010493&width=32",
+   "key": "icons/stores/shoesandlemons.com.c9d70686.webp"
+  },
+  "shop.goldsgym.com": {
+   "from": "https://shop.goldsgym.com/cdn/shop/files/black_golds_gym_logo_transparent_32x32.png?v=1740172669",
+   "key": "icons/stores/shop.goldsgym.com.c7ac0eba.webp"
+  },
+  "shopcolorgame.com": {
+   "from": "https://shopcolorgame.com/cdn/shop/files/color-game-favicon_f6089f34-87f2-4b8f-bf61-03fd75da0993.svg?v=1733180751&width=180",
+   "key": "icons/stores/shopcolorgame.com.d3488d9c.webp"
+  },
+  "shopdalmatian.com": {
+   "from": "https://shopdalmatian.com/cdn/shop/files/Dalmatian_profile_image_2.png?v=1655519776&width=32",
+   "key": "icons/stores/shopdalmatian.com.086c1cd0.webp"
+  },
+  "shopeitheror.com": {
+   "from": "https://shopeitheror.com/cdn/shop/files/EitherOr_circle_Logo.png?crop=center&height=32&v=1633635080&width=32",
+   "key": "icons/stores/shopeitheror.com.68aa769d.webp"
+  },
+  "shopharveys.com": {
+   "from": "https://shopharveys.com/cdn/shop/files/Hi-Res-H-Logo_1_35386b99-64c3-4dd0-adb0-ef24700d3e70.png?crop=center&height=180&v=1762459373&width=180",
+   "key": "icons/stores/shopharveys.com.e29130ea.webp"
+  },
+  "shopmoment.com": {
+   "from": "https://www.shopmoment.com/cdn/shop/files/apple-touch-icon.png?v=1788816172&width=180",
+   "key": "icons/stores/shopmoment.com.02f8425e.webp"
+  },
+  "silverconnection.com": {
+   "from": "https://silverconnection.com/cdn/shop/files/fav-icon.png?crop=center&height=32&v=1722834653&width=32",
+   "key": "icons/stores/silverconnection.com.ceaef9ea.webp"
+  },
+  "simplydresses.com": {
+   "from": "https://www.simplydresses.com/cdn/shop/files/favicon_32x32.png?v=1662471533",
+   "key": "icons/stores/simplydresses.com.569eb852.webp"
+  },
+  "slidejewels.com": {
+   "from": "https://slidejewels.com/cdn/shop/files/WhatsApp_Image_2025-09-05_at_10.03.14_32x32.jpg?v=1757059541",
+   "key": "icons/stores/slidejewels.com.3c755594.webp"
+  },
+  "snowehome.com": {
+   "from": "https://snowehome.com/cdn/shop/t/175/assets/favicon.ico?v=153321060837638153241734623225",
+   "key": "icons/stores/snowehome.com.a8d9954f.webp"
+  },
+  "sooo.me": {
+   "from": "https://sooo.me/cdn/shop/files/Untitled_design.png?crop=center&height=32&v=1732110353&width=32",
+   "key": "icons/stores/sooo.me.7b66f73b.webp"
+  },
+  "sophiehome.com": {
+   "from": "https://sophiehome.com/cdn/shop/files/sophie-home-favicon.png?crop=center&height=32&v=1747222694&width=32",
+   "key": "icons/stores/sophiehome.com.aeec3f91.webp"
+  },
+  "sowakanyc.com": {
+   "from": "https://sowakanyc.com/cdn/shop/files/sowaka_favicon.png?v=1767093869&width=180",
+   "key": "icons/stores/sowakanyc.com.a4462f5b.webp"
+  },
+  "sprinkler.net.au": {
+   "from": "https://sprinkler.net.au/cdn/shop/files/SprinklerFavicon.png?crop=center&height=32&v=1730262345&width=32",
+   "key": "icons/stores/sprinkler.net.au.b4fab5b7.webp"
+  },
+  "squeezm.net": {
+   "from": "https://squeezm.net/cdn/shop/files/SqueezM-Logo-AvatarV2.jpg?crop=center&height=32&v=1788739890&width=32",
+   "key": "icons/stores/squeezm.net.673917dd.webp"
+  },
+  "standartmag.com": {
+   "from": "https://standartmag.com/cdn/shop/files/standart_-_draft_mark_site_social_-_twitter.png?v=1782938875&width=180",
+   "key": "icons/stores/standartmag.com.7f2c4de7.webp"
+  },
+  "stroms.com": {
+   "from": "https://stroms.com/cdn/shop/files/STROMS-FAVICON.png?crop=center&height=32&v=1779196551&width=32",
+   "key": "icons/stores/stroms.com.7f24aab6.webp"
+  },
+  "studiopacific.art": {
+   "from": "https://studiopacific.art/cdn/shop/files/Favicon_6b9eda8c-9e33-475a-ab37-29c7ee5b2b43.png?crop=center&height=32&v=1714071497&width=32",
+   "key": "icons/stores/studiopacific.art.e9b44098.webp"
+  },
+  "studs.com": {
+   "from": "https://studs.com/cdn/shop/files/Studs_S_YellowCircle_FAVICON_256x256_0a2a56fb-0b13-4a3b-b646-c0291468aeb4.png?crop=center&height=32&v=1673477022&width=32",
+   "key": "icons/stores/studs.com.9780976a.webp"
+  },
+  "stussy.com": {
+   "from": "https://www.stussy.com/cdn/shop/files/Stussy_Crown_Favicon_13246623-57c8-4b1a-b376-bbe235e617fd_32x32.svg?v=1751492884",
+   "key": "icons/stores/stussy.com.75e0a07b.webp"
+  },
+  "suflet.in": {
+   "from": "https://suflet.in/cdn/shop/files/Suflet-fapicon-webp-n.webp?crop=center&height=32&v=1783934123&width=32",
+   "key": "icons/stores/suflet.in.e171f3ef.webp"
+  },
+  "summerfridays.com": {
+   "from": "https://summerfridays.com/cdn/shop/files/SF_FAVICON.png?crop=center&height=32&v=1731364857&width=32",
+   "key": "icons/stores/summerfridays.com.d037341c.webp"
+  },
+  "sunbutter.com.au": {
+   "from": "https://sunbutter.com.au/cdn/shop/files/91937877_2549511761980384_5726594597153406976_o.jpg?crop=center&height=32&v=1614373126&width=32",
+   "key": "icons/stores/sunbutter.com.au.6c1e255c.webp"
+  },
+  "sunglasscurator.com": {
+   "from": "https://www.sunglasscurator.com/cdn/shop/files/sticker_oct_2024_fara_background_32x32.png?v=1730467805",
+   "key": "icons/stores/sunglasscurator.com.2fb5177a.webp"
+  },
+  "supakit.co": {
+   "from": "https://supakit.co/cdn/shop/files/Favicon_2_2d757304-186e-4c0c-90ce-6d953ec1f98d.png?v=1701766505&width=32",
+   "key": "icons/stores/supakit.co.731632c8.webp"
+  },
+  "supergoop.com": {
+   "from": "https://supergoop.com/cdn/shop/files/favicon-32x32_329a1a5d-7477-4e25-a5e2-0c901c4461f9.png?crop=center&height=32&v=1706113620&width=32",
+   "key": "icons/stores/supergoop.com.077b87c4.webp"
+  },
+  "swell.com": {
+   "from": "https://www.swell.com/cdn/shop/files/Swell_Favicon.png?v=1748361911&width=180",
+   "key": "icons/stores/swell.com.34fb89ef.webp"
+  },
+  "switch-nails.com": {
+   "from": "https://switch-nails.com/cdn/shop/files/new-logo.svg?crop=center&height=32&v=1744227830&width=32",
+   "key": "icons/stores/switch-nails.com.9f0b14f4.webp"
+  },
+  "tailsandfin.com": {
+   "from": "https://tailsandfin.com/cdn/shop/files/tf-favicon.png?crop=center&height=32&v=1792598731&width=32",
+   "key": "icons/stores/tailsandfin.com.7d43850e.webp"
+  },
+  "tefal.com.au": {
+   "from": "https://www.tefal.com.au/cdn/shop/files/NEW_LOGO_TEFAL_T_FAVICON_2.png?v=1736723194&width=180",
+   "key": "icons/stores/tefal.com.au.d72cc30f.webp"
+  },
+  "tennisgiant.com": {
+   "from": "https://tennisgiant.com/cdn/shop/files/TG_Square_Icon_40d813e9-a4dd-4183-b224-b1eba59e0208.png?crop=center&height=32&v=1614347204&width=32",
+   "key": "icons/stores/tennisgiant.com.05e70a87.webp"
+  },
+  "terryhoproducts.com": {
+   "from": "https://terryhoproducts.com/cdn/shop/files/Favicon.png?v=1778792358&width=32",
+   "key": "icons/stores/terryhoproducts.com.03562e86.webp"
+  },
+  "thebalconygarden.eu": {
+   "from": "https://thebalconygarden.eu/cdn/shop/files/favicon.webp?crop=center&height=48&v=1721777417&width=48",
+   "key": "icons/stores/thebalconygarden.eu.e1e8aa94.webp"
+  },
+  "thebemagugu.com": {
+   "from": "https://thebemagugu.com/cdn/shop/files/LOGO_SISTERHOOD.png?crop=center&height=32&v=1741768404&width=32",
+   "key": "icons/stores/thebemagugu.com.6050c9ea.webp"
+  },
+  "theessential.com": {
+   "from": "https://theessential.com/cdn/shop/files/Slide_16_9_-_12.jpg?crop=center&height=48&v=1783830417&width=48",
+   "key": "icons/stores/theessential.com.286529db.webp"
+  },
+  "theirnibs.com": {
+   "from": "https://www.theirnibs.com/cdn/shop/files/favicon_1.svg?crop=center&height=32&v=1775640536&width=32",
+   "key": "icons/stores/theirnibs.com.8da42262.webp"
+  },
+  "theobromachocolat.com": {
+   "from": "https://theobromachocolat.com/cdn/shop/files/theobroma_logotype.png?v=1773234569&width=32",
+   "key": "icons/stores/theobromachocolat.com.8e748575.webp"
+  },
+  "thesill.com": {
+   "from": "https://www.thesill.com/cdn/shop/files/Favicon_3.png?crop=center&height=32&v=1768922768&width=32",
+   "key": "icons/stores/thesill.com.10f9d709.webp"
+  },
+  "thesugarcoatedcult.com": {
+   "from": "https://thesugarcoatedcult.com/cdn/shop/t/9/assets/favicon-180.png?v=136332594307950422281791831938",
+   "key": "icons/stores/thesugarcoatedcult.com.51b4ad26.webp"
+  },
+  "thirdlove.com": {
+   "from": "https://www.thirdlove.com/cdn/shop/files/favicon_042a16d1-4f02-4fbc-811d-a20899250f60_180x180.png?v=1748551454",
+   "key": "icons/stores/thirdlove.com.712b237b.webp"
+  },
+  "thisthatplace.com": {
+   "from": "https://thisthatplace.com/cdn/shop/files/ThisThatPlace_IconB_blk.png?v=1742507220&width=180",
+   "key": "icons/stores/thisthatplace.com.53e1db53.webp"
+  },
+  "threadwallets.com": {
+   "from": "https://www.threadwallets.com/cdn/shop/files/Logo_NEW-03_a165a79d-db0e-4b75-9313-4a7a39e48892.png?crop=center&height=180&v=1613660378&width=180",
+   "key": "icons/stores/threadwallets.com.f5d6bc7c.webp"
+  },
+  "thursdayboots.com": {
+   "from": "https://thursdayboots.com/cdn/shop/files/thursday-favicon-transparent_3d1882c8-b721-4de0-ab26-1651dec116cd_100x100.png?v=1613594272",
+   "key": "icons/stores/thursdayboots.com.04b0143a.webp"
+  },
+  "tillysveaas.co.uk": {
+   "from": "https://tillysveaas.co.uk/cdn/shop/files/tilly-sveaas-favicon-square-v2.svg?v=1793352064",
+   "key": "icons/stores/tillysveaas.co.uk.e65b3689.webp"
+  },
+  "tonymoly.us": {
+   "from": "https://tonymoly.us/cdn/shop/files/01.jpg?crop=center&height=32&v=1725487511&width=32",
+   "key": "icons/stores/tonymoly.us.0a5b467b.webp"
+  },
+  "toscablu.com": {
+   "from": "https://www.toscablu.com/cdn/shop/files/T_1.png?crop=center&height=32&v=1696866673&width=32",
+   "key": "icons/stores/toscablu.com.db97c455.webp"
+  },
+  "toutbienpils.com": {
+   "from": "https://toutbienpils.com/cdn/shop/files/Favicon.png?crop=center&height=32&v=1753969879&width=32",
+   "key": "icons/stores/toutbienpils.com.7f8981ec.webp"
+  },
+  "tower28beauty.com": {
+   "from": "https://www.tower28beauty.com/cdn/shop/files/Logo_Favicon.png?crop=center&height=32&v=1683037652&width=32",
+   "key": "icons/stores/tower28beauty.com.e718af2f.webp"
+  },
+  "toysrus.com.au": {
+   "from": "https://toysrus.com.au/cdn/shop/files/TRU_Favicon_Updated.png?crop=center&height=32&v=1794542286&width=32",
+   "key": "icons/stores/toysrus.com.au.33eb6d2f.webp"
+  },
+  "traced.life": {
+   "from": "https://traced.life/cdn/shop/t/6/assets/apple-touch-icon.png?v=45394517221907010921782721088",
+   "key": "icons/stores/traced.life.2e28c58f.webp"
+  },
+  "ultraviolette.com.au": {
+   "from": "https://ultraviolette.com.au/cdn/shop/t/318/assets/apple-touch-icon.png?v=34055212983479192961792529076",
+   "key": "icons/stores/ultraviolette.com.au.434d11bf.webp"
+  },
+  "unimaticwatches.com": {
+   "from": "https://www.unimaticwatches.com/cdn/shop/files/Favicon.png?crop=center&height=32&v=1787554580&width=32",
+   "key": "icons/stores/unimaticwatches.com.a2821261.webp"
+  },
+  "us.esteem-clothing.com": {
+   "from": "https://us.esteem-clothing.com/cdn/shop/files/fav.png?crop=center&height=48&v=1613709936&width=48",
+   "key": "icons/stores/us.esteem-clothing.com.e6d484ab.webp"
+  },
+  "vanna.la": {
+   "from": "https://vanna.la/cdn/shop/files/logomark_white_bg.png?crop=center&height=32&v=1781507477&width=32",
+   "key": "icons/stores/vanna.la.012c5887.webp"
+  },
+  "vibebevvy.com": {
+   "from": "https://vibebevvy.com/cdn/shop/t/6/assets/vibe-favicon.png?v=74658965599658298241790192030",
+   "key": "icons/stores/vibebevvy.com.221e987f.webp"
+  },
+  "vibrasonic.it": {
+   "from": "https://www.vibrasonic.it/cdn/shop/files/favicon-vibrasonic-512.png?crop=center&height=32&v=1788495856&width=32",
+   "key": "icons/stores/vibrasonic.it.e2f18b64.webp"
+  },
+  "vitalproteins.com": {
+   "from": "https://www.vitalproteins.com/cdn/shop/files/VitalProteins_Shields_Blue_Solid_32x32.png?v=1613673724",
+   "key": "icons/stores/vitalproteins.com.1979971e.webp"
+  },
+  "walkergolfthings.com": {
+   "from": "https://www.walkergolfthings.com/cdn/shop/files/KOOKA_1_32x32.png?v=1773724727",
+   "key": "icons/stores/walkergolfthings.com.4f243b8c.webp"
+  },
+  "watchhouse.com": {
+   "from": "https://watchhouse.com/cdn/shop/files/WH_Favicon.png?crop=center&height=32&v=1775293986&width=32",
+   "key": "icons/stores/watchhouse.com.b5749706.webp"
+  },
+  "wearicy.com": {
+   "from": "https://wearicy.com/cdn/shop/files/Group_223432_32x32.svg?v=1699589918",
+   "key": "icons/stores/wearicy.com.002e0239.webp"
+  },
+  "wellnesspathstudio.com": {
+   "from": "https://wellnesspathstudio.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1763816733&width=32",
+   "key": "icons/stores/wellnesspathstudio.com.6c361a12.webp"
+  },
+  "wildone.com": {
+   "from": "https://wildone.com/cdn/shop/files/wildone_favicon_64x64_da1d8396-f587-4d32-9dd3-bb518a81de91.webp?crop=center&height=32&v=1664883879&width=32",
+   "key": "icons/stores/wildone.com.a712264f.webp"
+  },
+  "woodturnerscatalog.com": {
+   "from": "https://woodturnerscatalog.com/cdn/shop/files/csusa-favicon-round-2024_32x32.png?v=1719866305",
+   "key": "icons/stores/woodturnerscatalog.com.1bbb1c81.webp"
+  },
+  "woodwrights.co.nz": {
+   "from": "https://woodwrights.co.nz/cdn/shop/files/WW_Favicon.png?crop=center&height=32&v=1724207135&width=32",
+   "key": "icons/stores/woodwrights.co.nz.8b55a608.webp"
+  },
+  "workoutforless.co.uk": {
+   "from": "https://www.workoutforless.co.uk/cdn/shop/files/workout-for-less-favicon-32-32.png?v=1645000315",
+   "key": "icons/stores/workoutforless.co.uk.b0b1d7b0.webp"
+  },
+  "wovenwoven.com.au": {
+   "from": "https://www.wovenwoven.com.au/cdn/shop/files/woven_woven_kids_weighted_blanket_logo.png?v=1716262751&width=192",
+   "key": "icons/stores/wovenwoven.com.au.0ba8e3ce.webp"
+  },
+  "xisvel.com": {
+   "from": "https://xisvel.com/cdn/shop/files/20260905-131929.png?crop=center&height=32&v=1788782129&width=32",
+   "key": "icons/stores/xisvel.com.098b8ca2.webp"
+  },
+  "yellowboxshoes.com": {
+   "from": "https://yellowboxshoes.com/cdn/shop/files/favicon-wht.jpg?crop=center&height=180&v=1628798164&width=180",
+   "key": "icons/stores/yellowboxshoes.com.78587803.webp"
+  },
+  "youngla.com": {
+   "from": "https://www.youngla.com/cdn/shop/files/YoungLA_Favicon.png?v=1742218506&width=180",
+   "key": "icons/stores/youngla.com.e9ce9d7e.webp"
+  },
+  "zoologistperfumes.com": {
+   "from": "https://www.zoologistperfumes.com/cdn/shop/files/zoologist-favicon_228x228.png?v=1613688227",
+   "key": "icons/stores/zoologistperfumes.com.b03b915f.webp"
+  }
+ },
+ "missing": {
+  "apps": [
+   "easylocation",
+   "app25967",
+   "sc-easy-redirects",
+   "seguno-email",
+   "sendlane",
+   "whatsapp-chat-for-support",
+   "bundler-bundles"
+  ],
+  "stores": [
+   "alaglow.com",
+   "bamboounderwear.com",
+   "baxterofcalifornia.com",
+   "beautyinstem.com",
+   "besamecosmetics.com",
+   "beziergames.com",
+   "brooklinen.com",
+   "bumbede.com",
+   "burnside360.com",
+   "collectivco.com",
+   "conzuri.com",
+   "dlginternationaltrading.com",
+   "dosfemmes.com",
+   "dosfoxes.com",
+   "edgeeyewear.com",
+   "emilynixon.com",
+   "fablepets.com",
+   "figforkids.com",
+   "girlfriend.com",
+   "goodboybob.com",
+   "gravityblankets.com",
+   "hardnheavy.style",
+   "katemarkerhome.com",
+   "kevinthorne.com",
+   "knitato.com",
+   "natileggings.com",
+   "nativecos.com",
+   "newyorkerbagels.com",
+   "nothingnew.com",
+   "phyba.com.au",
+   "radiantrobes.com",
+   "retrospec.com",
+   "robags.com",
+   "siesta-co.com",
+   "spectrausa.net",
+   "sunbleachedswim.com",
+   "sweetyhome.us",
+   "tallsize.com",
+   "taylorstitch.com",
+   "twoleavestea.com",
+   "vintouchjewels.com",
+   "wehve.com",
+   "wildertoys.com",
+   "wulliewear.com"
+  ]
+ }
+}

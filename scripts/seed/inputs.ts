@@ -199,6 +199,8 @@ export interface SeedInputs {
   themeStore: ThemeStoreInput;
   teardowns: TeardownFile[];
   /** Raw bytes of every input, for the data_version hash. */
+  /** Mirrored app icons (scripts/icons/fetch.ts): slug → original listing URL and R2 key. */
+  appIcons: Record<string, { url: string; key: string }>;
   rawFiles: Array<{ name: string; content: string }>;
 }
 
@@ -254,6 +256,14 @@ export function loadSeedInputs(root: string): SeedInputs {
       ? json('data/curation/theme-store.json', ThemeStoreInput)
       : { _note: 'none', themes: {} },
     teardowns,
+    appIcons: existsSync(join(root, 'data/curation/icons.json'))
+      ? json(
+          'data/curation/icons.json',
+          z
+            .object({ apps: z.record(z.string(), z.object({ url: z.string(), key: z.string() })) })
+            .loose(),
+        ).apps
+      : {},
     rawFiles,
   };
 }

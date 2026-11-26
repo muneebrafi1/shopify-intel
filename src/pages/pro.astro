@@ -20,6 +20,7 @@ import Segmented from '~/components/ui/Segmented.astro';
 import { CONTACT, SITE_NAME } from '~/config/site';
 import { formatDate } from '~/lib/format';
 import { loadMeta } from '~/components/static/meta';
+import { PRO_ENABLED } from '~/config/flags';
 import { whopConfig } from '~/server/account/env';
 import {
   LIFETIME,
@@ -33,6 +34,8 @@ import {
   type Plan,
   type Price,
 } from '~/components/static/content';
+
+if (!PRO_ENABLED) return Astro.redirect('/', 302);
 
 type PlanId = Plan['id'];
 const params = Astro.url.searchParams;

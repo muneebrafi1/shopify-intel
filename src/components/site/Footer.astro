@@ -5,6 +5,7 @@
  * row with the legal entity, the data date and the Shopify disclaimer.
  */
 import { LEGAL_ENTITY } from '~/config/site';
+import { PRO_ENABLED } from '~/config/flags';
 import Logo from './Logo.astro';
 import ThemeSwitch from '~/components/ui/ThemeSwitch.astro';
 
@@ -39,7 +40,7 @@ const COLUMNS = [
   {
     title: 'Product',
     links: [
-      { href: '/pro', label: 'Pro' },
+      ...(PRO_ENABLED ? [{ href: '/pro', label: 'Pro' }] : []),
       { href: '/developers', label: 'Developers' },
       { href: '/methodology', label: 'Methodology' },
     ],

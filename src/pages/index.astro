@@ -26,6 +26,7 @@ import FeatureBento, {
   type BentoTheme,
 } from '~/components/home/FeatureBento.astro';
 import Wall, { type WallTile } from '~/components/home/Wall.astro';
+import { PRO_ENABLED } from '~/config/flags';
 import ProBand from '~/components/home/ProBand.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import type { CropRegion } from '~/components/home/CaptureCrop.astro';
@@ -537,9 +538,7 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
         </section>
       )}
 
-      <div class="home__block home__block--last reveal">
-        <ProBand />
-      </div>
+      <div class="home__block home__block--last reveal">{PRO_ENABLED && <ProBand />}</div>
     </div>
   </div>
 </BaseLayout>

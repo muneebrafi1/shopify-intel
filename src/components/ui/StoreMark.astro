@@ -1,10 +1,11 @@
 ---
 /**
- * A store's avatar until we capture real favicons: a rounded square in the store's own tone
- * (the same palette as its captures) with its initial. 32px by default. Decorative; the name is
- * always shown beside it.
+ * A store's avatar: its own logo (mirrored from the store's site) over a rounded square in the
+ * store's tone with its initial, which only shows when no logo exists or it fails to load.
+ * 32px by default. Decorative; the name is always shown beside it.
  */
 import { toneFor } from '~/lib/tone';
+import { storeLogoSrc } from '~/lib/icons';
 
 interface Props {
   domain: string;
@@ -20,6 +21,7 @@ const initial = (name || domain)
   .trim()
   .charAt(0)
   .toUpperCase();
+const logo = storeLogoSrc(domain);
 const radius = Math.max(4, Math.round(size * 0.25));
 ---
 
@@ -29,6 +31,7 @@ const radius = Math.max(4, Math.round(size * 0.25));
   aria-hidden="true"
 >
   {initial}
+  {logo && <img src={logo} alt="" width={size} height={size} loading="lazy" decoding="async" />}
 </span>
 
 <style>
@@ -46,6 +49,16 @@ const radius = Math.max(4, Math.round(size * 0.25));
     font-weight: var(--weight-semibold);
     line-height: 1;
     letter-spacing: -0.02em;
+  }
+  .store-mark img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12%;
+    border-radius: inherit;
+    background: var(--surface);
   }
   .store-mark::after {
     content: '';

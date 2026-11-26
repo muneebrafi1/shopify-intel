@@ -96,6 +96,14 @@ export function buildSeedFromRoot(root: string): SeedResult {
   return buildSeed(loadSeedInputs(root), readLedger(root));
 }
 
+/** The mirrored copy in R2 when we have one for this exact listing icon. */
+function mirroredIcon(
+  m: { url: string; key: string } | undefined,
+  url: string | null,
+): string | null {
+  return m && (url === null || m.url === url) ? `/media/${m.key}` : url;
+}
+
 export function buildSeed(
   inputs: SeedInputs,
   ledger: IdLedger = { stores: {}, apps: {}, themes: {}, app_categories: {} },
@@ -330,7 +338,7 @@ export function buildSeed(
         tagline: a.tagline,
         rating,
         reviews: a.reviews,
-        icon_url: a.icon_url,
+        icon_url: mirroredIcon(inputs.appIcons[slug], a.icon_url),
         app_store_url: isAppStore ? listingUrl : null,
         website_url: isAppStore ? null : listingUrl,
         launched_on: parseLongDate(a.launched),
