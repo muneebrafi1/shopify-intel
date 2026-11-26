@@ -13,6 +13,7 @@ import PageContext from '~/components/sections/PageContext.astro';
 import SectionFocus from '~/components/sections/SectionFocus.astro';
 import { cropSource, fmt, pageLabel, pagePhrase } from '~/components/sections/library';
 import { api, orNotFound } from '~/server/api';
+import { isPlaceholderSrc } from '~/lib/media';
 
 const { type, id } = Astro.params;
 if (!id || !/^[1-9]\d{0,9}$/.test(id)) return Astro.rewrite('/404');
@@ -50,6 +51,13 @@ const title = `${s.type.name} section on ${s.store.display_name} (${phrase})`;
 const description = `The ${s.type.name.toLowerCase()} section on ${s.store.display_name}'s ${phrase}${
   s.theme ? `, ${s.theme.name} theme` : ''
 }${s.app ? `, rendered by ${s.app.short_name}` : ''}. Section ${index + 1} of ${ordered.length} on the page.`;
+const ogImage =
+  !detail.screenshot.is_placeholder &&
+  !s.crop.is_placeholder &&
+  !isPlaceholderSrc(s.crop.src) &&
+  /\.(webp|png|jpe?g)$/i.test(s.crop.src.split('?')[0] ?? s.crop.src)
+    ? s.crop.src
+    : undefined;
 const site = Astro.site ?? Astro.url;
 const jsonLd = [
   {
@@ -82,7 +90,15 @@ const jsonLd = [
 ];
 ---
 
-<BaseLayout title={title} description={description} canonical={s.href} jsonLd={jsonLd} wide>
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={s.href}
+  ogImage={ogImage}
+  ogImageAlt={ogImage ? title : undefined}
+  jsonLd={jsonLd}
+  wide
+>
   <div class="container--wide dx">
     <Breadcrumbs
       class="dx__crumbs"

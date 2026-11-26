@@ -26,6 +26,8 @@ interface Props {
   canonical?: string;
   noindex?: boolean;
   ogImage?: string;
+  ogImageAlt?: string;
+  ogType?: 'website' | 'article';
   /** One or more schema.org objects, serialised as JSON-LD. */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   /** Hide the global header/footer (admin, focused flows). */
@@ -45,6 +47,8 @@ const {
   canonical,
   noindex = false,
   ogImage,
+  ogImageAlt,
+  ogType = 'website',
   jsonLd,
   chrome = 'full',
   bodyClass,
@@ -75,6 +79,12 @@ if (chrome === 'full' && (!navCounts || !dataNote)) {
 const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} — ${SITE_TAGLINE}`;
 const canonicalUrl = new URL(canonical ?? Astro.url.pathname, Astro.site ?? Astro.url).href;
 const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const resolvedOgImage = ogImage ?? (noindex ? undefined : '/og-default.png');
+const ogImageHref = resolvedOgImage
+  ? new URL(resolvedOgImage, Astro.site ?? Astro.url).href
+  : undefined;
+const ogAltText =
+  ogImageAlt ?? (title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} — ${SITE_TAGLINE}`);
 ---
 
 <!doctype html>
@@ -118,11 +128,13 @@ const ldItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     <meta property="og:title" content={title ?? SITE_NAME} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:type" content="website" />
-    {ogImage && (
-      <meta property="og:image" content={new URL(ogImage, Astro.site ?? Astro.url).href} />
-    )}
-    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta property="og:type" content={ogType} />
+    {ogImageHref && <meta property="og:image" content={ogImageHref} />}
+    {ogImageHref && <meta property="og:image:alt" content={ogAltText} />}
+    <meta name="twitter:card" content={ogImageHref ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title ?? SITE_NAME} />
+    <meta name="twitter:description" content={description} />
+    {ogImageHref && <meta name="twitter:image" content={ogImageHref} />}
     {ldItems.map((item) => (
       <script
         type="application/ld+json"
