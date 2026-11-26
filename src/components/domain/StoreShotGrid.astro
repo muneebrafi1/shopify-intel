@@ -1,0 +1,37 @@
+---
+/**
+ * A row of store cards with their real captures: the stores that run an app, or the best
+ * captured stores on a theme. Items come straight from listStores.
+ */
+import StoreCard from './StoreCard.astro';
+import { themeName } from '~/components/stores/query';
+import type { StoreListItem } from '~/server/api/v1/types';
+
+interface Props {
+  stores: StoreListItem[];
+  class?: string;
+}
+const { stores, class: className } = Astro.props;
+---
+
+{
+  stores.length > 0 && (
+    <div class:list={['grid', 'grid--shots', 'shotgrid', className]}>
+      {stores.map((s) => (
+        <StoreCard
+          domain={s.domain}
+          name={s.name}
+          href={s.href}
+          shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
+          meta={`${themeName(s.theme)} · ${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`}
+        />
+      ))}
+    </div>
+  )
+}
+
+<style>
+  .shotgrid {
+    margin-bottom: var(--space-8);
+  }
+</style>

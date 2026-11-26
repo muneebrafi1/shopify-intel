@@ -128,6 +128,59 @@ async function visuals(ctx: Ctx, rows: IndexRow[]) {
   });
 }
 
+function lev(a: string, b: string): number {
+  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0]!;
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const up = prev[j]!;
+      prev[j] = Math.min(up + 1, prev[j - 1]! + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = up;
+    }
+  }
+  return prev[b.length]!;
+}
+
+const words = (v: string) =>
+  v
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+
+/** Typo-tolerant fallback for a query that matched nothing: one or two letters off a title word. */
+async function fuzzyRows(ctx: Ctx, q: string, kinds: SearchKind[], limit: number) {
+  const term = words(q).sort((a, b) => b.length - a.length)[0] ?? '';
+  if (term.length < 4) return [];
+  const pool = await ctx.db.all<IndexRow>(
+    `SELECT kind, ref, title, subtitle FROM search_index
+     WHERE kind IN (SELECT value FROM json_each(?)) AND search_index MATCH ?
+     ORDER BY CAST(boost AS REAL) DESC LIMIT 600`,
+    [JSON.stringify(kinds), `{title keywords} : "${term.slice(0, 3)}"*`],
+  );
+  const max = term.length <= 5 ? 1 : 2;
+  const scored = pool
+    .map((r) => {
+      let d = 9;
+      for (const w of words(r.title)) {
+        d = Math.min(d, lev(term, w), lev(term, w.slice(0, term.length)));
+      }
+      return { r, d };
+    })
+    .filter((x) => x.d <= max)
+    .sort((a, b) => a.d - b.d);
+  const perKind = new Map<string, number>();
+  return scored
+    .filter(({ r }) => {
+      const n = (perKind.get(r.kind) ?? 0) + 1;
+      perKind.set(r.kind, n);
+      return n <= limit;
+    })
+    .map((x) => x.r);
+}
+
 export async function search(
   ctx: Ctx,
   input: { q: string; kinds?: SearchKind[] | undefined; limit: number },
@@ -155,13 +208,14 @@ export async function search(
       JSON.stringify(input.kinds?.length ? kinds : ['theme', 'app', 'store', 'teardown']),
     );
   }
-  const rows = await ctx.db.all<IndexRow>(
+  let rows = await ctx.db.all<IndexRow>(
     `SELECT kind, ref, title, subtitle FROM (
        SELECT kind, ref, title, subtitle, ROW_NUMBER() OVER (PARTITION BY kind ORDER BY ${order}) AS rn
        FROM search_index WHERE ${where.join(' AND ')}
      ) WHERE rn <= ?`,
     [...params, input.limit],
   );
+  if (fts && rows.length === 0) rows = await fuzzyRows(ctx, q, kinds, input.limit);
   const visual = await visuals(ctx, rows);
   const groups = SEARCH_KINDS.filter((k) => kinds.includes(k.kind)).flatMap((k) => {
     const items = rows

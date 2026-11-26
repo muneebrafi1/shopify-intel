@@ -575,6 +575,13 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
   }
   .home__block {
     padding-top: var(--section-y);
+    /* Below the fold: skip style and layout work until it is near the viewport. */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 900px;
+  }
+  .home__window {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 760px;
   }
   .home__block--last {
     padding-bottom: var(--section-y);

@@ -120,6 +120,7 @@ const isSmall = (s: FullPageSection) => s.height / width < (device === 'mobile' 
         width={width}
         height={height}
         loading={eager ? 'eager' : 'lazy'}
+        fetchpriority={eager ? 'high' : undefined}
         decoding="async"
       />
       {ordered.map((s, i) => (

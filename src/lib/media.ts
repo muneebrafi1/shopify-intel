@@ -36,7 +36,9 @@ export function captureDevice(src: string): Device | null {
   return m ? (m[1] as Device) : null;
 }
 
-export const topThumbKey = (key: string) => key.replace(/\.webp$/, '.top.webp');
+export const topThumbKey = (key: string) => key.replace(/(\.top)?\.webp$/, '.top.webp');
+/** 1200×630 social-preview crop of a desktop capture, written next to it by the capture pipeline. */
+export const ogKey = (key: string) => key.replace(/(\.top|\.tile)?\.webp$/, '.og.jpg');
 
 export function thumbUrl(src: string, opts: { cropHeight: number; width?: number }): string {
   if (isPlaceholderSrc(src)) {
@@ -70,5 +72,7 @@ export function ogCaptureSrc(
   }
   const clean = src.split('?')[0] ?? src;
   if (!/\.(webp|png|jpe?g)$/i.test(clean)) return undefined;
-  return captureDevice(clean) ? topThumbKey(clean) : clean;
+  const device = captureDevice(clean);
+  if (device === 'desktop') return ogKey(clean);
+  return device ? topThumbKey(clean) : clean;
 }

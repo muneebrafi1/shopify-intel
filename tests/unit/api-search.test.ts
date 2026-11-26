@@ -32,6 +32,12 @@ describe('search', () => {
     expect(out.data.groups.find((g) => g.kind === 'app')?.items[0]?.ref).toBe('judgeme');
   });
 
+  it('forgives a one or two letter typo when nothing matches', async () => {
+    const out = await api.search({ q: 'klavyo' });
+    expect(out.data.groups.find((g) => g.kind === 'app')?.items[0]?.ref).toBe('klaviyo');
+    expect((await api.search({ q: 'zzzqx' })).data.groups).toEqual([]);
+  });
+
   it('returns suggestions for an empty query and nothing for punctuation', async () => {
     const empty = await api.search({});
     expect(empty.data.is_suggestion).toBe(true);

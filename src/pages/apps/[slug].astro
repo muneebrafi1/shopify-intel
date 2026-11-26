@@ -9,6 +9,7 @@
  * URL state: ?device=mobile (Seen on), ?seen=<section id> (Seen on rail), ?p=<n> (stores).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { ogCaptureSrc } from '~/lib/media';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
 import Badge from '~/components/ui/Badge.astro';
@@ -32,7 +33,8 @@ import ShareList from '~/components/apps/ShareList.astro';
 import AltCard from '~/components/apps/AltCard.astro';
 import PairList, { type Pair } from '~/components/apps/PairList.astro';
 import { api, orNotFound } from '~/server/api';
-import type { AppListItem, AppStoreRow } from '~/server/api/v1/types';
+import type { AppListItem, AppStoreRow, StoreListItem } from '~/server/api/v1/types';
+import StoreShotGrid from '~/components/domain/StoreShotGrid.astro';
 import type { Device } from '~/lib/taxonomy';
 import { formatDate } from '~/lib/format';
 import {
@@ -84,6 +86,18 @@ if (storesPage > 1) {
     )
   ).items;
 }
+
+// Real captures of the stores running it (first page only; the table below lists them all).
+const shotStores: StoreListItem[] =
+  storesPage === 1
+    ? await api
+        .listStores({ app: app.slug, captured: true, limit: 6, facets: false })
+        .then((r) => r.data.items.filter((s) => s.preview))
+        .catch(() => [])
+    : [];
+
+const ogShot = shotStores.find((s) => s.preview?.device === 'desktop')?.preview;
+const ogImage = ogCaptureSrc(ogShot);
 
 const alternatives = await api.getAlternatives({ slug: app.slug, kind: 'app' }).catch(() => null);
 
@@ -322,6 +336,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   description={description}
   canonical={app.href}
   noindex={params.length > 0}
+  {ogImage}
+  ogImageAlt={ogImage ? `${name} on a real store` : undefined}
   jsonLd={jsonLd}
 >
   <div class="container app">
@@ -472,6 +488,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           count={storesTotal}
           description={`Found on ${storesTotal.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')} scanned stores (${sharePct(app.usage.share)}). Curated stores are mapped page by page.`}
         />
+        <StoreShotGrid stores={shotStores} />
         <div class="table-wrap stores-wrap">
           <table class="table stores">
             <caption class="visually-hidden">Stores running{name}</caption>

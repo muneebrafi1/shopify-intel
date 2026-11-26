@@ -8,13 +8,13 @@
  * which recreates the local D1 with placeholders only. Nothing remote is touched.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { topThumbKey } from '../../src/lib/media.ts';
+import { ogKey, topThumbKey } from '../../src/lib/media.ts';
 import { isCaptureBlocked } from '../../src/server/repo/capture.ts';
 import { ingestCapture } from '../../src/server/repo/ingest.ts';
 import { rebuildDerived } from '../../src/server/repo/maintenance.ts';
 import { openLocalEnv } from './local-env.ts';
 import { readManifest } from './manifest.ts';
-import { topThumb } from './process.ts';
+import { ogCrop, topThumb } from './process.ts';
 import { MANIFEST, objectPath } from './paths.ts';
 
 if (!existsSync(MANIFEST)) {
@@ -38,6 +38,15 @@ try {
         objectPath(thumb),
         await topThumb(readFileSync(objectPath(capture.r2_key)), capture.device, capture.width),
       );
+    const og = ogKey(capture.r2_key);
+    if (capture.device === 'desktop' && existsSync(objectPath(capture.r2_key))) {
+      if (!existsSync(objectPath(og)))
+        writeFileSync(objectPath(og), await ogCrop(readFileSync(objectPath(capture.r2_key)), capture.width));
+      if (!(await local.media.head(og)))
+        await local.media.put(og, readFileSync(objectPath(og)), {
+          httpMetadata: { contentType: 'image/jpeg' },
+        });
+    }
     const keys = [capture.r2_key, thumb, ...capture.sections.flatMap((s) => s.r2_key_crop ?? [])];
     const missing = keys.filter((k) => !existsSync(objectPath(k)));
     if (missing.length) {
