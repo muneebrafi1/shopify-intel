@@ -70,7 +70,7 @@ if (store.country) {
   }
 }
 
-const facts: Fact[] = [
+const allFacts: Fact[] = [
   {
     label: 'Theme',
     value: store.theme.label,
@@ -104,6 +104,8 @@ const facts: Fact[] = [
     mono: true,
   },
 ];
+// Facts we have no value for are left out rather than shown as a dash.
+const facts = allFacts.filter((f) => f.value !== '—' && f.value !== 'Not ranked');
 const hasSimilar = detail.similar.length > 0;
 
 // ---- SEO ----------------------------------------------------------------------------------
@@ -146,9 +148,7 @@ const placed = allApps
   .map((a) => `${a.short_name} (${a.seen_in[0]!.name.toLowerCase()})`);
 const introParts = [
   `${title} runs ${store.theme.label}${store.app_count ? ` and ${store.app_count} detected ${store.app_count === 1 ? 'app' : 'apps'}${topNames.length ? `, including ${joinList(topNames)}` : ''}` : ''}.`,
-  placed.length
-    ? `On its captured pages we can place ${joinList(placed)} in the layout.`
-    : null,
+  placed.length ? `On its captured pages we can place ${joinList(placed)} in the layout.` : null,
   hasPlates
     ? `${detail.pages.length} ${detail.pages.length === 1 ? 'page type is' : 'page types are'} mapped section by section, on desktop and mobile.`
     : null,

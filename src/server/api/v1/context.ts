@@ -124,7 +124,7 @@ export async function loadDataInfo(db: Db): Promise<DataInfo> {
       ...(crawlLastAt
         ? {
             [SOURCE_IDS.crawl]: {
-              label: `Our storefront crawl (${m.get('crawl_rules_version') ?? 'StorePeek rules'})`,
+              label: 'Our storefront crawl',
               as_of: crawlLastAt.slice(0, 10),
               url: '/methodology',
             },

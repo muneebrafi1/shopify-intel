@@ -81,7 +81,7 @@ describe('provenance in meta.sources', () => {
     const info = await loadDataInfo(db);
     expect(info.crawlLastAt).toBe('2026-11-26T10:00:00.000Z');
     expect(info.sources['vitrine-crawl']).toEqual({
-      label: 'Our storefront crawl (storepeek-signatures-v9)',
+      label: 'Our storefront crawl',
       as_of: '2026-11-26',
       url: '/methodology',
     });
