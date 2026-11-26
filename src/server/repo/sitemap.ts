@@ -65,7 +65,9 @@ const renderUrlSet = (origin: string, entries: readonly SitemapUrl[]): string =>
 
 export async function buildSitemapIndex(db: Db, origin: string): Promise<string> {
   const base = origin.replace(/\/$/, '');
-  const row = await db.first<{ value: string }>("SELECT value FROM meta WHERE key = 'data_as_of'");
+  const row = await db.first<{ value: string }>(
+    "SELECT MAX(substr(value, 1, 10)) AS value FROM meta WHERE key IN ('data_as_of', 'crawl_last_at')",
+  );
   const lastmod = isoDay(row?.value);
   const tag = lastmod ? `<lastmod>${xmlEscape(lastmod)}</lastmod>` : '';
   return [
@@ -91,7 +93,9 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
     altApps,
     altThemes,
   ] = await Promise.all([
-    db.first<{ value: string }>("SELECT value FROM meta WHERE key = 'data_as_of'"),
+    db.first<{ value: string }>(
+      "SELECT MAX(substr(value, 1, 10)) AS value FROM meta WHERE key IN ('data_as_of', 'crawl_last_at')",
+    ),
     db.all<{ domain: string; last_seen: string }>(
       `SELECT domain, last_seen FROM stores
        WHERE status = 'active'
