@@ -9,6 +9,8 @@ import Button from '~/components/ui/Button.astro';
 import Badge from '~/components/ui/Badge.astro';
 import CodeBlock from '~/components/static/CodeBlock.astro';
 import { endpointList } from '~/server/api/v1/registry';
+import { MCP_RATE_LIMIT } from '~/server/mcp/rate-limit';
+import { mcpToolMeta } from '~/server/mcp/tools';
 import { CONTACT, SITE_NAME, SITE_URL } from '~/config/site';
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
@@ -101,17 +103,15 @@ const ERROR = `{
   }
 }`;
 
-const MCP_TOOLS = [
-  { name: 'search', what: 'Find stores, themes, apps and section types by name.' },
-  { name: 'get_store_stack', what: 'A store’s theme, version and detected apps, with dates.' },
-  { name: 'list_stores', what: 'Stores filtered by theme, app, category or currency.' },
-  { name: 'get_theme / get_app', what: 'Facts, usage on our scanned stores and alternatives.' },
-  { name: 'get_screenshots', what: 'Full-page captures of a store by page type and device.' },
-  {
-    name: 'list_sections',
-    what: 'Section crops by type, theme or app, such as product page reviews.',
-  },
-];
+const MCP_URL = `${SITE_URL}/mcp`;
+const MCP_CONFIG = JSON.stringify(
+  { mcpServers: { [SITE_NAME.toLowerCase()]: { url: MCP_URL } } },
+  null,
+  2,
+);
+const MCP_CURL = `curl -X POST ${MCP_URL} \\
+  -H 'Content-Type: application/json' \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search","arguments":{"q":"prestige"}}}'`;
 
 const NAV = [
   { id: 'overview', label: 'Overview' },
@@ -149,7 +149,7 @@ const QUICK_RESPONSE = `{
 
 <BaseLayout
   title="API & MCP"
-  description={`The public ${SITE_NAME} JSON API: stores, themes, apps, sections and screenshots, versioned and cacheable. Plus the upcoming MCP server for Claude and ChatGPT.`}
+  description={`The public ${SITE_NAME} JSON API and read-only MCP server: stores, themes, apps, sections and screenshots, versioned and cacheable.`}
   jsonLd={{
     '@type': 'TechArticle',
     headline: `${SITE_NAME} API & MCP`,
@@ -163,8 +163,9 @@ const QUICK_RESPONSE = `{
         <p class="eyebrow">API & MCP · v1</p>
         <h1 class="display-lg dev__title">The library, as JSON.</h1>
         <p class="lead dev__lead">
-          Every page on {SITE_NAME} reads from the same public API. Use it in your own tools now,
-          and soon from Claude or ChatGPT through our MCP server. No key needed.
+          Every page on {SITE_NAME} reads from the same public API. Use it in your own tools, or
+          from Claude, ChatGPT and Cursor through our read-only MCP server at <code>/mcp</code>. No
+          key needed.
         </p>
         <dl class="dev__spec">
           <div>
@@ -190,6 +191,9 @@ const QUICK_RESPONSE = `{
           </Button>
           <Button href="/api/v1" variant="secondary">
             API index
+          </Button>
+          <Button href="#mcp" variant="secondary">
+            MCP server
           </Button>
         </div>
       </div>
@@ -389,24 +393,30 @@ ETag: W/"…"`}
         <section class="dev__sec" aria-labelledby="mcp">
           <h2 id="mcp">
             MCP server{' '}
-            <Badge tone="caution" size="sm" class="dev__status">
-              In development
+            <Badge tone="positive" size="sm" class="dev__status">
+              Read-only · {mcpToolMeta.length} tools
             </Badge>
           </h2>
           <p>
-            An MCP server will let Claude, ChatGPT and other assistants pull real store references
-            while they help someone build a Shopify store. Each tool calls the v1 endpoints above,
-            so answers carry the same sources, dates and links.
+            Connect Claude, ChatGPT, Cursor or any Streamable HTTP MCP client to{' '}
+            <code>{MCP_URL}</code>. Every tool is read-only and calls the v1 endpoints above, so
+            answers carry the same sources, dates and canonical links.
+          </p>
+          <CodeBlock code={MCP_CONFIG} label="Client config (Streamable HTTP)" />
+          <CodeBlock code={MCP_CURL} label="Call a tool directly" prompt />
+          <p>
+            <strong>Rate limit:</strong> {MCP_RATE_LIMIT.maxRequests} requests per{' '}
+            {MCP_RATE_LIMIT.windowSeconds} seconds per IP (no API key needed; <code>429</code> with{' '}
+            <code>Retry-After</code> when exceeded).
           </p>
           <ul class="tools">
-            {MCP_TOOLS.map((t) => (
+            {mcpToolMeta.map((t) => (
               <li class="tools__row">
                 <code class="tools__name">{t.name}</code>
-                <span class="tools__what">{t.what}</span>
+                <span class="tools__what">{t.summary}</span>
               </li>
             ))}
           </ul>
-          <p>Tool names may change before release.</p>
         </section>
       </article>
     </div>
@@ -723,7 +733,7 @@ ETag: W/"…"`}
       margin-left: calc(46px + var(--space-3));
     }
     .tools__row {
-      grid-template-columns: 12rem minmax(0, 1fr);
+      grid-template-columns: 13.5rem minmax(0, 1fr);
       gap: var(--space-4);
     }
     .dev__spec {

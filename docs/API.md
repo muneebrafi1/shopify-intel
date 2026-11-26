@@ -240,3 +240,7 @@ else in the namespace (404s, 405s and the OpenAPI document included).
 - Search is FTS5 with prefix indexes (`prefix='2 3'`).
 - Placeholder SVGs and R2 media are immutable per key/data version; API responses get
   `s-maxage` + ETag by `data_version`. Next step: Cache API keyed by URL + data_version.
+
+## MCP server
+
+See `docs/MCP.md`: `POST /mcp` wraps the 22 read-only `GET` endpoints as MCP tools with D1-backed per-IP rate limiting.
