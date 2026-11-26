@@ -7,6 +7,20 @@
  */
 export const ROBOTS_TOKEN = 'VitrineBot';
 
+/**
+ * Where the token's `+url` points: what the bot does and how a store opts out. Override with
+ * BOT_INFO_URL once the final domain is live.
+ */
+export const BOT_INFO_URL =
+  process.env.BOT_INFO_URL ??
+  'https://vitrine-preview.iammuneebrafi.workers.dev/methodology#crawler';
+
+/** Appended to every browser user agent we send, so stores can see (and block) who we are. */
+export const BOT_UA_SUFFIX = `${ROBOTS_TOKEN}/1.0 (+${BOT_INFO_URL})`;
+
+/** A real browser user agent (layouts depend on it) that also identifies the bot. */
+export const identify = (browserUa: string) => `${browserUa} ${BOT_UA_SUFFIX}`;
+
 interface Rule {
   allow: boolean;
   path: string;
@@ -92,7 +106,7 @@ export async function robotsFor(
     hit = (async () => {
       try {
         const res = await fetch(`https://${domain}/robots.txt`, {
-          headers: { 'User-Agent': `Mozilla/5.0 (compatible; ${ROBOTS_TOKEN})` },
+          headers: { 'User-Agent': `Mozilla/5.0 (compatible; ${BOT_UA_SUFFIX})` },
           signal: AbortSignal.timeout(15_000),
         });
         if (res.status >= 400 && res.status < 500) return ALLOW_ALL;

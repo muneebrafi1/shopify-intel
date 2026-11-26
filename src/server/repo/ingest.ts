@@ -26,6 +26,11 @@ import { normalizeDomain } from '../lib/slug.ts';
 import { isServableKey } from '../media/serve.ts';
 import { isCaptureBlocked } from './capture.ts';
 
+/** Room for section ids per screenshot (matches SECTIONS_PER_SHOT in scripts/seed/ids.ts). */
+export const SECTIONS_PER_SHOT = 128;
+/** Screenshot ids above this are history captures (seed ids are storeId * 32 + n). */
+export const HISTORY_SHOT_BASE = 10_000_000;
+
 const px = z.number().int().nonnegative();
 const mediaKey = z
   .string()
@@ -148,7 +153,7 @@ export async function ingestCapture(db: Db, input: CaptureInput): Promise<Ingest
       params: [c.url, pageId],
     });
   } else {
-    pageId = (max?.page ?? 0) + 1;
+    pageId = Math.max(max?.page ?? 0, HISTORY_SHOT_BASE) + 1;
     stmts.push({
       sql: `INSERT INTO pages (id, store_id, page_type, url, is_placeholder, created_at)
             VALUES (?, ?, ?, ?, 0, ?)`,
@@ -182,7 +187,9 @@ export async function ingestCapture(db: Db, input: CaptureInput): Promise<Ingest
       },
     );
   } else {
-    shotId = (max?.shot ?? 0) + 1;
+    // History rows (a newer capture of a page that already has a real one) live above the
+    // seed's derived id range, so they never collide with a store added later.
+    shotId = Math.max(max?.shot ?? 0, HISTORY_SHOT_BASE) + 1;
     if (current)
       stmts.push(
         { sql: 'UPDATE screenshots SET is_current = 0 WHERE id = ?', params: [current.id] },
@@ -196,7 +203,9 @@ export async function ingestCapture(db: Db, input: CaptureInput): Promise<Ingest
     });
   }
 
-  const sorted = [...c.sections].sort((a, b) => a.y - b.y || a.x - b.x);
+  // Section ids derive from the screenshot id (same scheme as the seed, scripts/seed/ids.ts),
+  // so re-ingesting a capture rewrites the same rows instead of shifting every later id.
+  const sorted = [...c.sections].sort((a, b) => a.y - b.y || a.x - b.x).slice(0, SECTIONS_PER_SHOT);
   sorted.forEach((s, order) => {
     stmts.push({
       sql: `INSERT INTO sections (id, screenshot_id, section_type, y, height, x, w, order_index,
@@ -204,7 +213,7 @@ export async function ingestCapture(db: Db, input: CaptureInput): Promise<Ingest
               page_type, device, theme_id, is_current)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 1)`,
       params: [
-        (max?.section ?? 0) + 1 + order,
+        shotId * SECTIONS_PER_SHOT + order,
         shotId,
         s.type,
         s.y,

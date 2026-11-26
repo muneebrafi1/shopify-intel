@@ -30,12 +30,6 @@ notes:
     section_type: reviews
     title: 'Product reviews: Loox'
     body: Loox is the one reviews app we identified on this store; the same scan found it on 54 of 930 stores. Product-review apps usually render a reviews block on the product page, so that section is attributed to Loox. The capture will show the real placement.
-  - n: 5
-    page_type: cart
-    device: mobile
-    section_type: cart-summary
-    title: 'Shipping protection: Navidium'
-    body: Navidium Shipping Protection was detected. Shipping-protection apps add an opt-in line near the cart total, which is why the cart summary is attributed to it.
 ---
 
 > **Sample teardown.** This page shows the teardown format. It is written only from what our scan

@@ -20,9 +20,9 @@ describe('seed builder', () => {
     expect(report.counts.themes).toBe(20);
   });
 
-  it('plans 8 placeholder screenshots per curated store with realistic heights', () => {
+  it('plans 6 placeholder screenshots per curated store with realistic heights', () => {
     const { report } = seedResult();
-    expect(report.shotHeights).toHaveLength(50 * 4 * 2);
+    expect(report.shotHeights).toHaveLength(50 * 3 * 2);
     for (const h of report.shotHeights) {
       const [min, max] = h.device === 'desktop' ? [1000, 7500] : [2000, 11000];
       expect(h.height, `${h.domain} ${h.page} ${h.device}`).toBeGreaterThanOrEqual(min);

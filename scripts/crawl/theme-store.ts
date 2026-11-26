@@ -11,6 +11,7 @@
  * The Theme Store publishes no per-theme style or industry tags, so theme_tags stays empty
  * (we do not invent them).
  */
+import { identify } from './robots.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -26,8 +27,9 @@ export interface ThemeStoreFacts {
 }
 
 const OUT = join(ROOT, 'data/curation/theme-store.json');
-const UA =
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const UA = identify(
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+);
 
 /** Visible text of the page as " | "-separated tokens (scripts, styles and SVGs removed). */
 export function pageTokens(html: string): string[] {

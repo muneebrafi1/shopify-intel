@@ -76,7 +76,7 @@ describe('sections library', () => {
   it('lists section types with counts and previews', async () => {
     const { data } = await api.listSectionTypes();
     expect(data.items).toHaveLength(31);
-    expect(data.items.find((t) => t.slug === 'header')?.count).toBe(400);
+    expect(data.items.find((t) => t.slug === 'header')?.count).toBe(300);
     expect(data.groups.reduce((s, g) => s + g.count, 0)).toBe(SECTION_TOTAL);
     expect(data.items.find((t) => t.slug === 'hero')?.preview?.type.slug).toBe('hero');
   });
@@ -117,11 +117,11 @@ describe('teardowns', () => {
     ).toEqual(['fishwife', 'thesill', 'youngla']);
     expect(list.data.items.find((t) => t.slug === 'youngla')).toMatchObject({
       is_sample: true,
-      note_count: 5,
+      note_count: 4,
     });
     const { data } = await api.getTeardown({ slug: 'youngla' });
     expect(data.store.store.domain).toBe('youngla.com');
-    expect(data.notes.map((n) => n.n)).toEqual([1, 2, 3, 4, 5]);
+    expect(data.notes.map((n) => n.n)).toEqual([1, 2, 3, 4]);
     for (const note of data.notes) {
       expect(note.section?.type.slug).toBe(note.section_type.slug);
     }

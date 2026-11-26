@@ -30,12 +30,6 @@ notes:
     section_type: ugc-gallery
     title: 'Instagram feed: Instafeed'
     body: Instafeed was detected. It was the third most detected app in the whole scan (157 of 930 stores), and apps in the Video & UGC category render a photo or video gallery, so the home page gallery is attributed to it.
-  - n: 5
-    page_type: cart
-    device: mobile
-    section_type: upsell
-    title: Monk again, in the cart
-    body: The same Monk attribution applies to the cart's add-on row on mobile. Free-gift apps usually show the gift where the order total is visible, so the capture should tell us whether Monk appears on the product page, the cart, or both.
 ---
 
 > **Sample teardown.** This page shows the teardown format. It is written only from what our scan

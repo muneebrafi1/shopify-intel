@@ -14,6 +14,7 @@ import { CONTACT, SITE_NAME } from '~/config/site';
 import { formatCount, formatDate } from '~/lib/format';
 import { loadMeta } from '~/components/static/meta';
 import { LEGAL_UPDATED } from '~/components/static/content';
+const BOT_NAME = `${SITE_NAME}Bot`;
 
 const meta = await loadMeta();
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
@@ -99,9 +100,9 @@ const toc = [
 
     <h2 id="what-we-look-at">What we look at</h2>
     <p>
-      Our crawler opens the same pages any shopper can: the home page, a collection, a product and
-      the cart, in a real browser. It never signs in, never enters a password-protected store, never
-      goes through checkout and never touches a store’s admin.
+      Our crawler opens the same pages any shopper can: the home page, a collection and a product,
+      in a real browser. It never adds anything to a cart, never signs in, never enters a
+      password-protected store, never goes through checkout and never touches a store’s admin.
     </p>
     <ul>
       <li>
@@ -113,6 +114,12 @@ const toc = [
       </li>
       <li>
         Stores that block automated visits are left alone; we don’t work around bot protection.
+      </li>
+      <li id="crawler">
+        It says who it is: every request carries <code>{BOT_NAME}</code> in its user agent, with a
+        link to this page. To keep it out, add a <code>User-agent: {BOT_NAME}</code> group with{' '}
+        <code>Disallow: /</code> to your <code>robots.txt</code>, or use the{' '}
+        <a href="/opt-out">removal form</a>.
       </li>
     </ul>
     <p>
@@ -229,17 +236,16 @@ const toc = [
 
     <h2 id="screenshots">Screenshots</h2>
     <p>
-      For curated stores we capture full pages, top to bottom, for each page type (home, collection,
-      product, cart and more) on desktop at 1440px wide and on mobile at 390px wide. Each capture is
-      then sliced into sections such as the header, hero, buy box, reviews and footer. Each section
-      is tagged with its type and, when we can tell, the app that renders it.
+      For curated stores we capture full pages, top to bottom, for each page type (home, collection
+      and product) on desktop at 1440px wide and on mobile at 390px wide. Each capture is then
+      sliced into sections such as the header, hero, buy box, reviews and footer. Each section is
+      tagged with its type and, when we can tell, the app that renders it.
     </p>
     <SlicedPlate />
     <p>
-      <strong>Today these are layout previews.</strong> Until our first capture run, every
-      “screenshot” is drawn from the sections we detected on that page, in the store’s colours, and
-      labelled as a preview. The detection data under them is real. When real captures land, the
-      previews are replaced and every capture shows the date it was taken.
+      Every capture shows the date it was taken. A store we haven’t captured yet shows a layout
+      preview instead: drawn from the sections we detected on that page, in the store’s colours, and
+      labelled as a preview. The detection data under it is real.
     </p>
     <p>
       Screenshots only show public pages, always name the store and link back to it. Store owners

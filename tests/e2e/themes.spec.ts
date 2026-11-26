@@ -19,7 +19,7 @@ const ROUTES = [
   '/themes/dawn',
   '/themes/hyper',
   '/themes/enterprise',
-  '/themes/prestige?page=cart&device=mobile',
+  '/themes/prestige?page=collection&device=mobile',
   '/themes/dawn?page=product&device=mobile',
 ];
 

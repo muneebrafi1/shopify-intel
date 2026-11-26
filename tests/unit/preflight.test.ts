@@ -28,7 +28,6 @@ describe('launch preflight', () => {
     const failed = strict.checks.filter((c) => c.status === 'fail').map((c) => c.id);
     expect(failed).toContain('wrangler-d1-id');
     expect(failed).toContain('site-domain');
-    expect(failed).toContain('capture-notice');
   });
 
   it('runs read-only HTTP smoke checks and catches fail-open guards', async () => {

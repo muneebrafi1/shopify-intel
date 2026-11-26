@@ -6,7 +6,13 @@
  * Used by scripts/build-seed.ts (writes .data/seed.sql) and by the unit tests (in memory).
  */
 import { createHash } from 'node:crypto';
-import { PIXELS, SECTION_GROUPS, SECTION_TYPES } from '../../src/lib/taxonomy.ts';
+import {
+  DEVICES,
+  PAGE_TYPES,
+  PIXELS,
+  SECTION_GROUPS,
+  SECTION_TYPES,
+} from '../../src/lib/taxonomy.ts';
 import { REBUILD_DERIVED_SQL } from '../../src/server/repo/maintenance.ts';
 import { normalizeDomain, slugify } from '../../src/server/lib/slug.ts';
 import {
@@ -24,6 +30,15 @@ import {
   priceToCents,
   shortAppName,
 } from './normalize.ts';
+import {
+  assignIds,
+  pageIdFor,
+  readLedger,
+  sectionIdFor,
+  shotIdFor,
+  type IdKind,
+  type IdLedger,
+} from './ids.ts';
 import { SqlWriter, type Row } from './sql.ts';
 import { parseTeardown } from './teardowns.ts';
 
@@ -53,6 +68,8 @@ export interface SeedReport {
 export interface SeedResult {
   sql: string;
   report: SeedReport;
+  /** The id ledger after this build (new keys appended); scripts/build-seed.ts saves it. */
+  ledger: IdLedger;
 }
 
 interface AppRecord {
@@ -76,10 +93,14 @@ function themeStoreChecked(t: SeedInputs['themeStore']): Record<string, string> 
 const checkedAt = (ts: string | undefined) => (ts ? iso(ts) : null);
 
 export function buildSeedFromRoot(root: string): SeedResult {
-  return buildSeed(loadSeedInputs(root));
+  return buildSeed(loadSeedInputs(root), readLedger(root));
 }
 
-export function buildSeed(inputs: SeedInputs): SeedResult {
+export function buildSeed(
+  inputs: SeedInputs,
+  ledger: IdLedger = { stores: {}, apps: {}, themes: {} },
+): SeedResult {
+  const idOf = (kind: IdKind, key: string) => assignIds(ledger, kind, [key]).get(key)!;
   const warnings: string[] = [];
   const warn = (msg: string) => warnings.push(msg);
   const w = new SqlWriter();
@@ -226,7 +247,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   for (const input of allAppInputs) {
     if (aliasOf.has(input.slug) || appBySlug.has(input.slug)) continue;
     const rec: AppRecord = {
-      id: apps.length + 1,
+      id: idOf('apps', input.slug),
       slug: input.slug,
       input,
       profile: fullSlugs.has(input.slug) ? 'full' : 'basic',
@@ -322,7 +343,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   // ------------------------------------------------------------------------------------------
   // Themes
   // ------------------------------------------------------------------------------------------
-  const themes = inputs.themes.map((t, i) => ({ id: i + 1, ...t }));
+  const themes = inputs.themes.map((t) => ({ id: idOf('themes', t.slug), ...t }));
   const themeByName = new Map(themes.map((t) => [t.name.toLowerCase(), t]));
   const themeBySlug = new Map(themes.map((t) => [t.slug, t]));
   w.comment('themes');
@@ -444,8 +465,8 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   const storeApps = new Map<number, AppRecord[]>();
   const storeThemeId = new Map<number, number | null>();
 
-  ordered.forEach((d, i) => {
-    const id = i + 1;
+  ordered.forEach((d) => {
+    const id = idOf('stores', d.domain);
     const seen = iso(d.detected_at);
     const curated = curatedByDomain.get(d.domain);
     const edit = curation.get(d.domain);
@@ -591,7 +612,10 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
     for (const shot of planStoreCaptures(domain, layoutApps)) {
       let pageId = pageIds.get(shot.pageType);
       if (pageId === undefined) {
-        pageId = pageRows.length + 1;
+        pageId = pageIdFor(
+          storeId,
+          PAGE_TYPES.findIndex((p) => p.slug === shot.pageType),
+        );
         pageIds.set(shot.pageType, pageId);
         pageRows.push({
           id: pageId,
@@ -602,7 +626,10 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
           created_at: CATALOG_TS,
         });
       }
-      const shotId = shotRows.length + 1;
+      const shotId = shotIdFor(
+        pageId,
+        DEVICES.findIndex((d) => d.slug === shot.device),
+      );
       shotRows.push({
         id: shotId,
         page_id: pageId,
@@ -622,7 +649,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       });
       shotHeights.push({ domain, page: shot.pageType, device: shot.device, height: shot.height });
       shot.sections.forEach((s, order) => {
-        const sectionId = sectionRows.length + 1;
+        const sectionId = sectionIdFor(shotId, order);
         const appId = s.appSlug ? (appBySlug.get(s.appSlug)?.id ?? null) : null;
         sectionRows.push({
           id: sectionId,
@@ -855,6 +882,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   return {
     sql: w.toString(),
     report: { dataVersion, counts, warnings, appStoreCounts, themeStoreCounts, shotHeights },
+    ledger,
   };
 }
 

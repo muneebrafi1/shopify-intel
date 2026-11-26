@@ -4,6 +4,7 @@
  * the section boxes from the DOM. No logins, no form submissions, no bypassing of bot checks:
  * a page that does not render plainly is reported as failed.
  */
+import { identify } from '../crawl/robots.ts';
 import type { Browser, BrowserContextOptions, Page } from '@playwright/test';
 import type { RawSection } from './classify.ts';
 
@@ -27,13 +28,13 @@ export const DEVICE_PROFILES: Record<CaptureDevice, DeviceProfile> = {
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 1,
     maxHeight: 14000,
-    context: { userAgent: CHROME_UA },
+    context: { userAgent: identify(CHROME_UA) },
   },
   mobile: {
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
     maxHeight: 8000,
-    context: { userAgent: IPHONE_UA, isMobile: true, hasTouch: true },
+    context: { userAgent: identify(IPHONE_UA), isMobile: true, hasTouch: true },
   },
 };
 
@@ -296,41 +297,6 @@ export async function discoverPages(browser: Browser, homeUrl: string): Promise<
 }
 
 /**
- * Puts one item in the cart so the cart page shows its real layout. This uses the storefront
- * cart API exactly like the theme's own "Add to cart" button: no checkout, no account, nothing
- * personal; the cart lives only in this throwaway browser context.
- */
-async function addOneToCart(page: Page, productUrl: string) {
-  await page.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  const ok = await page.evaluate(async (path) => {
-    type V = { id: number; available: boolean };
-    const add = async (v: V | undefined) => {
-      if (!v) return false;
-      const r = await fetch('/cart/add.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ items: [{ id: v.id, quantity: 1 }] }),
-      }).catch(() => null);
-      return !!r && r.ok;
-    };
-    const json = async <T>(url: string) => {
-      const r = await fetch(url).catch(() => null);
-      return r && r.ok ? ((await r.json().catch(() => null)) as T | null) : null;
-    };
-    const p = await json<{ variants?: V[] }>(`${path.replace(/\/$/, '')}.js`);
-    if (await add(p?.variants?.find((x) => x.available))) return true;
-    // The featured product is sold out (or its variant is restricted): any product in stock.
-    const list = await json<{ products?: Array<{ variants?: V[] }> }>('/products.json?limit=30');
-    for (const item of list?.products ?? []) {
-      const v = item.variants?.find((x) => x.available);
-      if (v) return add(v);
-    }
-    return add(p?.variants?.[0]);
-  }, new URL(productUrl).pathname);
-  if (!ok) throw new CaptureError('empty', 'could not put an item in the cart');
-}
-
-/**
  * Viewport-by-viewport capture, stitched by the caller: for sites that only draw content while
  * it is in the real viewport (scroll-driven reveals), where a one-shot full-page capture comes
  * out partly blank. Fixed and sticky elements are hidden after the first tile so the header
@@ -391,10 +357,9 @@ export async function capturePage(
   });
   try {
     const page = await context.newPage();
-    if (opts.pageType === 'cart') {
-      if (!opts.productUrl) throw new CaptureError('empty', 'no product to put in the cart');
-      await addOneToCart(page, opts.productUrl);
-    }
+    // Cart pages are not captured: filling a cart needs POST /cart/add.js, which Shopify's
+    // robots.txt disallows (owner decision, docs/HANDOFF.md).
+    if (opts.pageType === 'cart') throw new CaptureError('empty', 'cart captures are disabled');
     const res = await page.goto(url, { waitUntil: 'load', timeout: 60_000 }).catch(async (e) => {
       // Pages with endless trackers never fire `load`; the DOM is enough to go on.
       if (!String(e).includes('Timeout')) throw e;
@@ -419,8 +384,6 @@ export async function capturePage(
     await dismissOverlays(page); // popups that open on scroll or after a delay
     await page.waitForTimeout(2500);
     await dismissOverlays(page); // consent tools that mount late (seen ~6 s after load)
-    // Themes open their cart drawer after an add; the page behind it is what we want.
-    if (opts.pageType === 'cart') await page.keyboard.press('Escape').catch(() => {});
 
     const fullHeight = await page.evaluate(() => document.documentElement.scrollHeight);
     if (fullHeight < 300) throw new CaptureError('empty', `page is ${fullHeight}px tall`);

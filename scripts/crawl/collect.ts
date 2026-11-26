@@ -11,6 +11,7 @@
  * Polite: one page per store, a real browser user agent, no logins, no forms, no bypassing of
  * bot checks (a challenge page is reported as such and nothing is ingested).
  */
+import { identify } from './robots.ts';
 import type { Browser } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -65,8 +66,9 @@ export async function loadEngine(): Promise<Engine> {
   };
 }
 
-const UA =
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const UA = identify(
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+);
 
 export async function crawlStore(
   browser: Browser,

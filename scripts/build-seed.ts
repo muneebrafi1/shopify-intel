@@ -8,13 +8,15 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSeedFromRoot } from './seed/build.ts';
+import { writeLedger } from './seed/ids.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, '.data/seed.sql');
 
-const { sql, report } = buildSeedFromRoot(root);
+const { sql, report, ledger } = buildSeedFromRoot(root);
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, sql);
+writeLedger(root, ledger);
 
 const heights = (device: string) =>
   report.shotHeights.filter((h) => h.device === device).map((h) => h.height);

@@ -12,7 +12,7 @@ describe('meta', () => {
     expect(data.counts.stores_scanned).toBe(930);
     expect(data.counts.stores_curated).toBe(50);
     expect(data.counts.stores_captured).toBe(0);
-    expect(data.counts.screenshots_placeholder).toBe(400);
+    expect(data.counts.screenshots_placeholder).toBe(300);
     expect(data.source.label).toContain('930 Shopify stores');
     expect(meta.api_version).toBe('v1');
     expect(meta.sources[data.source.id]?.as_of).toBe('2026-11-17');
@@ -89,12 +89,7 @@ describe('stores', () => {
     const loox = data.apps.groups.flatMap((g) => g.apps).find((a) => a.slug === 'loox');
     expect(loox?.seen_in.map((s) => s.slug)).toContain('reviews');
     expect(data.pixels).toEqual([{ slug: 'northbeam', name: 'Northbeam' }]);
-    expect(data.pages.map((p) => p.page_type.slug)).toEqual([
-      'home',
-      'collection',
-      'product',
-      'cart',
-    ]);
+    expect(data.pages.map((p) => p.page_type.slug)).toEqual(['home', 'collection', 'product']);
     const shot = data.pages[0]?.screenshots.desktop;
     expect(shot?.image.src).toBe(`/media/placeholder/shot/${shot?.id}.svg`);
     expect(shot?.is_placeholder).toBe(true);
@@ -172,7 +167,7 @@ describe('themes', () => {
     expect(data.stores.items).toHaveLength(5);
     expect(data.stores.next_cursor).not.toBeNull();
     expect(data.curated_stores[0]?.store.domain).toBe('youngla.com');
-    expect(data.curated_stores[0]?.pages).toHaveLength(4);
+    expect(data.curated_stores[0]?.pages).toHaveLength(3);
     expect(data.versions.find((v) => v.version === '9.3.0')?.stores).toBe(1);
     expect(data.top_apps[0]?.stores).toBeGreaterThan(0);
     expect(data.sections.items.length).toBeGreaterThan(0);

@@ -195,8 +195,8 @@ test.describe('compare page behaviour', () => {
 
   test('the stage view comes from the query string', async ({ page }) => {
     await prepare(page);
-    await page.goto('/compare/dawn-vs-horizon?page=cart&device=mobile');
-    await expect(page.locator('[data-stage-frame="cart:mobile"]')).toBeVisible();
+    await page.goto('/compare/dawn-vs-horizon?page=product&device=mobile');
+    await expect(page.locator('[data-stage-frame="product:mobile"]')).toBeVisible();
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
       /\/compare\/dawn-vs-horizon$/,

@@ -24,12 +24,6 @@ notes:
     section_type: buy-box
     title: 'Pay later, in the buy box: Afterpay'
     body: Afterpay On-Site Messaging was detected (18 of 930 stores). Buy-now-pay-later messaging usually sits under the price, so the buy box is attributed to it.
-  - n: 4
-    page_type: cart
-    device: desktop
-    section_type: shipping-bar
-    title: An attribution we expect to be wrong
-    body: The free-shipping bar is attributed to Wholesale Gorilla B2B Tools because it is the only app detected from our Cart & Checkout category. Its listing name points to wholesale ordering, not shipping thresholds, so the bar may well be the theme's own. Attribution by category is a guess until the capture shows the page.
 ---
 
 > **Sample teardown.** This page shows the teardown format. It is written only from what our scan

@@ -31,7 +31,8 @@ import { readManifest, upsertEntry, writeManifest } from './manifest.ts';
 import { ROOT } from './paths.ts';
 import { processCapture } from './process.ts';
 
-const PAGE_TYPES: CapturePageType[] = ['home', 'collection', 'product', 'cart'];
+// No cart: it needs POST /cart/add.js, which Shopify's robots.txt disallows.
+const PAGE_TYPES: CapturePageType[] = ['home', 'collection', 'product'];
 const { values } = parseArgs({
   options: {
     only: { type: 'string' },
