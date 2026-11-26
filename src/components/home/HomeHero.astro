@@ -1,23 +1,24 @@
 ---
 /**
- * Home hero (Attio + Stripe), the one centred block on the site: announcement pill for the
- * newest teardown → two-tone display headline → lead → Browse stores + Search ⌘K → live counter.
+ * Home hero: what the site is in one line, a search field, and three clear paths (stores, apps,
+ * compare), with the real store gallery right under it (HomeGallery). Compact on purpose: on a
+ * phone the gallery starts inside the first screen.
  *
- * "Search" is a link to /search (works without JS); with JS the header script hands it to the
- * command palette (`data-palette-open`), and the shortcut hint follows the platform.
+ * The field is a plain GET form to /search (works without JS). With JS, pressing or typing in it
+ * hands over to the command palette, which holds the instant results (`palette:open`).
  */
 import AnnouncementPill from '~/components/ui/AnnouncementPill.astro';
-import Button from '~/components/ui/Button.astro';
-import Counter from '~/components/ui/Counter.astro';
+import Icon from '~/components/ui/Icon.astro';
 import Kbd from '~/components/ui/Kbd.astro';
+import type { IconName } from '~/components/ui/icons';
 
 interface Props {
   announcement: { href: string; text: string } | null;
   lead: string;
-  counter: { value: number | string; label: string }[];
+  paths: { href: string; label: string; count: string; icon: IconName }[];
   asOf: string;
 }
-const { announcement, lead, counter, asOf } = Astro.props;
+const { announcement, lead, paths, asOf } = Astro.props;
 ---
 
 <section class="hero" aria-labelledby="home-title">
@@ -31,32 +32,66 @@ const { announcement, lead, counter, asOf } = Astro.props;
       Shopify themes and apps, <span class="tone-muted">on the stores that run them.</span>
     </h1>
     <p class="hero__lead lead">{lead}</p>
-    <div class="hero__actions">
-      <Button variant="primary" size="lg" href="/stores" arrow>
-        Browse stores
-      </Button>
-      <Button
-        variant="secondary"
-        size="lg"
-        href="/search"
-        icon="magnifying-glass"
-        class="hero__search"
-        data-palette-open
-      >
-        Search
-        <span class="hero__kbd" data-kbd-hint aria-hidden="true">
-          <Kbd>⌘</Kbd>
-          <Kbd>K</Kbd>
-        </span>
-      </Button>
-    </div>
-    <Counter items={counter} asOf={asOf} asOfLabel="scanned" class="hero__counter" />
+
+    <form class="hsearch" action="/search" method="get" role="search" data-home-search>
+      <label for="home-q" class="visually-hidden">Search stores, themes, apps and sections</label>
+      <Icon name="magnifying-glass" size={20} class="hsearch__icon" />
+      <input
+        id="home-q"
+        class="hsearch__input"
+        type="search"
+        name="q"
+        placeholder="Search a store, app or theme"
+        autocomplete="off"
+        spellcheck="false"
+        enterkeyhint="search"
+        maxlength="100"
+      />
+      <span class="hsearch__kbd" data-kbd-hint aria-hidden="true">
+        <Kbd>⌘</Kbd>
+        <Kbd>K</Kbd>
+      </span>
+      <button type="submit" class="hsearch__go">Search</button>
+    </form>
+
+    <ul class="paths" role="list">
+      {paths.map((p) => (
+        <li>
+          <a class="paths__item" href={p.href}>
+            <Icon name={p.icon} size={18} />
+            <span class="paths__label">{p.label}</span>
+            <span class="paths__count num">{p.count}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="hero__asof">Scanned {asOf}</p>
   </div>
 </section>
 
+<script>
+  // Hand the field to the command palette (instant results). Without it, the form submits.
+  const form = document.querySelector<HTMLFormElement>('[data-home-search]');
+  const input = form?.querySelector<HTMLInputElement>('input');
+  const open = (q: string) =>
+    !document.dispatchEvent(new CustomEvent('palette:open', { cancelable: true, detail: { q } }));
+  input?.addEventListener('pointerdown', (e) => {
+    if (open('')) e.preventDefault();
+  });
+  input?.addEventListener('input', () => {
+    if (input.value && open(input.value)) input.value = '';
+  });
+  form?.addEventListener('submit', (e) => {
+    if (!input?.value.trim()) {
+      e.preventDefault();
+      open('');
+    }
+  });
+</script>
+
 <style>
   .hero {
-    padding-top: var(--space-16);
+    padding-top: var(--space-8);
     text-align: center;
   }
   .hero__inner {
@@ -66,7 +101,7 @@ const { announcement, lead, counter, asOf } = Astro.props;
   }
   .hero :global(.hero__pill) {
     max-width: min(100%, 420px);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
   }
   .hero__title {
     max-width: 15ch;
@@ -82,51 +117,157 @@ const { announcement, lead, counter, asOf } = Astro.props;
   }
   .hero__lead {
     max-width: 34rem;
-    margin-top: var(--space-5);
+    margin-top: var(--space-4);
   }
-  .hero__actions {
+
+  .hsearch {
+    position: relative;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    align-items: center;
     gap: var(--space-3);
-    margin-top: var(--space-8);
+    width: 100%;
+    max-width: 36rem;
+    height: 56px;
+    margin-top: var(--space-6);
+    padding: 0 6px 0 var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    text-align: left;
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      var(--shadow-sm),
+      var(--highlight);
+    transition: box-shadow var(--dur-fast) var(--ease-out);
   }
-  .hero__kbd {
+  .hsearch:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--ink-4),
+      var(--shadow-sm),
+      var(--highlight);
+  }
+  .hsearch:focus-within {
+    box-shadow:
+      inset 0 0 0 1.5px var(--accent),
+      var(--shadow-sm),
+      var(--highlight);
+  }
+  .hsearch :global(.hsearch__icon) {
+    flex: none;
+    color: var(--ink-3);
+  }
+  .hsearch__input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--text-lg);
+    letter-spacing: -0.01em;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .hsearch__input:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+  .hsearch__input::placeholder {
+    color: var(--ink-3);
+  }
+  .hsearch__input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .hsearch__kbd {
     display: none;
     gap: 3px;
-    margin-left: var(--space-1);
+    flex: none;
   }
-  .hero :global(.hero__counter) {
-    justify-content: center;
-    margin-top: var(--space-8);
+  .hsearch__go {
+    flex: none;
+    height: 44px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-control);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .hsearch__go:hover {
+    background: var(--btn-bg-hover);
   }
   @media (hover: hover) and (pointer: fine) {
-    .hero__kbd {
+    .hsearch__kbd {
       display: inline-flex;
     }
   }
-  @media (max-width: 639px) {
-    .hero {
-      padding-top: var(--space-10);
-    }
-    .hero__actions {
-      width: 100%;
-    }
-    .hero__actions > :global(.btn) {
-      flex: 1 1 0;
-      min-width: 0;
-    }
-    /* The date goes to its own line instead of wrapping behind a separator. */
-    .hero :global(.counter__item:last-child) {
-      flex-basis: 100%;
-    }
-    .hero :global(.counter__item:last-child .counter__sep) {
-      display: none;
+
+  .paths {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+    width: 100%;
+    max-width: 36rem;
+    margin-top: var(--space-3);
+  }
+  .paths__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs, none);
+    transition: box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .paths__item:hover {
+    box-shadow: inset 0 0 0 1px var(--ink-4);
+  }
+  .paths__item :global(.icon) {
+    color: var(--ink-3);
+  }
+  .paths__label {
+    font-size: var(--text-ui);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+  .paths__count {
+    color: var(--ink-3);
+    font-size: var(--text-xs);
+  }
+  .hero__asof {
+    margin-top: var(--space-3);
+    color: var(--ink-4);
+    font-size: var(--text-xs);
+  }
+  @media (min-width: 640px) {
+    .paths__item {
+      flex-direction: row;
+      justify-content: center;
+      gap: var(--space-2);
     }
   }
   @media (min-width: 1024px) {
     .hero {
-      padding-top: var(--space-24);
+      padding-top: var(--space-12);
+    }
+    .hsearch {
+      height: 64px;
+      max-width: 40rem;
+      padding-left: var(--space-5);
+      padding-right: 10px;
+    }
+    .hsearch__input {
+      font-size: var(--text-xl);
+    }
+    .paths {
+      max-width: 40rem;
     }
   }
 </style>

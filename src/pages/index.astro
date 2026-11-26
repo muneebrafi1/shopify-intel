@@ -1,21 +1,23 @@
 ---
 /**
- * Home: the product is the hero visual. Centred hero (newest teardown pill, the headline, two
- * actions, a live counter) → the store viewer in a product window → curated store strip →
+ * Home: value on the first screen. Centred hero (newest teardown pill, headline, search field,
+ * three paths: stores / apps / compare) → a gallery of real store captures → the store viewer in
+ * a product window →
  * "How it works" dark band → feature bento of real UI → latest captures → Pro band.
  *
  * Every number and capture comes from the in-process API (the same one behind /api/v1). The page
  * stays inside D1's 50-queries-per-request budget (`npm run budget:queries`): one teardown detail
  * (with its store) feeds the window, the steps and the teardown card, and one sections query
- * (items only, no facets) feeds the strip and the gallery.
+ * (items only, no facets) feeds the captures wall; one stores query (domains filter) the gallery.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import HomeHero from '~/components/home/HomeHero.astro';
+import HomeGallery, { type GalleryTile } from '~/components/home/HomeGallery.astro';
+import galleryManifest from '../../data/curation/home-gallery.json';
 import ProductWindow, {
   type WindowPage,
   type WindowShot,
 } from '~/components/home/ProductWindow.astro';
-import StoreStrip, { type StripStore } from '~/components/home/StoreStrip.astro';
 import HowItWorks from '~/components/home/HowItWorks.astro';
 import type { HowData, CompareSide } from '~/components/home/HowVisual.astro';
 import FeatureBento, {
@@ -50,6 +52,7 @@ const [
   apps,
   { data: comparisons },
   { data: homeShots },
+  galleryStores,
 ] = await Promise.all([
   api.getMeta({}),
   api.listTeardowns({}),
@@ -60,6 +63,12 @@ const [
   // screenshot and store, so this one query gives the strip and the gallery (desktop + phone).
   // Items only: the facet counts are not shown here.
   api.listSections({ type: 'header', page_type: 'home', limit: 40, facets: false }),
+  // The gallery under the hero: the stores we cut tiles for (data/curation/home-gallery.json).
+  api.listStores({
+    domains: galleryManifest.tiles.map((t) => t.domain),
+    limit: 60,
+    facets: false,
+  }),
 ]);
 
 const c = meta.counts;
@@ -372,6 +381,34 @@ const benteardown: BentoTeardown | null = (() => {
   };
 })();
 
+// ---- Hero gallery: real captures only, in the manifest's order.
+const storeByDomain = new Map(galleryStores.data.items.map((i) => [i.domain, i]));
+const galleryTiles: GalleryTile[] = galleryManifest.tiles.flatMap((t) => {
+  const st = storeByDomain.get(t.domain);
+  const shot = st?.preview;
+  if (!st || !shot || shot.is_placeholder) return [];
+  // The cut tiles belong to one specific capture; if the store was re-captured since, use the
+  // regular top thumbnail of the current one instead.
+  const fresh = shot.image.src.endsWith(t.desktop.src);
+  const live = { src: shot.image.src, width: shot.image.width, height: shot.image.height, tile: false };
+  return [
+    {
+      domain: st.domain,
+      name: st.display_name,
+      href: st.href,
+      theme: st.theme.label,
+      appCount: st.app_count,
+      apps: st.top_apps.map((a) => ({ name: a.short_name, iconUrl: a.icon_url })),
+      desktop: fresh
+        ? { src: `/media/${t.desktop.key}`, width: t.desktop.w, height: t.desktop.h, tile: true }
+        : live,
+      mobile: fresh
+        ? { src: `/media/${t.mobile.key}`, width: t.mobile.w, height: t.mobile.h, tile: true }
+        : live,
+    },
+  ];
+});
+
 // ---- Strip + gallery: every curated store's home page, desktop and phone.
 const homeItems = homeShots.items.filter((s) => s.store.is_curated);
 const toTile = (s: (typeof homeItems)[number]): WallTile => ({
@@ -388,26 +425,6 @@ const toTile = (s: (typeof homeItems)[number]): WallTile => ({
 const wallDesktop = homeItems.filter((s) => s.device === 'desktop').map(toTile);
 const wallMobile = homeItems.filter((s) => s.device === 'mobile').map(toTile);
 const allPlaceholders = [...wallDesktop, ...wallMobile].every((t) => t.isPlaceholder);
-
-const stripSeen = new Set<string>();
-const stripAll = homeItems
-  .filter((s) => (stripSeen.has(s.store.domain) ? false : (stripSeen.add(s.store.domain), true)))
-  .map((s) => ({
-    named: !!s.store.name,
-    store: {
-      domain: s.store.domain,
-      name: s.store.display_name,
-      href: s.store.href,
-      theme: s.theme?.name ?? null,
-    } satisfies StripStore,
-  }));
-// Stores with an editorial name first (they read better in a strip), catalogue order otherwise.
-const strip: StripStore[] = [
-  ...stripAll.filter((s) => s.named),
-  ...stripAll.filter((s) => !s.named),
-]
-  .slice(0, 10)
-  .map((s) => s.store);
 
 const siteUrl = new URL('/', Astro.site ?? Astro.url).href.replace(/\/$/, '');
 const jsonLd = [
@@ -451,13 +468,16 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
     <div class="container guides home__inner">
       <HomeHero
         announcement={announcement}
-        lead={`The theme and apps behind ${formatCount(c.stores_scanned)} Shopify stores, and ${c.stores_curated} stores you can open page by page and section by section, on desktop and mobile.`}
-        counter={[
-          { value: c.stores_scanned, label: 'stores scanned' },
-          { value: c.sections, label: 'sections tagged' },
+        lead={`The theme and apps behind ${formatCount(c.stores_scanned)} Shopify stores. Open ${c.stores_curated} of them page by page, on desktop and mobile.`}
+        paths={[
+          { href: '/stores', label: 'Stores', count: formatCount(c.stores_curated), icon: 'squares-four' },
+          { href: '/apps', label: 'Apps', count: formatCount(c.apps), icon: 'puzzle-piece' },
+          { href: '/compare', label: 'Compare', count: formatCount(c.comparisons), icon: 'arrows-down-up' },
         ]}
         asOf={asOf}
       />
+
+      {galleryTiles.length > 0 && <HomeGallery tiles={galleryTiles} total={c.stores_curated} />}
 
       {store && windowPages.length > 0 && (
         <div class="home__window">
@@ -478,12 +498,6 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
             initial={initialPage}
             mobile={windowMobile}
           />
-        </div>
-      )}
-
-      {strip.length > 0 && (
-        <div class="home__strip">
-          <StoreStrip stores={strip} total={c.stores_curated} />
         </div>
       )}
 

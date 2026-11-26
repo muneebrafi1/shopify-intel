@@ -1,0 +1,276 @@
+{
+ "tiles": [
+  {
+   "domain": "thursdayboots.com",
+   "desktop": {
+    "key": "shots/thursdayboots.com/home/desktop/20261126T095907Z.tile.webp",
+    "src": "shots/thursdayboots.com/home/desktop/20261126T095907Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 11.7
+   },
+   "mobile": {
+    "key": "shots/thursdayboots.com/home/mobile/20261125T195026Z.tile.webp",
+    "src": "shots/thursdayboots.com/home/mobile/20261125T195026Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 13.6
+   }
+  },
+  {
+   "domain": "marinelayer.com",
+   "desktop": {
+    "key": "shots/marinelayer.com/home/desktop/20261126T122805Z.tile.webp",
+    "src": "shots/marinelayer.com/home/desktop/20261126T122805Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 8.7
+   },
+   "mobile": {
+    "key": "shots/marinelayer.com/home/mobile/20261126T122832Z.tile.webp",
+    "src": "shots/marinelayer.com/home/mobile/20261126T122832Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 11.0
+   }
+  },
+  {
+   "domain": "youngla.com",
+   "desktop": {
+    "key": "shots/youngla.com/home/desktop/20261125T194617Z.tile.webp",
+    "src": "shots/youngla.com/home/desktop/20261125T194617Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 14.8
+   },
+   "mobile": {
+    "key": "shots/youngla.com/home/mobile/20261125T194642Z.tile.webp",
+    "src": "shots/youngla.com/home/mobile/20261125T194642Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 15.9
+   }
+  },
+  {
+   "domain": "thesill.com",
+   "desktop": {
+    "key": "shots/thesill.com/home/desktop/20261125T200040Z.tile.webp",
+    "src": "shots/thesill.com/home/desktop/20261125T200040Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 11.0
+   },
+   "mobile": {
+    "key": "shots/thesill.com/home/mobile/20261125T200106Z.tile.webp",
+    "src": "shots/thesill.com/home/mobile/20261125T200106Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 12.1
+   }
+  },
+  {
+   "domain": "eatfishwife.com",
+   "desktop": {
+    "key": "shots/eatfishwife.com/home/desktop/20261125T201137Z.tile.webp",
+    "src": "shots/eatfishwife.com/home/desktop/20261125T201137Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 16.8
+   },
+   "mobile": {
+    "key": "shots/eatfishwife.com/home/mobile/20261125T201157Z.tile.webp",
+    "src": "shots/eatfishwife.com/home/mobile/20261125T201157Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 14.4
+   }
+  },
+  {
+   "domain": "kosas.com",
+   "desktop": {
+    "key": "shots/kosas.com/home/desktop/20261126T111748Z.tile.webp",
+    "src": "shots/kosas.com/home/desktop/20261126T111748Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 8.5
+   },
+   "mobile": {
+    "key": "shots/kosas.com/home/mobile/20261126T111804Z.tile.webp",
+    "src": "shots/kosas.com/home/mobile/20261126T111804Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 12.1
+   }
+  },
+  {
+   "domain": "tower28beauty.com",
+   "desktop": {
+    "key": "shots/tower28beauty.com/home/desktop/20261126T111924Z.tile.webp",
+    "src": "shots/tower28beauty.com/home/desktop/20261126T111924Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 20.7
+   },
+   "mobile": {
+    "key": "shots/tower28beauty.com/home/mobile/20261126T111942Z.tile.webp",
+    "src": "shots/tower28beauty.com/home/mobile/20261126T111942Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 18.3
+   }
+  },
+  {
+   "domain": "rothys.com",
+   "desktop": {
+    "key": "shots/rothys.com/home/desktop/20261126T105952Z.tile.webp",
+    "src": "shots/rothys.com/home/desktop/20261126T105952Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 8.7
+   },
+   "mobile": {
+    "key": "shots/rothys.com/home/mobile/20261126T110028Z.tile.webp",
+    "src": "shots/rothys.com/home/mobile/20261126T110028Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 13.7
+   }
+  },
+  {
+   "domain": "brooklinen.com",
+   "desktop": {
+    "key": "shots/brooklinen.com/home/desktop/20261126T110312Z.tile.webp",
+    "src": "shots/brooklinen.com/home/desktop/20261126T110312Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 6.2
+   },
+   "mobile": {
+    "key": "shots/brooklinen.com/home/mobile/20261126T110334Z.tile.webp",
+    "src": "shots/brooklinen.com/home/mobile/20261126T110334Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 10.7
+   }
+  },
+  {
+   "domain": "ranchogordo.com",
+   "desktop": {
+    "key": "shots/ranchogordo.com/home/desktop/20261125T232535Z.tile.webp",
+    "src": "shots/ranchogordo.com/home/desktop/20261125T232535Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 17.6
+   },
+   "mobile": {
+    "key": "shots/ranchogordo.com/home/mobile/20261125T232553Z.tile.webp",
+    "src": "shots/ranchogordo.com/home/mobile/20261125T232553Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 18.2
+   }
+  },
+  {
+   "domain": "iliabeauty.com",
+   "desktop": {
+    "key": "shots/iliabeauty.com/home/desktop/20261126T101003Z.tile.webp",
+    "src": "shots/iliabeauty.com/home/desktop/20261126T101003Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 12.1
+   },
+   "mobile": {
+    "key": "shots/iliabeauty.com/home/mobile/20261126T101100Z.tile.webp",
+    "src": "shots/iliabeauty.com/home/mobile/20261126T101100Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 15.3
+   }
+  },
+  {
+   "domain": "koh.com",
+   "desktop": {
+    "key": "shots/koh.com/home/desktop/20261125T201436Z.tile.webp",
+    "src": "shots/koh.com/home/desktop/20261125T201436Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 13.3
+   },
+   "mobile": {
+    "key": "shots/koh.com/home/mobile/20261125T201457Z.tile.webp",
+    "src": "shots/koh.com/home/mobile/20261125T201457Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 14.7
+   }
+  },
+  {
+   "domain": "brightland.co",
+   "desktop": {
+    "key": "shots/brightland.co/home/desktop/20261125T233708Z.tile.webp",
+    "src": "shots/brightland.co/home/desktop/20261125T233708Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 15.6
+   },
+   "mobile": {
+    "key": "shots/brightland.co/home/mobile/20261125T233800Z.tile.webp",
+    "src": "shots/brightland.co/home/mobile/20261125T233800Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 13.3
+   }
+  },
+  {
+   "domain": "graza.co",
+   "desktop": {
+    "key": "shots/graza.co/home/desktop/20261126T103913Z.tile.webp",
+    "src": "shots/graza.co/home/desktop/20261126T103913Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 13.5
+   },
+   "mobile": {
+    "key": "shots/graza.co/home/mobile/20261126T104035Z.tile.webp",
+    "src": "shots/graza.co/home/mobile/20261126T104035Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 4.9
+   }
+  },
+  {
+   "domain": "liquiddeath.com",
+   "desktop": {
+    "key": "shots/liquiddeath.com/home/desktop/20261126T105437Z.tile.webp",
+    "src": "shots/liquiddeath.com/home/desktop/20261126T105437Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 10.7
+   },
+   "mobile": {
+    "key": "shots/liquiddeath.com/home/mobile/20261126T105512Z.tile.webp",
+    "src": "shots/liquiddeath.com/home/mobile/20261126T105512Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 15.0
+   }
+  },
+  {
+   "domain": "ekster.com",
+   "desktop": {
+    "key": "shots/ekster.com/home/desktop/20261126T100920Z.tile.webp",
+    "src": "shots/ekster.com/home/desktop/20261126T100920Z.webp",
+    "w": 480,
+    "h": 300,
+    "kb": 10.4
+   },
+   "mobile": {
+    "key": "shots/ekster.com/home/mobile/20261126T100940Z.tile.webp",
+    "src": "shots/ekster.com/home/mobile/20261126T100940Z.webp",
+    "w": 280,
+    "h": 448,
+    "kb": 13.0
+   }
+  }
+ ]
+}
