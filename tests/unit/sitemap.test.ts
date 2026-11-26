@@ -33,7 +33,7 @@ describe('XML sitemaps', () => {
       const locs = extractLocs(xml);
       expect(new Set(locs).size).toBe(locs.length);
       expect(locs).toContain(`${ORIGIN}/`);
-      expect(locs).toContain(`${ORIGIN}/pro`);
+      expect(locs).not.toContain(`${ORIGIN}/pro`); // the site is open: no pricing page until PUBLIC_PRO_ENABLED
       expect(locs).toContain(`${ORIGIN}/stores/youngla.com`);
       expect(locs).toContain(`${ORIGIN}/themes/dawn`);
       expect(locs).toContain(`${ORIGIN}/apps/klaviyo`);
