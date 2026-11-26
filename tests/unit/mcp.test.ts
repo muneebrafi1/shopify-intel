@@ -12,6 +12,9 @@ import { FIXED_NOW, seededDb, testDeps } from './helpers/db.ts';
 const db = seededDb();
 afterAll(() => db.close());
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const readJson = async <T = any>(res: Response): Promise<T> => (await readJson(res)) as T;
+
 const post = (
   handler: (req: Request) => Promise<Response>,
   body: unknown,
@@ -104,7 +107,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
       method: 'initialize',
       params: { protocolVersion: '1999-01-01' },
     });
-    expect((await fallback.json()).result.protocolVersion).toBe('2025-03-26');
+    expect((await readJson(fallback)).result.protocolVersion).toBe('2025-03-26');
 
     const notif = await post(handler, {
       jsonrpc: '2.0',
@@ -119,7 +122,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
     expect(await ping.json()).toEqual({ jsonrpc: '2.0', id: 2, result: {} });
 
     const list = await post(handler, { jsonrpc: '2.0', id: 3, method: 'tools/list' });
-    const json = await list.json();
+    const json = await readJson(list);
     expect(json.result.tools.length).toBe(mcpTools.length);
     const getStore = json.result.tools.find((t: { name: string }) => t.name === 'getStore');
     expect(getStore.inputSchema.required).toEqual(['domain']);
@@ -135,7 +138,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
       method: 'tools/call',
       params: { name: 'search', arguments: { q: 'prestige' } },
     });
-    const searchJson = await searchRes.json();
+    const searchJson = await readJson(searchRes);
     const payload = JSON.parse(searchJson.result.content[0].text);
     expect(payload.meta.api_version).toBe('v1');
     expect(payload.meta.sources).toBeDefined();
@@ -151,7 +154,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
       method: 'tools/call',
       params: { name: 'listStores', arguments: { limit: 2, facets: false } },
     });
-    const storesPayload = JSON.parse((await storesRes.json()).result.content[0].text);
+    const storesPayload = JSON.parse((await readJson(storesRes)).result.content[0].text);
     expect(storesPayload.data.items).toHaveLength(2);
     const domain = storesPayload.data.items[0].domain;
 
@@ -161,7 +164,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
       method: 'tools/call',
       params: { name: 'getStore', arguments: { domain } },
     });
-    const storePayload = JSON.parse((await storeRes.json()).result.content[0].text);
+    const storePayload = JSON.parse((await readJson(storeRes)).result.content[0].text);
     expect(storePayload.data.store.domain).toBe(domain);
     expect(storePayload.meta.canonical).toBe(`/stores/${domain}`);
   });
@@ -173,7 +176,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
       method: 'tools/call',
       params: { name: 'getStore', arguments: { domain: 'does-not-exist.example' } },
     });
-    const missingJson = await missing.json();
+    const missingJson = await readJson(missing);
     expect(missingJson.result.isError).toBe(true);
     expect(JSON.parse(missingJson.result.content[0].text)).toMatchObject({
       error: { code: 'not_found' },
@@ -185,7 +188,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
       method: 'tools/call',
       params: { name: 'listStores', arguments: { limit: 999 } },
     });
-    const invalidJson = await invalid.json();
+    const invalidJson = await readJson(invalid);
     expect(invalidJson.result.isError).toBe(true);
     expect(JSON.parse(invalidJson.result.content[0].text)).toMatchObject({
       error: { code: 'validation_error' },
@@ -210,7 +213,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
       { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'getMeta' } },
     ]);
     expect(res.status).toBe(200);
-    const replies = await res.json();
+    const replies = await readJson(res);
     expect(replies).toHaveLength(2);
     expect(replies[0]).toEqual({ jsonrpc: '2.0', id: 1, result: {} });
     expect(replies[1].id).toBe(2);
