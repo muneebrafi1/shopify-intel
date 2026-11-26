@@ -440,7 +440,7 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
 ---
 
 <BaseLayout
-  description={`See which theme and apps ${formatCount(c.stores_scanned)} Shopify stores run, and what ${c.stores_curated} of them look like page by page: home, collection and product, on desktop and mobile.`}
+  description={`The theme and apps behind ${formatCount(c.stores_scanned)} Shopify stores, plus ${c.stores_curated} stores shown page by page and section by section, on desktop and mobile.`}
   jsonLd={jsonLd}
   navCounts={navCounts}
   dataNote={dataNote}
@@ -451,7 +451,7 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
     <div class="container guides home__inner">
       <HomeHero
         announcement={announcement}
-        lead={`See which theme and apps ${formatCount(c.stores_scanned)} Shopify stores run, and how ${c.stores_curated} of them are built, section by section, on desktop and mobile.`}
+        lead={`The theme and apps behind ${formatCount(c.stores_scanned)} Shopify stores, and ${c.stores_curated} stores you can open page by page and section by section, on desktop and mobile.`}
         counter={[
           { value: c.stores_scanned, label: 'stores scanned' },
           { value: c.sections, label: 'sections tagged' },

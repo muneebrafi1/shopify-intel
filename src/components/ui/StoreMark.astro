@@ -31,7 +31,17 @@ const radius = Math.max(4, Math.round(size * 0.25));
   aria-hidden="true"
 >
   {initial}
-  {logo && <img src={logo} alt="" width={size} height={size} loading="lazy" decoding="async" />}
+  {logo && (
+    <img
+      src={logo}
+      alt=""
+      width={size}
+      height={size}
+      loading="lazy"
+      decoding="async"
+      onerror="this.remove()"
+    />
+  )}
 </span>
 
 <style>

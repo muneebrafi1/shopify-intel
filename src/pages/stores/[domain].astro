@@ -135,8 +135,27 @@ const jsonLd = [
     },
   },
 ];
+// A short factual intro built only from this store's own data.
+const joinList = (xs: string[]) =>
+  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+const allApps = detail.apps.groups.flatMap((g) => g.apps);
+const topNames = store.top_apps.slice(0, 3).map((a) => a.short_name);
+const placed = allApps
+  .filter((a) => a.seen_in.length > 0)
+  .slice(0, 3)
+  .map((a) => `${a.short_name} (${a.seen_in[0]!.name.toLowerCase()})`);
+const introParts = [
+  `${title} runs ${store.theme.label}${store.app_count ? ` and ${store.app_count} detected ${store.app_count === 1 ? 'app' : 'apps'}${topNames.length ? `, including ${joinList(topNames)}` : ''}` : ''}.`,
+  placed.length
+    ? `On its captured pages we can place ${joinList(placed)} in the layout.`
+    : null,
+  hasPlates
+    ? `${detail.pages.length} ${detail.pages.length === 1 ? 'page type is' : 'page types are'} mapped section by section, on desktop and mobile.`
+    : null,
+].filter(Boolean) as string[];
+const intro = introParts.join(' ');
 const description = hasPlates
-  ? `${title} runs ${store.theme.label} with ${store.app_count} detected apps. See its home, collection and product pages on desktop and mobile, section by section, and where each app renders.`
+  ? `${title} runs ${store.theme.label} with ${store.app_count} detected apps${topNames.length ? `, including ${joinList(topNames)}` : ''}. See its home, collection and product pages on desktop and mobile, section by section.`
   : `${store.domain} runs ${store.theme.label} with ${store.app_count} detected Shopify apps (scan of ${asOf}). Screenshots are not captured yet.`;
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
@@ -193,6 +212,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
                 <Badge tone="neutral">Detected only</Badge>
               )}
             </p>
+            {intro && <p class="sid__intro">{intro}</p>}
           </div>
         </div>
         <div class="sid__actions">
@@ -338,6 +358,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   }
   .sid__name {
     overflow-wrap: anywhere;
+  }
+  .sid__intro {
+    margin-block-start: var(--space-3);
+    max-inline-size: 62ch;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: 1.55;
   }
   .sid__meta {
     display: flex;
