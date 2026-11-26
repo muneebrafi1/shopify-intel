@@ -27,7 +27,9 @@
     "capture:reprocess": "node scripts/capture/reprocess.ts",
     "crawl": "node scripts/crawl/run.ts",
     "crawl:ingest": "node scripts/crawl/ingest.ts",
-    "crawl:themes": "node scripts/crawl/theme-store.ts"
+    "crawl:themes": "node scripts/crawl/theme-store.ts",
+    "ops:preflight": "node scripts/ops/preflight.ts",
+    "ops:smoke": "node scripts/ops/preflight.ts --smoke"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.8",
