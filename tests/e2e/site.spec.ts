@@ -53,8 +53,10 @@ test.describe('site pages are healthy', () => {
 
   test('board ids that are not slugs are 404s', async ({ page }) => {
     await prepare(page);
-    const res = await page.goto('/account/boards/Not_A_Slug!');
+    // example-… ids are public; anything else needs sign-in first.
+    const res = await page.goto('/account/boards/example-Not_A_Slug!');
     expect(res?.status()).toBe(404);
+    expect((await page.goto('/account/boards/example-nope'))?.status()).toBe(404);
   });
 });
 

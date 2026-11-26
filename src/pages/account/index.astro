@@ -209,7 +209,11 @@ const error = Astro.url.searchParams.get('error');
   }
   .ov__confirm {
     position: relative;
-    flex: none;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  .ov__confirm[open] {
+    flex-basis: 100%;
   }
   .ov__confirm-btn {
     display: inline-flex;
@@ -243,7 +247,15 @@ const error = Astro.url.searchParams.get('error');
     font: inherit;
   }
   .ov__setting--danger {
+    flex-wrap: wrap;
     align-items: flex-start;
+  }
+  .ov__setting--danger > div {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+  .ov__confirm-form {
+    max-width: 320px;
   }
 
   .ov__head {
