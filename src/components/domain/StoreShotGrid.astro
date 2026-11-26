@@ -34,4 +34,9 @@ const { stores, class: className } = Astro.props;
   .shotgrid {
     margin-bottom: var(--space-8);
   }
+  @media (max-width: 639px) {
+    .shotgrid > :nth-child(n + 5) {
+      display: none;
+    }
+  }
 </style>
