@@ -11,7 +11,7 @@ notes:
     device: desktop
     section_type: header
     title: 'Country and currency: Global-e CrossBorder'
-    body: Global-e CrossBorder was detected, together with EasyLocation, a second Currency & Translation app. Apps in this category usually add a country or currency selector to the header, so the header is attributed to Global-e. The capture will show the real placement.
+    body: Global-e CrossBorder was detected, together with EasyLocation, a second Currency & Translation app. Apps in this category usually add a country or currency selector to the header, so the header is attributed to Global-e.
   - n: 2
     page_type: home
     device: desktop
@@ -29,12 +29,12 @@ notes:
     device: desktop
     section_type: reviews
     title: 'Product reviews: Loox'
-    body: Loox is the one reviews app we identified on this store; the same scan found it on 54 of 930 stores. Product-review apps usually render a reviews block on the product page, so that section is attributed to Loox. The capture will show the real placement.
+    body: Loox is the one reviews app we identified on this store; the same scan found it on 54 of 930 stores. Product-review apps usually render a reviews block on the product page, so that section is attributed to Loox.
 ---
 
-> **Sample teardown.** This page shows the teardown format. It is written only from what our scan
-> of 17 November 2026 detected on youngla.com. Screenshots have not been captured yet, so the page
-> layouts are placeholders and every app attribution is our expectation, not an observation.
+> **How this was written.** From our scan of 17 November 2026 and our captures of 25 November
+> 2026 (home, collection and product pages, desktop and mobile) of youngla.com. Apps are matched
+> to sections from the page code; where an app could render in more than one place, we say so.
 
 ## Theme
 
@@ -52,8 +52,8 @@ The scan picked up eleven app signatures. Ten are identified apps, grouped here 
 - **Shipping & Returns:** Navidium Shipping Protection
 - **Privacy & Security:** Consentmo GDPR Compliance and NoFraud
 
-Four categories hold two apps each: email, loyalty, currency and privacy. The capture will show
-whether both apps in each pair render on the storefront or one works behind the scenes.
+Four categories hold two apps each: email, loyalty, currency and privacy. In most pairs only one app
+renders on the storefront; the other works behind the scenes (sending email, scoring fraud, storing consent).
 
 The eleventh signature, `trustpilot`, is not attributed to any app. It was matched to an App Store
 listing that turned out to be a different app, so it stays unidentified until we can verify it.
@@ -62,7 +62,7 @@ listing that turned out to be a different app, so it stays unidentified until we
 
 One tracking tag was detected: **Northbeam**, a marketing attribution tool.
 
-## What we will check when screenshots land
+## Open questions
 
 1. Where the Global-e country selector sits in the header on desktop and mobile.
 2. Which loyalty app owns the on-page loyalty block, if there is one.

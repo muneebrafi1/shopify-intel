@@ -30,7 +30,8 @@
     "crawl:themes": "node scripts/crawl/theme-store.ts",
     "ops:preflight": "node scripts/ops/preflight.ts",
     "ops:smoke": "node scripts/ops/preflight.ts --smoke",
-    "seed:import-apps": "node scripts/seed/import-storepeek-apps.ts"
+    "seed:import-apps": "node scripts/seed/import-storepeek-apps.ts",
+    "crawl:export-rules": "node scripts/crawl/export-rules.ts"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.8",

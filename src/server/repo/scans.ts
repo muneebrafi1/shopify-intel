@@ -169,7 +169,10 @@ export async function ingestScan(db: Db, input: ScanInput): Promise<ScanResult> 
       open &&
       (themeId !== null
         ? open.theme_id === themeId
-        : (open.raw_name ?? '').toLowerCase() === t.name.toLowerCase());
+        : // Unknown theme: the open row stores the merchant's label (raw_name ?? name).
+          [t.raw_name ?? t.name, t.name].some(
+            (n) => (open.raw_name ?? '').toLowerCase() === n.toLowerCase(),
+          ));
     // A missing version on either side is "not observed", not a change.
     const sameVersion = !open?.version || !t.version || open.version === t.version;
     if (open && sameTheme && sameVersion) {

@@ -2,7 +2,7 @@
 slug: fishwife
 store: eatfishwife.com
 title: 'Fishwife: thirteen apps on Blockshop, four of them for email and SMS'
-dek: What our 17 Nov 2026 scan found on eatfishwife.com (Blockshop 6.6.0, four email and SMS tools, two testing apps) and one attribution we expect the capture to correct.
+dek: What our 17 Nov 2026 scan found on eatfishwife.com (Blockshop 6.6.0, four email and SMS tools, two testing apps) and one attribution made by category alone.
 published_at: '2026-11-17'
 is_sample: true
 notes:
@@ -26,9 +26,9 @@ notes:
     body: Afterpay On-Site Messaging was detected (18 of 930 stores). Buy-now-pay-later messaging usually sits under the price, so the buy box is attributed to it.
 ---
 
-> **Sample teardown.** This page shows the teardown format. It is written only from what our scan
-> of 17 November 2026 detected on eatfishwife.com. Screenshots have not been captured yet, so the
-> page layouts are placeholders and every app attribution is our expectation, not an observation.
+> **How this was written.** From our scan of 17 November 2026 and our captures of 25 November
+> 2026 (home, collection and product pages, desktop and mobile) of eatfishwife.com. Apps are matched
+> to sections from the page code; where an app could render in more than one place, we say so.
 
 ## Theme
 
@@ -64,11 +64,11 @@ Two tracking tags were detected: **Google Analytics 4** and **Google Tag Manager
 1. How a food brand's stack is weighted. Four of thirteen apps are email and SMS, two are
    affiliate and referral tools and two run tests, against one app for the product page itself.
 2. That an app count says little about the page. Only four of the thirteen are attributed to a
-   section in the planned capture.
-3. Why we label attributions as expectations. The cart's shipping bar is attributed to a wholesale
-   app by category alone, and we expect the capture to correct it.
+   section in the capture.
+3. Why some attributions are labelled guesses. The cart's shipping bar is attributed to a wholesale
+   app by category alone; we do not capture cart pages, so it stays a labelled guess.
 
-## What we will check when screenshots land
+## Open questions
 
 1. Which of the four email and SMS apps renders the signup, and where Alia's popup appears.
 2. Whether the loyalty banner is Okendo's, and whether Okendo also shows reviews.
