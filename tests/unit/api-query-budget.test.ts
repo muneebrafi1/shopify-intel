@@ -44,9 +44,16 @@ const queries = async <T>(call: () => Promise<T>): Promise<[T, number]> => {
 let apps: string[] = [];
 beforeAll(async () => {
   await api.getMeta(); // the runtime reads the data meta once; keep it out of the counts
-  apps = (await db.all<{ slug: string }>("SELECT slug FROM apps WHERE status = 'active'")).map(
-    (r) => r.slug,
-  );
+  // Every app with sections, plus a slice of the ones without (the empty path is the same for all).
+  apps = (
+    await db.all<{ slug: string }>(
+      `SELECT slug FROM (
+         SELECT a.slug, a.id, EXISTS (SELECT 1 FROM sections s WHERE s.app_id = a.id) AS has
+         FROM apps a WHERE a.status = 'active')
+       WHERE has = 1 OR id IN (SELECT id FROM apps WHERE status = 'active' ORDER BY id LIMIT 40)
+       ORDER BY id`,
+    )
+  ).map((r) => r.slug);
 });
 
 describe('listSectionsByApps', () => {

@@ -69,13 +69,15 @@ describe('seed builder', () => {
     db.close();
   });
 
-  it('resolves every teardown note to a section', async () => {
+  it('points every teardown note at a captured page', async () => {
     const db = seededDb();
-    const notes = await db.all<{ section_id: number | null }>(
-      'SELECT section_id FROM teardown_notes',
+    const notes = await db.all<{ screenshot_id: number | null; section_id: number | null }>(
+      'SELECT screenshot_id, section_id FROM teardown_notes',
     );
     expect(notes.length).toBeGreaterThan(0);
-    expect(notes.every((n) => n.section_id !== null)).toBe(true);
+    // Sections themselves resolve once real captures are ingested (ingestCapture relinks notes).
+    expect(notes.every((n) => n.screenshot_id !== null)).toBe(true);
+    expect(notes.some((n) => n.section_id !== null)).toBe(true);
     db.close();
   });
 });

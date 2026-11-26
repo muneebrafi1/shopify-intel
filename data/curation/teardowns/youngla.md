@@ -15,15 +15,15 @@ notes:
   - n: 2
     page_type: home
     device: desktop
-    section_type: newsletter
-    title: 'Email capture: Attentive'
-    body: Two Email & SMS apps were detected, Attentive and AfterShip Email Marketing. We attribute the on-page signup to Attentive, the more widely detected of the two in this scan (38 vs 19 of 930 stores). Popups are not sliced as sections.
+    section_type: ugc-gallery
+    title: 'Customer photos above the footer'
+    body: 'After a slideshow, a featured collection and a collection list, the home page ends with a customer photo gallery. No on-page email signup was captured: Attentive and AfterShip Email Marketing were detected, so signup most likely happens in a popup, which we do not slice.'
   - n: 3
-    page_type: home
+    page_type: product
     device: desktop
-    section_type: loyalty
-    title: Two loyalty apps
-    body: Rise (gift cards and store credit) and Rivo (loyalty program) were both detected. Until the capture shows which one renders the loyalty block, it is attributed to Rise, the more widely detected app in this category (24 vs 18 of 930 stores).
+    section_type: upsell
+    title: 'A related-products row, with no upsell app'
+    body: 'Below the reviews, a row of related products sits before the footer. No upsell app was detected on youngla.com, so this row is most likely the theme’s own recommendations section.'
   - n: 4
     page_type: product
     device: desktop

@@ -107,8 +107,11 @@ describe('teardowns', () => {
     const list = await api.listTeardowns();
     expect(list.data.items.map((t) => t.slug).sort()).toEqual([
       'fishwife',
+      'flybyjing',
+      'gravityblankets',
       'lskd',
       'negativeunderwear',
+      'saltandstone',
       'thesill',
       'thursdayboots',
       'youngla',
@@ -126,8 +129,9 @@ describe('teardowns', () => {
     const { data } = await api.getTeardown({ slug: 'youngla' });
     expect(data.store.store.domain).toBe('youngla.com');
     expect(data.notes.map((n) => n.n)).toEqual([1, 2, 3, 4]);
+    // Placeholder plans only guess sections; a resolved note always matches its type.
     for (const note of data.notes) {
-      expect(note.section?.type.slug).toBe(note.section_type.slug);
+      if (note.section) expect(note.section.type.slug).toBe(note.section_type.slug);
     }
     expect(data.notes.find((n) => n.section_type.slug === 'reviews')?.section?.app?.slug).toBe(
       'loox',

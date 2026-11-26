@@ -9,15 +9,15 @@ notes:
   - n: 1
     page_type: home
     device: desktop
-    section_type: newsletter
-    title: 'Four email and SMS apps, one signup'
-    body: Klaviyo, Alia, Postscript SMS Marketing and Retention.com were all detected. The on-page signup is attributed to Klaviyo, the most detected app in the whole scan (383 of 930 stores). Alia makes popups, and popups are not sliced as sections, so it may never show up in a plate.
+    section_type: trust-badges
+    title: 'A short home page with a trust strip'
+    body: 'The home page is announcement bar, header, hero, a trust-badge strip and a press logo list before the footer. None of the four email and SMS apps (Klaviyo, Alia, Postscript, Retention.com) renders an on-page block in the capture, so signup most likely happens in a popup, which we do not slice.'
   - n: 2
-    page_type: home
+    page_type: product
     device: desktop
-    section_type: loyalty
-    title: 'Loyalty block: Okendo'
-    body: Okendo (48 of 930 stores) and Fondue CashBack Promotions (5 of 930) are both in our Loyalty & Rewards category, so the loyalty banner is attributed to Okendo. No app from our Reviews category was detected on this store, even though Okendo's listing also covers reviews.
+    section_type: reviews
+    title: 'Okendo renders the reviews'
+    body: 'The page code ties the product reviews block to Okendo (48 of 930 stores), and its star rating also sits in the buy box. So on this store Okendo works as the reviews app, not only for loyalty.'
   - n: 3
     page_type: product
     device: desktop
@@ -71,6 +71,6 @@ Two tracking tags were detected: **Google Analytics 4** and **Google Tag Manager
 ## Open questions
 
 1. Which of the four email and SMS apps renders the signup, and where Alia's popup appears.
-2. Whether the loyalty banner is Okendo's, and whether Okendo also shows reviews.
+2. Whether Okendo's loyalty features show anywhere outside the product page.
 3. Where Afterpay's message sits in the buy box on mobile.
 4. Whether the cart's free-shipping bar comes from the theme or an app.

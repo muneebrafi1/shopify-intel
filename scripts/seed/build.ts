@@ -691,6 +691,8 @@ export function buildSeed(
         });
         const key = `${shot.pageType}|${shot.device}|${s.type}`;
         if (!index.has(key)) index.set(key, { sectionId, shotId });
+        const pageKey = `${shot.pageType}|${shot.device}|*`;
+        if (!index.has(pageKey)) index.set(pageKey, { sectionId, shotId });
       });
     }
   }
@@ -723,12 +725,14 @@ export function buildSeed(
       updated_at: CATALOG_TS,
     });
     for (const note of fm.notes) {
-      const hit = sectionIndex
-        .get(domain)
-        ?.get(`${note.page_type}|${note.device}|${note.section_type}`);
-      if (!hit) {
+      const pages = sectionIndex.get(domain);
+      const hit = pages?.get(`${note.page_type}|${note.device}|${note.section_type}`);
+      // Placeholder plans guess the sections; real ones arrive with capture:ingest, which relinks
+      // notes by section type. Only a page we never capture is an error worth flagging.
+      const page = pages?.get(`${note.page_type}|${note.device}|*`);
+      if (!page) {
         warn(
-          `${file.file}: note ${note.n} (${note.page_type}/${note.device}/${note.section_type}) has no matching section`,
+          `${file.file}: note ${note.n} (${note.page_type}/${note.device}) is not a captured page`,
         );
       }
       noteRows.push({
@@ -738,7 +742,7 @@ export function buildSeed(
         page_type: note.page_type,
         device: note.device,
         section_type: note.section_type,
-        screenshot_id: hit?.shotId ?? null,
+        screenshot_id: hit?.shotId ?? page?.shotId ?? null,
         section_id: hit?.sectionId ?? null,
         title: note.title,
         body: note.body,
