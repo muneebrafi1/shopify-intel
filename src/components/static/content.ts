@@ -41,6 +41,9 @@ export function safeNext(value: string | null | undefined, fallback = '/account'
   if (!value) return fallback;
   if (!value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return fallback;
   if (value.length > 300) return fallback;
+  // Browsers drop tabs/newlines inside URLs ("/\t/evil.com" → "//evil.com"): refuse controls,
+  // spaces and backslashes anywhere.
+  if (/[\u0000-\u0020\\\u007f]/.test(value)) return fallback;
   return value;
 }
 

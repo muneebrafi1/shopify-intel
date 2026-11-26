@@ -1,7 +1,7 @@
 ---
 /**
- * Account overview — designed placeholder until accounts open with Pro (Whop). Shows the slots
- * the real page will fill (plan, boards, profile, settings) with honest empty values. noindex.
+ * Account overview: plan (from Whop memberships), boards, profile, billing on Whop, sign-out and
+ * account deletion. Signed-in only (middleware). noindex, no-store.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Badge from '~/components/ui/Badge.astro';
@@ -9,31 +9,42 @@ import Button from '~/components/ui/Button.astro';
 import Card from '~/components/ui/Card.astro';
 import AccountShell from '~/components/static/AccountShell.astro';
 import { MONTHLY_PRICE } from '~/components/static/content';
+import { accountDb } from '~/server/account/env';
+import { listBoards } from '~/server/account/boards';
+import { isPaid, PLAN_LABEL } from '~/server/account/entitlements';
+import { membershipsFor } from '~/server/account/users';
+import { formatDate } from '~/lib/format';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
-
-const SETTINGS = [
-  {
-    title: 'Email address',
-    body: 'Where sign-in links and receipts go.',
-    action: 'Change',
-  },
-  {
-    title: 'Theme-switch alerts',
-    body: 'An email when a store you follow changes theme. Pro.',
-    action: 'Turn on',
-  },
-  {
-    title: 'Billing',
-    body: 'Plan, invoices and cancellation are managed on Whop.',
-    action: 'Open Whop',
-  },
-  {
-    title: 'Delete account',
-    body: 'Removes your account and every board. This can’t be undone.',
-    action: 'Delete',
-  },
-];
+const user = Astro.locals.user!;
+const db = accountDb();
+const [boards, memberships, profile] = await Promise.all([
+  listBoards(db, user.id),
+  membershipsFor(db, user.whopUserId),
+  db.first<{ created_at: string }>('SELECT created_at FROM users WHERE id = ?', [user.id]),
+]);
+const paid = isPaid(user.plan);
+const membership = memberships[0] ?? null;
+const STATUS: Record<string, string> = {
+  active: 'Active',
+  trialing: 'Trial',
+  canceling: 'Cancels at period end',
+  past_due: 'Payment due',
+  canceled: 'Cancelled',
+  expired: 'Expired',
+  completed: 'Ended',
+};
+const statusLabel = membership
+  ? membership.cancelAtPeriodEnd && membership.status === 'active'
+    ? 'Cancels at period end'
+    : (STATUS[membership.status] ?? membership.status)
+  : null;
+const renewLabel =
+  membership?.currentPeriodEnd && paid
+    ? `${membership.cancelAtPeriodEnd || membership.status === 'canceling' ? 'Access until' : 'Renews'} ${formatDate(membership.currentPeriodEnd)}`
+    : null;
+const placeholderEmail = user.email.endsWith('@users.whop.invalid');
+const error = Astro.url.searchParams.get('error');
 ---
 
 <BaseLayout title="Account" description="Your plan, boards and settings." noindex>
@@ -46,25 +57,40 @@ const SETTINGS = [
     <div class="ov__grid">
       <Card padding="md" class="ov__card">
         <p class="ov__label">Plan</p>
-        <p class="ov__value">
-          Free{' '}
-          <Badge tone="neutral" size="sm">
-            Current
-          </Badge>
+        <p class="ov__value" data-plan={user.plan}>
+          {PLAN_LABEL[user.plan] ?? 'Free'}{' '}
+          {statusLabel && (
+            <Badge tone={paid ? 'positive' : 'neutral'} size="sm">
+              {statusLabel}
+            </Badge>
+          )}
         </p>
-        <p class="ov__note">
-          Home page screenshots and basic theme and app data. Pro adds every page type, full-page
-          and section screenshots and exports, from ${MONTHLY_PRICE.pro} a month.
-        </p>
+        {paid ? (
+          <p class="ov__note">
+            Every page type, full-page and section screenshots, boards and exports.
+            {renewLabel && <span class="ov__renew"> {renewLabel}.</span>}
+          </p>
+        ) : (
+          <p class="ov__note">
+            Home page screenshots and basic theme and app data. Pro adds every page type, full-page
+            and section screenshots, boards and exports, from ${MONTHLY_PRICE.pro} a month.
+          </p>
+        )}
         <div class="ov__actions">
-          <Button href="/pro" variant="accent" size="sm" arrow>
-            Compare plans
-          </Button>
+          {membership?.manageUrl ? (
+            <Button href={membership.manageUrl} variant="secondary" size="sm" rel="noopener" arrow>
+              Manage on Whop
+            </Button>
+          ) : (
+            <Button href="/pro" variant="accent" size="sm" arrow>
+              {paid ? 'Compare plans' : 'Get Pro'}
+            </Button>
+          )}
         </div>
       </Card>
       <Card padding="md" class="ov__card">
         <p class="ov__label">Boards</p>
-        <p class="ov__value num">0</p>
+        <p class="ov__value num">{boards.length}</p>
         <p class="ov__note">Save stores, pages and sections to compare them or share them.</p>
         <div class="ov__actions">
           <Button href="/account/boards" variant="secondary" size="sm" arrow>
@@ -76,16 +102,22 @@ const SETTINGS = [
         <p class="ov__label">Profile</p>
         <dl class="ov__facts">
           <div>
+            <dt>Name</dt>
+            <dd class:list={[!user.name && 'ov__muted']}>{user.name ?? '—'}</dd>
+          </div>
+          <div>
             <dt>Email</dt>
-            <dd class="ov__muted">Not signed in</dd>
+            <dd class:list={['ov__email', placeholderEmail && 'ov__muted']}>
+              {placeholderEmail ? 'Not shared by Whop' : user.email}
+            </dd>
           </div>
           <div>
             <dt>Member since</dt>
-            <dd class="ov__muted">—</dd>
+            <dd>{profile ? formatDate(profile.created_at) : '—'}</dd>
           </div>
           <div>
             <dt>Seats</dt>
-            <dd class="num">1</dd>
+            <dd class="num">{user.plan === 'team' ? 3 : 1}</dd>
           </div>
         </dl>
       </Card>
@@ -96,21 +128,67 @@ const SETTINGS = [
         <h2 class="h3" id="settings-title">
           Settings
         </h2>
-        <p class="ov__sub">Available once you’re signed in.</p>
+        <p class="ov__sub">Name and email come from your Whop account.</p>
       </div>
       <Card padding="none">
         <ul class="ov__list">
-          {SETTINGS.map((s) => (
-            <li class="ov__setting">
-              <div>
-                <h3 class="ov__setting-title">{s.title}</h3>
-                <p class="ov__setting-body">{s.body}</p>
-              </div>
-              <Button variant="secondary" size="sm" disabled>
-                {s.action}
+          <li class="ov__setting">
+            <div>
+              <h3 class="ov__setting-title">Billing</h3>
+              <p class="ov__setting-body">Plan, invoices and cancellation are managed on Whop.</p>
+            </div>
+            {membership?.manageUrl ? (
+              <Button href={membership.manageUrl} variant="secondary" size="sm" rel="noopener">
+                Open Whop
               </Button>
-            </li>
-          ))}
+            ) : (
+              <Button href="/pro" variant="secondary" size="sm">
+                See plans
+              </Button>
+            )}
+          </li>
+          <li class="ov__setting">
+            <div>
+              <h3 class="ov__setting-title">Sign out</h3>
+              <p class="ov__setting-body">Ends this session on this device.</p>
+            </div>
+            <form method="post" action="/auth/sign-out">
+              <Button type="submit" variant="secondary" size="sm">
+                Sign out
+              </Button>
+            </form>
+          </li>
+          <li class="ov__setting ov__setting--danger">
+            <div>
+              <h3 class="ov__setting-title">Delete account</h3>
+              <p class="ov__setting-body">
+                Removes your account and every board. This can’t be undone. A paid plan keeps
+                running until you cancel it on Whop.
+              </p>
+              {error === 'confirm' && (
+                <p class="ov__error" role="alert">
+                  Type “delete” to confirm.
+                </p>
+              )}
+            </div>
+            <details class="ov__confirm">
+              <summary class="ov__confirm-btn">Delete</summary>
+              <form method="post" action="/account/actions" class="ov__confirm-form">
+                <input type="hidden" name="intent" value="delete-account" />
+                <label for="confirm-delete">Type “delete” to confirm</label>
+                <input
+                  id="confirm-delete"
+                  name="confirm"
+                  autocomplete="off"
+                  required
+                  pattern="delete"
+                />
+                <Button type="submit" variant="primary" size="sm">
+                  Delete my account
+                </Button>
+              </form>
+            </details>
+          </li>
         </ul>
       </Card>
     </section>
@@ -118,6 +196,56 @@ const SETTINGS = [
 </BaseLayout>
 
 <style>
+  .ov__renew {
+    color: var(--ink);
+  }
+  .ov__email {
+    overflow-wrap: anywhere;
+  }
+  .ov__error {
+    margin-top: var(--space-2);
+    color: var(--critical);
+    font-size: var(--text-sm);
+  }
+  .ov__confirm {
+    position: relative;
+    flex: none;
+  }
+  .ov__confirm-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-control, 10px);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--critical);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium, 500);
+    cursor: pointer;
+    list-style: none;
+  }
+  .ov__confirm-btn::-webkit-details-marker {
+    display: none;
+  }
+  .ov__confirm-form {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .ov__confirm-form input {
+    min-height: 36px;
+    padding: 0 var(--space-2);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+  }
+  .ov__setting--danger {
+    align-items: flex-start;
+  }
+
   .ov__head {
     padding-block: var(--space-8) var(--space-6);
   }

@@ -1,8 +1,9 @@
 ---
 /**
- * Sign-in placeholder. Accounts open with Pro (Whop). Both options are designed and routed;
- * neither signs anyone in yet, and the email typed here is never read or stored.
- * `next` (a same-site path) is preserved for when sign-in is wired.
+ * Sign in. "Continue with Whop" (OAuth, /auth/whop/start) once a Whop app is configured; until
+ * then the button is off and says so. Locally, DEV_SIGN_IN=1 adds a dev form (/auth/dev) that
+ * signs in without Whop, on 127.0.0.1/localhost only.
+ * `next` (a same-site path) is where the visitor lands afterwards.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Button from '~/components/ui/Button.astro';
@@ -11,12 +12,18 @@ import Input from '~/components/ui/Input.astro';
 import Badge from '~/components/ui/Badge.astro';
 import Icon from '~/components/ui/Icon.astro';
 import { safeNext } from '~/components/static/content';
+import { SITE_NAME } from '~/config/site';
+import { whopConfig } from '~/server/account/env';
+import { isLocalHost } from '~/server/whop/config';
 
 const next = safeNext(Astro.url.searchParams.get('next'));
-const submitted = Astro.request.method === 'POST';
+const user = Astro.locals.user ?? null;
+const config = whopConfig();
+const whopOpen = !!config.oauth;
+const devForm = config.devSignIn && isLocalHost(Astro.url);
 Astro.response.headers.set('Cache-Control', 'no-store');
 
-// Context-aware headline when we arrive from a "Save" button (/account/boards?save=<type>:<id>).
+// Context-aware headline when we arrive from a "Save" button (/account/save?item=<type>:<id>).
 const SAVE_NOUN: Record<string, string> = {
   screenshot: 'this screenshot',
   section: 'this section',
@@ -26,17 +33,30 @@ const SAVE_NOUN: Record<string, string> = {
 };
 let saveNoun: string | null = null;
 try {
-  const save = new URL(next, 'http://x').searchParams.get('save');
+  const q = new URL(next, 'http://x').searchParams;
+  const save = q.get('item') ?? q.get('save');
   saveNoun = save ? (SAVE_NOUN[save.split(':')[0] ?? ''] ?? null) : null;
 } catch {
   saveNoun = null;
 }
-const headline = saveNoun
-  ? `Sign in to save ${saveNoun}.`
-  : next === '/pro'
-    ? 'Sign in to get Pro.'
-    : 'Sign in to save boards.';
-const action = `/sign-in?next=${encodeURIComponent(next)}`;
+const headline = user
+  ? 'You’re signed in.'
+  : saveNoun
+    ? `Sign in to save ${saveNoun}.`
+    : next === '/pro'
+      ? 'Sign in to get Pro.'
+      : `Sign in to ${SITE_NAME}.`;
+
+const ERRORS: Record<string, string> = {
+  closed: 'Sign-in isn’t open yet. It opens with Pro.',
+  expired: 'That sign-in took too long or was opened in another browser. Try again.',
+  denied: 'Whop sign-in was cancelled. Nothing was shared.',
+  state: 'That sign-in link didn’t match this browser. Try again.',
+  whop: 'Whop didn’t answer as expected. Try again in a minute.',
+  email: 'Enter an email address.',
+};
+const error = ERRORS[Astro.url.searchParams.get('error') ?? ''] ?? null;
+const startHref = `/auth/whop/start?next=${encodeURIComponent(next)}`;
 const backHref = next.startsWith('/account') ? '/' : next;
 ---
 
@@ -51,61 +71,110 @@ const backHref = next.startsWith('/account') ? '/' : next;
     <div class="auth__inner">
       <div class="auth__card">
         <p class="auth__flag">
-          <Badge tone="neutral" icon="lock-simple">
-            Accounts open with Pro
-          </Badge>
+          {whopOpen || user ? (
+            <Badge tone="neutral" icon="lock-simple">
+              Accounts run on Whop
+            </Badge>
+          ) : (
+            <Badge tone="neutral" icon="lock-simple">
+              Accounts open with Pro
+            </Badge>
+          )}
         </p>
         <h1 class="auth__title">{headline}</h1>
-        <p class="auth__sub">
-          Accounts aren’t open yet. They arrive with Pro; until then, everything else is free to
-          browse without one.
-        </p>
+        {user ? (
+          <p class="auth__sub">
+            As <strong>{user.name ?? user.email}</strong>. Carry on where you were, or sign out.
+          </p>
+        ) : whopOpen ? (
+          <p class="auth__sub">
+            Sign in with your Whop account. Checkout and memberships run on Whop, so one sign-in
+            covers both.
+          </p>
+        ) : (
+          <p class="auth__sub">
+            Accounts aren’t open yet. They arrive with Pro; until then, everything else is free to
+            browse without one.
+          </p>
+        )}
 
-        <div class="auth__notice" data-signin-notice role="status" hidden={!submitted}>
-          <Icon name="info" size={16} class="auth__notice-icon" />
-          <div>
-            <p class="auth__notice-title">Nothing was sent.</p>
-            <p>
-              Sign-in links start working when accounts open with Pro. We didn’t keep the address
-              you typed.
-            </p>
-            <p class="auth__notice-links">
-              <a href="/pro">See what Pro includes</a>
-              <a href={backHref}>Keep browsing</a>
+        {error && !user && (
+          <div class="auth__notice" role="alert">
+            <Icon name="info" size={16} class="auth__notice-icon" />
+            <div>
+              <p class="auth__notice-title">Not signed in.</p>
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
+
+        {user ? (
+          <div class="auth__options">
+            <Button href={next} variant="primary" size="lg" full>
+              Continue
+            </Button>
+            <form method="post" action="/auth/sign-out">
+              <Button type="submit" variant="secondary" size="lg" full>
+                Sign out
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <div class="auth__options">
+            {whopOpen ? (
+              <Button href={startHref} variant="primary" size="lg" full rel="nofollow">
+                Continue with Whop
+              </Button>
+            ) : (
+              <Button variant="secondary" size="lg" full disabled aria-describedby="whop-note">
+                Continue with Whop
+              </Button>
+            )}
+            <p class="auth__fine" id="whop-note">
+              {whopOpen
+                ? 'You’ll come straight back here. We get your name and email, nothing else.'
+                : 'Coming soon. Memberships and checkout run on Whop.'}
             </p>
           </div>
-        </div>
+        )}
 
-        <div class="auth__options">
-          <Button variant="secondary" size="lg" full disabled aria-describedby="whop-note">
-            Continue with Whop
-          </Button>
-          <p class="auth__fine" id="whop-note">
-            Coming soon. Memberships and checkout run on Whop.
-          </p>
-        </div>
-
-        <div class="auth__or" aria-hidden="true">
-          <span>or</span>
-        </div>
-
-        <form class="auth__form" method="post" action={action} novalidate data-signin-form>
-          <input type="hidden" name="next" value={next} />
-          <Field label="Email" for="signin-email">
-            <Input
-              id="signin-email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              autocapitalize="none"
-              spellcheck="false"
-              placeholder="you@studio.com"
-            />
-          </Field>
-          <Button type="submit" variant="primary" size="lg" full>
-            Email me a sign-in link
-          </Button>
-        </form>
+        {devForm && !user && (
+          <>
+            <div class="auth__or" aria-hidden="true">
+              <span>local only</span>
+            </div>
+            <form class="auth__form" method="post" action="/auth/dev" data-dev-signin>
+              <input type="hidden" name="next" value={next} />
+              <Field label="Email (dev sign-in)" for="dev-email">
+                <Input
+                  id="dev-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  placeholder="you@studio.com"
+                  required
+                />
+              </Field>
+              <Field label="Plan" for="dev-plan">
+                <select id="dev-plan" name="plan" class="auth__select">
+                  <option value="free">Free</option>
+                  <option value="pro" selected>
+                    Pro
+                  </option>
+                  <option value="team">Team</option>
+                </select>
+              </Field>
+              <Button type="submit" variant="secondary" size="lg" full>
+                Dev sign-in
+              </Button>
+              <p class="auth__fine">
+                DEV_SIGN_IN=1 on a local host. Never available in production.
+              </p>
+            </form>
+          </>
+        )}
       </div>
 
       <p class="auth__legal">
@@ -122,23 +191,18 @@ const backHref = next.startsWith('/account') ? '/' : next;
   </div>
 </BaseLayout>
 
-<script>
-  // Without JS the form posts and the page answers with the same notice; with JS, no round trip.
-  const form = document.querySelector<HTMLFormElement>('[data-signin-form]');
-  const notice = document.querySelector<HTMLElement>('[data-signin-notice]');
-  form?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const email = form.querySelector<HTMLInputElement>('input[name="email"]');
-    if (email) email.value = '';
-    if (notice) {
-      notice.hidden = false;
-      notice.setAttribute('tabindex', '-1');
-      notice.focus();
-    }
-  });
-</script>
-
 <style>
+  .auth__select {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-control, 10px);
+    border: 1px solid var(--line-strong, var(--line));
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+  }
+
   /* Auth screen: a centred card on --bg-subtle (direction.md "Account and sign-in"). */
   .auth {
     display: flex;
