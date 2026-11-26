@@ -1,5 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { seedResult, setup } from './helpers/db.ts';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { ROOT, seedResult, setup } from './helpers/db.ts';
 import { PLACEHOLDER_SHOTS } from './helpers/counts.ts';
 
 const { db, api } = setup();
@@ -105,17 +107,13 @@ describe('sections library', () => {
 describe('teardowns', () => {
   it('lists and resolves notes to sections', async () => {
     const list = await api.listTeardowns();
-    expect(list.data.items.map((t) => t.slug).sort()).toEqual([
-      'fishwife',
-      'flybyjing',
-      'gravityblankets',
-      'lskd',
-      'negativeunderwear',
-      'saltandstone',
-      'thesill',
-      'thursdayboots',
-      'youngla',
-    ]);
+    // One listing per file in data/curation/teardowns.
+    const files = readdirSync(join(ROOT, 'data/curation/teardowns'))
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => f.replace(/\.md$/, ''))
+      .sort();
+    expect(list.data.items.map((t) => t.slug).sort()).toEqual(files);
+    expect(files).toContain('fishwife');
     expect(
       list.data.items
         .filter((t) => t.is_sample)
