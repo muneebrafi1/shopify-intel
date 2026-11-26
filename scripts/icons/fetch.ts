@@ -83,8 +83,15 @@ async function toWebp(buf: Buffer): Promise<{ data: Buffer; w: number } | null> 
     if (!meta.width || !meta.height) return null;
     // Wordmarks are often wide and short (e.g. 112×22); accept if the long side is ≥ 32.
     if (Math.max(meta.width, meta.height) < 32) return null;
-    const side = Math.min(128, Math.max(meta.width, meta.height));
-    const fitted = sharp(buf)
+    // Tight crop of transparent/same-colour margins so wordmarks fill the tile.
+    const trimmed = await sharp(buf)
+      .trim({ threshold: 16 })
+      .toBuffer()
+      .catch(() => buf);
+    const tmeta = await sharp(trimmed).metadata();
+    const src = tmeta.width && tmeta.height ? trimmed : buf;
+    const side = Math.min(128, Math.max(tmeta.width ?? meta.width, tmeta.height ?? meta.height));
+    const fitted = sharp(src)
       .resize(side, side, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .ensureAlpha();
     const raw = await fitted.clone().raw().toBuffer({ resolveWithObject: true });
