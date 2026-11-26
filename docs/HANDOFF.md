@@ -137,7 +137,8 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
 12. [#12](https://github.com/muneebrafi1/shopify-intel/pull/12) `feat/12-saas-redesign` — SaaS redesign (light + dark), owner decisions, admin API, D1 query budget
 13. [#13](https://github.com/muneebrafi1/shopify-intel/pull/13) `feat/13-capture-pipeline` — local capture pipeline, DOM section detection, `ingestCapture()`
 14. [#14](https://github.com/muneebrafi1/shopify-intel/pull/14) `feat/14-capture-depth` — collection/product/cart capture, stitched mode, top thumbnails, data-independent e2e
-15. `feat/15-data-depth` — 50 curated stores, crawler + scan ingest, Theme Store facts, content-based section rules
+15. [#15](https://github.com/muneebrafi1/shopify-intel/pull/15) `feat/15-data-depth` — 50 curated stores, crawler + scan ingest, Theme Store facts, content-based section rules
+16. `feat/16-accounts-pro` — Whop sign-in (OAuth + PKCE), sessions, signed webhooks → plans, boards (save, export CSV), Pro checkout links, dev sign-in
 
 `claude/busy-wright-i74iuv` holds the same final tree with the session's checkpoint history.
 PR screenshots live on the `pr-screenshots` branch (images only; never merge it).
@@ -149,8 +150,11 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
      box or GitHub Actions. **Needs the owner's go-ahead** (R2 bucket, uploading store
      screenshots publicly). Then set `SHOW_CAPTURE_PREVIEW_NOTICE = false`.
 2. **Mirror App Store icons to R2** (they are hotlinked from cdn.shopify.com today).
-3. **Accounts + Pro via Whop**: `users`, `collections`, `collection_items` exist; UI slots are routed
-   (`/sign-in`, `/account`, `/account/boards`, `SaveButton`).
+3. **Accounts + Pro via Whop**: code is done in #16 (docs/ACCOUNTS.md). Going live needs the
+   owner to do three things:
+   - create a Whop app, products, checkout links and a webhook (sandbox first)
+   - set the Worker secrets
+   - verify the webhook key convention with one sandbox delivery
 4. **MCP server**: wrap `endpointList` from `src/server/api/v1/registry.ts` (id → tool name, zod
    input → tool schema).
 5. Grow data further: production crawl schedule (needs the owner's go-ahead), theme
@@ -202,6 +206,10 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
     - The crawl and the capture send a desktop Chrome user agent. Shopify's file asks agents to
       identify themselves (`/agents.md`). Switch to an identifying agent (`VitrineBot`, with a
       contact URL)? Some stores may then show bot checks more often.
+11. **Accounts** (docs/ACCOUNTS.md "Not done"):
+    - Team seat invites: Whop seats or our own invites?
+    - Gate non-home page types for Free visitors now, or after captures go live?
+    - Sign-in is Whop-only; the email-link option was dropped (it needs a mail provider). OK?
 
 ## Gotchas
 
@@ -215,6 +223,11 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
   `astro dev` first (or restart it afterwards) so it sees the new rows.
 - The local `admin` e2e test expecting 403 for a cross-site POST gets 401 when `.dev.vars` is
   missing (admin not configured). CI writes throwaway credentials; do the same locally.
+
+- New migrations on a local D1 that holds captures: `npx wrangler d1 migrations apply DB --local`
+  (keeps the data); `npm run setup` rebuilds it from the seed and drops ingested captures.
+- Account e2e needs `DEV_SIGN_IN=1` + `USER_SESSION_SECRET` (+ `WHOP_WEBHOOK_SECRET`,
+  `WHOP_PRO_PRODUCT_ID` for the webhook test) in `.dev.vars`; it skips itself otherwise.
 
 - Astro ≥6 removed `Astro.locals.runtime`; use `import { env } from 'cloudflare:workers'`.
 - Astro 7 runs `astro dev`/`astro preview` as managed **background** processes when it detects an
