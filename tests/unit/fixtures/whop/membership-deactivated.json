@@ -1,0 +1,17 @@
+{
+  "id": "evt_test_deactivated",
+  "api_version": "v1",
+  "timestamp": "2026-11-17T11:59:30.000Z",
+  "type": "membership.deactivated",
+  "company_id": "biz_TESTONLY",
+  "data": {
+    "id": "mem_TESTPRO1",
+    "status": "expired",
+    "manage_url": "https://whop.com/billing/manage/mem_TESTPRO1",
+    "user": { "id": "user_TESTA" },
+    "renewal_period_end": "2026-12-17T11:58:00.000Z",
+    "cancel_at_period_end": false,
+    "plan": { "id": "plan_TESTMONTHLY" },
+    "product": { "id": "prod_TESTPRO" }
+  }
+}

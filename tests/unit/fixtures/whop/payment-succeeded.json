@@ -1,0 +1,7 @@
+{
+  "id": "evt_test_payment",
+  "api_version": "v1",
+  "timestamp": "2026-11-17T11:59:10.000Z",
+  "type": "payment.succeeded",
+  "data": { "id": "pay_TEST1", "status": "paid", "total": 12, "currency": "usd" }
+}
