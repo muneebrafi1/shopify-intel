@@ -163,6 +163,8 @@ const filterSummary = (() => {
   const themeLabel =
     facets.themes.find((f) => f.value === q.filters.theme)?.label ?? q.filters.theme;
   const appLabel = facets.apps.find((f) => f.value === q.filters.app)?.label;
+  const categoryLabel = facets.categories.find((f) => f.value === q.filters.category)?.label;
+  if (q.filters.category) parts.push(`in ${categoryLabel ?? q.filters.category}`);
   if (q.filters.theme) parts.push(`on ${themeLabel}`);
   if (q.filters.app) parts.push(`running ${appLabel ? shortAppName(appLabel) : q.filters.app}`);
   return parts.join(' ');
@@ -216,7 +218,11 @@ const title = hasFilters
 
 <BaseLayout
   title={title}
-  description={`${formatCount(counts.stores_scanned)} Shopify stores with their detected theme and apps. ${counts.stores_curated} curated stores are mapped page by page — home, collection and product, on desktop and mobile.`}
+  description={
+    singleParam
+      ? `${formatCount(total)} ${q.scope === 'curated' ? 'curated ' : ''}Shopify ${total === 1 ? 'store' : 'stores'} ${filterSummary}, with the theme and apps we detected on each. Curated stores are mapped page by page: home, collection and product, on desktop and mobile.`
+      : `${formatCount(counts.stores_scanned)} Shopify stores with their detected theme and apps. ${counts.stores_curated} curated stores are mapped page by page — home, collection and product, on desktop and mobile.`
+  }
   canonical={canonical}
   noindex={noindex}
   jsonLd={jsonLd}
