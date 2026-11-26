@@ -481,11 +481,6 @@ const groupId = (g: PairGroup) => `g-${g.key}`;
                 {k.label === 'Apps' ? 'App pairs' : 'Theme pairs'}
                 <span class="cmpi__kind-n num">{k.n}</span>
               </h2>
-              <p class="cmpi__kind-desc">
-                {k.label === 'Apps'
-                  ? 'The three most used apps in each category, compared pair by pair.'
-                  : 'The most used themes against each other, and themes from the same vendor.'}
-              </p>
             </div>
             {k.groups.map((g) => (
               <section class="cmpi__group" aria-labelledby={groupId(g)}>

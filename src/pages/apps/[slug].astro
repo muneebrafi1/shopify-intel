@@ -395,11 +395,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   <div class="container">
     <div class="layout">
       <div class="layout__item layout__seen">
-        {isBasic && (
-          <Notice tone="info" title="Basic profile" class="basic">
-            {`${knownListing > 0 ? 'Only part of' : 'None of'} ${name}’s App Store listing is on file yet, so some facts are missing. Complete: where it was detected (${app.usage.stores.toLocaleString('en-US')} scanned stores), where it shows up on curated stores, and the apps and themes it runs with.`}
-          </Notice>
-        )}
         <SeenOn
           detail={detail}
           device={device}
@@ -414,16 +409,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
       <aside class="layout__aside" aria-label={`${name} facts`}>
         <FactsCard title={`${name} at a glance`} items={facts} sticky class="facts">
-          <Fragment slot="footer">
-            <p>
-              Listing: Shopify App Store,{' '}
-              {listingRead ? `checked ${formatDate(app.checked_on)}` : 'not read yet'}.
-            </p>
-            <p>
-              Stores and rank: {scan?.label ?? `our scan of ${denominator} stores`}.{' '}
-              <a href="/methodology">Method</a>
-            </p>
-          </Fragment>
         </FactsCard>
       </aside>
 
@@ -627,9 +612,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           {pairs.length > 0 && (
             <div class="compare" id="compare">
               <h3 class="compare__title">Head to head</h3>
-              <p class="compare__text">
-                Curated side-by-side pages: where each renders, stores, ratings and plans.
-              </p>
               <PairList items={pairs.slice(0, 6)} label={`Comparisons with ${name}`} />
             </div>
           )}

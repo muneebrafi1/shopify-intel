@@ -74,10 +74,6 @@ const altFor = (s: (typeof all)[number]) =>
               ? `Seen in ${seen.section_total.toLocaleString('en-US')} sections on curated stores`
               : `Seen on ${storeCount} curated ${storeCount === 1 ? 'store' : 'stores'}`}
           </h2>
-          <p class="seen__lede">
-            {name} renders as {surfaceList || 'its own section'} on {pages.join(' and ')} pages.
-            Each capture pins its section on the real page.
-          </p>
         </>
       )}
       {variant === 'installed' && (
@@ -86,11 +82,6 @@ const altFor = (s: (typeof all)[number]) =>
             On {seen.stores.length} curated {seen.stores.length === 1 ? 'store' : 'stores'}, no
             section to pin
           </h2>
-          <p class="seen__lede">
-            {surfaces.length > 0
-              ? `Apps like ${name} usually render as ${surfaceList.toLowerCase()}, but on these stores we have not attributed a section to it.`
-              : `${name} works as a widget, a script or in the back office, so it adds no section we slice.`}
-          </p>
         </>
       )}
       {variant === 'unseen' && (
@@ -207,10 +198,6 @@ const altFor = (s: (typeof all)[number]) =>
 
   {variant === 'pinned' && (
     <div class="seen__foot">
-      <p>
-        Layout previews drawn from each page’s detected sections until captures land. A section is
-        credited to {name} only when the store runs it.
-      </p>
       <a href={appSectionsHref} class="seen__more">
         All {seen.section_total} in the sections library
         <Icon name="arrow-right" size={14} />
@@ -250,7 +237,6 @@ const altFor = (s: (typeof all)[number]) =>
 
   {variant === 'installed' && (
     <div class="seen__foot">
-      <p>Layout previews drawn from each page’s detected sections until captures land.</p>
       <a href="#stores" class="seen__more">
         All stores running {name}
         <Icon name="arrow-right" size={14} />

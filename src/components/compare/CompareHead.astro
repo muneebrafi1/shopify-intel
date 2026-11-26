@@ -69,12 +69,7 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
       <h1 class="ch__title display-md">
         {a.name} <span class="tone-muted">vs</span> {b.name}
       </h1>
-      <p class="ch__lede">{summary(cmp)}</p>
     </div>
-    <p class="ch__asof">
-      <Icon name="clock" size={14} />
-      Data as of {formatDate(meta.data_as_of)}
-    </p>
   </div>
 
   <div class="ch__pair" data-ch-pair>

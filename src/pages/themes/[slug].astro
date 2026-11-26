@@ -273,9 +273,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           </Badge>
         )}
       </div>
-      <p slot="meta" class="th-lead lead">
-        {lead}
-      </p>
       <div slot="actions" class="th-actions">
         <Button href={compareHref} variant="secondary" icon="scales" class="th-act">
           Compare
@@ -359,17 +356,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
               </dd>
             </div>
           ))}
-          <p slot="footer" class="th-side__bias">
-            Stores were found through Theme Store example lists, so counts show reach in our scan,
-            not market share.
-            {store && (
-              <>
-                {' '}
-                Presets, version and reviews: <a href={store.url}>Shopify Theme Store</a>, checked{' '}
-                {storeCheckedOn}.
-              </>
-            )}
-          </p>
         </FactsCard>
       </aside>
 
@@ -396,18 +382,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <ThemeStores stores={stores} label={`Stores using ${theme.name}`} class="th-table" />
         )}
         <div class="th-pager">
-          <p class="th-pager__status">
-            {stores.length > 0 && (
-              <span class="num">
-                {storesTotal > stores.length
-                  ? `${formatCount(storesFrom)}–${formatCount(storesTo)} of `
-                  : ''}
-                {formatCount(storesTotal)} {storesTotal === 1 ? 'store' : 'stores'} ·{' '}
-              </span>
-            )}
-            Detected in the {sourceLabel} · {asOf}.{' '}
-            <a href={source?.url ?? '/methodology'}>How we detect</a>
-          </p>
           {(listPage > 1 || nextCursor) && (
             <div class="th-pager__buttons">
               {listPage > 1 && (

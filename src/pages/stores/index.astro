@@ -390,9 +390,6 @@ const title = hasFilters
             {formatCount(detectedOnly)} more {detectedOnly === 1 ? 'store' : 'stores'}
             {filterSummary ? ` ${filterSummary}` : ''}, detected but not captured
           </h2>
-          <p class="stores__more-body">
-            Theme, version and apps on file for each one. No page captures yet.
-          </p>
         </div>
         {(detectedRes?.data.items.length ?? 0) > 0 && (
           <ul class="stores__peek" aria-label="A few of them">

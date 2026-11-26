@@ -175,13 +175,6 @@ const storePlateHref = current
             </li>
           ))}
         </ol>
-        <p class="tdplates__hint">
-          Numbers match the sections on the{' '}
-          <a href={storePlateHref}>
-            store page’s {current.label.toLowerCase()} capture
-            <Icon name="arrow-right" size={12} />
-          </a>
-        </p>
         {plates.length > 1 && (
           <ul class="tdplates__others">
             {plates

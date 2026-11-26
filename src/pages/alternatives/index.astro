@@ -239,9 +239,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <h2 id="alti-apps" class="h2">
             Apps<span class="alti__kind-n num">{data.apps.length}</span>
           </h2>
-          <p class="alti__kind-desc">
-            Apps detected on at least one scanned store, grouped by category.
-          </p>
         </div>
         {appGroups.map((g) => (
           <section class="alti__group" aria-labelledby={`cat-${g.key}`}>
@@ -311,9 +308,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <h2 id="alti-themes" class="h2">
             Themes<span class="alti__kind-n num">{data.themes.length}</span>
           </h2>
-          <p class="alti__kind-desc">
-            Themes with at least one close match by vendor, price or app stack.
-          </p>
         </div>
         <ul class="alti__grid alti__grid--themes">
           {themeItems.map((t) => {

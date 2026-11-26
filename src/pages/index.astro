@@ -468,7 +468,7 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
     <div class="container guides home__inner">
       <HomeHero
         announcement={announcement}
-        lead={`The theme and apps behind ${formatCount(c.stores_scanned)} Shopify stores. Open ${c.stores_curated} of them page by page, on desktop and mobile.`}
+        lead={`Real Shopify stores, page by page, with the theme and apps behind them.`}
         paths={[
           { href: '/stores', label: 'Stores', count: formatCount(c.stores_curated), icon: 'squares-four' },
           { href: '/apps', label: 'Apps', count: formatCount(c.apps), icon: 'puzzle-piece' },
@@ -501,23 +501,7 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
         </div>
       )}
 
-      {how && (
-        <div class="home__block reveal">
-          <HowItWorks
-            data={how}
-            counts={{ sections: c.sections, types: c.section_types, stores: c.stores_curated }}
-          />
-        </div>
-      )}
-
       <section class="home__block" aria-labelledby="home-features">
-        <SectionHeader
-          id="home-features"
-          size="lg"
-          eyebrow="What’s inside"
-          title="Real data, not screenshots of it."
-          titleMuted="Every number has a source and a date."
-        />
         <FeatureBento
           apps={bentoApps}
           appsTotal={apps.meta.pagination?.total ?? c.apps}

@@ -40,6 +40,8 @@ const ordered = [...list.items].sort(
 const others = ordered.filter((t) => t.slug !== teardown.slug).slice(0, 3);
 
 const body = renderMarkdown(teardown.body_md);
+// Method notes ("How this was written", "Note.") live on /methodology, not in the article.
+body.html = body.html.replace(/<blockquote>[\s\S]*?<\/blockquote>\s*/g, '');
 const words =
   teardown.body_md.split(/\s+/).length + notes.reduce((n, x) => n + x.body.split(/\s+/).length, 0);
 const minutes = Math.max(1, Math.round(words / 220));
@@ -142,7 +144,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
               )}
             </p>
             <h1 class="td__title display-lg">{teardown.title}</h1>
-            {teardown.dek && <p class="td__dek lead">{teardown.dek}</p>}
             <p class="td__byline">
               <span class="td__author">Editorial team</span>
               {teardown.published_at && (

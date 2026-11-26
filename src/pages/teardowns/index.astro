@@ -103,47 +103,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         </section>
       )}
 
-      <section class="tds__how" aria-labelledby="how-title">
-        <h2 id="how-title" class="tds__h2">
-          How a teardown is written
-        </h2>
-        <ol class="tds__steps">
-          <li>
-            <span class="tds__step-n num">01</span>
-            <div>
-              <h3>One scan, read in full</h3>
-              <p>
-                The theme and its version, every app we detect and the tracking pixels, from a
-                single scan of the store.
-              </p>
-            </div>
-          </li>
-          <li>
-            <span class="tds__step-n num">02</span>
-            <div>
-              <h3>Notes pinned to sections</h3>
-              <p>
-                Each note points at one section of a page capture, numbered the same way as on the
-                store page.
-              </p>
-            </div>
-          </li>
-          <li>
-            <span class="tds__step-n num">03</span>
-            <div>
-              <h3>No estimates</h3>
-              <p>
-                No revenue, traffic or conversion numbers. If the scan didn’t see it, the teardown
-                says so.
-              </p>
-            </div>
-          </li>
-        </ol>
-        <a class="tds__method" href="/methodology">
-          How we detect themes and apps
-          <Icon name="arrow-right" size={14} />
-        </a>
-      </section>
     </div>
 
     <SourceNote class="tds__source" source={meta.source.label} asOf={asOf} />

@@ -211,24 +211,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           : 'Every Shopify theme we track, shown on the real stores that run it.'
       }
     >
-      <p slot="meta" class="ti-facts">
-        {headerFacts.map((f, i) => (
-          <>
-            {i > 0 && (
-              <span class="ti-facts__sep" aria-hidden="true">
-                ·
-              </span>
-            )}
-            <span>{f}</span>
-          </>
-        ))}
-        <span class="ti-facts__sep" aria-hidden="true">
-          ·
-        </span>
-        <span>
-          data <time datetime={meta.data_as_of}>{asOf}</time>
-        </span>
-      </p>
       <Fragment slot="actions">
         <Button href="/compare?kind=theme" variant="secondary" icon="scales">
           Compare themes
@@ -337,10 +319,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         asOf={source.label.includes(asOf) ? undefined : asOf}
         href={source.url ?? '/methodology'}
       />
-      <p class="ti-source__bias">
-        Stores were found through Shopify Theme Store example lists, so a count shows reach in our
-        scan of {formatCount(scanned)} stores, not market share.
-      </p>
     </footer>
   </div>
 </BaseLayout>

@@ -281,7 +281,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
           <h3 class="bento__title td__title">
             <a href={teardown.href}>{teardown.title}</a>
           </h3>
-          {teardown.dek && <p class="td__dek">{teardown.dek}</p>}
           <div class="td__actions">
             <Button variant="secondary" size="sm" href={teardown.href} arrow>
               Read the teardown
@@ -290,7 +289,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
               All teardowns <span aria-hidden="true">→</span>
             </a>
           </div>
-          {teardown.isSample && <p class="td__sample">Sample format, from our own scan.</p>}
         </div>
         <div class="td__capture">
           <CaptureCrop
