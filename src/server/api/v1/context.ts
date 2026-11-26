@@ -27,6 +27,8 @@ export const SOURCE_IDS = {
   appStore: 'shopify-app-store',
   editorial: 'editorial',
   capturePlan: 'capture-plan',
+  themeStore: 'shopify-theme-store',
+  crawl: 'vitrine-crawl', // = scans.source written by scripts/crawl (npm run crawl)
 } as const;
 
 /** Data provenance, from the `meta` table. */
@@ -39,6 +41,9 @@ export interface DataInfo {
   scannedTotal: number;
   appStoreCheckedFrom: string | null;
   appStoreCheckedTo: string | null;
+  /** Latest scan ingested from our own storefront crawl (POST /admin/scans); null if none. */
+  crawlLastAt: string | null;
+  themeStoreCheckedTo: string | null;
   sources: Record<string, Source>;
 }
 
@@ -78,6 +83,8 @@ export async function loadDataInfo(db: Db): Promise<DataInfo> {
   const scanSourceId = m.get('source_id') ?? 'scan';
   const scanSourceLabel = m.get('source_label') ?? 'Store scan';
   const appStoreCheckedTo = m.get('app_store_checked_to') ?? null;
+  const crawlLastAt = m.get('crawl_last_at') ?? null;
+  const themeStoreCheckedTo = m.get('theme_store_checked_to') ?? null;
   return {
     dataVersion: m.get('data_version') ?? 'empty',
     dataAsOf,
@@ -87,6 +94,8 @@ export async function loadDataInfo(db: Db): Promise<DataInfo> {
     scannedTotal: Number(m.get('scanned_total') ?? 0),
     appStoreCheckedFrom: m.get('app_store_checked_from') ?? null,
     appStoreCheckedTo,
+    crawlLastAt,
+    themeStoreCheckedTo,
     sources: {
       [scanSourceId]: { label: scanSourceLabel, as_of: dataAsOf, url: '/methodology' },
       [SOURCE_IDS.appStore]: {
@@ -100,6 +109,24 @@ export async function loadDataInfo(db: Db): Promise<DataInfo> {
         as_of: dataAsOf,
         url: '/methodology',
       },
+      ...(themeStoreCheckedTo
+        ? {
+            [SOURCE_IDS.themeStore]: {
+              label: 'Shopify Theme Store page',
+              as_of: themeStoreCheckedTo,
+              url: 'https://themes.shopify.com',
+            },
+          }
+        : {}),
+      ...(crawlLastAt
+        ? {
+            [SOURCE_IDS.crawl]: {
+              label: `Our storefront crawl (${m.get('crawl_rules_version') ?? 'StorePeek rules'})`,
+              as_of: crawlLastAt.slice(0, 10),
+              url: '/methodology',
+            },
+          }
+        : {}),
     },
   };
 }

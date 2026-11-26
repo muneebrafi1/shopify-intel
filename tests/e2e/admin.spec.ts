@@ -256,7 +256,8 @@ test.describe('admin pages (signed in)', () => {
     await page.goto('/admin/stores?curated=yes');
     const curated = await page.locator('table.stores tbody tr').count();
     expect(curated).toBeGreaterThan(0);
-    expect(curated).toBeLessThan(50);
+    expect(curated).toBeLessThanOrEqual(50);
+    await expect(page.locator('table.stores tbody')).not.toContainText('aetrio.com');
   });
 
   test('a signed-in POST still needs a same-origin Origin', async ({ page }) => {

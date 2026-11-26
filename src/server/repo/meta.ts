@@ -40,6 +40,8 @@ export async function getDataMeta(ctx: Ctx): Promise<DataMeta> {
     },
     rules_version: d.rulesVersion,
     app_store_checked: { from: d.appStoreCheckedFrom, to: d.appStoreCheckedTo },
+    theme_store_checked: d.themeStoreCheckedTo,
+    crawl_last_at: d.crawlLastAt,
     counts: c ?? {
       stores_scanned: 0,
       stores_curated: 0,

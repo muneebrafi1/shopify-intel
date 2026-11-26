@@ -32,12 +32,12 @@ describe('opted-out stores disappear everywhere', () => {
   it('removes it from lists, facets, counts and search', async () => {
     const stores = await api.listStores({ limit: 60, curated: true });
     expect(stores.data.items.map((s) => s.domain)).not.toContain('youngla.com');
-    expect(stores.meta.pagination?.total).toBe(19);
+    expect(stores.meta.pagination?.total).toBe(49);
     expect((await api.getMeta()).data.counts.stores_scanned).toBe(929);
     expect((await api.getApp({ slug: 'loox' })).data.app.usage.stores).toBe(before.loox - 1);
     const prestige = await api.getTheme({ slug: 'prestige' });
     expect(prestige.data.theme.usage.stores).toBe(before.prestige - 1);
-    expect(prestige.data.curated_stores).toEqual([]);
+    expect(prestige.data.curated_stores.map((c) => c.store.domain)).not.toContain('youngla.com');
     expect(prestige.data.stores.items.map((s) => s.store.domain)).not.toContain('youngla.com');
     const search = await api.search({ q: 'youngla' });
     expect(search.data.groups.flatMap((g) => g.items).map((i) => i.ref)).not.toContain(

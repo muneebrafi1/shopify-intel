@@ -9,7 +9,12 @@ import { createHash } from 'node:crypto';
 import { PIXELS, SECTION_GROUPS, SECTION_TYPES } from '../../src/lib/taxonomy.ts';
 import { REBUILD_DERIVED_SQL } from '../../src/server/repo/maintenance.ts';
 import { normalizeDomain, slugify } from '../../src/server/lib/slug.ts';
-import { loadSeedInputs, type AppInput, type SeedInputs } from './inputs.ts';
+import {
+  loadSeedInputs,
+  type AppInput,
+  type CuratedStoreInput,
+  type SeedInputs,
+} from './inputs.ts';
 import { planStoreCaptures, type LayoutApp } from './layout.ts';
 import {
   dollarsToCents,
@@ -59,6 +64,16 @@ interface AppRecord {
 }
 
 const iso = (ts: string) => new Date(ts).toISOString();
+/** meta keys for the Theme Store facts' check dates (omitted when none were read). */
+function themeStoreChecked(t: SeedInputs['themeStore']): Record<string, string> {
+  const days = Object.values(t.themes)
+    .map((x) => iso(x.checked_at).slice(0, 10))
+    .sort();
+  return days.length
+    ? { theme_store_checked_from: days[0]!, theme_store_checked_to: days[days.length - 1]! }
+    : {};
+}
+const checkedAt = (ts: string | undefined) => (ts ? iso(ts) : null);
 
 export function buildSeedFromRoot(root: string): SeedResult {
   return buildSeed(loadSeedInputs(root));
@@ -102,6 +117,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
     'apps',
     'app_categories',
     'theme_tags',
+    'theme_features',
     'theme_presets',
     'themes',
     'section_types',
@@ -150,6 +166,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       source_label: SEED_CONSTANTS.sourceLabel,
       app_store_checked_from: checkedDays[0] ?? SEED_CONSTANTS.dataAsOf,
       app_store_checked_to: checkedDays[checkedDays.length - 1] ?? SEED_CONSTANTS.dataAsOf,
+      ...themeStoreChecked(inputs.themeStore),
       schema_version: '1',
     }).map(([key, value]) => ({ key, value, updated_at: CATALOG_TS })),
   );
@@ -322,22 +339,78 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       price_label: t.price,
       marketplace: t.marketplace,
       official_url: t.official_url,
+      store_version: inputs.themeStore.themes[t.slug]?.version ?? null,
+      review_positive_pct: inputs.themeStore.themes[t.slug]?.reviews?.positive_pct ?? null,
+      review_count: inputs.themeStore.themes[t.slug]?.reviews?.count ?? null,
+      store_checked_at: checkedAt(inputs.themeStore.themes[t.slug]?.checked_at),
       status: 'active',
       created_at: CATALOG_TS,
       updated_at: CATALOG_TS,
     })),
   );
+  for (const slug of Object.keys(inputs.themeStore.themes)) {
+    if (!themeBySlug.has(slug)) warn(`theme-store facts for unknown theme ${slug}`);
+  }
+  const presetRows: Row[] = [];
+  const featureRows: Row[] = [];
+  for (const t of themes) {
+    const facts = inputs.themeStore.themes[t.slug];
+    if (!facts) continue;
+    const seenPresets = new Set<string>();
+    for (const name of facts.presets) {
+      const slug = slugify(name);
+      if (seenPresets.has(slug)) continue;
+      seenPresets.add(slug);
+      presetRows.push({ id: presetRows.length + 1, theme_id: t.id, slug, name });
+    }
+    for (const g of facts.features) {
+      const seenItems = new Set<string>();
+      g.items.forEach((item) => {
+        if (seenItems.has(item)) return;
+        seenItems.add(item);
+        featureRows.push({
+          theme_id: t.id,
+          feature_group: g.group,
+          item,
+          position: featureRows.length + 1,
+        });
+      });
+    }
+  }
+  w.insert('theme_presets', presetRows);
+  w.insert('theme_features', featureRows);
 
   // ------------------------------------------------------------------------------------------
-  // Stores (930 detected; 20 curated merged in) + detection history
+  // Stores (930 detected; curated stores merged in) + detection history
   // ------------------------------------------------------------------------------------------
-  const curatedByDomain = new Map(
-    inputs.curatedStores.map((s) => [normalizeDomain(s.domain) ?? s.domain, s]),
-  );
+  // Curated = the 20 exported stores (data/seed/stores.json) plus every other domain listed in
+  // data/curation/stores.json. Those extra stores take their facts from detections-930.json
+  // (no version, confidence or pixels yet) until a local crawl (npm run crawl) refreshes them.
   const curation = new Map(inputs.storeCuration.stores.map((s) => [s.domain, s]));
-  for (const domain of curation.keys()) {
-    if (!curatedByDomain.has(domain)) warn(`curation for unknown curated store ${domain}`);
-  }
+  const exported = new Set(inputs.curatedStores.map((s) => normalizeDomain(s.domain) ?? s.domain));
+  const curatedStores: CuratedStoreInput[] = [
+    ...inputs.curatedStores,
+    ...inputs.storeCuration.stores
+      .filter((s) => !exported.has(s.domain))
+      .map((s): CuratedStoreInput => {
+        const d = detections.find((x) => x.domain === s.domain);
+        if (!d) throw new Error(`Curated store ${s.domain} missing from detections`);
+        return {
+          domain: d.domain,
+          url: `https://${d.domain}/`,
+          theme: d.theme ? { slug: null, name: d.theme, version: null, raw_name: d.theme } : null,
+          apps: d.apps.map((slug) => ({ slug, confidence: null })),
+          pixels: [],
+          currency: d.currency,
+          tranco_rank: null,
+          detected_at: d.detected_at,
+          source: 'detections-930',
+        };
+      }),
+  ];
+  const curatedByDomain = new Map(
+    curatedStores.map((s) => [normalizeDomain(s.domain) ?? s.domain, s]),
+  );
   const storeCategories = [
     ...new Set(inputs.storeCuration.stores.map((s) => s.category).filter((c): c is string => !!c)),
   ].sort((a, b) => a.localeCompare(b));
@@ -349,7 +422,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
 
   // Curated stores first (in curation order), then the rest by domain.
   const ordered = [
-    ...inputs.curatedStores.map((c) => {
+    ...curatedStores.map((c) => {
       const d = detections.find((x) => x.domain === normalizeDomain(c.domain));
       if (!d) throw new Error(`Curated store ${c.domain} missing from detections`);
       return d;
@@ -501,7 +574,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   /** domain → page|device|type → first section/screenshot id (for teardown notes). */
   const sectionIndex = new Map<string, Map<string, { sectionId: number; shotId: number }>>();
 
-  for (const curated of inputs.curatedStores) {
+  for (const curated of curatedStores) {
     const domain = normalizeDomain(curated.domain) ?? curated.domain;
     const storeId = storeIdByDomain.get(domain);
     if (!storeId) continue;

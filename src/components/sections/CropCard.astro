@@ -167,6 +167,11 @@ const sameName = s.store.display_name === s.store.domain;
   .ccard__title a {
     color: var(--ink);
   }
+  /* Positioned against the card, not after a long (ellipsised) store name: never overflows. */
+  .ccard__title .visually-hidden {
+    top: 0;
+    left: 0;
+  }
   .ccard__title a:focus-visible {
     outline: none;
   }

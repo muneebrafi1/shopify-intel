@@ -99,7 +99,8 @@ describe('section classification', () => {
       )?.type ?? null;
     expect(footer('sill_footer_Yn9yjr')).toBe('footer');
     expect(footer('sill_reasons_to_buy_3PGyAK')).toBe('trust-badges');
-    expect(footer('marquee_PynRVL')).toBeNull();
+    // Anything else in the footer group (marquees, copyright bars) is part of the footer.
+    expect(footer('marquee_PynRVL')).toBe('footer');
     // Overlay groups (cart drawers, popups) are never sections of the page.
     expect(
       classifySection(
@@ -373,6 +374,25 @@ describe('ingestCapture', () => {
       { is_current: 0, n: 0 },
       { is_current: 1, n: 0 },
     ]);
+  });
+
+  it('replaces the sections in place when the same capture is re-detected', async () => {
+    const first = (await ingestCapture(db, capture())) as { screenshot_id: number };
+    const base = capture();
+    const res = await ingestCapture(db, {
+      ...base,
+      sections: [...base.sections, { type: 'footer', y: 5000, height: 400 }],
+    });
+    expect(res).toEqual({
+      status: 'resectioned',
+      screenshot_id: first.screenshot_id,
+      sections: base.sections.length + 1,
+    });
+    const n = await db.first<{ n: number }>(
+      'SELECT COUNT(*) AS n FROM sections WHERE screenshot_id = ?',
+      [first.screenshot_id],
+    );
+    expect(n?.n).toBe(base.sections.length + 1);
   });
 
   it('refuses blocked domains and unknown stores', async () => {

@@ -23,7 +23,11 @@
     "test": "vitest run",
     "db:build-seed": "node scripts/build-seed.ts",
     "db:reset": "node scripts/db-reset.ts",
-    "setup": "npm run db:build-seed && npm run db:reset"
+    "setup": "npm run db:build-seed && npm run db:reset",
+    "capture:reprocess": "node scripts/capture/reprocess.ts",
+    "crawl": "node scripts/crawl/run.ts",
+    "crawl:ingest": "node scripts/crawl/ingest.ts",
+    "crawl:themes": "node scripts/crawl/theme-store.ts"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.8",

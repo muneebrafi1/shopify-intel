@@ -55,7 +55,16 @@ describe('section type counts', () => {
 describe('section position in its type', () => {
   it('links prev/next in library order and counts the position', async () => {
     const all = await api.listSections({ type: 'reviews', sort: 'mixed', limit: 60 });
-    const ids = all.data.items.map((s) => s.id);
+    const more = await api.listSections({
+      type: 'reviews',
+      sort: 'mixed',
+      limit: 60,
+      cursor: all.meta.pagination?.next_cursor ?? '',
+    });
+    const ids = [
+      ...all.data.items,
+      ...(all.meta.pagination?.next_cursor ? more.data.items : []),
+    ].map((s) => s.id);
     const mid = ids[3]!;
     const { data } = await api.getSection({ id: mid });
     expect(data.in_type).toMatchObject({

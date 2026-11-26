@@ -11,7 +11,8 @@
  *  - A placeholder screenshot for the same store × page type × device is replaced in place, so
  *    its id (referenced by teardown notes) stays stable; its drawn sections are deleted.
  *  - An earlier real capture is kept as history (`is_current = 0`, sections too).
- *  - Re-ingesting the same r2_key is a no-op.
+ *  - Re-ingesting the same r2_key is a no-op, unless its sections changed (re-run detection,
+ *    scripts/capture/reprocess.ts): then the sections are replaced in place (`resectioned`).
  *  - Teardown notes on that page × device are re-pointed at the new section of their type.
  *  - Derived tables are not rebuilt here: call rebuildDerived(db) once after a batch of ingests.
  *
@@ -78,6 +79,7 @@ export type CaptureRecord = z.output<typeof captureInputSchema>;
 export type IngestResult =
   | { status: 'ingested'; screenshot_id: number; sections: number; replaced_placeholder: boolean }
   | { status: 'unchanged'; screenshot_id: number }
+  | { status: 'resectioned'; screenshot_id: number; sections: number }
   | { status: 'blocked' }
   | { status: 'unknown-store' };
 
@@ -97,8 +99,24 @@ export async function ingestCapture(db: Db, input: CaptureInput): Promise<Ingest
      ORDER BY is_placeholder, id DESC LIMIT 1`,
     [store.id, c.page_type, c.device],
   );
-  if (current && current.is_placeholder === 0 && current.r2_key === c.r2_key)
-    return { status: 'unchanged', screenshot_id: current.id };
+  const sameShot = !!current && current.is_placeholder === 0 && current.r2_key === c.r2_key;
+  if (sameShot) {
+    const existing = await db.all<{ k: string }>(
+      `SELECT s.section_type || '|' || s.y || '|' || s.height || '|' || s.x || '|' ||
+              COALESCE(s.w, '') || '|' || COALESCE(s.r2_key_crop, '') || '|' ||
+              COALESCE(a.slug, '') AS k
+       FROM sections s LEFT JOIN apps a ON a.id = s.app_id
+       WHERE s.screenshot_id = ? ORDER BY s.order_index`,
+      [current.id],
+    );
+    const incoming = [...c.sections]
+      .sort((a, b) => a.y - b.y || a.x - b.x)
+      .map((x) =>
+        [x.type, x.y, x.height, x.x, x.w ?? '', x.r2_key_crop ?? '', x.app_slug ?? ''].join('|'),
+      );
+    if (existing.map((e) => e.k).join('\n') === incoming.join('\n'))
+      return { status: 'unchanged', screenshot_id: current.id };
+  }
 
   const appSlugs = [...new Set(c.sections.flatMap((s) => (s.app_slug ? [s.app_slug] : [])))];
   const appIds = new Map<string, number>();
@@ -149,7 +167,10 @@ export async function ingestCapture(db: Db, input: CaptureInput): Promise<Ingest
   ];
   const replacePlaceholder = current?.is_placeholder === 1;
   let shotId: number;
-  if (current && replacePlaceholder) {
+  if (current && sameShot) {
+    shotId = current.id;
+    stmts.push({ sql: 'DELETE FROM sections WHERE screenshot_id = ?', params: [shotId] });
+  } else if (current && replacePlaceholder) {
     shotId = current.id;
     stmts.push(
       { sql: 'DELETE FROM sections WHERE screenshot_id = ?', params: [shotId] },
@@ -214,6 +235,8 @@ export async function ingestCapture(db: Db, input: CaptureInput): Promise<Ingest
   });
 
   await db.batch(stmts);
+  if (sameShot)
+    return { status: 'resectioned', screenshot_id: shotId, sections: c.sections.length };
   return {
     status: 'ingested',
     screenshot_id: shotId,

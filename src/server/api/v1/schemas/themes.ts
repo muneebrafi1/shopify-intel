@@ -120,6 +120,19 @@ export const ThemeDetailSchema = named(
       }),
     ),
     presets: z.array(z.object({ slug: z.string(), name: z.string() })),
+    theme_store: z
+      .object({
+        url: z.string(),
+        version: z.string().nullable(),
+        review_positive_pct: int().nullable(),
+        review_count: int().nullable(),
+        checked_at: z.string(),
+        features: z.array(z.object({ group: z.string(), items: z.array(z.string()) })),
+      })
+      .nullable()
+      .describe(
+        'As published on the theme’s Shopify Theme Store page (url), read on checked_at. Null when not read.',
+      ),
     tags: z.object({ style: z.array(z.string()), industry: z.array(z.string()) }),
     comparisons: z.array(ComparisonLinkSchema),
   }),

@@ -112,6 +112,14 @@ export const MetaOutput = named(
     source: SourceSchema.extend({ id: z.string() }),
     rules_version: z.string().nullable(),
     app_store_checked: z.object({ from: z.string().nullable(), to: z.string().nullable() }),
+    theme_store_checked: z
+      .string()
+      .nullable()
+      .describe('Latest date a theme’s Theme Store page was read (presets, features, reviews).'),
+    crawl_last_at: z
+      .string()
+      .nullable()
+      .describe('Latest storefront scan from our own crawl (source vitrine-crawl); null if none.'),
     counts: z.object({
       stores_scanned: int(),
       stores_curated: int(),

@@ -147,6 +147,18 @@ test.describe('theme detail', () => {
     await expect(facts).toContainText('#3 of 20 themes');
     await expect(facts).toContainText('13 of 930');
     await expect(facts).toContainText('Source:');
+    // Theme Store facts, sourced and dated.
+    await expect(facts.locator('dt', { hasText: 'Presets' })).toBeVisible();
+    await expect(facts).toContainText('Couture');
+    await expect(facts.locator('dt', { hasText: 'Theme Store reviews' })).toBeVisible();
+    await expect(
+      facts.locator('a[href="https://themes.shopify.com/themes/prestige"]'),
+    ).toBeVisible();
+    const features = page.locator('#features');
+    await expect(features.getByRole('heading', { name: 'Published features' })).toBeVisible();
+    await expect(features.getByRole('heading', { name: 'Cart and checkout' })).toBeVisible();
+    await expect(features).toContainText('Quick buy');
+    await expect(features).toContainText('Shopify Theme Store · checked');
 
     const actions = page.locator('.th-actions');
     const cta = actions.locator('.cta a.btn');
@@ -257,8 +269,13 @@ test.describe('theme detail', () => {
     await page.goto('/themes/prestige');
     const ranks = await page.locator('.tapps__rank').allTextContents();
     expect(ranks[0]).toBe('#1');
-    // Several apps run on the same number of Prestige stores: they share one rank.
-    expect(ranks.filter((r) => r === '#4').length).toBeGreaterThan(1);
-    expect(ranks).not.toContain('#5');
+    // Apps on the same number of Prestige stores share one rank (competition ranking: 1, 2, 2, 4).
+    const { data } = (await (await page.request.get('/api/v1/themes/prestige')).json()) as {
+      data: { top_apps: Array<{ stores: number }> };
+    };
+    const expected = data.top_apps.map(
+      (a) => `#${data.top_apps.findIndex((b) => b.stores === a.stores) + 1}`,
+    );
+    expect(ranks).toEqual(expected);
   });
 });

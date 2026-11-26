@@ -154,46 +154,22 @@ export async function processCapture(opts: {
   const dpr = capture.deviceScaleFactor;
   const png = await fullPng(capture);
   const full = sharp(png, { limitInputPixels: false });
-  const meta = await full.metadata();
-  const pxW = meta.width ?? Math.round(capture.width * dpr);
-  const pxH = meta.height ?? Math.round(capture.height * dpr);
 
   const r2Key = shotKey(domain, page, device, capturedAt);
   const webp = await full.clone().webp(WEBP).toBuffer();
   save(r2Key, webp);
   save(topThumbKey(r2Key), await topThumb(png, device, capture.width));
 
-  const out: ManifestEntry['capture']['sections'] = [];
-  for (const [order, s] of sections.entries()) {
-    const top = Math.min(pxH - 1, Math.round(s.y * dpr));
-    const height = Math.max(1, Math.min(pxH - top, Math.round(s.height * dpr)));
-    const left = Math.min(pxW - 1, Math.round(s.x * dpr));
-    const width = s.w === null ? pxW : Math.max(1, Math.min(pxW - left, Math.round(s.w * dpr)));
-    const key = cropKey(domain, page, device, capturedAt, order, s.type);
-    save(
-      key,
-      await sharp(png, { limitInputPixels: false })
-        .extract({ left, top, width, height })
-        .webp(WEBP)
-        .toBuffer(),
-    );
-    out.push({
-      type: s.type,
-      y: Math.round(s.y),
-      height: Math.round(s.height),
-      x: Math.round(s.x),
-      w: s.w === null ? null : Math.round(s.w),
-      app_slug: s.appSlug,
-      r2_key_crop: key,
-      theme_section_name: s.parsed.key,
-      hints: {
-        source: 'dom',
-        classified_by: s.by,
-        ...(s.column ? { column: s.column } : {}),
-        ...(capture.tiles ? { capture: 'stitched' } : {}),
-      },
-    });
-  }
+  const out = await cropSections({
+    domain,
+    device,
+    page,
+    capturedAt,
+    image: png,
+    sections,
+    stitched: !!capture.tiles,
+    cssWidth: capture.width,
+  });
 
   return {
     capture: {
@@ -216,5 +192,56 @@ export async function processCapture(opts: {
       dom_sections: capture.sections.length,
       unclassified,
     },
+    raw: { sections: capture.sections },
   };
+}
+
+/** One WebP crop per detected section, cut from the full-page image (any pixel density). */
+export async function cropSections(opts: {
+  domain: string;
+  device: 'desktop' | 'mobile';
+  page: CapturePageType;
+  capturedAt: string;
+  image: Buffer;
+  sections: DetectedSection[];
+  stitched: boolean;
+  cssWidth?: number;
+}): Promise<ManifestEntry['capture']['sections']> {
+  const { domain, device, page, capturedAt, image, sections } = opts;
+  const meta = await sharp(image, { limitInputPixels: false }).metadata();
+  const pxW = meta.width ?? 1;
+  const pxH = meta.height ?? 1;
+  const dpr = pxW / (opts.cssWidth ?? (device === 'desktop' ? 1440 : 390));
+  const out: ManifestEntry['capture']['sections'] = [];
+  for (const [order, s] of sections.entries()) {
+    const top = Math.min(pxH - 1, Math.round(s.y * dpr));
+    const height = Math.max(1, Math.min(pxH - top, Math.round(s.height * dpr)));
+    const left = Math.min(pxW - 1, Math.round(s.x * dpr));
+    const width = s.w === null ? pxW : Math.max(1, Math.min(pxW - left, Math.round(s.w * dpr)));
+    const key = cropKey(domain, page, device, capturedAt, order, s.type);
+    save(
+      key,
+      await sharp(image, { limitInputPixels: false })
+        .extract({ left, top, width, height })
+        .webp(WEBP)
+        .toBuffer(),
+    );
+    out.push({
+      type: s.type,
+      y: Math.round(s.y),
+      height: Math.round(s.height),
+      x: Math.round(s.x),
+      w: s.w === null ? null : Math.round(s.w),
+      app_slug: s.appSlug,
+      r2_key_crop: key,
+      theme_section_name: s.parsed.key,
+      hints: {
+        source: 'dom',
+        classified_by: s.by,
+        ...(s.column ? { column: s.column } : {}),
+        ...(opts.stitched ? { capture: 'stitched' } : {}),
+      },
+    });
+  }
+  return out;
 }

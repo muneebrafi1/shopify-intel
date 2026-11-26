@@ -37,7 +37,7 @@ describe('HTTP router', () => {
     };
     expect(res.status).toBe(200);
     expect(body.data.items).toHaveLength(2);
-    expect(body.meta.pagination.total).toBe(20);
+    expect(body.meta.pagination.total).toBe(50);
     const search = await get(http, '/api/v1/search?q=pre&kinds=theme,app');
     const s = (await search.json()) as { data: { groups: Array<{ kind: string }> } };
     expect(s.data.groups.map((g) => g.kind)).toEqual(['theme', 'app']);

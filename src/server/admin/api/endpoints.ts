@@ -21,7 +21,10 @@ import {
   listCaptureBlocks,
   listCaptureTargets,
 } from '../../repo/capture.ts';
+import { rebuildDerived } from '../../repo/maintenance.ts';
 import { purgeExpiredRemovalRecords } from '../../repo/removal.ts';
+import { ingestScan } from '../../repo/scans.ts';
+import { auditStatement } from '../audit.ts';
 import {
   approveRemoval,
   cancelJob,
@@ -57,6 +60,8 @@ import {
   CreateAffiliateLinkOutput,
   GetCaptureStatusInput,
   GetRemovalRequestInput,
+  IngestScansInput,
+  IngestScansOutput,
   ListAffiliateLinksOutput,
   ListAuditInput,
   ListAuditOutput,
@@ -659,7 +664,46 @@ const listAuditEndpoint = defineEndpoint({
 // ---------------------------------------------------------------------------------------------
 // Registry
 // ---------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------
+// Scans (crawler ingest)
+// ---------------------------------------------------------------------------------------------
+const ingestScansEndpoint = defineEndpoint({
+  id: 'adminIngestScans',
+  method: 'POST',
+  path: '/scans',
+  summary: 'Ingest crawler scans',
+  description:
+    'One home-page scan (theme, apps, pixels, storefront facts) into the detection history, then rebuilds derived counts unless `rebuild` is false (send false for all but the last scan of a batch). Opted-out and unknown domains are refused per item. Apps not seen are not closed by a single scan. Audited.',
+  tags: tags.catalogue,
+  cache: 'no-store',
+  input: IngestScansInput,
+  output: IngestScansOutput,
+  handler: async (input, ctx) => {
+    const results = [];
+    for (const scan of input.scans) results.push(await ingestScan(ctx.db, scan));
+    const ingested = results.filter((r) => r.status === 'ingested' || r.status === 'not-shopify');
+    if (ingested.length && input.rebuild) await rebuildDerived(ctx.db);
+    await ctx.db.batch([
+      auditStatement(
+        {
+          actor: principal(ctx).actor,
+          action: 'scans.ingest',
+          targetType: 'scan',
+          detail: {
+            total: results.length,
+            ingested: ingested.length,
+            domains: results.map((r) => `${r.domain}:${r.status}`),
+          },
+        },
+        ctx.now(),
+      ),
+    ]);
+    return { data: { results } };
+  },
+});
+
 const rest = [
+  ingestScansEndpoint,
   listRemovalRequestsEndpoint,
   getRemovalRequestEndpoint,
   updateRemovalRequestEndpoint,

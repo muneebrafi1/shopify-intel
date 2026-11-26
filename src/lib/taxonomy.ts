@@ -326,6 +326,15 @@ export const PIXELS: Record<string, string> = {
   hotjar: 'Hotjar',
   clarity: 'Microsoft Clarity',
   snapchat: 'Snap Pixel',
+  // Names as StorePeek's signatures (v9) publish them.
+  amplitude: 'Amplitude',
+  contentsquare: 'Contentsquare',
+  elevar: 'Elevar',
+  'linkedin-insight': 'LinkedIn Insight Tag',
+  littledata: 'Littledata',
+  'reddit-pixel': 'Reddit Pixel',
+  tradedesk: 'The Trade Desk',
+  xtwitterpixel: 'X Pixel',
 };
 
 export const pageTypeName = (slug: string) => PAGE_TYPES.find((p) => p.slug === slug)?.name ?? slug;

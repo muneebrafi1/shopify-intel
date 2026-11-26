@@ -1,0 +1,1727 @@
+{
+  "_note": "Shopify Theme Store facts per theme, read from each theme's public Theme Store page by scripts/crawl/theme-store.ts (npm run crawl:themes). Presets, the published feature list, the current version and the review summary, with the page URL and the date checked. Re-run to refresh; never edit by hand.",
+  "themes": {
+    "athens": {
+      "url": "https://themes.shopify.com/themes/athens",
+      "checked_at": "2026-11-25T22:41:06.629Z",
+      "presets": [
+        "Athens",
+        "Spoke",
+        "Pharm",
+        "Prism",
+        "Apex"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "Gift wrapping",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Sticky cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Trust badges",
+            "Stock counter",
+            "Right-to-left",
+            "Recommended products",
+            "Recently viewed",
+            "Quick view",
+            "Quick order list",
+            "Promo tiles",
+            "Promo popups",
+            "Promo banners",
+            "Product badges",
+            "Press coverage",
+            "In-menu promos",
+            "FAQ page",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "Customizable contact form",
+            "Cross-selling",
+            "Countdown timer",
+            "Blogs",
+            "Back-in-stock alert",
+            "Age verifier",
+            "Quantity pricing"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Animation",
+            "Before/after image slider",
+            "Color swatches",
+            "High-resolution images",
+            "Image galleries",
+            "Image hotspot",
+            "Image rollover",
+            "Image zoom",
+            "Ingredients or nutritional information",
+            "Product options",
+            "Product tabs",
+            "Product videos",
+            "Shipping/delivery information",
+            "Slideshow",
+            "Usage information",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "6.7.0",
+      "reviews": {
+        "positive_pct": 100,
+        "count": 80
+      }
+    },
+    "atlantic": {
+      "url": "https://themes.shopify.com/themes/atlantic",
+      "checked_at": "2026-11-25T22:41:10.233Z",
+      "presets": [
+        "Atlantic",
+        "Plush",
+        "Cotton",
+        "Atrium",
+        "Parfum"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Quick buy",
+            "Slide-out cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Age verifier",
+            "Blogs",
+            "Countdown timer",
+            "FAQ page",
+            "Product badges",
+            "Promo banners",
+            "Quick view",
+            "Recommended products",
+            "Stock counter"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "High-resolution images",
+            "Image galleries",
+            "Image rollover",
+            "Image zoom",
+            "Product options",
+            "Product tabs",
+            "Product videos",
+            "Size chart",
+            "Slideshow"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "19.2.0",
+      "reviews": {
+        "positive_pct": 96,
+        "count": 226
+      }
+    },
+    "barcelona": {
+      "url": "https://themes.shopify.com/themes/barcelona",
+      "checked_at": "2026-11-25T22:41:13.951Z",
+      "presets": [
+        "Barcelona",
+        "Appeal",
+        "Season",
+        "Lights",
+        "Beats"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Quick buy",
+            "Slide-out cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Age verifier",
+            "Blogs",
+            "Countdown timer",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Quick view",
+            "Recommended products",
+            "Right-to-left",
+            "Stock counter",
+            "Trust badges"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header"
+          ]
+        }
+      ],
+      "version": "1.3.3",
+      "reviews": {
+        "positive_pct": 100,
+        "count": 18
+      }
+    },
+    "be-yours": {
+      "url": "https://themes.shopify.com/themes/be-yours",
+      "checked_at": "2026-11-25T22:40:47.341Z",
+      "presets": [
+        "Be Yours",
+        "Sheen",
+        "Peace",
+        "Harmony"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "Gift wrapping",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Slide-out cart",
+            "Sticky cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Trust badges",
+            "Stock counter",
+            "Right-to-left",
+            "Recommended products",
+            "Recently viewed",
+            "Quick view",
+            "Promo popups",
+            "Promo banners",
+            "Product badges",
+            "Press coverage",
+            "In-menu promos",
+            "FAQ page",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "Customizable contact form",
+            "Cross-selling",
+            "Countdown timer",
+            "Blogs",
+            "Age verifier",
+            "Quantity pricing"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "10.0.0",
+      "reviews": {
+        "positive_pct": 98,
+        "count": 703
+      }
+    },
+    "berlin": {
+      "url": "https://themes.shopify.com/themes/berlin",
+      "checked_at": "2026-11-25T22:41:17.828Z",
+      "presets": [
+        "Berlin",
+        "Adrenaline",
+        "Polarized",
+        "Fade",
+        "Stereo"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "Gift wrapping",
+            "In-store pickups",
+            "Slide-out cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Age verifier",
+            "Blogs",
+            "Countdown timer",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Promo tiles",
+            "Quick view",
+            "Recently viewed",
+            "Recommended products",
+            "Right-to-left",
+            "Stock counter",
+            "Trust badges"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "1.3.8",
+      "reviews": {
+        "positive_pct": 96,
+        "count": 26
+      }
+    },
+    "bespoke": {
+      "url": "https://themes.shopify.com/themes/bespoke",
+      "checked_at": "2026-11-25T22:41:21.623Z",
+      "presets": [
+        "Bespoke",
+        "Splendor",
+        "Workshop",
+        "Nature"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "Gift wrapping",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Sticky cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Trust badges",
+            "Stock counter",
+            "Right-to-left",
+            "Recommended products",
+            "Recently viewed",
+            "Quick view",
+            "Promo tiles",
+            "Promo banners",
+            "Product badges",
+            "Press coverage",
+            "In-menu promos",
+            "FAQ page",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "Customizable contact form",
+            "Cross-selling",
+            "Countdown timer",
+            "Blogs",
+            "Quantity pricing"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "6.0.2",
+      "reviews": {
+        "positive_pct": 100,
+        "count": 3
+      }
+    },
+    "blockshop": {
+      "url": "https://themes.shopify.com/themes/blockshop",
+      "checked_at": "2026-11-25T22:40:51.103Z",
+      "presets": [
+        "Blockshop",
+        "Radiance",
+        "Stone",
+        "Valla"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Quick buy",
+            "Slide-out cart",
+            "Sticky cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Age verifier",
+            "Back-in-stock alert",
+            "Blogs",
+            "Countdown timer",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Promo tiles",
+            "Quick view",
+            "Recently viewed",
+            "Recommended products",
+            "Stock counter",
+            "Trust badges"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "13.4.0",
+      "reviews": {
+        "positive_pct": 96,
+        "count": 421
+      }
+    },
+    "broadcast": {
+      "url": "https://themes.shopify.com/themes/broadcast",
+      "checked_at": "2026-11-25T22:40:15.937Z",
+      "presets": [
+        "Broadcast",
+        "Relay",
+        "Airwave",
+        "Motif",
+        "Stellar"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Sticky cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Back-in-stock alert",
+            "Blogs",
+            "Countdown timer",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Quick view",
+            "Recently viewed",
+            "Recommended products",
+            "Stock counter",
+            "Trust badges"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Animation",
+            "Before/after image slider",
+            "Color swatches",
+            "Image galleries",
+            "Image hotspot",
+            "Image rollover",
+            "Image zoom",
+            "Product options",
+            "Product tabs",
+            "Product videos",
+            "Shipping/delivery information",
+            "Size chart",
+            "Slideshow"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "8.2.0",
+      "reviews": {
+        "positive_pct": 94,
+        "count": 287
+      }
+    },
+    "concept": {
+      "url": "https://themes.shopify.com/themes/concept",
+      "checked_at": "2026-11-25T22:40:23.002Z",
+      "presets": [
+        "Concept",
+        "Inova"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "Gift wrapping",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Sticky cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Trust badges",
+            "Stock counter",
+            "Right-to-left",
+            "Recommended products",
+            "Recently viewed",
+            "Quick view",
+            "Quick order list",
+            "Promo tiles",
+            "Promo popups",
+            "Promo banners",
+            "Product badges",
+            "Press coverage",
+            "In-menu promos",
+            "FAQ page",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "Customizable contact form",
+            "Cross-selling",
+            "Countdown timer",
+            "Blogs",
+            "Back-in-stock alert",
+            "Age verifier",
+            "Quantity pricing"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "6.1.0",
+      "reviews": {
+        "positive_pct": 99,
+        "count": 675
+      }
+    },
+    "dawn": {
+      "url": "https://themes.shopify.com/themes/dawn",
+      "checked_at": "2026-11-25T22:39:45.720Z",
+      "presets": [
+        "Dawn"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Quick buy"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Blogs",
+            "Cross-selling",
+            "FAQ page",
+            "Press coverage",
+            "Promo banners",
+            "Recommended products"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Color swatches",
+            "High-resolution images",
+            "Image galleries",
+            "Image rollover",
+            "Image zoom",
+            "Ingredients or nutritional information",
+            "Lookbooks",
+            "Product options",
+            "Product videos",
+            "Shipping/delivery information",
+            "Size chart",
+            "Slideshow",
+            "Usage information"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "16.2.0",
+      "reviews": {
+        "positive_pct": 35,
+        "count": 293
+      }
+    },
+    "enterprise": {
+      "url": "https://themes.shopify.com/themes/enterprise",
+      "checked_at": "2026-11-25T22:40:55.072Z",
+      "presets": [
+        "Enterprise",
+        "Outlet",
+        "Homestead"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Sticky cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Age verifier",
+            "Back-in-stock alert",
+            "Blogs",
+            "Countdown timer",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Promo tiles",
+            "Quick view",
+            "Recently viewed",
+            "Recommended products",
+            "Right-to-left",
+            "Stock counter",
+            "Trust badges"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "2.3.0",
+      "reviews": {
+        "positive_pct": 90,
+        "count": 113
+      }
+    },
+    "flow": {
+      "url": "https://themes.shopify.com/themes/flow",
+      "checked_at": "2026-11-25T22:40:39.405Z",
+      "presets": [
+        "Flow",
+        "Grain",
+        "Timeless",
+        "Nectar",
+        "Sanctuary"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "Gift wrapping",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Age verifier",
+            "Back-in-stock alert",
+            "Blogs",
+            "Countdown timer",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Promo tiles",
+            "Quick view",
+            "Recently viewed",
+            "Recommended products",
+            "Stock counter",
+            "Trust badges"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Animation",
+            "Color swatches",
+            "High-resolution images",
+            "Image galleries",
+            "Image hotspot",
+            "Image rollover",
+            "Image zoom",
+            "Ingredients or nutritional information",
+            "Lookbooks",
+            "Product options",
+            "Product tabs",
+            "Product videos",
+            "Size chart",
+            "Slideshow",
+            "Usage information",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "42.0.0",
+      "reviews": {
+        "positive_pct": 91,
+        "count": 391
+      }
+    },
+    "horizon": {
+      "url": "https://themes.shopify.com/themes/horizon",
+      "checked_at": "2026-11-25T22:39:55.147Z",
+      "presets": [
+        "Horizon"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Back-in-stock alert",
+            "Blogs",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Quick view",
+            "Recently viewed",
+            "Recommended products",
+            "Stock counter"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Animation",
+            "Color swatches",
+            "High-resolution images",
+            "Image galleries",
+            "Image rollover",
+            "Image zoom",
+            "Ingredients or nutritional information",
+            "Lookbooks",
+            "Product options",
+            "Product videos",
+            "Shipping/delivery information",
+            "Size chart",
+            "Slideshow",
+            "Usage information",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "4.5.0",
+      "reviews": {
+        "positive_pct": 35,
+        "count": 216
+      }
+    },
+    "hyper": {
+      "url": "https://themes.shopify.com/themes/hyper",
+      "checked_at": "2026-11-25T22:40:27.921Z",
+      "presets": [
+        "Hyper",
+        "Ceramide",
+        "Trove",
+        "Pillar",
+        "Nexvo"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "Gift wrapping",
+            "In-store pickups",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Sticky cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Trust badges",
+            "Stock counter",
+            "Right-to-left",
+            "Recommended products",
+            "Recently viewed",
+            "Quick view",
+            "Quick order list",
+            "Promo tiles",
+            "Promo popups",
+            "Promo banners",
+            "Product badges",
+            "Press coverage",
+            "In-menu promos",
+            "FAQ page",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "Customizable contact form",
+            "Cross-selling",
+            "Countdown timer",
+            "Blogs",
+            "Quantity pricing"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Back-to-top button",
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Infinite scroll",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "1.5.0",
+      "reviews": {
+        "positive_pct": 99,
+        "count": 531
+      }
+    },
+    "impact": {
+      "url": "https://themes.shopify.com/themes/impact",
+      "checked_at": "2026-11-25T22:40:31.920Z",
+      "presets": [
+        "Impact",
+        "Cocoon",
+        "Balance"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Slide-out cart",
+            "Sticky cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Blogs",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Promo tiles",
+            "Quick view",
+            "Recommended products",
+            "Right-to-left",
+            "Trust badges",
+            "Quantity pricing"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "7.2.0",
+      "reviews": {
+        "positive_pct": 85,
+        "count": 201
+      }
+    },
+    "impulse": {
+      "url": "https://themes.shopify.com/themes/impulse",
+      "checked_at": "2026-11-25T22:40:35.691Z",
+      "presets": [
+        "Impulse",
+        "Dune",
+        "Terrain",
+        "Apothecary"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Quick buy",
+            "Slide-out cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Age verifier",
+            "Blogs",
+            "Countdown timer",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Promo tiles",
+            "Quick view",
+            "Recently viewed",
+            "Recommended products",
+            "Stock counter",
+            "Trust badges"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header"
+          ]
+        }
+      ],
+      "version": "10.0.0",
+      "reviews": {
+        "positive_pct": 94,
+        "count": 1306
+      }
+    },
+    "prestige": {
+      "url": "https://themes.shopify.com/themes/prestige",
+      "checked_at": "2026-11-25T22:41:37.630Z",
+      "presets": [
+        "Prestige",
+        "Couture",
+        "Vogue",
+        "Strass",
+        "Signature"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Quick buy",
+            "Slide-out cart",
+            "Sticky cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Stock counter",
+            "Right-to-left",
+            "Recommended products",
+            "Recently viewed",
+            "Quick view",
+            "Quick order list",
+            "Promo tiles",
+            "Promo popups",
+            "Promo banners",
+            "Product badges",
+            "Press coverage",
+            "In-menu promos",
+            "FAQ page",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "Customizable contact form",
+            "Cross-selling",
+            "Countdown timer",
+            "Blogs",
+            "Quantity pricing"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "11.4.1",
+      "reviews": {
+        "positive_pct": 91,
+        "count": 876
+      }
+    },
+    "shapes": {
+      "url": "https://themes.shopify.com/themes/shapes",
+      "checked_at": "2026-11-25T22:40:58.735Z",
+      "presets": [
+        "Shapes",
+        "Fizz",
+        "Candy",
+        "Aura",
+        "Scratch"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Slide-out cart",
+            "Sticky cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Age verifier",
+            "Blogs",
+            "Cross-selling",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Recently viewed",
+            "Recommended products"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Animation",
+            "Color swatches",
+            "High-resolution images",
+            "Image galleries",
+            "Image rollover",
+            "Image zoom",
+            "Ingredients or nutritional information",
+            "Product options",
+            "Product tabs",
+            "Product videos",
+            "Size chart",
+            "Slideshow",
+            "Usage information",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "5.1.0",
+      "reviews": {
+        "positive_pct": 99,
+        "count": 87
+      }
+    },
+    "stretch": {
+      "url": "https://themes.shopify.com/themes/stretch",
+      "checked_at": "2026-11-25T22:41:02.705Z",
+      "presets": [
+        "Stretch",
+        "Snow",
+        "Diffuse"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Sticky cart"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Trust badges",
+            "Stock counter",
+            "Right-to-left",
+            "Recommended products",
+            "Recently viewed",
+            "Quick view",
+            "Promo tiles",
+            "Promo popups",
+            "Promo banners",
+            "Product badges",
+            "Press coverage",
+            "In-menu promos",
+            "FAQ page",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "Customizable contact form",
+            "Cross-selling",
+            "Countdown timer",
+            "Blogs",
+            "Age verifier",
+            "Quantity pricing"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Before/after image slider",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recently viewed",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "2.1.1",
+      "reviews": {
+        "positive_pct": 89,
+        "count": 44
+      }
+    },
+    "symmetry": {
+      "url": "https://themes.shopify.com/themes/symmetry",
+      "checked_at": "2026-11-25T22:40:43.434Z",
+      "presets": [
+        "Symmetry",
+        "Salt Yard",
+        "Beatnik",
+        "Duke",
+        "Amara"
+      ],
+      "features": [
+        {
+          "group": "Cart and checkout",
+          "items": [
+            "Cart notes",
+            "In-store pickups",
+            "Pre-order",
+            "Quick buy",
+            "Sign in with Shop",
+            "Slide-out cart",
+            "Sticky cart",
+            "Customer accounts and sign-in",
+            "Account menu"
+          ]
+        },
+        {
+          "group": "Marketing and conversion",
+          "items": [
+            "Blogs",
+            "Countdown timer",
+            "Cross-selling",
+            "Customizable contact form",
+            "EU translations (EN, FR, IT, DE, ES)",
+            "FAQ page",
+            "In-menu promos",
+            "Press coverage",
+            "Product badges",
+            "Promo banners",
+            "Promo popups",
+            "Promo tiles",
+            "Quick view",
+            "Recommended products",
+            "Right-to-left",
+            "Stock counter",
+            "Trust badges"
+          ]
+        },
+        {
+          "group": "Merchandising",
+          "items": [
+            "Usage information",
+            "Slideshow",
+            "Size chart",
+            "Shipping/delivery information",
+            "Product videos",
+            "Product tabs",
+            "Product options",
+            "Lookbooks",
+            "Ingredients or nutritional information",
+            "Image zoom",
+            "Image rollover",
+            "Image hotspot",
+            "Image galleries",
+            "High-resolution images",
+            "Color swatches",
+            "Animation",
+            "Combined listing"
+          ]
+        },
+        {
+          "group": "Product discovery",
+          "items": [
+            "Breadcrumbs",
+            "Collection page navigation",
+            "Enhanced search",
+            "Mega menu",
+            "Product filtering and sorting",
+            "Recommended products",
+            "Sticky header",
+            "Swatch filters"
+          ]
+        }
+      ],
+      "version": "8.3.2",
+      "reviews": {
+        "positive_pct": 94,
+        "count": 392
+      }
+    }
+  }
+}

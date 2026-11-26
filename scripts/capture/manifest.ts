@@ -7,6 +7,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { CaptureInput } from '../../src/server/repo/ingest.ts';
+import type { RawSection } from './classify.ts';
 import { MANIFEST } from './paths.ts';
 
 export interface ManifestEntry {
@@ -19,6 +20,8 @@ export interface ManifestEntry {
     /** Template keys we could not name (kept for improving the rules). */
     unclassified: string[];
   };
+  /** The DOM sections as read, so the rules can be re-run without a browser (reprocess.ts). */
+  raw?: { sections: RawSection[] };
 }
 
 export interface Manifest {
