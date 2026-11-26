@@ -6,13 +6,20 @@ import { expectHealthyPage, prepare } from './helpers';
 test.describe('teardowns', () => {
   test('index is healthy, leads with the newest and labels samples', async ({ page }) => {
     await expectHealthyPage(page, '/teardowns');
-    await expect(page.locator('.lead a[href="/teardowns/youngla"]')).toBeVisible();
+    await expect(page.locator('.lead a[href="/teardowns/negativeunderwear"]')).toBeVisible();
     await expect(page.locator('.tds')).toContainText('Sample');
-    await expect(page.locator('.tds__grid .td-card')).toHaveCount(2);
+    await expect(page.locator('.tds__grid .td-card')).toHaveCount(5);
     expect(await page.locator('main').textContent()).not.toContain('N°');
   });
 
-  for (const slug of ['youngla', 'thesill', 'fishwife']) {
+  for (const slug of [
+    'negativeunderwear',
+    'lskd',
+    'thursdayboots',
+    'youngla',
+    'thesill',
+    'fishwife',
+  ]) {
     test(`detail is healthy: ${slug}`, async ({ page }) => {
       await expectHealthyPage(page, `/teardowns/${slug}`);
       const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join(

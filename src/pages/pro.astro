@@ -114,12 +114,67 @@ const FAQ = [
 ];
 
 const cellText = (c: Cell) => (c === true ? 'Included' : c === false ? 'Not included' : c);
+
+const site = Astro.site ?? Astro.url;
+const abs = (path: string) => new URL(path, site).href;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: abs('/') },
+      { '@type': 'ListItem', position: 2, name: 'Pro', item: abs('/pro') },
+    ],
+  },
+  {
+    '@type': 'SoftwareApplication',
+    name: SITE_NAME,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    url: abs('/pro'),
+    offers: [
+      { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' },
+      {
+        '@type': 'Offer',
+        name: 'Pro monthly',
+        price: String(MONTHLY_PRICE.pro),
+        priceCurrency: 'USD',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Pro yearly',
+        price: String(yearlyOf(MONTHLY_PRICE.pro)),
+        priceCurrency: 'USD',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Team monthly',
+        price: String(MONTHLY_PRICE.team),
+        priceCurrency: 'USD',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Team yearly',
+        price: String(yearlyOf(MONTHLY_PRICE.team)),
+        priceCurrency: 'USD',
+      },
+    ],
+  },
+  {
+    '@type': 'FAQPage',
+    mainEntity: FAQ.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
+  },
+];
 ---
 
 <BaseLayout
   title="Pro"
   description={`${SITE_NAME} pricing. Free: home page screenshots and basic theme and app data. Pro: every page type, full-page and section screenshots, CSV exports. Team: three seats. Planned launch prices.`}
   canonical="/pro"
+  jsonLd={jsonLd}
 >
   <div class="pro" data-billing={billing} data-compare={compare} data-pro>
     <div class="container guides pro__frame">

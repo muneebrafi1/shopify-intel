@@ -56,3 +56,19 @@ export function thumbUrl(src: string, opts: { cropHeight: number; width?: number
     return topThumbKey(src);
   return src;
 }
+
+/** Social-preview image for a real (non-placeholder) capture; returns undefined for placeholders. */
+export function ogCaptureSrc(
+  shot:
+    | { is_placeholder?: boolean; image?: { src: string; is_placeholder?: boolean } }
+    | null
+    | undefined,
+): string | undefined {
+  const src = shot?.image?.src;
+  if (!src || shot.is_placeholder || shot.image?.is_placeholder || isPlaceholderSrc(src)) {
+    return undefined;
+  }
+  const clean = src.split('?')[0] ?? src;
+  if (!/\.(webp|png|jpe?g)$/i.test(clean)) return undefined;
+  return captureDevice(clean) ? topThumbKey(clean) : clean;
+}

@@ -23,6 +23,7 @@ import { renderMarkdown } from '~/components/teardowns/markdown';
 import { api, orNotFound } from '~/server/api';
 import { SITE_NAME } from '~/config/site';
 import { formatCount, formatDate } from '~/lib/format';
+import { ogCaptureSrc } from '~/lib/media';
 
 const slug = Astro.params.slug ?? '';
 const res = slug ? await orNotFound(api.getTeardown({ slug })) : null;
@@ -48,6 +49,7 @@ const asOf = formatDate(source?.as_of ?? detail.detection.last_seen);
 const isPreview = detail.pages.some((p) => p.is_placeholder);
 const title = store.name ?? store.domain;
 const cover = teardown.cover;
+const ogImage = ogCaptureSrc(cover);
 
 const facts: Fact[] = [
   { label: 'Store', value: store.domain, href: store.href, mono: true },
@@ -103,6 +105,7 @@ const jsonLd = [
     author: { '@type': 'Organization', name: SITE_NAME, url: new URL('/about', site).href },
     publisher: { '@type': 'Organization', name: SITE_NAME },
     mainEntityOfPage: pageUrl,
+    image: new URL(ogImage ?? '/og-default.png', site).href,
     wordCount: words,
     about: { '@type': 'OnlineStore', name: title, url: store.url },
   },
@@ -118,6 +121,9 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     `A teardown of ${store.domain}: theme, apps and where each one shows up on the page.`
   }
   canonical={teardown.href}
+  ogType="article"
+  ogImage={ogImage}
+  ogImageAlt={ogImage ? `${title} home page capture` : undefined}
   jsonLd={jsonLd}
 >
   <article class="td">

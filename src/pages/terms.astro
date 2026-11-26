@@ -28,11 +28,34 @@ const toc = [
   { id: 'law', label: 'Governing law' },
   { id: 'contact', label: 'Contact' },
 ];
+const site = Astro.site ?? Astro.url;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', site).href },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: `Terms · ${SITE_NAME}`,
+        item: new URL('/terms', site).href,
+      },
+    ],
+  },
+  {
+    '@type': 'WebPage',
+    name: `Terms · ${SITE_NAME}`,
+    url: new URL('/terms', site).href,
+    description: `The rules for using ${SITE_NAME}: what our data is, how you can reuse it, API fair use and how Pro will work.`,
+  },
+];
 ---
 
 <BaseLayout
   title="Terms"
   description={`The rules for using ${SITE_NAME}: what our data is, how you can reuse it, API fair use and how Pro will work.`}
+  canonical="/terms"
+  jsonLd={jsonLd}
 >
   <DocShell
     title="Terms"

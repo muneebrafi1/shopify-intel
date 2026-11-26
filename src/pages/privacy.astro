@@ -26,11 +26,34 @@ const toc = [
   { id: 'changes', label: 'Changes to this policy' },
   { id: 'contact', label: 'Contact' },
 ];
+const site = Astro.site ?? Astro.url;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', site).href },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: `Privacy · ${SITE_NAME}`,
+        item: new URL('/privacy', site).href,
+      },
+    ],
+  },
+  {
+    '@type': 'WebPage',
+    name: `Privacy · ${SITE_NAME}`,
+    url: new URL('/privacy', site).href,
+    description: `What ${SITE_NAME} collects (very little), what it never does, and how to ask for your data or your store to be removed.`,
+  },
+];
 ---
 
 <BaseLayout
   title="Privacy"
   description={`What ${SITE_NAME} collects (very little), what it never does, and how to ask for your data or your store to be removed.`}
+  canonical="/privacy"
+  jsonLd={jsonLd}
 >
   <DocShell
     title="Privacy"
