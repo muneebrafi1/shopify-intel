@@ -138,7 +138,8 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
 13. [#13](https://github.com/muneebrafi1/shopify-intel/pull/13) `feat/13-capture-pipeline` — local capture pipeline, DOM section detection, `ingestCapture()`
 14. [#14](https://github.com/muneebrafi1/shopify-intel/pull/14) `feat/14-capture-depth` — collection/product/cart capture, stitched mode, top thumbnails, data-independent e2e
 15. [#15](https://github.com/muneebrafi1/shopify-intel/pull/15) `feat/15-data-depth` — 50 curated stores, crawler + scan ingest, Theme Store facts, content-based section rules
-16. `feat/16-accounts-pro` — Whop sign-in (OAuth + PKCE), sessions, signed webhooks → plans, boards (save, export CSV), Pro checkout links, dev sign-in
+16. [#16](https://github.com/muneebrafi1/shopify-intel/pull/16) `feat/16-accounts-pro` — Whop sign-in (OAuth + PKCE), sessions, signed webhooks → plans, boards (save, export CSV), Pro checkout links, dev sign-in
+17. `feat/17-mcp-server` — read-only MCP server (`POST /mcp`) over API v1 with D1 per-IP rate limiting
 
 `claude/busy-wright-i74iuv` holds the same final tree with the session's checkpoint history.
 PR screenshots live on the `pr-screenshots` branch (images only; never merge it).
@@ -155,8 +156,8 @@ PR screenshots live on the `pr-screenshots` branch (images only; never merge it)
    - create a Whop app, products, checkout links and a webhook (sandbox first)
    - set the Worker secrets
    - verify the webhook key convention with one sandbox delivery
-4. **MCP server**: wrap `endpointList` from `src/server/api/v1/registry.ts` (id → tool name, zod
-   input → tool schema).
+4. **MCP server**: done in #17 (`POST /mcp`, read-only tools from `endpointList`, D1 rate limit,
+   `docs/MCP.md`, `/developers#mcp`).
 5. Grow data further: production crawl schedule (needs the owner's go-ahead), theme
    style/industry tags (the Theme Store publishes none; left empty on purpose), Tranco
    source/date in `meta.sources`.
