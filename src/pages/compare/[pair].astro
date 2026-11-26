@@ -265,6 +265,9 @@ const jsonLd = [
   },
 ];
 const description = `${cmp.title}: ${isApp ? 'where each app renders on real Shopify stores' : 'the same pages on real stores using each theme'}, ${isApp ? 'ratings, plans' : 'prices, versions'} and how many of ${formatCount(a.denominator)} scanned stores run them. Facts only, no winner.`;
+const compareTitleLong = `${cmp.title}: ${isApp ? 'ratings, plans' : 'price, versions'} and real stores using each`;
+const compareTitle =
+  compareTitleLong.length <= 62 ? compareTitleLong : `${cmp.title}: compared on real stores`;
 const sections: Array<[string, string]> = [
   ['stage', 'Seen on'],
   ['facts', 'Facts'],
@@ -276,7 +279,7 @@ const sections: Array<[string, string]> = [
 ---
 
 <BaseLayout
-  title={`${cmp.title}: side by side on real stores`}
+  title={compareTitle}
   description={description}
   canonical={cmp.href}
   jsonLd={jsonLd}

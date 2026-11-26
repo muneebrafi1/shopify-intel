@@ -191,13 +191,17 @@ const top3 = alt.items
   .filter(Boolean)
   .join(', ');
 const description = isApp
-  ? `Alternatives to ${name} on real Shopify stores: ${top3} and more ${alt.category?.name ?? ''} apps, ranked by how many of ${formatCount(usage.denominator)} scanned stores use them.`
+  ? `Alternatives to ${name} on real Shopify stores: ${top3} and more ${alt.category?.name ? `${alt.category.name} ` : ''}apps, ranked by how many of ${formatCount(usage.denominator)} scanned stores use them.`
   : `Themes like ${name}: ${top3} and more, with the stores that use them.`;
+const altTitleLong = isApp
+  ? `${name} alternatives: ${count} ${alt.category?.name ? `${alt.category.name} ` : ''}apps ranked by use`
+  : `Themes like ${name}: ${count} alternatives`;
+const altTitle = altTitleLong.length <= 62 ? altTitleLong : `${name} alternatives on real Shopify stores`;
 const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Themes'].join(' · ');
 ---
 
 <BaseLayout
-  title={`Alternatives to ${name}`}
+  title={altTitle}
   description={description}
   canonical={`/alternatives/${alt.slug}`}
   jsonLd={jsonLd}
