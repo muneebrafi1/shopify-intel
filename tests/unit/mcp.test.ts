@@ -162,7 +162,7 @@ describe('MCP HTTP & JSON-RPC protocol', () => {
       params: { name: 'getStore', arguments: { domain } },
     });
     const storePayload = JSON.parse((await storeRes.json()).result.content[0].text);
-    expect(storePayload.data.domain).toBe(domain);
+    expect(storePayload.data.store.domain).toBe(domain);
     expect(storePayload.meta.canonical).toBe(`/stores/${domain}`);
   });
 
