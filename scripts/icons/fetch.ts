@@ -84,10 +84,23 @@ async function toWebp(buf: Buffer): Promise<{ data: Buffer; w: number } | null> 
     // Wordmarks are often wide and short (e.g. 112×22); accept if the long side is ≥ 32.
     if (Math.max(meta.width, meta.height) < 32) return null;
     const side = Math.min(128, Math.max(meta.width, meta.height));
-    const data = await sharp(buf)
+    const fitted = sharp(buf)
       .resize(side, side, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-      .webp({ quality: 88 })
-      .toBuffer();
+      .ensureAlpha();
+    const raw = await fitted.clone().raw().toBuffer({ resolveWithObject: true });
+    let lum = 0, n = 0;
+    for (let i = 0; i < raw.data.length; i += 4) {
+      if (raw.data[i + 3]! > 40) {
+        lum += raw.data[i]! * 0.3 + raw.data[i + 1]! * 0.59 + raw.data[i + 2]! * 0.11;
+        n++;
+      }
+    }
+    // Light marks on transparency vanish on our white tile; sit them on ink instead.
+    const pipeline =
+      n && lum / n > 210
+        ? fitted.flatten({ background: '#191816' })
+        : fitted;
+    const data = await pipeline.webp({ quality: 88 }).toBuffer();
     return { data, w: meta.width };
   } catch {
     return null;
