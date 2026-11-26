@@ -269,8 +269,13 @@ test.describe('theme detail', () => {
     await page.goto('/themes/prestige');
     const ranks = await page.locator('.tapps__rank').allTextContents();
     expect(ranks[0]).toBe('#1');
-    // Several apps run on the same number of Prestige stores: they share one rank.
-    expect(ranks.filter((r) => r === '#4').length).toBeGreaterThan(1);
-    expect(ranks).not.toContain('#5');
+    // Apps on the same number of Prestige stores share one rank (competition ranking: 1, 2, 2, 4).
+    const { data } = (await (await page.request.get('/api/v1/themes/prestige')).json()) as {
+      data: { top_apps: Array<{ stores: number }> };
+    };
+    const expected = data.top_apps.map(
+      (a) => `#${data.top_apps.findIndex((b) => b.stores === a.stores) + 1}`,
+    );
+    expect(ranks).toEqual(expected);
   });
 });

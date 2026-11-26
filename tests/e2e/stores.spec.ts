@@ -18,6 +18,7 @@ interface ApiShot {
   sections: Array<{ id: number; type: { name: string }; app: { short_name: string } | null }>;
 }
 interface ApiStore {
+  apps: { total: number };
   pages: Array<{
     page_type: { slug: string };
     screenshots: { desktop: ApiShot | null; mobile: ApiShot | null };
@@ -201,7 +202,8 @@ test.describe('store detail', () => {
     await page.goto('/stores/youngla.com');
     const facts = page.locator('.store__aside .fcard');
     await expect(facts).toContainText('Prestige 9.3.0');
-    await expect(facts).toContainText('11 detected');
+    const { apps } = await storeDetail(page, 'youngla.com');
+    await expect(facts).toContainText(`${apps.total} detected`);
     await expect(facts).toContainText('Source:');
     await expect(page.locator('.store__aside a[href="/teardowns/youngla"]')).toBeVisible();
   });

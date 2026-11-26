@@ -489,7 +489,15 @@ function appStoresStage(a: AppDetail, b: AppDetail): StageModel {
 
 /** Theme pairs: the same page type of a curated store on each theme, with its sections pinned. */
 export function themeStage(a: ThemeDetail, b: ThemeDetail): StageModel {
-  const storeOf = (t: ThemeDetail) => t.curated_stores[0] ?? null;
+  // The curated store with the most sampled sections, so its captures carry pinned tags.
+  const storeOf = (t: ThemeDetail) => {
+    const tagged = (domain: string) =>
+      t.sections.items.filter((x) => x.store.domain === domain).length;
+    return (
+      [...t.curated_stores].sort((x, y) => tagged(y.store.domain) - tagged(x.store.domain))[0] ??
+      null
+    );
+  };
   const sa = storeOf(a);
   const sb = storeOf(b);
   const pages = CORE_PAGE_TYPES.filter((p) =>
