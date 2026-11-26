@@ -232,6 +232,17 @@ const market = (s: StoreListItem) => [s.currency, s.country].filter(Boolean).joi
   .stable__apps {
     width: 132px;
   }
+  @media (max-width: 639px) {
+    .stable__store {
+      width: auto;
+    }
+    .stable__apps {
+      width: 64px;
+    }
+    .stable__wrap {
+      overflow-x: clip;
+    }
+  }
   .stable__market {
     width: 112px;
   }
