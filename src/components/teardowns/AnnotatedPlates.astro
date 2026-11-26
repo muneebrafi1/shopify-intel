@@ -96,7 +96,7 @@ const css = annotatedIds
     (id) =>
       `.tdplates.tdplates [data-region="${id}"]::before{border:1.5px solid var(--accent)}` +
       `.tdplates.tdplates [data-region="${id}"] .fp__tag{opacity:1;transform:none;background:var(--accent-btn);color:var(--accent-fg)}` +
-      `.tdplates.tdplates [data-region="${id}"] .fp__tag :is(.fp__tag-n,.fp__tag-app){color:color-mix(in srgb,var(--accent-fg) 94%,transparent)}`,
+      `.tdplates.tdplates [data-region="${id}"] .fp__tag :is(.fp__tag-n,.fp__tag-app){color:var(--accent-fg)}`,
   )
   .join('');
 const PATHS: Record<string, string> = {
