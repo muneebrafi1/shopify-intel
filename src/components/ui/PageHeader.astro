@@ -59,7 +59,12 @@ const shownCount = typeof count === 'number' ? count.toLocaleString('en-US') : c
             <span class="tone-muted">{titleMuted}</span>
           </>
         )}
-        {shownCount !== undefined && <span class="ph__count num">{shownCount}</span>}
+        {shownCount !== undefined && (
+          <>
+            {' '}
+            <span class="ph__count num">{shownCount}</span>
+          </>
+        )}
       </h1>
       {desc && <p class="ph__desc lead">{desc}</p>}
       <slot name="meta" />

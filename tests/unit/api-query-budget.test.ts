@@ -5,6 +5,7 @@
  * both the results (same as the one-at-a-time calls they replace) and the query counts.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { absolutizeMedia } from '../../src/server/media/urls.ts';
 import type { Db, SqlValue, Statement } from '../../src/server/db/types.ts';
 import { buildCtx, createRuntime } from '../../src/server/api/v1/execute.ts';
 import { appDetails, findApps, getAppDetail } from '../../src/server/repo/apps.ts';
@@ -145,7 +146,11 @@ describe('listSectionsByApps', () => {
       per_app: 2,
       device: 'mobile',
     });
-    expect(body.data).toEqual(JSON.parse(JSON.stringify(viaClient.data)));
+    // HTTP responses carry absolute media URLs; the in-process client keeps them root-relative.
+    expect(body.data).toEqual(
+      absolutizeMedia(JSON.parse(JSON.stringify(viaClient.data)), 'https://test.local'),
+    );
+    expect(JSON.stringify(body.data)).toContain('https://test.local/media/');
   });
 
   it('validates its input (1 to 50 apps, per_app 1 to 24)', async () => {

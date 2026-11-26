@@ -5,6 +5,7 @@
  */
 import { SITE_NAME, SITE_URL } from '../../config/site.ts';
 import { isApiError } from '../api/v1/errors.ts';
+import { absolutizeMedia } from '../media/urls.ts';
 import { createRuntime, execute, type ApiDeps, type Runtime } from '../api/v1/execute.ts';
 import { parseJsonObject } from '../auth/crypto.ts';
 import { checkMcpRateLimit, rateLimitHeaders, type McpRateLimitOptions } from './rate-limit.ts';
@@ -164,7 +165,7 @@ export function createMcpHandler(
         try {
           const result = await execute(rt, def, args, { ip });
           return rpcOk(id, {
-            content: [{ type: 'text', text: JSON.stringify(result.envelope) }],
+            content: [{ type: 'text', text: JSON.stringify(absolutizeMedia(result.envelope, SITE_URL)) }],
           });
         } catch (err) {
           if (isApiError(err)) {

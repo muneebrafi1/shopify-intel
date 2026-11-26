@@ -248,14 +248,31 @@ const crumbs = [
   ...(app.category ? [{ label: app.category.name, href: app.category.href }] : []),
   { label: name, href: app.href },
 ];
-const title = `${name}: where it shows up on real Shopify stores`;
-const description = `${name}${full ? ` (${full})` : ''} runs on ${app.usage.stores} of ${denominator} scanned Shopify stores${
-  hasRating ? `, rated ${app.rating!.toFixed(1)} on the App Store` : ''
-}. ${
+const longTitle = `${name} for Shopify: stores using it, pricing, alternatives`;
+const title = longTitle.length <= 62 ? longTitle : `${name}: Shopify app on real stores`;
+const pricedPlans = app.plans.filter((p) => typeof p.price_cents === 'number');
+const paidPlans = pricedPlans.filter((p) => (p.price_cents ?? 0) > 0);
+const hasFreePlan = pricedPlans.some((p) => p.price_cents === 0);
+const cheapest = paidPlans.length
+  ? Math.min(...paidPlans.map((p) => p.price_cents ?? 0)) / 100
+  : null;
+const priceBit =
+  cheapest !== null
+    ? `${hasFreePlan ? 'Free plan, paid from ' : 'Plans from '}$${Number.isInteger(cheapest) ? cheapest : cheapest.toFixed(2)}${paidPlans.find((p) => (p.price_cents ?? 0) / 100 === cheapest)?.period === 'month' ? '/mo' : ''}`
+    : hasFreePlan
+      ? 'Free plan'
+      : null;
+const description = [
+  `${name} is ${app.category ? `${/^[aeiou]/i.test(app.category.name) ? 'an' : 'a'} ${app.category.name} app` : 'an app'} for Shopify${app.developer && app.developer !== name ? ` by ${app.developer}` : ''}, found on ${app.usage.stores.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')} scanned stores${
+    hasRating ? ` and rated ${app.rating!.toFixed(1)} on the App Store` : ''
+  }.`,
+  priceBit ? `${priceBit}.` : null,
   detail.seen_on.section_total
-    ? 'See its sections on real store pages, plans, co-installed apps and alternatives.'
-    : `See the stores running it${app.plans.length ? ', its plans' : ''}, co-installed apps and alternatives.`
-}`;
+    ? 'See where it renders on real store pages, with alternatives.'
+    : 'See the stores running it and its alternatives.',
+]
+  .filter(Boolean)
+  .join(' ');
 
 const base = Astro.site ?? url;
 const offers = app.plans
