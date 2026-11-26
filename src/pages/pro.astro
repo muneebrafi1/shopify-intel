@@ -4,8 +4,9 @@
  * three plan cards (Pro recommended) → "Compare all features" with a sticky plan header row
  * (one plan column at a time below 640px) → FAQ → lifetime-deal band.
  *
- * Checkout (Whop) is not live: paid plan buttons go to /sign-in?next=/pro, which explains that
- * accounts open with Pro. Both switches are URL state and work without JS
+ * Checkout runs on Whop: with WHOP_CHECKOUT_* links set, paid plan buttons open Whop's checkout
+ * for the selected billing period (members then sign in with the same Whop account). Without
+ * them the buttons go to /sign-in?next=/pro, which explains that accounts open with Pro. Both switches are URL state and work without JS
  * (?billing=yearly, ?compare=free|pro|team); with JS they switch in place and keep the URL
  * shareable. Plans and prices live in src/components/static/content.ts (OWNER: draft).
  */
@@ -19,6 +20,7 @@ import Segmented from '~/components/ui/Segmented.astro';
 import { CONTACT, SITE_NAME } from '~/config/site';
 import { formatDate } from '~/lib/format';
 import { loadMeta } from '~/components/static/meta';
+import { whopConfig } from '~/server/account/env';
 import {
   LIFETIME,
   MONTHLY_PRICE,
@@ -43,6 +45,21 @@ const compare: PlanId =
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
 const meta = await loadMeta();
+const checkout = whopConfig().checkout;
+const checkoutFor = (id: PlanId, b: Billing): string | null =>
+  id === 'pro' || id === 'team' ? checkout[`${id}-${b}`] : null;
+const checkoutOpen = !!(checkout['pro-monthly'] || checkout['pro-yearly']);
+/** Plan button target and per-billing alternatives for the in-place switch. */
+const ctaAttrs = (plan: Plan) => {
+  const m = checkoutFor(plan.id, 'monthly');
+  const y = checkoutFor(plan.id, 'yearly');
+  if (!m && !y) return { href: plan.cta.href };
+  return {
+    href: (billing === 'yearly' ? y : m) ?? plan.cta.href,
+    'data-href-monthly': m ?? plan.cta.href,
+    'data-href-yearly': y ?? plan.cta.href,
+  };
+};
 
 /** URL for a given state; defaults are left out so the canonical stays /pro. */
 const stateHref = (b: Billing, c: PlanId, hash = '') => {
@@ -62,7 +79,9 @@ const yearlyOf = (monthly: number) => monthly * (12 - YEARLY_FREE_MONTHS);
 const FAQ = [
   {
     q: 'When can I buy Pro?',
-    a: 'Pro opens together with accounts. Checkout isn’t live yet, so nothing on this page can charge you. The prices here are the planned launch prices.',
+    a: checkoutOpen
+      ? 'Now. Checkout runs on Whop; after paying, sign in here with the same Whop account and Pro is on. Cancel any time on Whop.'
+      : 'Pro opens together with accounts. Checkout isn’t live yet, so nothing on this page can charge you. The prices here are the planned launch prices.',
   },
   {
     q: 'What stays free?',
@@ -201,7 +220,7 @@ const cellText = (c: Cell) => (c === true ? 'Included' : c === false ? 'Not incl
                   {now.note}
                 </p>
                 <Button
-                  href={plan.cta.href}
+                  {...ctaAttrs(plan)}
                   variant={plan.recommended ? 'accent' : 'secondary'}
                   size="lg"
                   full
@@ -280,7 +299,7 @@ const cellText = (c: Cell) => (c === true ? 'Included' : c === false ? 'Not incl
                 </span>
               </p>
               <Button
-                href={p.cta.href}
+                {...ctaAttrs(p)}
                 variant={p.recommended ? 'accent' : 'secondary'}
                 size="sm"
                 rel={p.id === 'free' ? undefined : 'nofollow'}
@@ -430,6 +449,12 @@ const cellText = (c: Cell) => (c === true ? 'Included' : c === false ? 'Not incl
       else a.removeAttribute('aria-current');
       a.href = hrefFor(billing, a.dataset.value ?? 'pro', '#compare');
     });
+    root
+      .querySelectorAll<HTMLAnchorElement>('a[data-href-monthly][data-href-yearly]')
+      .forEach((a) => {
+        const next = billing === 'yearly' ? a.dataset.hrefYearly : a.dataset.hrefMonthly;
+        if (next) a.href = next;
+      });
     root.querySelectorAll<HTMLElement>('[data-monthly][data-yearly]').forEach((el) => {
       const next = el.dataset[billing];
       if (next !== undefined && el.textContent !== next) el.textContent = next;
