@@ -237,10 +237,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       count={catalogue}
       description={`Every app we detect, ranked by how many of ${denominator.toLocaleString('en-US')} scanned stores run it, with App Store ratings and prices.`}
     >
-      <p slot="meta" class="apps__asof">
-        <span>Scan {formatDate(scan?.as_of)}</span>
-        <span>App Store checked {formatDate(appStore?.as_of)}</span>
-      </p>
       <Fragment slot="actions">
         <Button href="/apps/categories" iconRight="arrow-right">
           Categories

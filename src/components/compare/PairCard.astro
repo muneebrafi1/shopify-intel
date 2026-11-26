@@ -49,9 +49,7 @@ const both =
   typeof shared === 'number'
     ? shared > 0
       ? `${formatCount(shared)} ${shared === 1 ? 'store' : 'stores'} ${sharedVerb} both`
-      : sharedVerb === 'run'
-        ? 'No scanned store runs both'
-        : 'No store has run both'
+      : null
     : null;
 ---
 

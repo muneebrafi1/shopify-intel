@@ -107,10 +107,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       description={`${countWord} kinds of app, ordered by how many of ${denominator.toLocaleString('en-US')} scanned stores run at least one. ${onPage.length} of them put a section on the page.`}
     >
       <Breadcrumbs slot="top" items={crumbs} />
-      <p slot="meta" class="cats__asof">
-        <span>Scan {formatDate(source?.as_of)}</span>
-        <span>{appCount} apps tracked</span>
-      </p>
       <Fragment slot="actions">
         <Button href="/apps" iconRight="arrow-right">
           All apps, ranked
