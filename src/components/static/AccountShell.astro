@@ -60,15 +60,17 @@ const signInHref = `/sign-in?next=${encodeURIComponent(next)}`;
           </form>
         )}
         {!paid && (
-        <div class="acct__pro">
-          <p class="acct__pro-title">{user ? 'Boards come with Pro' : 'Accounts open with Pro'}</p>
-          <p class="acct__pro-body">
-            Boards, exports and every page type. Planned from ${MONTHLY_PRICE.pro} a month.
-          </p>
-          <Button href="/pro" variant="secondary" size="sm" full>
-            See Pro
-          </Button>
-        </div>
+          <div class="acct__pro">
+            <p class="acct__pro-title">
+              {user ? 'Boards come with Pro' : 'Accounts open with Pro'}
+            </p>
+            <p class="acct__pro-body">
+              Boards, exports and every page type. Planned from ${MONTHLY_PRICE.pro} a month.
+            </p>
+            <Button href="/pro" variant="secondary" size="sm" full>
+              See Pro
+            </Button>
+          </div>
         )}
       </div>
     </aside>

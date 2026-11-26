@@ -1,8 +1,8 @@
 ---
 /**
- * Boards (saved collections) — placeholder until accounts open. Shows the empty state a new
- * account will see, plus example boards built from the library and labelled as examples.
- * `?save=<type>:<id>` (from SaveButton → sign-in) explains that saving needs an account.
+ * Boards (saved collections). Pro and Team users see and create their own boards; Free users get
+ * the Pro note. Both see the labelled example boards while they have no board of their own.
+ * The old `?save=<type>:<id>` links (before accounts) are forwarded to /account/save.
  * Data model: collections + collection_items (migrations/0001_init.sql).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -11,26 +11,45 @@ import Icon from '~/components/ui/Icon.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import AccountShell from '~/components/static/AccountShell.astro';
 import BoardCard from '~/components/static/BoardCard.astro';
-import { EXAMPLE_BOARDS } from '~/components/static/content';
+import { EXAMPLE_BOARDS, MONTHLY_PRICE } from '~/components/static/content';
 import { loadExampleItems } from '~/components/static/boards';
+import { accountCtx, accountDb } from '~/server/account/env';
+import { listBoards, MAX_BOARDS, NAME_MAX } from '~/server/account/boards';
+import { isPaid } from '~/server/account/entitlements';
+import { boardThumbs } from '~/server/account/views';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
-const SAVE_NOUN: Record<string, string> = {
-  screenshot: 'screenshot',
-  section: 'section',
-  store: 'store',
-  theme: 'theme',
-  app: 'app',
-};
-const save = Astro.url.searchParams.get('save') ?? '';
-const [saveType = '', saveId = ''] = save.split(':');
-const saveNoun = /^[\w.-]{1,120}$/.test(saveId) ? (SAVE_NOUN[saveType] ?? null) : null;
+const legacySave = Astro.url.searchParams.get('save');
+if (legacySave) return Astro.redirect(`/account/save?item=${encodeURIComponent(legacySave)}`, 302);
 
-const examples = await Promise.all(
-  EXAMPLE_BOARDS.map(async (board) => ({ board, items: await loadExampleItems(board, 24) })),
-);
+const user = Astro.locals.user!;
+const paid = isPaid(user.plan);
+const boards = paid ? await listBoards(accountDb(), user.id) : [];
+const thumbs = boards.length
+  ? await boardThumbs(
+      await accountCtx(),
+      boards.flatMap((b) => b.thumbSectionIds),
+    )
+  : new Map();
+
+const examples =
+  boards.length === 0
+    ? await Promise.all(
+        EXAMPLE_BOARDS.map(async (board) => ({ board, items: await loadExampleItems(board, 24) })),
+      )
+    : [];
 const shown = examples.filter((e) => e.items.length > 0);
+
+const DONE: Record<string, string> = { deleted: 'Board deleted.' };
+const ERRORS: Record<string, string> = {
+  plan: 'Boards come with Pro.',
+  invalid: 'Give the board a name.',
+  limit: `You can have up to ${MAX_BOARDS} boards.`,
+  not_found: 'That board no longer exists.',
+};
+const done = DONE[Astro.url.searchParams.get('done') ?? ''] ?? null;
+const error = ERRORS[Astro.url.searchParams.get('error') ?? ''] ?? null;
 ---
 
 <BaseLayout
@@ -39,63 +58,93 @@ const shown = examples.filter((e) => e.items.length > 0);
   noindex
   canonical="/account/boards"
 >
-  <AccountShell current="boards" hideNotice={!!saveNoun}>
-    {saveNoun && (
-      <div class="save-note" role="status">
-        <Icon name="bookmark-simple" size={20} class="save-note__icon" />
-        <div class="save-note__text">
-          <p class="save-note__title">Not saved yet</p>
-          <p>
-            <strong>Saving needs an account.</strong> Accounts open with Pro. When they do, this{' '}
-            {saveNoun} goes straight onto a board.
-          </p>
-        </div>
-        <div class="save-note__actions">
-          <Button
-            href={`/sign-in?next=${encodeURIComponent(`/account/boards?save=${save}`)}`}
-            variant="primary"
-            size="sm"
-            rel="nofollow"
-          >
-            Sign in
-          </Button>
-          <Button href="/pro" variant="secondary" size="sm">
-            See Pro
-          </Button>
-        </div>
-      </div>
+  <AccountShell current="boards">
+    {(done || error) && (
+      <p class:list={['flash', error && 'flash--error']} role={error ? 'alert' : 'status'}>
+        <Icon name={error ? 'info' : 'check'} size={16} />
+        <span>{error ?? done}</span>
+      </p>
     )}
 
     <header class="bh">
       <div>
         <h1 class="h2 bh__title">
-          Boards <span class="bh__count num">0</span>
+          Boards <span class="bh__count num">{boards.length}</span>
         </h1>
         <p class="bh__sub">Collections of stores, pages and sections, for a pitch or a brief.</p>
       </div>
-      <Button
-        href="/sign-in?next=/account/boards"
-        variant="primary"
-        size="sm"
-        icon="plus"
-        rel="nofollow"
-      >
-        New board
-      </Button>
+      {paid && (
+        <details class="newb" open={error === ERRORS.invalid ? true : undefined}>
+          <summary class="newb__btn">
+            <Icon name="plus" size={16} />
+            <span>New board</span>
+          </summary>
+          <form method="post" action="/account/actions" class="newb__form">
+            <input type="hidden" name="intent" value="create" />
+            <input type="hidden" name="back" value="/account/boards" />
+            <label for="board-name">Name</label>
+            <input
+              id="board-name"
+              name="name"
+              required
+              maxlength={NAME_MAX}
+              placeholder="Client pitch"
+            />
+            <label for="board-desc">Note (optional)</label>
+            <input id="board-desc" name="description" maxlength={280} />
+            <Button type="submit" variant="primary" size="sm">
+              Create board
+            </Button>
+          </form>
+        </details>
+      )}
     </header>
 
-    <EmptyState
-      title="No boards yet"
-      body="Save stores, pages and sections to compare them later or share them with a client."
-      icon="squares-four"
-    >
-      <Button href="/sections" variant="primary" size="sm">
-        Browse sections
-      </Button>
-      <Button href="/stores" variant="secondary" size="sm">
-        Top stores
-      </Button>
-    </EmptyState>
+    {!paid ? (
+      <div class="save-note" role="note">
+        <Icon name="bookmark-simple" size={20} class="save-note__icon" />
+        <div class="save-note__text">
+          <p class="save-note__title">Boards come with Pro</p>
+          <p>
+            Save stores, pages and sections, then export them or share them with a client. Pro is{' '}
+            {`$${MONTHLY_PRICE.pro}`} a month.
+          </p>
+        </div>
+        <div class="save-note__actions">
+          <Button href="/pro" variant="accent" size="sm" arrow>
+            See Pro
+          </Button>
+        </div>
+      </div>
+    ) : boards.length === 0 ? (
+      <EmptyState
+        title="No boards yet"
+        body="Save stores, pages and sections to compare them later or share them with a client."
+        icon="squares-four"
+      >
+        <Button href="/sections" variant="primary" size="sm">
+          Browse sections
+        </Button>
+        <Button href="/stores" variant="secondary" size="sm">
+          Top stores
+        </Button>
+      </EmptyState>
+    ) : (
+      <div class="examples__grid" data-boards>
+        {boards.map((b) => (
+          <BoardCard
+            href={`/account/boards/${b.slug}`}
+            name={b.name}
+            description={b.description ?? undefined}
+            count={b.count}
+            thumbs={b.thumbSectionIds.flatMap((id) => {
+              const t = thumbs.get(id);
+              return t ? [{ src: t.src, width: t.width, height: t.height }] : [];
+            })}
+          />
+        ))}
+      </div>
+    )}
 
     {shown.length > 0 && (
       <section class="examples" aria-labelledby="examples-title">
@@ -127,6 +176,71 @@ const shown = examples.filter((e) => e.items.length > 0);
 </BaseLayout>
 
 <style>
+  .flash {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink);
+    font-size: var(--text-sm);
+  }
+  .flash--error {
+    box-shadow: inset 0 0 0 1.5px var(--critical);
+  }
+  .newb {
+    position: relative;
+  }
+  .newb__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-control, 10px);
+    background: var(--ink);
+    color: var(--bg);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    list-style: none;
+  }
+  .newb__btn::-webkit-details-marker {
+    display: none;
+  }
+  .newb__form {
+    display: grid;
+    gap: var(--space-2);
+    width: min(320px, calc(100vw - 2 * var(--page-gutter)));
+    margin-top: var(--space-2);
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-sm);
+    font-size: var(--text-sm);
+  }
+  @media (min-width: 640px) {
+    .newb__form {
+      position: absolute;
+      right: 0;
+      z-index: 5;
+    }
+  }
+  .newb__form input {
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+  }
+
   .save-note {
     display: flex;
     flex-wrap: wrap;

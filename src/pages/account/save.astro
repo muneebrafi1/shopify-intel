@@ -1,0 +1,209 @@
+---
+/**
+ * Save an item to a board: /account/save?item=<type>:<ref>&back=<path>. SaveButton links here;
+ * signed-out visitors are sent to sign-in first (middleware) and come back. Free users get the
+ * Pro note. Pro/Team pick a board (or name a new one) and post to /account/actions.
+ * After saving (?saved=added|already&board=<slug>) it confirms and links back.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Button from '~/components/ui/Button.astro';
+import Icon from '~/components/ui/Icon.astro';
+import AccountShell from '~/components/static/AccountShell.astro';
+import { MONTHLY_PRICE, safeNext } from '~/components/static/content';
+import { accountDb } from '~/server/account/env';
+import { isItemType, listBoards, NAME_MAX, resolveItem } from '~/server/account/boards';
+import { isPaid } from '~/server/account/entitlements';
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+const user = Astro.locals.user!;
+const params = Astro.url.searchParams;
+const item = params.get('item') ?? '';
+const [type = '', ref = ''] = item.split(':');
+const back = safeNext(params.get('back'), '/account/boards');
+const NOUN: Record<string, string> = {
+  screenshot: 'screenshot',
+  section: 'section',
+  store: 'store',
+  theme: 'theme',
+  app: 'app',
+};
+const db = accountDb();
+const valid = isItemType(type) && (await resolveItem(db, type, ref)) !== null;
+if (!valid) return Astro.rewrite('/404');
+const noun = NOUN[type] ?? 'item';
+const paid = isPaid(user.plan);
+const boards = paid ? await listBoards(db, user.id) : [];
+const saved = params.get('saved');
+const savedBoard = saved ? boards.find((b) => b.slug === params.get('board')) : undefined;
+const ERRORS: Record<string, string> = {
+  limit: 'That board is full, or you have the most boards allowed. Pick another one.',
+  not_found: 'That board no longer exists. Pick another one.',
+  invalid: 'Give the new board a name.',
+  unknown_item: 'That item is no longer available.',
+};
+const error = ERRORS[params.get('error') ?? ''] ?? null;
+const self = `/account/save?item=${encodeURIComponent(item)}&back=${encodeURIComponent(back)}`;
+const label = type === 'store' || type === 'theme' || type === 'app' ? ref : `${noun} #${ref}`;
+---
+
+<BaseLayout title={`Save ${noun}`} description="Save to a board." noindex>
+  <AccountShell current="boards">
+    <div class="sv">
+      {savedBoard ? (
+        <div class="sv__card" role="status" data-saved>
+          <Icon name="check-circle-fill" size={24} class="sv__ok" />
+          <h1 class="h3">
+            {saved === 'already' ? 'Already on' : 'Saved to'} “{savedBoard.name}”
+          </h1>
+          <p class="sv__sub">
+            {label} · {savedBoard.count} item{savedBoard.count === 1 ? '' : 's'} on the board.
+          </p>
+          <div class="sv__actions">
+            <Button href={back} variant="primary" size="sm" icon="arrow-left">
+              Back
+            </Button>
+            <Button href={`/account/boards/${savedBoard.slug}`} variant="secondary" size="sm">
+              Open board
+            </Button>
+          </div>
+        </div>
+      ) : !paid ? (
+        <div class="sv__card">
+          <Icon name="bookmark-simple" size={24} />
+          <h1 class="h3">Boards come with Pro</h1>
+          <p class="sv__sub">
+            Save this {noun} and anything else to boards, then export or share them. Pro is{' '}
+            {`$${MONTHLY_PRICE.pro}`} a month.
+          </p>
+          <div class="sv__actions">
+            <Button href="/pro" variant="accent" size="sm" arrow>
+              See Pro
+            </Button>
+            <Button href={back} variant="secondary" size="sm">
+              Back
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form method="post" action="/account/actions" class="sv__card" data-save-form>
+          <h1 class="h3">Save this {noun}</h1>
+          <p class="sv__sub">{label}</p>
+          {error && (
+            <p class="sv__error" role="alert">
+              {error}
+            </p>
+          )}
+          <input type="hidden" name="intent" value="save" />
+          <input type="hidden" name="item" value={item} />
+          <input type="hidden" name="back" value={self} />
+          <fieldset class="sv__boards">
+            <legend>Board</legend>
+            {boards.map((b, i) => (
+              <label class="sv__opt">
+                <input type="radio" name="board" value={b.slug} checked={i === 0} />
+                <span class="sv__opt-name">{b.name}</span>
+                <span class="sv__opt-n num">{b.count}</span>
+              </label>
+            ))}
+            <label class="sv__opt">
+              <input type="radio" name="board" value="__new" checked={boards.length === 0} />
+              <span class="sv__opt-name">New board</span>
+            </label>
+            <input
+              class="sv__name"
+              name="name"
+              maxlength={NAME_MAX}
+              placeholder="New board name"
+              aria-label="New board name"
+            />
+          </fieldset>
+          <div class="sv__actions">
+            <Button type="submit" variant="primary" size="sm" icon="bookmark-simple">
+              Save
+            </Button>
+            <Button href={back} variant="ghost" size="sm">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
+  </AccountShell>
+</BaseLayout>
+
+<style>
+  .sv {
+    padding-block: var(--space-8);
+  }
+  .sv__card {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 460px;
+    padding: var(--space-6);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-sm);
+  }
+  .sv__card :global(.sv__ok) {
+    color: var(--positive, var(--ink));
+  }
+  .sv__sub {
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+  .sv__error {
+    color: var(--critical);
+    font-size: var(--text-sm);
+  }
+  .sv__boards {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .sv__boards legend {
+    margin-bottom: var(--space-2);
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .sv__opt {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    cursor: pointer;
+  }
+  .sv__opt:has(input:checked) {
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .sv__opt-name {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .sv__opt-n {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .sv__name {
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+  }
+  .sv__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+</style>
