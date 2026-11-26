@@ -181,7 +181,7 @@ function remoteAll(config: string, db: string, sql: string): Row[] {
   return parsed.flatMap((p) => p.results);
 }
 
-function remoteTable(config: string, db: string, table: string, cols: string[]): Row[] {
+function remoteTable(config: string, db: string, table: string, cols: string[], where = ''): Row[] {
   const rows: Row[] = [];
   const page = 5000;
   const list = cols.map((c) => `"${c}"`).join(', ');
@@ -189,7 +189,7 @@ function remoteTable(config: string, db: string, table: string, cols: string[]):
     const chunk = remoteAll(
       config,
       db,
-      `SELECT ${list} FROM "${table}" ORDER BY rowid LIMIT ${page} OFFSET ${off}`,
+      `SELECT ${list} FROM "${table}" ${where} ORDER BY rowid LIMIT ${page} OFFSET ${off}`,
     );
     rows.push(...chunk);
     if (chunk.length < page) return rows;
@@ -208,6 +208,8 @@ async function main() {
       'keep-remote-crawl': { type: 'boolean', default: false },
       /** A copy of the local D1 sqlite file to sync from (default: the live local D1). */
       'local-file': { type: 'string' },
+      /** Only rows of these stores (comma-separated domains) in per-store tables. */
+      stores: { type: 'string' },
     },
   });
   if (!values.config) throw new Error('--config <wrangler config for the remote> is required');
@@ -222,6 +224,14 @@ async function main() {
       .all() as Array<{ name: string }>
   ).map((r) => r.name);
   const wanted = values.tables ? new Set(values.tables.split(',')) : null;
+  const onlyStores = values.stores
+    ? (
+        local
+          .prepare(`SELECT id FROM stores WHERE domain IN (SELECT value FROM json_each(?))`)
+          .all(JSON.stringify(values.stores.split(','))) as Array<{ id: number }>
+      ).map((r) => r.id)
+    : null;
+  if (onlyStores && !wanted) throw new Error('--stores needs --tables (per-store tables only)');
   const tables = all.filter(
     (t) =>
       !RUNTIME_TABLES.has(t) &&
@@ -279,11 +289,13 @@ async function main() {
             .filter((c) => c.pk > 0)
             .sort((a, b) => a.pk - b.pk)
             .map((c) => c.name);
-    const localRows = local
-      .prepare(`SELECT ${cols.map((c) => `"${c}"`).join(', ')} FROM "${t}"`)
-      .all() as Row[];
-    const remoteRows = remoteTable(config, values.db!, t, cols);
     const sc = STORE_COLUMN[t];
+    if (onlyStores && !sc) throw new Error(`--stores: ${t} is not a per-store table`);
+    const where = onlyStores ? `WHERE "${sc}" IN (${onlyStores.join(', ')})` : '';
+    const localRows = local
+      .prepare(`SELECT ${cols.map((c) => `"${c}"`).join(', ')} FROM "${t}" ${where}`)
+      .all() as Row[];
+    const remoteRows = remoteTable(config, values.db!, t, cols, where);
     const skip = sc ? (r: Row) => protectedIds.has(Number(r[sc])) : undefined;
     const d = diffRows(t, localRows, remoteRows, key, skip);
     const indexes = (local.prepare(`PRAGMA index_list("${t}")`).all() as unknown[]).length;
