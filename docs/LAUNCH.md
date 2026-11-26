@@ -113,6 +113,10 @@ PUBLIC_SITE_URL="https://shopify-intel.<your-subdomain>.workers.dev" npm run bui
 npx wrangler deploy
 ```
 
+A preview that must stay out of Google is built with `PUBLIC_NOINDEX=1` as well: `robots.txt`
+becomes `Disallow: /` and every response carries `X-Robots-Tag: noindex, nofollow`. Leave the
+variable out of the production build.
+
 For custom-domain production (after updating `SITE_DOMAIN` in `src/config/site.ts` and attaching
 the custom domain / route in Cloudflare Workers):
 

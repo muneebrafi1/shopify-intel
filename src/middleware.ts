@@ -28,12 +28,15 @@ import {
   type AdminArea,
 } from './server/auth/guard.ts';
 
+// Set at build time for pre-launch previews (PUBLIC_NOINDEX=1): noindex on every response.
+const NOINDEX = import.meta.env.PUBLIC_NOINDEX === '1';
+
 export const onRequest = defineMiddleware(async (context, next) => {
-  if (!import.meta.env.DEV) return withSecurityHeaders(await route(context, next));
+  if (!import.meta.env.DEV) return withSecurityHeaders(await route(context, next), NOINDEX);
   // Dev only: report D1 usage per request (free plan limit: 50 queries per invocation).
   queryMeter.calls = 0;
   queryMeter.statements = 0;
-  const response = withSecurityHeaders(await route(context, next));
+  const response = withSecurityHeaders(await route(context, next), NOINDEX);
   const used = `${queryMeter.calls}/${queryMeter.statements}`;
   try {
     response.headers.set('x-d1-queries', used);

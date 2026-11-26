@@ -284,7 +284,7 @@ export async function runSmokeChecks(
 
   // 2. robots.txt & XML sitemaps & og-default.png
   for (const [id, path, contentMatch, bodyMatch] of [
-    ['smoke:robots', '/robots.txt', 'text/plain', 'Sitemap:'],
+    ['smoke:robots', '/robots.txt', 'text/plain', 'User-agent:'],
     ['smoke:sitemap-index', '/sitemap.xml', 'xml', '<sitemapindex'],
     ['smoke:sitemap-core', '/sitemaps/core.xml', 'xml', '<urlset'],
     ['smoke:sitemap-sections', '/sitemaps/sections.xml', 'xml', '<urlset'],

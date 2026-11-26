@@ -25,4 +25,17 @@ describe('withSecurityHeaders', () => {
     expect(adminRes.headers.get('x-content-type-options')).toBe('nosniff');
     expect(adminRes.headers.get('cache-control')).toBe('no-store');
   });
+
+  it('adds noindex to every response for pre-launch previews, keeping existing values', () => {
+    const res = withSecurityHeaders(new Response('ok'), true);
+    expect(res.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+    const redirected = withSecurityHeaders(Response.redirect('https://example.test/x', 302), true);
+    expect(redirected.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+    const own = withSecurityHeaders(
+      new Response('ok', { headers: { 'X-Robots-Tag': 'noindex' } }),
+      true,
+    );
+    expect(own.headers.get('x-robots-tag')).toBe('noindex');
+    expect(withSecurityHeaders(new Response('ok')).headers.get('x-robots-tag')).toBeNull();
+  });
 });

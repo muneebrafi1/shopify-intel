@@ -126,7 +126,19 @@ export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'X-Frame-Options': 'SAMEORIGIN',
 };
 
-export function withSecurityHeaders(response: Response): Response {
+/**
+ * Pre-launch previews (build with PUBLIC_NOINDEX=1) tell crawlers to stay away from every
+ * response, on top of the robots.txt disallow. Existing X-Robots-Tag values are kept.
+ */
+export function withSecurityHeaders(response: Response, noindex = false): Response {
+  if (noindex && !response.headers.has('X-Robots-Tag')) {
+    try {
+      response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    } catch {
+      response = new Response(response.body, response);
+      response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    }
+  }
   let missing = false;
   for (const name of Object.keys(SECURITY_HEADERS)) {
     if (!response.headers.has(name)) {
