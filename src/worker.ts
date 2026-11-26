@@ -9,7 +9,19 @@ export default {
   fetch: server.fetch,
   async scheduled(_controller: ScheduledController, env: Cloudflare.Env, ctx: ExecutionContext) {
     ctx.waitUntil(
-      crawlNext(env, import.meta.env.SITE).then((o) => console.log(JSON.stringify({ crawl: o }))),
+      crawlNext(env, import.meta.env.SITE)
+        .catch((e: unknown) => ({ status: 'error', reason: String(e).slice(0, 200) }))
+        .then(async (o) => {
+          const line = JSON.stringify({ ...o, at: new Date().toISOString() });
+          console.log(JSON.stringify({ crawl: o }));
+          // The last outcome, so a quiet crawler can be diagnosed from D1 alone (one row write).
+          await env.DB.prepare(
+            `INSERT INTO meta (key, value, updated_at) VALUES ('crawl_last_outcome', ?1, ?2)
+             ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+          )
+            .bind(line, new Date().toISOString())
+            .run();
+        }),
     );
   },
 } satisfies ExportedHandler<Cloudflare.Env>;
