@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { seedResult, setup } from './helpers/db.ts';
+import { PLACEHOLDER_SHOTS } from './helpers/counts.ts';
 
 const { db, api } = setup();
 const SECTION_TOTAL = seedResult().report.counts.sections ?? -1;
@@ -76,7 +77,7 @@ describe('sections library', () => {
   it('lists section types with counts and previews', async () => {
     const { data } = await api.listSectionTypes();
     expect(data.items).toHaveLength(31);
-    expect(data.items.find((t) => t.slug === 'header')?.count).toBe(300);
+    expect(data.items.find((t) => t.slug === 'header')?.count).toBe(PLACEHOLDER_SHOTS);
     expect(data.groups.reduce((s, g) => s + g.count, 0)).toBe(SECTION_TOTAL);
     expect(data.items.find((t) => t.slug === 'hero')?.preview?.type.slug).toBe('hero');
   });

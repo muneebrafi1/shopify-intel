@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { endpointList } from '../../src/server/api/v1/registry.ts';
 import { get, setup } from './helpers/db.ts';
+import { CURATED } from './helpers/counts.ts';
 
 const { db, http } = setup();
 afterAll(() => db.close());
@@ -37,7 +38,7 @@ describe('HTTP router', () => {
     };
     expect(res.status).toBe(200);
     expect(body.data.items).toHaveLength(2);
-    expect(body.meta.pagination.total).toBe(50);
+    expect(body.meta.pagination.total).toBe(CURATED);
     const search = await get(http, '/api/v1/search?q=pre&kinds=theme,app');
     const s = (await search.json()) as { data: { groups: Array<{ kind: string }> } };
     expect(s.data.groups.map((g) => g.kind)).toEqual(['theme', 'app']);

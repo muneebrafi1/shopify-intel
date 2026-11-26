@@ -279,15 +279,24 @@ export function buildSeed(
     if (!appBySlug.has(slug)) warn(`apps curation: unknown app '${slug}'`);
   }
   const autoShort = new Map(apps.map((r) => [r.slug, shortAppName(displayName(r.input))]));
-  const shortCounts = new Map<string, number>();
-  for (const v of autoShort.values())
-    shortCounts.set(v.toLowerCase(), (shortCounts.get(v.toLowerCase()) ?? 0) + 1);
+  // A shared short name ("Klaviyo") goes to the most-detected app; the others keep full names.
+  const shortOwner = new Map<string, AppRecord>();
+  for (const r of apps) {
+    const k = (autoShort.get(r.slug) ?? '').toLowerCase();
+    const cur = shortOwner.get(k);
+    if (
+      !cur ||
+      r.input.scan.stores > cur.input.scan.stores ||
+      (r.input.scan.stores === cur.input.scan.stores && r.slug < cur.slug)
+    )
+      shortOwner.set(k, r);
+  }
   const shortName = (r: AppRecord): string => {
     const override = overrides[r.slug];
     if (override) return override;
     const auto = autoShort.get(r.slug) ?? displayName(r.input);
-    const collides = (shortCounts.get(auto.toLowerCase()) ?? 0) > 1;
-    return collides || auto.length < 3 ? displayName(r.input) : auto;
+    const owns = shortOwner.get(auto.toLowerCase()) === r;
+    return !owns || auto.length < 3 ? displayName(r.input).trim() : auto;
   };
 
   w.comment('apps');

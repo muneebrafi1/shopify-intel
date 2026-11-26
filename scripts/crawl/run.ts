@@ -58,7 +58,18 @@ for (const d of domains) {
 await local.dispose();
 
 const engine = await loadEngine();
-const browser = await chromium.launch();
+let browser = await chromium.launch();
+/** A wedged browser turns every later page into a timeout: relaunch after a run of them. */
+let timeoutsInARow = 0;
+const relaunchIfWedged = async (failed: boolean) => {
+  timeoutsInARow = failed ? timeoutsInARow + 1 : 0;
+  if (timeoutsInARow < 6) return;
+  timeoutsInARow = 0;
+  console.log('  (6 timeouts in a row; relaunching the browser)');
+  const old = browser;
+  browser = await chromium.launch();
+  await old.close().catch(() => undefined);
+};
 type Out = Awaited<ReturnType<typeof crawlStore>> & { error?: string };
 const previous: Record<string, Out> = existsSync(SCANS_FILE)
   ? Object.fromEntries(
@@ -88,6 +99,7 @@ const worker = async () => {
       const out = await crawlStore(browser, engine, d);
       if (robots.crawlDelay) await new Promise((r) => setTimeout(r, robots.crawlDelay! * 1000));
       results[d] = out;
+      await relaunchIfWedged(false);
       if (++unsaved >= 10) save();
       const s = out.scan;
       console.log(
@@ -96,6 +108,7 @@ const worker = async () => {
       );
     } catch (e) {
       console.log(`  FAIL ${d}: ${String(e).split('\n')[0]}`);
+      await relaunchIfWedged(/Timeout/.test(String(e)));
     }
   }
 };

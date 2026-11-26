@@ -111,7 +111,7 @@ for (const s of sigs) {
   out.push({
     slug: s.slug,
     app_store_handle: handle,
-    name: l.name,
+    name: l.name.trim(),
     developer: l.developer ?? l.brand ?? s.vendor ?? null,
     category: s.category,
     tagline: l.tagline ?? null,

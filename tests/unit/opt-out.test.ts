@@ -1,12 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { isTombstoned, optOutStore } from '../../src/server/repo/opt-out.ts';
 import { get, setup } from './helpers/db.ts';
+import { CURATED } from './helpers/counts.ts';
 
 const { db, api, http } = setup();
 afterAll(() => db.close());
 
 describe('opted-out stores disappear everywhere', () => {
   let before: { loox: number; prestige: number; reviews: number };
+  let pair = '';
 
   beforeAll(async () => {
     before = {
@@ -14,6 +16,16 @@ describe('opted-out stores disappear everywhere', () => {
       prestige: (await api.getTheme({ slug: 'prestige' })).data.theme.usage.stores,
       reviews: (await api.listSections({ type: 'reviews' })).meta.pagination?.total ?? 0,
     };
+    const youngla = (await db.first<{ id: number }>(
+      "SELECT id FROM stores WHERE domain = 'youngla.com'",
+    ))!.id;
+    const row = await db.first<{ slug: string }>(
+      `SELECT c.slug FROM comparisons c
+       WHERE c.kind = 'app' AND (c.a_id IN (SELECT app_id FROM store_apps WHERE store_id = ?1)
+         OR c.b_id IN (SELECT app_id FROM store_apps WHERE store_id = ?1)) LIMIT 1`,
+      [youngla],
+    );
+    pair = row?.slug ?? '';
     const result = await optOutStore(db, 'www.youngla.com', { reason: 'test' });
     expect(result?.domain).toBe('youngla.com');
   });
@@ -32,7 +44,7 @@ describe('opted-out stores disappear everywhere', () => {
   it('removes it from lists, facets, counts and search', async () => {
     const stores = await api.listStores({ limit: 60, curated: true });
     expect(stores.data.items.map((s) => s.domain)).not.toContain('youngla.com');
-    expect(stores.meta.pagination?.total).toBe(49);
+    expect(stores.meta.pagination?.total).toBe(CURATED - 1);
     expect((await api.getMeta()).data.counts.stores_scanned).toBe(929);
     expect((await api.getApp({ slug: 'loox' })).data.app.usage.stores).toBe(before.loox - 1);
     const prestige = await api.getTheme({ slug: 'prestige' });
@@ -64,8 +76,9 @@ describe('opted-out stores disappear everywhere', () => {
   it('drops it from similar stores and comparisons', async () => {
     const other = await api.getStore({ domain: 'thursdayboots.com' });
     expect(other.data.similar.map((s) => s.store.domain)).not.toContain('youngla.com');
-    // A curated pair whose apps both run on youngla.com (only curated pairs have a page).
-    const cmp = await api.getComparison({ pair: 'global-e-crossborder-vs-easylocation' });
+    // A curated pair with an app that runs on youngla.com (only curated pairs have a page).
+    expect(pair).not.toBe('');
+    const cmp = await api.getComparison({ pair });
     expect(cmp.data.shared_stores.items.map((s) => s.domain)).not.toContain('youngla.com');
   });
 });

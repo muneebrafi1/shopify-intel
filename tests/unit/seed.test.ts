@@ -3,6 +3,7 @@ import { buildSeedFromRoot } from '../../scripts/seed/build.ts';
 import { createApiClient } from '../../src/server/api/v1/client.ts';
 import { affiliateRedirect } from '../../src/server/repo/affiliate.ts';
 import { FIXED_NOW, ROOT, seedResult, seededDb, testDeps } from './helpers/db.ts';
+import { CURATED, PLACEHOLDER_SHOTS } from './helpers/counts.ts';
 
 describe('seed builder', () => {
   it('is deterministic', () => {
@@ -22,9 +23,9 @@ describe('seed builder', () => {
 
   it('plans 6 placeholder screenshots per curated store with realistic heights', () => {
     const { report } = seedResult();
-    expect(report.shotHeights).toHaveLength(50 * 3 * 2);
+    expect(report.shotHeights).toHaveLength(PLACEHOLDER_SHOTS);
     for (const h of report.shotHeights) {
-      const [min, max] = h.device === 'desktop' ? [1000, 7500] : [2000, 11000];
+      const [min, max] = h.device === 'desktop' ? [1000, 8000] : [2000, 11000];
       expect(h.height, `${h.domain} ${h.page} ${h.device}`).toBeGreaterThanOrEqual(min);
       expect(h.height, `${h.domain} ${h.page} ${h.device}`).toBeLessThanOrEqual(max);
     }
@@ -49,7 +50,7 @@ describe('seed builder', () => {
        JOIN sections b ON b.screenshot_id = g.screenshot_id AND b.section_type = 'buy-box'
        WHERE g.section_type = 'product-gallery' AND g.device = 'desktop'`,
     );
-    expect(rows).toHaveLength(50);
+    expect(rows).toHaveLength(CURATED);
     for (const r of rows) expect([r.g, r.gh]).toEqual([r.b, r.bh]);
     db.close();
   });

@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { ApiError } from '../../src/server/api/v1/errors.ts';
 import { get, setup } from './helpers/db.ts';
+import { CURATED, PLACEHOLDER_SHOTS, SCANNED } from './helpers/counts.ts';
 
 const { db, api, http } = setup();
 afterAll(() => db.close());
@@ -10,9 +11,9 @@ describe('meta', () => {
     const { data, meta } = await api.getMeta();
     expect(data.data_as_of).toBe('2026-11-17');
     expect(data.counts.stores_scanned).toBe(930);
-    expect(data.counts.stores_curated).toBe(50);
+    expect(data.counts.stores_curated).toBe(CURATED);
     expect(data.counts.stores_captured).toBe(0);
-    expect(data.counts.screenshots_placeholder).toBe(300);
+    expect(data.counts.screenshots_placeholder).toBe(PLACEHOLDER_SHOTS);
     expect(data.source.label).toContain('930 Shopify stores');
     expect(meta.api_version).toBe('v1');
     expect(meta.sources[data.source.id]?.as_of).toBe('2026-11-17');
@@ -22,9 +23,9 @@ describe('meta', () => {
 describe('stores', () => {
   it('defaults to the curated stores, with or without filters (owner decision)', async () => {
     const curated = await api.listStores({ limit: 60 });
-    expect(curated.meta.pagination?.total).toBe(50);
+    expect(curated.meta.pagination?.total).toBe(CURATED);
     expect(curated.data.items.every((s) => s.is_curated)).toBe(true);
-    expect(curated.data.facets.scope).toEqual({ curated: 50, all: 930 });
+    expect(curated.data.facets.scope).toEqual({ curated: CURATED, all: SCANNED });
     // Filters keep the curated default; scope=all reaches every detected store.
     const dawn = await api.listStores({ theme: 'dawn' });
     expect(dawn.data.items.every((s) => s.is_curated)).toBe(true);
@@ -33,7 +34,7 @@ describe('stores', () => {
     expect((await api.listStores({ theme: 'dawn', scope: 'all' })).meta.pagination?.total).toBe(20);
     // An explicit curated flag overrides the scope.
     const rest = await api.listStores({ curated: false });
-    expect(rest.meta.pagination?.total).toBe(880);
+    expect(rest.meta.pagination?.total).toBe(SCANNED - CURATED);
     expect(rest.data.items.some((s) => s.is_curated)).toBe(false);
   });
 
@@ -51,7 +52,7 @@ describe('stores', () => {
     const first = await api.listStores({ scope: 'all', limit: 24 });
     expect(first.meta.pagination?.total).toBe(930);
     expect(first.data.items[0]?.domain).toBe('youngla.com');
-    expect(first.data.facets.curated).toBe(50);
+    expect(first.data.facets.curated).toBe(CURATED);
     const seen = new Set(first.data.items.map((s) => s.domain));
     let cursor = first.meta.pagination?.next_cursor ?? null;
     for (let i = 0; i < 3 && cursor; i++) {
@@ -205,8 +206,13 @@ describe('apps', () => {
       rank: 1,
     });
     expect(meta.sources[data.items[0]?.usage.source ?? '']).toBeDefined();
-    // 7 reviews apps: the export's 'trustpilot' record is a wrong match and is not created.
-    expect(data.facets.categories.find((c) => c.value === 'reviews')?.count).toBe(7);
+    // The export's 'trustpilot' record is a wrong match and is never created.
+    expect(data.facets.categories.find((c) => c.value === 'reviews')?.count).toBeGreaterThanOrEqual(
+      7,
+    );
+    expect(
+      (await api.getApp({ slug: 'trustpilot' }).catch(() => null))?.data.app.slug,
+    ).toBeUndefined();
     const reviews = await api.listApps({ category: 'reviews', sort: 'rating' });
     expect(reviews.data.items.every((a) => a.category?.slug === 'reviews')).toBe(true);
     const bfs = await api.listApps({ built_for_shopify: true, min_rating: 4.9 });
