@@ -37,7 +37,7 @@ const page = pageLabel(shot.page_type.slug);
 const pad = (n: number) => String(n).padStart(2, '0');
 // The current section's outline, rendered on the server (no JS needed to see it).
 const id = Number(currentId);
-const currentCss = `[data-ctx="${id}"] .fp__region[data-region="${id}"]::before{border:1.5px solid var(--accent);background:var(--accent-wash)}[data-ctx="${id}"] .fp__region[data-region="${id}"] .fp__tag{opacity:1;transform:none;background:var(--accent-btn);color:var(--accent-fg)}[data-ctx="${id}"] .fp__region[data-region="${id}"] :is(.fp__tag-n,.fp__tag-app){color:color-mix(in srgb,var(--accent-fg) 72%,transparent)}`;
+const currentCss = `[data-ctx="${id}"] .fp__region[data-region="${id}"]::before{border:1.5px solid var(--accent);background:var(--accent-wash)}[data-ctx="${id}"] .fp__region[data-region="${id}"] .fp__tag{opacity:1;transform:none;background:var(--accent-btn);color:var(--accent-fg)}[data-ctx="${id}"] .fp__region[data-region="${id}"] :is(.fp__tag-n,.fp__tag-app){color:color-mix(in srgb,var(--accent-fg) 94%,transparent)}`;
 ---
 
 <style is:inline set:html={currentCss}></style>
