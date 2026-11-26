@@ -100,7 +100,7 @@ export async function loadDataInfo(db: Db): Promise<DataInfo> {
     crawlLastAt,
     themeStoreCheckedTo,
     sources: {
-      [scanSourceId]: { label: scanSourceLabel, as_of: dataAsOf, url: '/methodology' },
+      [scanSourceId]: { label: scanSourceLabel, as_of: seededAsOf, url: '/methodology' },
       [SOURCE_IDS.appStore]: {
         label: 'Shopify App Store listing',
         as_of: appStoreCheckedTo ?? dataAsOf,
