@@ -51,6 +51,32 @@ ops:preflight`, `npm run ops:smoke`) + CI check + unit tests.
     cap 45 vs D1 free limit 50).
 - **Base build:** complete in PRs `#1`–`#11` (`main` currently sits at `#11`).
 
+## Phase 2 decisions (owner approved phase 2; small calls made by the agent)
+
+- **Cart captures dropped.** Filling a cart needs `POST /cart/add.js`, which Shopify's robots.txt
+  disallows. Page types are home, collection and product; cart-only section types show no crops.
+- **Identifying crawler.** Every request carries `VitrineBot/1.0 (+<site>/methodology#crawler)`
+  (appended to a real browser UA for captures, so layouts render normally). robots.txt is read
+  for our token, then `*`; a network error retries once, then counts as "disallowed". Opt-out
+  instructions are on /methodology#crawler. The UA did not break captures (0 failures so far).
+- **Stable ids + row-diff syncs.** `data/curation/ids.json` keeps store/app/theme/app-category ids
+  forever; the remote D1 is never re-seeded, only diffed with `scripts/ops/d1-sync.ts` (the D1
+  free plan's 100k rows written/day is account-wide and shared with other products). Stores that
+  are opted out, tombstoned, blocked or hidden remotely are never touched by a sync.
+- **Capture preview notice off** once real captures are live.
+- **More stores.** Curated stores grow in niche-balanced batches (`scripts/curation/suggest_stores.py`):
+  English storefronts with a detected theme and ≥3 apps, category from the store's own name,
+  title and description (keyword rules, margin ≥2), at most ~30 per category. Names/categories are
+  editorial suggestions in `data/curation/stores.json`; country only from an unambiguous ccTLD.
+- **More apps.** `npm run seed:import-apps` adds every signature app that was really detected on a
+  scanned store and has a cached App Store listing (no undetected or listing-less apps): +350 apps,
+  449 total. Trustpilot stays unmatched (override).
+- **Weekly crawler.** Cron Trigger every 10 minutes scans one store (round-robin, ≈ every store
+  weekly) from the HTML only, with precise signals (99% precision vs the browser crawler on a 35-store
+  check, ~1.5 ms CPU). It records theme switches/version bumps and newly seen apps; it never closes
+  apps and never rebuilds derived tables remotely (a full rebuild rewrites ~60k rows). Once it runs,
+  scan/history tables are remote-owned: d1-sync must not overwrite them.
+
 ## Ordered PR merge list
 
 Merge **bottom-up** in exact stack order so each PR lands cleanly on `main`. Do **not** merge the
