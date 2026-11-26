@@ -25,6 +25,9 @@ type Value = string | number | null;
 type Row = Record<string, Value>;
 
 /** Written by the Worker's scheduled crawler once it runs: the remote copy is the truth. */
+/** Small tables rewritten wholesale when anything changed (see the diff loop). */
+const REPLACE_TABLES = new Set(['teardowns', 'teardown_notes']);
+
 export const CRAWL_TABLES = new Set([
   'scans',
   'store_themes',
@@ -315,7 +318,10 @@ async function main() {
     const indexes = indexList.length;
     // A second UNIQUE key (e.g. teardown_notes (teardown_id, n)) can collide mid-upsert when ids
     // shift; such (small) tables are replaced wholesale when anything changed.
-    const extraUnique = indexList.some((i) => i.unique && i.origin === 'u');
+    // Only for tables whose ids can shift and that nothing else points at; stable-id tables
+    // (apps: slug is unique too) are upserted, since deleting them would cascade into their children.
+    const extraUnique =
+      REPLACE_TABLES.has(t) && indexList.some((i) => i.unique && i.origin === 'u');
     const changed = d.inserts.length + d.updates.length + d.deletes.length > 0;
     diffs.push({
       d,
