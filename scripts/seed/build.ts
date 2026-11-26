@@ -479,6 +479,12 @@ export function buildSeed(
   const scanRows: Row[] = [];
   const appStoreCounts: Record<string, number> = {};
   const themeStoreCounts: Record<string, number> = {};
+  // The same counts over the 930 scan only, to cross-check against the export's numbers.
+  const baseAppCounts: Record<string, number> = {};
+  const baseThemeCounts: Record<string, number> = {};
+  const baseDomains = new Set(
+    detections.slice(0, inputs.baseDetectionCount ?? detections.length).map((d) => d.domain),
+  );
   const storeIdByDomain = new Map<string, number>();
   const storeApps = new Map<number, AppRecord[]>();
   const storeThemeId = new Map<number, number | null>();
@@ -493,7 +499,9 @@ export function buildSeed(
     const rawTheme = curated?.theme?.raw_name ?? d.theme;
     const theme = rawTheme ? themeByName.get(rawTheme.toLowerCase()) : undefined;
     storeThemeId.set(id, theme?.id ?? null);
+    const inBase = baseDomains.has(d.domain);
     if (theme) themeStoreCounts[theme.slug] = (themeStoreCounts[theme.slug] ?? 0) + 1;
+    if (theme && inBase) baseThemeCounts[theme.slug] = (baseThemeCounts[theme.slug] ?? 0) + 1;
 
     storeRows.push({
       id,
@@ -541,6 +549,7 @@ export function buildSeed(
       if (resolved.has(app.id)) continue; // alias + canonical both detected
       resolved.set(app.id, app);
       appStoreCounts[app.slug] = (appStoreCounts[app.slug] ?? 0) + 1;
+      if (inBase) baseAppCounts[app.slug] = (baseAppCounts[app.slug] ?? 0) + 1;
       storeAppRows.push({
         store_id: id,
         app_id: app.id,
@@ -579,26 +588,27 @@ export function buildSeed(
   for (const a of allAppInputs) {
     const canonical = aliasOf.get(a.slug) ?? a.slug;
     if (canonical !== a.slug) continue;
-    const ours = appStoreCounts[a.slug] ?? 0;
+    const ours = baseAppCounts[a.slug] ?? 0;
     if (ours !== a.scan.stores) {
       warn(`MISMATCH app ${a.slug}: detections=${ours} export=${a.scan.stores}`);
     }
     if (a.scan.pct_of_scanned !== undefined) {
-      const pct = Math.round((ours / scannedTotal) * 10000) / 100;
+      const pct = Math.round((ours / baseDomains.size) * 10000) / 100;
       if (Math.abs(pct - a.scan.pct_of_scanned) > 0.01) {
         warn(`MISMATCH app ${a.slug} share: ${pct}% vs export ${a.scan.pct_of_scanned}%`);
       }
     }
   }
   for (const t of themes) {
-    const ours = themeStoreCounts[t.slug] ?? 0;
+    const ours = baseThemeCounts[t.slug] ?? 0;
     if (ours !== t.scan.stores) {
       warn(`MISMATCH theme ${t.slug}: detections=${ours} export=${t.scan.stores}`);
     }
   }
+  const baseIds = new Set([...baseDomains].map((d) => storeIdByDomain.get(d)));
   checkCoInstalls(
     inputs.apps.filter((a) => !unmatched.has(a.slug)),
-    storeApps,
+    new Map([...storeApps].filter(([id]) => baseIds.has(id))),
     (slug) => resolveApp(slug) !== undefined,
     warn,
   );

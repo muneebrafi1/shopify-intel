@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { ApiError } from '../../src/server/api/v1/errors.ts';
 import { get, setup } from './helpers/db.ts';
-import { CURATED, PLACEHOLDER_SHOTS, SCANNED } from './helpers/counts.ts';
+import { CURATED, PLACEHOLDER_SHOTS, SCANNED, appStores, themeStores } from './helpers/counts.ts';
 
 const { db, api, http } = setup();
 afterAll(() => db.close());
@@ -10,7 +10,7 @@ describe('meta', () => {
   it('reports provenance and counts', async () => {
     const { data, meta } = await api.getMeta();
     expect(data.data_as_of).toBe('2026-11-17');
-    expect(data.counts.stores_scanned).toBe(930);
+    expect(data.counts.stores_scanned).toBe(SCANNED);
     expect(data.counts.stores_curated).toBe(CURATED);
     expect(data.counts.stores_captured).toBe(0);
     expect(data.counts.screenshots_placeholder).toBe(PLACEHOLDER_SHOTS);
@@ -30,8 +30,10 @@ describe('stores', () => {
     const dawn = await api.listStores({ theme: 'dawn' });
     expect(dawn.data.items.every((s) => s.is_curated)).toBe(true);
     expect(dawn.meta.pagination?.total).toBe(dawn.data.facets.scope.curated);
-    expect(dawn.data.facets.scope.all).toBe(20);
-    expect((await api.listStores({ theme: 'dawn', scope: 'all' })).meta.pagination?.total).toBe(20);
+    expect(dawn.data.facets.scope.all).toBe(themeStores('dawn'));
+    expect((await api.listStores({ theme: 'dawn', scope: 'all' })).meta.pagination?.total).toBe(
+      themeStores('dawn'),
+    );
     // An explicit curated flag overrides the scope.
     const rest = await api.listStores({ curated: false });
     expect(rest.meta.pagination?.total).toBe(SCANNED - CURATED);
@@ -44,13 +46,13 @@ describe('stores', () => {
     const all = await get(http, '/api/v1/stores?theme=dawn&scope=all');
     const allBody = (await all.json()) as { meta: { pagination: { total: number } } };
     expect(body.meta.pagination.total).toBeLessThan(allBody.meta.pagination.total);
-    expect(allBody.meta.pagination.total).toBe(20);
+    expect(allBody.meta.pagination.total).toBe(themeStores('dawn'));
     expect((await get(http, '/api/v1/stores?scope=some')).status).toBe(400);
   });
 
   it('lists with facets and stable keyset pagination', async () => {
     const first = await api.listStores({ scope: 'all', limit: 24 });
-    expect(first.meta.pagination?.total).toBe(930);
+    expect(first.meta.pagination?.total).toBe(SCANNED);
     expect(first.data.items[0]?.domain).toBe('youngla.com');
     expect(first.data.facets.curated).toBe(CURATED);
     const seen = new Set(first.data.items.map((s) => s.domain));
@@ -68,17 +70,19 @@ describe('stores', () => {
 
   it('filters by theme and app with counts from the scan', async () => {
     const dawn = await api.listStores({ theme: 'dawn', scope: 'all', limit: 60 });
-    expect(dawn.meta.pagination?.total).toBe(20);
+    expect(dawn.meta.pagination?.total).toBe(themeStores('dawn'));
     expect(dawn.data.items.every((s) => s.theme.theme?.slug === 'dawn')).toBe(true);
     const klaviyo = await api.listStores({ app: 'klaviyo', scope: 'all', sort: 'apps', limit: 10 });
-    expect(klaviyo.meta.pagination?.total).toBe(383);
+    expect(klaviyo.meta.pagination?.total).toBe(appStores('klaviyo'));
     const counts = klaviyo.data.items.map((s) => s.app_count);
     expect([...counts].sort((a, b) => b - a)).toEqual(counts);
     // A detected theme without a record is filterable by its slugified name.
     const foodie = await api.listStores({ theme: 'foodie', scope: 'all' });
     expect(foodie.meta.pagination?.total).toBe(5);
     // Facets ignore their own filter.
-    expect(dawn.data.facets.themes.find((f) => f.value === 'horizon')?.count).toBe(14);
+    expect(dawn.data.facets.themes.find((f) => f.value === 'horizon')?.count).toBe(
+      themeStores('horizon'),
+    );
   });
 
   it('returns a rich store detail', async () => {
@@ -123,7 +127,7 @@ describe('themes', () => {
   it('lists themes with usage, previews and price facets', async () => {
     const { data } = await api.listThemes();
     expect(data.items[0]?.slug).toBe('dawn');
-    expect(data.items[0]?.usage.stores).toBe(20);
+    expect(data.items[0]?.usage.stores).toBe(themeStores('dawn'));
     expect(data.items[0]?.price).toEqual({ cents: 0, label: 'Free', is_free: true });
     const prestige = data.items.find((t) => t.slug === 'prestige');
     expect(prestige?.price.cents).toBe(40000);
@@ -163,8 +167,8 @@ describe('themes', () => {
 
   it('returns a theme detail with stores, apps and sections', async () => {
     const { data } = await api.getTheme({ slug: 'prestige', stores_limit: 5 });
-    expect(data.theme.usage.stores).toBe(13);
-    expect(data.stores.total).toBe(13);
+    expect(data.theme.usage.stores).toBe(themeStores('prestige'));
+    expect(data.stores.total).toBe(themeStores('prestige'));
     expect(data.stores.items).toHaveLength(5);
     expect(data.stores.next_cursor).not.toBeNull();
     expect(data.curated_stores[0]?.store.domain).toBe('youngla.com');
@@ -191,7 +195,7 @@ describe('themes', () => {
       slug: 'prestige',
       cursor: data.stores.next_cursor ?? '',
     });
-    expect(rest.data.items).toHaveLength(8);
+    expect(rest.data.items).toHaveLength(themeStores('prestige') - 5);
   });
 });
 
@@ -200,9 +204,9 @@ describe('apps', () => {
     const { data, meta } = await api.listApps({ limit: 5 });
     expect(data.items[0]?.slug).toBe('klaviyo');
     expect(data.items[0]?.usage).toMatchObject({
-      stores: 383,
-      share: 0.4118,
-      denominator: 930,
+      stores: appStores('klaviyo'),
+      share: Math.round((appStores('klaviyo') / SCANNED) * 10000) / 10000,
+      denominator: SCANNED,
       rank: 1,
     });
     expect(meta.sources[data.items[0]?.usage.source ?? '']).toBeDefined();
@@ -223,13 +227,13 @@ describe('apps', () => {
     const { data } = await api.listAppCategories();
     const reviews = data.items.find((c) => c.slug === 'reviews');
     expect(reviews?.surfaces.map((s) => s.slug)).toEqual(['reviews']);
-    expect(reviews?.store_count).toBeGreaterThan(221);
+    expect(reviews?.store_count).toBeGreaterThan(appStores('judgeme'));
     expect(reviews?.top_apps[0]?.slug).toBe('judgeme');
   });
 
   it('returns app detail with facts, usage, co-installs and alternatives', async () => {
     const { data } = await api.getApp({ slug: 'judgeme' });
-    expect(data.app.usage.stores).toBe(221);
+    expect(data.app.usage.stores).toBe(appStores('judgeme'));
     expect(data.app.plans.length).toBeGreaterThan(0);
     expect(data.app.checked_on).toBe('2026-11-17');
     expect(data.app.facts_source).toBe('shopify-app-store');
@@ -239,7 +243,7 @@ describe('apps', () => {
     expect(data.co_installed[0]?.app.slug).toBe('klaviyo');
     expect(data.alternatives.every((a) => a.category?.slug === 'reviews')).toBe(true);
     expect(data.comparisons.map((c) => c.slug)).toContain('judgeme-vs-loox');
-    expect(data.stores.total).toBe(221);
+    expect(data.stores.total).toBe(appStores('judgeme'));
     expect(data.themes.length).toBeGreaterThan(0);
   });
 

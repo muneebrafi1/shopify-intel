@@ -3,7 +3,14 @@ import { buildSeedFromRoot } from '../../scripts/seed/build.ts';
 import { createApiClient } from '../../src/server/api/v1/client.ts';
 import { affiliateRedirect } from '../../src/server/repo/affiliate.ts';
 import { FIXED_NOW, ROOT, seedResult, seededDb, testDeps } from './helpers/db.ts';
-import { CURATED, PLACEHOLDER_SHOTS } from './helpers/counts.ts';
+import {
+  CURATED,
+  DETECTIONS,
+  PLACEHOLDER_SHOTS,
+  SCANNED,
+  appStores,
+  themeStores,
+} from './helpers/counts.ts';
 
 describe('seed builder', () => {
   it('is deterministic', () => {
@@ -15,9 +22,9 @@ describe('seed builder', () => {
   it('matches the export counts (detections are the single source of truth)', () => {
     const { report } = seedResult();
     expect(report.warnings.filter((w) => w.startsWith('MISMATCH'))).toEqual([]);
-    expect(report.appStoreCounts.klaviyo).toBe(383);
-    expect(report.themeStoreCounts.dawn).toBe(20);
-    expect(report.counts.stores).toBe(930);
+    expect(report.appStoreCounts.klaviyo).toBe(appStores('klaviyo'));
+    expect(report.themeStoreCounts.dawn).toBe(themeStores('dawn'));
+    expect(report.counts.stores).toBe(SCANNED);
     expect(report.counts.themes).toBe(20);
   });
 
@@ -94,7 +101,7 @@ describe('curation overrides (data/curation/overrides.json)', () => {
     const unresolved = await db.first<{ n: number }>(
       "SELECT COUNT(*) AS n FROM store_unresolved_apps WHERE detection_slug = 'trustpilot'",
     );
-    expect(unresolved?.n).toBe(37);
+    expect(unresolved?.n).toBe(DETECTIONS.filter((d) => d.apps.includes('trustpilot')).length);
     expect(seedResult().report.appStoreCounts.trustpilot).toBeUndefined();
     await expect(api.getApp({ slug: 'trustpilot' })).rejects.toMatchObject({ status: 404 });
 

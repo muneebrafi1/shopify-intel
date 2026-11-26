@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { isTombstoned, optOutStore } from '../../src/server/repo/opt-out.ts';
 import { get, setup } from './helpers/db.ts';
-import { CURATED } from './helpers/counts.ts';
+import { CURATED, SCANNED } from './helpers/counts.ts';
 
 const { db, api, http } = setup();
 afterAll(() => db.close());
@@ -45,7 +45,7 @@ describe('opted-out stores disappear everywhere', () => {
     const stores = await api.listStores({ limit: 60, curated: true });
     expect(stores.data.items.map((s) => s.domain)).not.toContain('youngla.com');
     expect(stores.meta.pagination?.total).toBe(CURATED - 1);
-    expect((await api.getMeta()).data.counts.stores_scanned).toBe(929);
+    expect((await api.getMeta()).data.counts.stores_scanned).toBe(SCANNED - 1);
     expect((await api.getApp({ slug: 'loox' })).data.app.usage.stores).toBe(before.loox - 1);
     const prestige = await api.getTheme({ slug: 'prestige' });
     expect(prestige.data.theme.usage.stores).toBe(before.prestige - 1);

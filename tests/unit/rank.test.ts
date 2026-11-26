@@ -26,11 +26,14 @@ describe('usage ranks in the API', () => {
     const at = (slug: string) => data.items.find((t) => t.slug === slug)?.usage;
     // Hyper, Impact and Impulse are each detected on 8 stores; Flow and Symmetry on 7.
     expect([at('hyper'), at('impact'), at('impulse')].map((u) => u?.stores)).toEqual([8, 8, 8]);
-    expect(at('hyper')?.rank).toBe(6);
-    expect(at('impact')?.rank).toBe(6);
-    expect(at('impulse')?.rank).toBe(6);
-    expect(at('flow')?.rank).toBe(9);
-    expect(at('symmetry')?.rank).toBe(9);
+    const above = (n: number) => data.items.filter((t) => t.usage.stores > n).length;
+    const rank8 = 1 + above(8);
+    expect(at('hyper')?.rank).toBe(rank8);
+    expect(at('impact')?.rank).toBe(rank8);
+    expect(at('impulse')?.rank).toBe(rank8);
+    // The next rank skips past the three-way tie.
+    expect(at('flow')?.rank).toBe(rank8 + 3);
+    expect(at('symmetry')?.rank).toBe(rank8 + 3);
     const order = data.items.map((t) => t.slug);
     expect(order.indexOf('hyper')).toBeLessThan(order.indexOf('impact'));
     expect(order.indexOf('impact')).toBeLessThan(order.indexOf('impulse'));
@@ -38,7 +41,7 @@ describe('usage ranks in the API', () => {
     const counts = data.items.map((t) => t.usage.stores);
     expect(data.items.map((t) => t.usage.rank)).toEqual(competitionRanks(counts));
     // getTheme reports the same rank as the list.
-    expect((await api.getTheme({ slug: 'impulse' })).data.theme.usage.rank).toBe(6);
+    expect((await api.getTheme({ slug: 'impulse' })).data.theme.usage.rank).toBe(rank8);
   });
 
   it('ranks apps overall and within their category with competition ranking', async () => {

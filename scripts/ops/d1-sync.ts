@@ -275,7 +275,12 @@ async function main() {
   };
   for (const t of tables) visit(t);
 
-  const diffs: Array<{ d: TableDiff; key: string[]; indexes: number }> = [];
+  const diffs: Array<{
+    d: TableDiff;
+    key: string[];
+    indexes: number;
+    replaceAll?: { rows: Row[]; where: string };
+  }> = [];
   for (const t of order) {
     const info = local.prepare(`PRAGMA table_info("${t}")`).all() as Array<{
       name: string;
@@ -298,8 +303,21 @@ async function main() {
     const remoteRows = remoteTable(config, values.db!, t, cols, where);
     const skip = sc ? (r: Row) => protectedIds.has(Number(r[sc])) : undefined;
     const d = diffRows(t, localRows, remoteRows, key, skip);
-    const indexes = (local.prepare(`PRAGMA index_list("${t}")`).all() as unknown[]).length;
-    diffs.push({ d, key, indexes });
+    const indexList = local.prepare(`PRAGMA index_list("${t}")`).all() as Array<{
+      unique: number;
+      origin: string;
+    }>;
+    const indexes = indexList.length;
+    // A second UNIQUE key (e.g. teardown_notes (teardown_id, n)) can collide mid-upsert when ids
+    // shift; such (small) tables are replaced wholesale when anything changed.
+    const extraUnique = indexList.some((i) => i.unique && i.origin === 'u');
+    const changed = d.inserts.length + d.updates.length + d.deletes.length > 0;
+    diffs.push({
+      d,
+      key,
+      indexes,
+      ...(extraUnique && changed && !skip ? { replaceAll: { rows: localRows, where } } : {}),
+    });
     const n = d.inserts.length + d.updates.length + d.deletes.length;
     if (n)
       console.log(`${t.padEnd(24)} +${d.inserts.length} ~${d.updates.length} -${d.deletes.length}`);
@@ -314,36 +332,82 @@ async function main() {
   }, 0);
   console.log(`estimated rows written: ~${estimate}`);
 
-  const lines = ['PRAGMA defer_foreign_keys = true;'];
-  for (const { d, key } of [...diffs].reverse())
-    for (const l of diffSql({ ...d, inserts: [], updates: [] }, key)) lines.push(l);
-  for (const { d, key } of diffs)
-    for (const l of diffSql({ ...d, deletes: [] }, key)) lines.push(l);
-  mkdirSync(join(ROOT, '.data/sync'), { recursive: true });
-  const file = join(ROOT, `.data/sync/${new Date().toISOString().replace(/[:.]/g, '')}.sql`);
-  writeFileSync(file, `${lines.join('\n')}\n`);
-  console.log(`plan: ${lines.length - 1} statements → ${file}`);
+  // Applied as one file per table and phase, in FK-safe order, so no single request is huge and
+  // no step relies on deferred FK checks across D1's internal batching: upserts parent-first
+  // (FTS rows deleted just before they are re-inserted), then deletes children-first.
+  const steps: Array<{ name: string; lines: string[] }> = [];
+  for (const { d, key, replaceAll } of diffs) {
+    if (replaceAll) {
+      const cols = Object.keys(replaceAll.rows[0] ?? {});
+      steps.push({
+        name: `replace-${d.table}`,
+        lines: [
+          `DELETE FROM "${d.table}" ${replaceAll.where};`,
+          ...replaceAll.rows.map(
+            (r) =>
+              `INSERT INTO "${d.table}" (${cols.map((c) => `"${c}"`).join(', ')}) VALUES (${cols
+                .map((c) => sqlValue(r[c]!))
+                .join(', ')});`,
+          ),
+        ],
+      });
+      continue;
+    }
+    if (d.table === FTS && (d.deletes.length || d.updates.length))
+      steps.push({
+        name: `del-${d.table}`,
+        lines: diffSql({ ...d, inserts: [], updates: [] }, key),
+      });
+    const up = diffSql({ ...d, deletes: [] }, key);
+    if (up.length) steps.push({ name: `up-${d.table}`, lines: up });
+  }
+  for (const { d, key, replaceAll } of [...diffs].reverse()) {
+    if (replaceAll || d.table === FTS || !d.deletes.length) continue;
+    steps.push({ name: `del-${d.table}`, lines: diffSql({ ...d, inserts: [], updates: [] }, key) });
+  }
+  const stamp = new Date().toISOString().replace(/[:.]/g, '');
+  const dir = join(ROOT, `.data/sync/${stamp}`);
+  mkdirSync(dir, { recursive: true });
+  const files = steps.map((st, i) => {
+    const file = join(dir, `${String(i + 1).padStart(2, '0')}-${st.name}.sql`);
+    writeFileSync(file, `PRAGMA defer_foreign_keys = true;\n${st.lines.join('\n')}\n`);
+    return file;
+  });
+  console.log(
+    `plan: ${steps.reduce((n, st) => n + st.lines.length, 0)} statements in ${files.length} steps → ${dir}`,
+  );
   if (!values.apply) return;
-  if (lines.length === 1) return console.log('nothing to apply');
+  if (!files.length) return console.log('nothing to apply');
   if (estimate > Number(values['max-writes'])) {
     console.error(
       `refusing: estimate ${estimate} > --max-writes ${values['max-writes']} (split with --tables)`,
     );
     process.exit(1);
   }
-  console.log(
-    wrangler([
-      'd1',
-      'execute',
-      values.db!,
-      '--remote',
-      '--yes',
-      '--config',
-      config,
-      '--file',
-      file,
-    ]).slice(-600),
-  );
+  for (const file of files) {
+    let out = '';
+    for (let attempt = 1; ; attempt++) {
+      try {
+        out = wranglerOnce([
+          'd1',
+          'execute',
+          values.db!,
+          '--remote',
+          '--yes',
+          '--config',
+          config,
+          '--file',
+          file,
+        ]);
+        break;
+      } catch (e) {
+        // Each file is one transaction, so a timed-out step is safe to re-run.
+        if (attempt >= 4 || !/timed out|fetch failed/i.test(String(e))) throw e;
+      }
+    }
+    const written = [...out.matchAll(/"rows_written": (\d+)/g)].at(-1)?.[1] ?? '?';
+    console.log(`  applied ${file.split('/').pop()} (${written} rows written)`);
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
