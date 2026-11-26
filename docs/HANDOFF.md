@@ -76,6 +76,15 @@ ops:preflight`, `npm run ops:smoke`) + CI check + unit tests.
   check, ~1.5 ms CPU). It records theme switches/version bumps and newly seen apps; it never closes
   apps and never rebuilds derived tables remotely (a full rebuild rewrites ~60k rows). Once it runs,
   scan/history tables are remote-owned: d1-sync must not overwrite them.
+- **Second store batch (297 curated).** Same rules with ≥2 apps and ≤40 per category, after the
+  26 Nov browser crawl added each store's title/description/language. Left out: the operator's own
+  store (xovist.com) and thin pages. About 30 names/categories were corrected by hand.
+- **26 Nov crawl is the history baseline.** It re-scanned 929 stores with newer signatures, so the
+  apps it adds over the 17 Nov scan are mostly detection gains, not installs. "Newly seen" alerts
+  or trend pages should only count changes from the weekly crawler onwards. A seed row that never
+  named a theme is filled in place, not recorded as a theme switch.
+- **Teardowns follow the captures.** Notes point at sections that were really captured; where an
+  app's placement isn't in the page code, the note says so instead of guessing.
 
 ## Ordered PR merge list
 
