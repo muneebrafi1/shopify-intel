@@ -13,7 +13,7 @@ const db = seededDb();
 afterAll(() => db.close());
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const readJson = async <T = any>(res: Response): Promise<T> => (await readJson(res)) as T;
+const readJson = async <T = any>(res: Response): Promise<T> => (await res.json()) as T;
 
 const post = (
   handler: (req: Request) => Promise<Response>,
