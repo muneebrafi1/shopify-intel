@@ -17,11 +17,34 @@ const toc = [
   { id: 'non-paying', label: 'Apps that pay us nothing' },
   { id: 'questions', label: 'Questions' },
 ];
+const site = Astro.site ?? Astro.url;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', site).href },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: `Affiliate disclosure · ${SITE_NAME}`,
+        item: new URL('/affiliate-disclosure', site).href,
+      },
+    ],
+  },
+  {
+    '@type': 'WebPage',
+    name: `Affiliate disclosure · ${SITE_NAME}`,
+    url: new URL('/affiliate-disclosure', site).href,
+    description: `How ${SITE_NAME} earns money from affiliate links, how every one is labelled, and why partnerships never change what we detect or rank.`,
+  },
+];
 ---
 
 <BaseLayout
   title="Affiliate disclosure"
   description={`How ${SITE_NAME} earns money from affiliate links, how every one is labelled, and why partnerships never change what we detect or rank.`}
+  canonical="/affiliate-disclosure"
+  jsonLd={jsonLd}
 >
   <DocShell
     title="Affiliate disclosure"

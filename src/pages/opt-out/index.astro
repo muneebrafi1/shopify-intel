@@ -99,6 +99,27 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 
 /** 'within 3 business days' → 'Within 3 business days' for the facts card. */
 const SLA_SHORT = REMOVAL_SLA.charAt(0).toUpperCase() + REMOVAL_SLA.slice(1);
+const site = Astro.site ?? Astro.url;
+const jsonLd = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', site).href },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: `Remove your store · ${SITE_NAME}`,
+        item: new URL('/opt-out', site).href,
+      },
+    ],
+  },
+  {
+    '@type': 'WebPage',
+    name: `Remove your store · ${SITE_NAME}`,
+    url: new URL('/opt-out', site).href,
+    description: `Own a Shopify store listed on ${SITE_NAME}? Ask us to hide it everywhere and delete its screenshots, or correct a detail.`,
+  },
+];
 ---
 
 <BaseLayout
@@ -106,6 +127,7 @@ const SLA_SHORT = REMOVAL_SLA.charAt(0).toUpperCase() + REMOVAL_SLA.slice(1);
   description={`Own a Shopify store listed on ${SITE_NAME}? Ask us to hide it everywhere and delete its screenshots, or correct a detail. No account needed.`}
   canonical="/opt-out"
   noindex={!!sent || Astro.request.method === 'POST'}
+  jsonLd={jsonLd}
 >
   <div class="optout">
     <div class="container">
