@@ -79,6 +79,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 const { data, meta } = list;
 const info = whole.data.section_type ?? data.section_type;
 if (!info) return Astro.rewrite('/404');
+// A type with nothing captured (cart-only types) has no page.
+if ((whole.meta.pagination?.total ?? whole.data.items.length) === 0) return Astro.rewrite('/404');
 
 const taxonomy = SECTION_TYPES.find((t) => t.slug === type)!;
 const total = meta.pagination?.total ?? data.items.length;

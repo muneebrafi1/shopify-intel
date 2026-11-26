@@ -136,7 +136,7 @@ const jsonLd = [
   },
 ];
 const description = hasPlates
-  ? `${title} runs ${store.theme.label} with ${store.app_count} detected apps. See its home, collection, product and cart pages on desktop and mobile, section by section, and where each app renders.`
+  ? `${title} runs ${store.theme.label} with ${store.app_count} detected apps. See its home, collection and product pages on desktop and mobile, section by section, and where each app renders.`
   : `${store.domain} runs ${store.theme.label} with ${store.app_count} detected Shopify apps (scan of ${asOf}). Screenshots are not captured yet.`;
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');

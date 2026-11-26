@@ -79,7 +79,7 @@ const groups = buildFilterGroups(data.facets, null, filters);
 const source = cropSource(meta, data.items);
 const typeCount = counts.section_types || SECTION_TYPES.length;
 
-const description = `${fmt(counts.sections)} page sections (headers, heroes, buy boxes, reviews, carts and more) sliced from ${counts.stores_with_capture_plan} Shopify stores on desktop and mobile. Filter by type, page, device, theme and app.`;
+const description = `${fmt(counts.sections)} page sections (headers, heroes, buy boxes, reviews, footers and more) sliced from ${counts.stores_with_capture_plan} Shopify stores on desktop and mobile. Filter by type, page, device, theme and app.`;
 
 const jsonLd = {
   '@type': 'CollectionPage',

@@ -76,7 +76,10 @@ describe('sections library', () => {
 
   it('lists section types with counts and previews', async () => {
     const { data } = await api.listSectionTypes();
-    expect(data.items).toHaveLength(31);
+    // Only types with captured sections are listed (cart-only types have none).
+    expect(data.items.length).toBeGreaterThan(20);
+    expect(data.items.every((t) => t.count > 0)).toBe(true);
+    expect(data.items.map((t) => t.slug)).not.toContain('cart-summary');
     expect(data.items.find((t) => t.slug === 'header')?.count).toBe(PLACEHOLDER_SHOTS);
     expect(data.groups.reduce((s, g) => s + g.count, 0)).toBe(SECTION_TOTAL);
     expect(data.items.find((t) => t.slug === 'hero')?.preview?.type.slug).toBe('hero');

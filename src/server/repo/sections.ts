@@ -351,7 +351,9 @@ export async function sectionTypeInfos(
 }
 
 export async function listSectionTypes(ctx: Ctx) {
-  const items = await sectionTypeInfos(ctx);
+  // Types with no captured sections (e.g. cart-only ones, since carts are not captured) are left
+  // out so browsing never leads to an empty page.
+  const items = (await sectionTypeInfos(ctx)).filter((i) => i.count > 0);
   return {
     items,
     groups: SECTION_GROUPS.map((g) => ({

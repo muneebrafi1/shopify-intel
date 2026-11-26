@@ -139,7 +139,7 @@ const title = state.q
     : 'Shopify themes on real stores';
 const description = facetFiltered
   ? `${formatCount(total)} ${heading.toLowerCase()} we track, each shown on the real Shopify stores that run it, with prices, vendors and usage in our scan of ${formatCount(scanned)} stores.`
-  : `Every Shopify theme we track (${allTotal}), shown on the real stores that run it: home, collection, product and cart pages, desktop and mobile, with price, vendor and usage in our scan.`;
+  : `Every Shopify theme we track (${allTotal}), shown on the real stores that run it: home, collection and product pages, desktop and mobile, with price, vendor and usage in our scan.`;
 
 const singleFilter = !state.q && (state.price ? 1 : 0) + (state.vendor ? 1 : 0) === 1;
 const canonical = singleFilter

@@ -200,7 +200,7 @@ const storesTo = storesFrom + stores.length - 1;
 const site = Astro.site ?? Astro.url;
 const abs = (path: string) => new URL(path, site).href;
 const title = `${theme.name} theme${theme.vendor ? ` by ${theme.vendor}` : ''} on real Shopify stores`;
-const description = `${theme.name}${theme.vendor ? ` by ${theme.vendor}` : ''} (${priceText}) seen on ${formatCount(usage.stores)} of ${formatCount(usage.denominator)} scanned Shopify stores: home, collection, product and cart pages on desktop and mobile, the sections they use, apps installed alongside it and similar themes.`;
+const description = `${theme.name}${theme.vendor ? ` by ${theme.vendor}` : ''} (${priceText}) seen on ${formatCount(usage.stores)} of ${formatCount(usage.denominator)} scanned Shopify stores: home, collection and product pages on desktop and mobile, the sections they use, apps installed alongside it and similar themes.`;
 const jsonLd = [
   {
     '@type': 'BreadcrumbList',
