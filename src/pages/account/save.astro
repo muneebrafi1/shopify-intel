@@ -11,7 +11,7 @@ import Icon from '~/components/ui/Icon.astro';
 import AccountShell from '~/components/static/AccountShell.astro';
 import { MONTHLY_PRICE, safeNext } from '~/components/static/content';
 import { accountDb } from '~/server/account/env';
-import { isItemType, listBoards, NAME_MAX, resolveItem } from '~/server/account/boards';
+import { isItemType, itemLabel, listBoards, NAME_MAX, resolveItem } from '~/server/account/boards';
 import { isPaid } from '~/server/account/entitlements';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
@@ -28,8 +28,8 @@ const NOUN: Record<string, string> = {
   app: 'app',
 };
 const db = accountDb();
-const valid = isItemType(type) && (await resolveItem(db, type, ref)) !== null;
-if (!valid) return Astro.rewrite('/404');
+const itemId = isItemType(type) ? await resolveItem(db, type, ref) : null;
+if (!isItemType(type) || itemId === null) return Astro.rewrite('/404');
 const noun = NOUN[type] ?? 'item';
 const paid = isPaid(user.plan);
 const boards = paid ? await listBoards(db, user.id) : [];
@@ -43,7 +43,7 @@ const ERRORS: Record<string, string> = {
 };
 const error = ERRORS[params.get('error') ?? ''] ?? null;
 const self = `/account/save?item=${encodeURIComponent(item)}&back=${encodeURIComponent(back)}`;
-const label = type === 'store' || type === 'theme' || type === 'app' ? ref : `${noun} #${ref}`;
+const label = (await itemLabel(db, type, itemId)) ?? ref;
 ---
 
 <BaseLayout title={`Save ${noun}`} description="Save to a board." noindex>

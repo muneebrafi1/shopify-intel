@@ -251,6 +251,25 @@ export async function boardItems(
     }));
 }
 
+const LABEL_SQL = `CASE i.item_type
+         WHEN 'store' THEN (SELECT COALESCE(name, domain) FROM stores WHERE id = i.item_id)
+         WHEN 'theme' THEN (SELECT name FROM themes WHERE id = i.item_id)
+         WHEN 'app' THEN (SELECT name FROM apps WHERE id = i.item_id)
+         WHEN 'section' THEN (SELECT COALESCE(st.name, st.domain) || ' · ' || s.section_type || ' · ' || s.page_type || ' · ' || s.device
+                              FROM sections s JOIN stores st ON st.id = s.store_id WHERE s.id = i.item_id)
+         WHEN 'screenshot' THEN (SELECT COALESCE(st.name, st.domain) || ' · ' || sh.page_type || ' · ' || sh.device
+                              FROM screenshots sh JOIN stores st ON st.id = sh.store_id WHERE sh.id = i.item_id)
+       END`;
+
+/** A short human label for one item ("YoungLA · hero · home · desktop"), or null. */
+export async function itemLabel(db: Db, type: ItemType, id: number): Promise<string | null> {
+  const row = await db.first<{ label: string | null }>(
+    `SELECT ${LABEL_SQL} AS label FROM (SELECT ? AS item_type, ? AS item_id) i`,
+    [type, id],
+  );
+  return row?.label ?? null;
+}
+
 /** Rows for a CSV export of one board (Pro: "exports"). */
 export async function boardCsv(db: Db, boardId: number): Promise<string> {
   const rows = await db.all<{
@@ -260,15 +279,7 @@ export async function boardCsv(db: Db, boardId: number): Promise<string> {
     added_at: string;
   }>(
     `SELECT i.item_type, i.added_at,
-       CASE i.item_type
-         WHEN 'store' THEN (SELECT COALESCE(name, domain) FROM stores WHERE id = i.item_id)
-         WHEN 'theme' THEN (SELECT name FROM themes WHERE id = i.item_id)
-         WHEN 'app' THEN (SELECT name FROM apps WHERE id = i.item_id)
-         WHEN 'section' THEN (SELECT st.domain || ' · ' || s.section_type || ' · ' || s.page_type || ' · ' || s.device
-                              FROM sections s JOIN stores st ON st.id = s.store_id WHERE s.id = i.item_id)
-         WHEN 'screenshot' THEN (SELECT st.domain || ' · ' || sh.page_type || ' · ' || sh.device
-                              FROM screenshots sh JOIN stores st ON st.id = sh.store_id WHERE sh.id = i.item_id)
-       END AS label,
+       ${LABEL_SQL} AS label,
        CASE i.item_type
          WHEN 'store' THEN (SELECT '/stores/' || domain FROM stores WHERE id = i.item_id)
          WHEN 'theme' THEN (SELECT '/themes/' || slug FROM themes WHERE id = i.item_id)
