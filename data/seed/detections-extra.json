@@ -1,0 +1,780 @@
+[
+  {
+    "domain": "achillesheel.co.uk",
+    "theme": "Achilles Heel Custom",
+    "theme_custom": false,
+    "apps": [
+      "afterpay-messaging",
+      "amp-back-in-stock",
+      "backinstock",
+      "essential-announcement-bar",
+      "gdpr-cookie-consent",
+      "google-shopping-feed",
+      "instafeed",
+      "omnisend"
+    ],
+    "currency": "GBP",
+    "detected_at": "2026-11-26T11:46:57.049Z"
+  },
+  {
+    "domain": "acmecups.nz",
+    "theme": "Orion - SA",
+    "theme_custom": false,
+    "apps": [
+      "essential-pre-order",
+      "klaviyo",
+      "order-limits-minmaxify",
+      "privy",
+      "redirect-hero",
+      "wishlistplus"
+    ],
+    "currency": "NZD",
+    "detected_at": "2026-11-26T11:47:02.087Z"
+  },
+  {
+    "domain": "agnestoth.com",
+    "theme": "Dawn",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:47:06.764Z"
+  },
+  {
+    "domain": "almadalabel.com",
+    "theme": "coi",
+    "theme_custom": false,
+    "apps": [
+      "amp-back-in-stock",
+      "backinstock",
+      "depict",
+      "gdpr-backpack",
+      "global-e-crossborder",
+      "index-gpt",
+      "klaviyo",
+      "mf-feed-builder-remix",
+      "shopmy",
+      "stock-app",
+      "weglot"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:47:13.684Z"
+  },
+  {
+    "domain": "aoiofficial.com",
+    "theme": null,
+    "theme_custom": false,
+    "apps": [
+      "shopmy"
+    ],
+    "currency": null,
+    "detected_at": "2026-11-26T11:47:17.106Z"
+  },
+  {
+    "domain": "apinistudio.com",
+    "theme": "Stretch",
+    "theme_custom": false,
+    "apps": [
+      "iubenda"
+    ],
+    "currency": "EUR",
+    "detected_at": "2026-11-26T11:47:22.649Z"
+  },
+  {
+    "domain": "atticusfinchclothing.com.au",
+    "theme": "Atticus-Finch",
+    "theme_custom": false,
+    "apps": [
+      "instafeed"
+    ],
+    "currency": "AUD",
+    "detected_at": "2026-11-26T11:47:32.993Z"
+  },
+  {
+    "domain": "balmoralrunning.com",
+    "theme": "Mill3 Shopify Boilerplate",
+    "theme_custom": false,
+    "apps": [
+      "gifter-cart-auto-include",
+      "instafeed"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:47:55.305Z"
+  },
+  {
+    "domain": "beautyinstem.com",
+    "theme": "Beautyinstem",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:47:41.828Z"
+  },
+  {
+    "domain": "becore.se",
+    "theme": "Stretch",
+    "theme_custom": false,
+    "apps": [
+      "appstlesubscriptions",
+      "klaviyo",
+      "mailchimp"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:48:03.843Z"
+  },
+  {
+    "domain": "bluntumbrellas.com",
+    "theme": "Blunt - SA",
+    "theme_custom": false,
+    "apps": [
+      "accesswidget",
+      "cookiebot-cmp-gdpr-compliance",
+      "helpdesk",
+      "klaviyo",
+      "microsoft-clarity"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:48:08.867Z"
+  },
+  {
+    "domain": "bodicine.com",
+    "theme": "Wonder",
+    "theme_custom": false,
+    "apps": [
+      "judgeme",
+      "klaviyo"
+    ],
+    "currency": "PLN",
+    "detected_at": "2026-11-26T11:48:14.676Z"
+  },
+  {
+    "domain": "brigadeoverland.com",
+    "theme": "Brigade Overland",
+    "theme_custom": false,
+    "apps": [
+      "preproduct"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:48:17.092Z"
+  },
+  {
+    "domain": "cafebinocle.com",
+    "theme": "Dawn",
+    "theme_custom": false,
+    "apps": [
+      "ecomsend",
+      "recharge",
+      "weglot"
+    ],
+    "currency": "CAD",
+    "detected_at": "2026-11-26T11:48:22.193Z"
+  },
+  {
+    "domain": "caffemilani.it",
+    "theme": "Stretch",
+    "theme_custom": false,
+    "apps": [
+      "cmp-insert-code",
+      "iubenda",
+      "joy-subscription",
+      "mapstore",
+      "product-recommendation-quiz-revenuehunt",
+      "shopify-forms",
+      "trustpilot"
+    ],
+    "currency": "EUR",
+    "detected_at": "2026-11-26T11:48:26.704Z"
+  },
+  {
+    "domain": "ceciliebahnsen.com",
+    "theme": "Signifly Skeleton",
+    "theme_custom": false,
+    "apps": [
+      "getsitecontrol",
+      "klaviyo",
+      "preorder-manager-prequik"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:48:41.137Z"
+  },
+  {
+    "domain": "cocoonblanket.com",
+    "theme": "Cocoon",
+    "theme_custom": false,
+    "apps": [
+      "klaviyo",
+      "loox"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:48:37.690Z"
+  },
+  {
+    "domain": "coutumes.com",
+    "theme": "Coutumes",
+    "theme_custom": false,
+    "apps": [
+      "appointly",
+      "cartbite",
+      "klaviyo",
+      "okendo-reviews"
+    ],
+    "currency": "EUR",
+    "detected_at": "2026-11-26T11:48:49.618Z"
+  },
+  {
+    "domain": "deadlyponies.com",
+    "theme": "deadly - SA",
+    "theme_custom": false,
+    "apps": [
+      "gifter-cart-auto-include",
+      "helpdesk",
+      "hubspot-2",
+      "klaviyo",
+      "wishlistplus"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:48:53.343Z"
+  },
+  {
+    "domain": "deadstockcoffee.com",
+    "theme": "Ride",
+    "theme_custom": false,
+    "apps": [
+      "amp-back-in-stock",
+      "bold-subscriptions",
+      "boldupsell",
+      "sc-product-options"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:48:58.558Z"
+  },
+  {
+    "domain": "emilynixon.com",
+    "theme": "The Barn",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:49:08.747Z"
+  },
+  {
+    "domain": "estudioniksen.com",
+    "theme": "Estudio Niksen Theme",
+    "theme_custom": false,
+    "apps": [
+      "appointly",
+      "cartbite",
+      "mailchimp"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:49:12.152Z"
+  },
+  {
+    "domain": "eternalblue.co.nz",
+    "theme": "Orion - SA",
+    "theme_custom": false,
+    "apps": [
+      "cookiebot-cmp-gdpr-compliance",
+      "klaviyo"
+    ],
+    "currency": "NZD",
+    "detected_at": "2026-11-26T11:49:22.284Z"
+  },
+  {
+    "domain": "fctrylab.com",
+    "theme": "SimplSo",
+    "theme_custom": false,
+    "apps": [
+      "black-crow-ai",
+      "free-shipping-bar",
+      "instafeed",
+      "klaviyo",
+      "loox",
+      "pagefly",
+      "pushowl",
+      "redo",
+      "wishlist-king"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:49:27.433Z"
+  },
+  {
+    "domain": "feelreformed.com",
+    "theme": "Vessel",
+    "theme_custom": false,
+    "apps": [
+      "alia",
+      "attentive",
+      "heatmap-com",
+      "helpdesk",
+      "hotjar",
+      "intelligems",
+      "klaviyo",
+      "octane-ai-quiz-personalization",
+      "okendo-reviews",
+      "rebuy",
+      "superfiliate"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:49:35.818Z"
+  },
+  {
+    "domain": "fermliving.com",
+    "theme": "Ferm Living",
+    "theme_custom": false,
+    "apps": [
+      "bundler-product-bundles",
+      "cookiebot-cmp-gdpr-compliance",
+      "gifter-cart-auto-include",
+      "klaviyo",
+      "server-gtm",
+      "wishlistplus"
+    ],
+    "currency": "EUR",
+    "detected_at": "2026-11-26T11:49:39.715Z"
+  },
+  {
+    "domain": "halcyon.co.nz",
+    "theme": "Orion - SA",
+    "theme_custom": false,
+    "apps": [
+      "klaviyo",
+      "product-filter-search"
+    ],
+    "currency": "NZD",
+    "detected_at": "2026-11-26T11:49:58.356Z"
+  },
+  {
+    "domain": "heirest.com",
+    "theme": "Orion",
+    "theme_custom": false,
+    "apps": [
+      "helpdesk",
+      "klaviyo",
+      "wishlistplus"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:50:06.598Z"
+  },
+  {
+    "domain": "hexpens.com",
+    "theme": "Nova",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:50:07.899Z"
+  },
+  {
+    "domain": "hueylightshop.com",
+    "theme": "Dawn",
+    "theme_custom": false,
+    "apps": [
+      "form-builder-contact-form",
+      "klaviyo",
+      "shopify-forms"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:50:18.913Z"
+  },
+  {
+    "domain": "iginusa.com",
+    "theme": "Dawn",
+    "theme_custom": false,
+    "apps": [
+      "klaviyo"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:50:21.263Z"
+  },
+  {
+    "domain": "killstar.com",
+    "theme": "Cake Vite",
+    "theme_custom": false,
+    "apps": [
+      "amp-back-in-stock",
+      "backinstock",
+      "geoip-country-redirect",
+      "klarnaosm",
+      "klaviyo",
+      "postscript",
+      "reamaze",
+      "route",
+      "searchanise",
+      "shopify-forms",
+      "spicegems-country-redirect",
+      "stock-app",
+      "swell",
+      "wishlistplus",
+      "yotpo"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:50:31.907Z"
+  },
+  {
+    "domain": "kindredofireland.com",
+    "theme": "Kindred",
+    "theme_custom": false,
+    "apps": [
+      "gdpr-backpack",
+      "helpdesk",
+      "instafeed",
+      "klaviyo",
+      "smart-seo",
+      "wishlist-king"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:50:39.643Z"
+  },
+  {
+    "domain": "lofliballs.com",
+    "theme": "LoFli",
+    "theme_custom": false,
+    "apps": [
+      "judgeme",
+      "klaviyo"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:50:46.862Z"
+  },
+  {
+    "domain": "lujoliving.com",
+    "theme": "Orion - SA",
+    "theme_custom": false,
+    "apps": [
+      "klaviyo",
+      "orbe",
+      "wishlistplus"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:50:55.710Z"
+  },
+  {
+    "domain": "lulaoil.com",
+    "theme": "Horizon",
+    "theme_custom": false,
+    "apps": [
+      "alia",
+      "instafeed",
+      "klaviyo",
+      "loop-subscriptions",
+      "okendo-reviews",
+      "shopmy"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:51:03.899Z"
+  },
+  {
+    "domain": "nextsense.io",
+    "theme": "Horizon",
+    "theme_custom": false,
+    "apps": [
+      "checkmate",
+      "klaviyo",
+      "mailmunch"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:51:43.467Z"
+  },
+  {
+    "domain": "nymphaicosmetics.com",
+    "theme": "Generated Data Theme",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "EUR",
+    "detected_at": "2026-11-26T11:53:07.485Z"
+  },
+  {
+    "domain": "objectandarchive.com",
+    "theme": "Object & Archive",
+    "theme_custom": false,
+    "apps": [
+      "form-builder-by-hulkapps",
+      "klaviyo",
+      "product-options-by-hulkapps-1"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:51:59.735Z"
+  },
+  {
+    "domain": "palaceskateboards.com",
+    "theme": null,
+    "theme_custom": false,
+    "apps": [],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:53:39.500Z"
+  },
+  {
+    "domain": "partakefoods.com",
+    "theme": "Partake (hasmerit.co)",
+    "theme_custom": false,
+    "apps": [
+      "accessibly-app",
+      "bazaarvoice",
+      "gdpr-backpack",
+      "helpdesk",
+      "klaviyo"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:53:23.818Z"
+  },
+  {
+    "domain": "proteinbolaget.se",
+    "theme": "Panagora",
+    "theme_custom": false,
+    "apps": [
+      "klarnaosm",
+      "prefixbox-search",
+      "wishlist-king",
+      "zendesk"
+    ],
+    "currency": "SEK",
+    "detected_at": "2026-11-26T11:53:42.681Z"
+  },
+  {
+    "domain": "robertocollina.it",
+    "theme": "madeinevolvebase",
+    "theme_custom": false,
+    "apps": [
+      "form-builder-contact-form",
+      "klaviyo",
+      "wishlist-king"
+    ],
+    "currency": "EUR",
+    "detected_at": "2026-11-26T11:54:40.237Z"
+  },
+  {
+    "domain": "ruthgriffioen.art",
+    "theme": "Ruth Griffioen",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "EUR",
+    "detected_at": "2026-11-26T11:54:48.752Z"
+  },
+  {
+    "domain": "seedjewelry.com",
+    "theme": "Prestige",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:54:54.013Z"
+  },
+  {
+    "domain": "stroms.com",
+    "theme": "coi",
+    "theme_custom": false,
+    "apps": [
+      "stock-app"
+    ],
+    "currency": "SEK",
+    "detected_at": "2026-11-26T11:55:04.550Z"
+  },
+  {
+    "domain": "switch-nails.com",
+    "theme": "Revolution",
+    "theme_custom": false,
+    "apps": [
+      "content-translation",
+      "freegifts",
+      "gdpr-cookie-consent",
+      "heatmap-com",
+      "instafeed",
+      "judgeme",
+      "klaviyo",
+      "translate-my-store"
+    ],
+    "currency": "SEK",
+    "detected_at": "2026-11-26T11:55:16.913Z"
+  },
+  {
+    "domain": "tailsandfin.com",
+    "theme": "Zap",
+    "theme_custom": false,
+    "apps": [
+      "klaviyo",
+      "loox",
+      "reamaze"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:55:28.780Z"
+  },
+  {
+    "domain": "terryhoproducts.com",
+    "theme": "Shapes",
+    "theme_custom": false,
+    "apps": [
+      "instafeed",
+      "junip"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:55:36.994Z"
+  },
+  {
+    "domain": "thebemagugu.com",
+    "theme": "Madrid",
+    "theme_custom": false,
+    "apps": [
+      "mailchimp"
+    ],
+    "currency": "ZAR",
+    "detected_at": "2026-11-26T11:55:58.386Z"
+  },
+  {
+    "domain": "theirnibs.com",
+    "theme": "Stiletto",
+    "theme_custom": false,
+    "apps": [
+      "giftkart",
+      "google-shopping-feed",
+      "klaviyo",
+      "microsoft-clarity",
+      "swap-shipping-returns",
+      "tidio-chat"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:55:50.624Z"
+  },
+  {
+    "domain": "theobromachocolat.com",
+    "theme": "Skeleton",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "CAD",
+    "detected_at": "2026-11-26T11:55:59.606Z"
+  },
+  {
+    "domain": "thesugarcoatedcult.com",
+    "theme": "The Sugar Coated Cult",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "EUR",
+    "detected_at": "2026-11-26T11:56:11.711Z"
+  },
+  {
+    "domain": "thisthatplace.com",
+    "theme": "Stretch",
+    "theme_custom": false,
+    "apps": [
+      "instafeed",
+      "klaviyo",
+      "sezzle-widget"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:56:15.113Z"
+  },
+  {
+    "domain": "tillysveaas.co.uk",
+    "theme": "Skeleton",
+    "theme_custom": false,
+    "apps": [
+      "klaviyo",
+      "shopmy",
+      "wishlistplus",
+      "yotpo"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:56:23.468Z"
+  },
+  {
+    "domain": "toutbienpils.com",
+    "theme": "Dawn",
+    "theme_custom": false,
+    "apps": [
+      "avada-order-limit",
+      "icart",
+      "madgic-order-limits",
+      "upcart"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:56:28.511Z"
+  },
+  {
+    "domain": "traced.life",
+    "theme": "s8-shopify-starter",
+    "theme_custom": false,
+    "apps": [
+      "goaffpro",
+      "klaviyo",
+      "okendo-reviews",
+      "reelup",
+      "sealsubscriptions"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:56:40.382Z"
+  },
+  {
+    "domain": "twoleavestea.com",
+    "theme": "Manufactur",
+    "theme_custom": false,
+    "apps": [
+      "accesswidget",
+      "form-builder-contact-form",
+      "klaviyo",
+      "stamped",
+      "yoast-seo"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:56:52.192Z"
+  },
+  {
+    "domain": "unimaticwatches.com",
+    "theme": "Unimatich",
+    "theme_custom": false,
+    "apps": [
+      "form-builder-contact-form",
+      "klaviyo",
+      "wishlist-engine"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:56:51.319Z"
+  },
+  {
+    "domain": "vibebevvy.com",
+    "theme": "Savor",
+    "theme_custom": false,
+    "apps": [],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:56:59.354Z"
+  },
+  {
+    "domain": "vibrasonic.it",
+    "theme": "Yuva",
+    "theme_custom": false,
+    "apps": [
+      "cmp-insert-code",
+      "customer-account-deluxe",
+      "elfsight-google-reviews",
+      "globo-mega-menu",
+      "insert-code-to-header-and-footer",
+      "instafeed",
+      "product-filter-and-search",
+      "pushowl",
+      "sendinblue",
+      "shopify-forms",
+      "wishlist-king"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:57:05.246Z"
+  },
+  {
+    "domain": "watchhouse.com",
+    "theme": "WatchHouse",
+    "theme_custom": false,
+    "apps": [
+      "gdpr-cookie-consent",
+      "judgeme",
+      "stamped",
+      "wishlist-king"
+    ],
+    "currency": "USD",
+    "detected_at": "2026-11-26T11:57:12.367Z"
+  },
+  {
+    "domain": "woodwrights.co.nz",
+    "theme": "Orion - SA",
+    "theme_custom": false,
+    "apps": [
+      "fin",
+      "klaviyo",
+      "wishlistplus"
+    ],
+    "currency": "NZD",
+    "detected_at": "2026-11-26T11:58:48.226Z"
+  }
+]

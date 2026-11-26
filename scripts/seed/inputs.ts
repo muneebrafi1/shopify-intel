@@ -231,7 +231,14 @@ export function loadSeedInputs(root: string): SeedInputs {
       : [],
     themes: json('data/seed/themes.json', z.array(ThemeInput)),
     curatedStores: json('data/seed/stores.json', z.array(CuratedStoreInput)),
-    detections: json('data/seed/detections-930.json', z.array(DetectionInput)),
+    // The 930-store scan, plus curated stores found later by our own crawl (domains outside the
+    // scan, e.g. design-award picks), exported by scripts/curation/export_extra_detections.py.
+    detections: [
+      ...json('data/seed/detections-930.json', z.array(DetectionInput)),
+      ...(existsSync(join(root, 'data/seed/detections-extra.json'))
+        ? json('data/seed/detections-extra.json', z.array(DetectionInput))
+        : []),
+    ],
     programs: json('data/seed/affiliate-programs.json', z.array(AffiliateProgramInput)),
     links: json('data/seed/affiliate-links.json', z.array(AffiliateLinkInput)),
     categories: json('data/seed/categories.json', z.array(z.string())),
