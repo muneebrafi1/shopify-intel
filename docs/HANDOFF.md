@@ -1,6 +1,6 @@
 # Handoff
 
-_Last updated: 26 Nov 2026, data-depth session (PR #15). Update this file before stopping
+_Last updated: 26 Nov 2026, SEO & content session (PR #18). Update this file before stopping
 for any reason._
 
 ## Status
@@ -139,7 +139,8 @@ npm run dev          # http://localhost:4321  (Astro 7 SSR inside workerd, local
 14. [#14](https://github.com/muneebrafi1/shopify-intel/pull/14) `feat/14-capture-depth` — collection/product/cart capture, stitched mode, top thumbnails, data-independent e2e
 15. [#15](https://github.com/muneebrafi1/shopify-intel/pull/15) `feat/15-data-depth` — 50 curated stores, crawler + scan ingest, Theme Store facts, content-based section rules
 16. [#16](https://github.com/muneebrafi1/shopify-intel/pull/16) `feat/16-accounts-pro` — Whop sign-in (OAuth + PKCE), sessions, signed webhooks → plans, boards (save, export CSV), Pro checkout links, dev sign-in
-17. `feat/17-mcp-server` — read-only MCP server (`POST /mcp`) over API v1 with D1 per-IP rate limiting
+17. [#17](https://github.com/muneebrafi1/shopify-intel/pull/17) `feat/17-mcp-server` — read-only MCP server (`POST /mcp`) over API v1 with D1 per-IP rate limiting
+18. `feat/18-seo-content` — XML sitemaps (`/sitemap.xml`, `/sitemaps/core.xml`, `/sitemaps/sections.xml`), static PNG OG fallback + capture OG/Twitter meta, Pro/legal JSON-LD, explicit canonicals, 3 new teardowns (LSKD, Thursday Boot Co., Negative Underwear)
 
 `claude/busy-wright-i74iuv` holds the same final tree with the session's checkpoint history.
 PR screenshots live on the `pr-screenshots` branch (images only; never merge it).
