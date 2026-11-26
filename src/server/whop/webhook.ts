@@ -95,7 +95,7 @@ export async function verifyWebhook(
   };
 }
 
-/** The subset of a Whop Membership object Vitrine keeps. */
+/** The subset of a Whop Membership object the site keeps. */
 export interface MembershipRecord {
   id: string;
   whopUserId: string | null;
