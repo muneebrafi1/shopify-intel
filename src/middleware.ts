@@ -1,6 +1,7 @@
 /**
- * Site-wide middleware. Its only job is to guard the admin; every other request goes straight
- * to `next()` after one cheap path check.
+ * Site-wide middleware. It guards the admin and loads the visitor on account pages; every other
+ * request goes straight to `next()` after cheap path checks (public pages stay user-agnostic, so
+ * they can be cached by the CDN).
  *
  * Guarded: /admin/** (except the sign-in page, which still gets the headers and CSRF check) and
  * /api/v1/admin/**. Protection is server-side only:
@@ -43,9 +44,59 @@ export const onRequest = defineMiddleware(async (context, next) => {
 });
 
 async function route(context: Ctx, next: Next): Promise<Response> {
+  const userArea = userAreaFor(context.url.pathname);
+  if (userArea !== null) return guardUser(context, next, userArea);
   const area = adminAreaFor(context.url.pathname);
   if (area === null) return next();
   return withAdminHeaders(await guardAdmin(context, next, area));
+}
+
+/**
+ * Visitor accounts. 'account' (/account/**) needs a signed-in user; 'auth' (/auth/**, /sign-in)
+ * only loads one. Both: non-GET must come from this origin (CSRF, on top of SameSite=Lax), and
+ * responses are never cached.
+ */
+type UserArea = 'account' | 'auth';
+function userAreaFor(pathname: string): UserArea | null {
+  // Example boards are a public preview of what boards look like.
+  if (pathname.startsWith('/account/boards/example-')) return 'auth';
+  if (pathname === '/account' || pathname.startsWith('/account/')) return 'account';
+  if (pathname.startsWith('/auth/') || pathname === '/sign-in') return 'auth';
+  return null;
+}
+
+async function guardUser(context: Ctx, next: Next, area: UserArea): Promise<Response> {
+  const { request, url, cookies, locals } = context;
+  if (!isSafeMethod(request.method) && !isSameOrigin(request, url)) {
+    return new Response('Cross-origin request blocked.', {
+      status: 403,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
+  // Loaded lazily so the public fast path never touches account code or bindings.
+  const [{ accountDb }, { userForSession, SESSION_COOKIE, SIGNED_IN_COOKIE }] = await Promise.all([
+    import('./server/account/env.ts'),
+    import('./server/account/sessions.ts'),
+  ]);
+  const token = cookies.get(SESSION_COOKIE)?.value;
+  locals.user = token ? await userForSession(accountDb(), token) : null;
+  if (token && !locals.user) {
+    cookies.delete(SESSION_COOKIE, { path: '/' });
+    cookies.delete(SIGNED_IN_COOKIE, { path: '/' });
+  }
+  if (area === 'account' && !locals.user) {
+    if (!isSafeMethod(request.method)) return context.redirect('/sign-in', 303);
+    const target = `${url.pathname}${url.search}`;
+    return context.redirect(`/sign-in?next=${encodeURIComponent(target)}`, 302);
+  }
+  const response = await next();
+  try {
+    response.headers.set('Cache-Control', 'no-store');
+    response.headers.set('X-Robots-Tag', 'noindex');
+  } catch {
+    // Immutable headers (redirects): nothing to add.
+  }
+  return response;
 }
 
 type Ctx = Parameters<Parameters<typeof defineMiddleware>[0]>[0];

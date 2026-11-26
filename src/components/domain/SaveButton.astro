@@ -1,7 +1,8 @@
 ---
 /**
- * "Save to board" — a Pro feature. Until accounts exist it links to sign-in with the item
- * encoded, so wiring it later needs no UI change.
+ * "Save to board" — a Pro feature. Links to /account/save with the item and this page as
+ * `back`; signed-out visitors go through sign-in first (middleware), Free users see the Pro note.
+ * A plain link keeps public pages user-agnostic (CDN-cacheable).
  */
 import Button from '~/components/ui/Button.astro';
 
@@ -13,7 +14,7 @@ interface Props {
   class?: string;
 }
 const { itemType, itemId, size = 'sm', iconOnly = false, class: className } = Astro.props;
-const href = `/sign-in?next=${encodeURIComponent(`/account/boards?save=${itemType}:${itemId}`)}`;
+const href = `/account/save?item=${encodeURIComponent(`${itemType}:${itemId}`)}&back=${encodeURIComponent(Astro.url.pathname)}`;
 ---
 
 {iconOnly ? (

@@ -54,12 +54,14 @@ jobs:
       - run: npm ci
       - name: Seed local D1 (no cloud resources)
         run: npm run setup
-      - name: Throwaway admin credentials for the signed-in admin tests
+      - name: Throwaway admin and account credentials for the signed-in tests
         # Generated per run; never stored. .dev.vars is gitignored.
         run: |
           ADMIN_PASSWORD="ci-$(openssl rand -hex 12)"
           echo "::add-mask::$ADMIN_PASSWORD"
           printf 'ADMIN_PASSWORD=%s\nADMIN_SESSION_SECRET=%s\nIP_HASH_SALT=%s\n' "$ADMIN_PASSWORD" "$(openssl rand -hex 32)" "$(openssl rand -hex 16)" > .dev.vars
+          # Accounts: local dev sign-in and a throwaway webhook secret (no Whop app, no live keys).
+          printf 'USER_SESSION_SECRET=%s\nDEV_SIGN_IN=1\nWHOP_WEBHOOK_SECRET=ws_ci_%s\nWHOP_PRO_PRODUCT_ID=prod_CIPRO\nWHOP_TEAM_PRODUCT_ID=prod_CITEAM\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 24)" >> .dev.vars
           echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
       - name: Build Worker
         run: npm run build

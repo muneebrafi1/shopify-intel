@@ -1,14 +1,15 @@
 ---
 /**
  * Account area frame: a simple app shell. ≥1024: a sticky sidebar (who is signed in, the
- * account nav, a Pro note); below: underline tabs. A "not signed in" strip sits above the page
- * content. Accounts open with Pro; every page here is a designed placeholder (noindex).
+ * account nav, a Pro note for Free users); below: underline tabs. Signed-out visitors (only the
+ * example boards are open to them) get a "not signed in" strip above the page content.
  */
 import Button from '~/components/ui/Button.astro';
 import Icon from '~/components/ui/Icon.astro';
 import Tabs from '~/components/ui/Tabs.astro';
 import type { IconName } from '~/components/ui/icons';
 import { MONTHLY_PRICE } from './content';
+import { isPaid, PLAN_LABEL } from '~/server/account/entitlements';
 
 interface Props {
   current: 'overview' | 'boards';
@@ -20,6 +21,8 @@ const NAV: { id: Props['current']; href: string; label: string; icon: IconName }
   { id: 'overview', href: '/account', label: 'Overview', icon: 'house' },
   { id: 'boards', href: '/account/boards', label: 'Boards', icon: 'squares-four' },
 ];
+const user = Astro.locals.user ?? null;
+const paid = isPaid(user?.plan);
 const next = Astro.url.pathname + Astro.url.search;
 const signInHref = `/sign-in?next=${encodeURIComponent(next)}`;
 ---
@@ -33,8 +36,8 @@ const signInHref = `/sign-in?next=${encodeURIComponent(next)}`;
             <Icon name="user" size={16} />
           </span>
           <span class="acct__who-text">
-            <span class="acct__who-name">Not signed in</span>
-            <span class="acct__who-plan">Free plan</span>
+            <span class="acct__who-name">{user ? (user.name ?? user.email) : 'Not signed in'}</span>
+            <span class="acct__who-plan">{PLAN_LABEL[user?.plan ?? 'free']} plan</span>
           </span>
         </div>
         <nav class="acct__nav" aria-label="Account">
@@ -49,15 +52,26 @@ const signInHref = `/sign-in?next=${encodeURIComponent(next)}`;
             ))}
           </ul>
         </nav>
-        <div class="acct__pro">
-          <p class="acct__pro-title">Accounts open with Pro</p>
-          <p class="acct__pro-body">
-            Boards, exports and every page type. Planned from ${MONTHLY_PRICE.pro} a month.
-          </p>
-          <Button href="/pro" variant="secondary" size="sm" full>
-            See Pro
-          </Button>
-        </div>
+        {user && (
+          <form method="post" action="/auth/sign-out" class="acct__signout">
+            <Button type="submit" variant="ghost" size="sm" icon="sign-out">
+              Sign out
+            </Button>
+          </form>
+        )}
+        {!paid && (
+          <div class="acct__pro">
+            <p class="acct__pro-title">
+              {user ? 'Boards come with Pro' : 'Accounts open with Pro'}
+            </p>
+            <p class="acct__pro-body">
+              Boards, exports and every page type. Planned from ${MONTHLY_PRICE.pro} a month.
+            </p>
+            <Button href="/pro" variant="secondary" size="sm" full>
+              See Pro
+            </Button>
+          </div>
+        )}
       </div>
     </aside>
 
@@ -71,12 +85,12 @@ const signInHref = `/sign-in?next=${encodeURIComponent(next)}`;
           selected: item.id === current,
         }))}
       />
-      {!hideNotice && (
+      {!hideNotice && !user && (
         <div class="acct__notice" role="note">
           <Icon name="lock-simple" size={16} class="acct__notice-icon" />
           <p class="acct__notice-text">
-            <strong>You’re not signed in.</strong> This is a preview of your account. It opens with
-            Pro.
+            <strong>You’re not signed in.</strong> This is an example board. Sign in to make your
+            own.
           </p>
           <div class="acct__notice-actions">
             <Button href={signInHref} variant="primary" size="sm" rel="nofollow">
@@ -94,6 +108,9 @@ const signInHref = `/sign-in?next=${encodeURIComponent(next)}`;
 </div>
 
 <style>
+  .acct__signout {
+    margin-top: var(--space-2);
+  }
   .acct {
     border-top: 1px solid var(--line);
   }

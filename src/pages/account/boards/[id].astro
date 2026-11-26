@@ -1,31 +1,76 @@
 ---
 /**
- * Board detail — placeholder. Example boards (ids in EXAMPLE_BOARDS) show items from the
- * sections library, labelled as an example; any other id shows the empty board a new account
- * would see. Ids that aren't slugs are 404s.
+ * Board detail. Example boards (ids in EXAMPLE_BOARDS, public) show items from the sections
+ * library, labelled as an example. Any other id is one of the signed-in user's boards (the
+ * middleware requires sign-in): its items, rename, CSV export, remove item and delete board.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import Button from '~/components/ui/Button.astro';
 import Badge from '~/components/ui/Badge.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
+import Icon from '~/components/ui/Icon.astro';
 import SectionCard from '~/components/domain/SectionCard.astro';
 import AccountShell from '~/components/static/AccountShell.astro';
 import { EXAMPLE_BOARDS, isBoardId } from '~/components/static/content';
 import { loadExampleItems } from '~/components/static/boards';
 import { pageTypeName } from '~/lib/taxonomy';
+import { accountCtx, accountDb } from '~/server/account/env';
+import { boardItems, getBoard, NAME_MAX } from '~/server/account/boards';
+import { isPaid } from '~/server/account/entitlements';
+import { boardViews, type BoardView } from '~/server/account/views';
+import type { SectionCard as SectionCardData } from '~/server/api/v1/schemas/common';
 
 const { id } = Astro.params;
 if (!isBoardId(id)) return Astro.rewrite('/404');
+Astro.response.headers.set('Cache-Control', 'no-store');
 
 const example = EXAMPLE_BOARDS.find((b) => b.id === id) ?? null;
-const items = example ? await loadExampleItems(example, 24) : [];
-const title = example ? example.name : 'Untitled board';
-Astro.response.headers.set('Cache-Control', 'no-store');
+const user = Astro.locals.user ?? null;
+let views: BoardView[] = [];
+let board: Awaited<ReturnType<typeof getBoard>> = null;
+if (example) {
+  views = (await loadExampleItems(example, 24)).map((card) => ({
+    kind: 'section' as const,
+    type: 'section' as const,
+    id: card.id,
+    card,
+  }));
+} else {
+  if (!user || id.startsWith('example-')) return Astro.rewrite('/404');
+  if (!isPaid(user.plan)) return Astro.redirect('/account/boards?error=plan', 302);
+  const db = accountDb();
+  board = await getBoard(db, user.id, id);
+  if (!board) return Astro.rewrite('/404');
+  views = await boardViews(await accountCtx(), await boardItems(db, board.id));
+}
+const title = example ? example.name : (board?.name ?? 'Board');
+const description = example ? example.description : (board?.description ?? null);
+const sectionMeta = (s: SectionCardData) =>
+  `${s.theme?.name ?? 'Custom theme'} · ${pageTypeName(s.page_type)} · ${s.device}`;
+
+const DONE: Record<string, string> = {
+  created: 'Board created. Use Save on any store, page or section to add to it.',
+  renamed: 'Board updated.',
+  removed: 'Removed from the board.',
+};
+const ERRORS: Record<string, string> = {
+  invalid: 'Give the board a name.',
+  not_found: 'That item is no longer on this board.',
+};
+const done = DONE[Astro.url.searchParams.get('done') ?? ''] ?? null;
+const error = ERRORS[Astro.url.searchParams.get('error') ?? ''] ?? null;
+const self = `/account/boards/${id}`;
 ---
 
 <BaseLayout title={title} description="A board of saved stores, pages and sections." noindex>
   <AccountShell current="boards">
+    {(done || error) && (
+      <p class:list={['flash', error && 'flash--error']} role={error ? 'alert' : 'status'}>
+        <Icon name={error ? 'info' : 'check'} size={16} />
+        <span>{error ?? done}</span>
+      </p>
+    )}
     <header class="bd__head">
       <Breadcrumbs
         items={[
@@ -37,13 +82,9 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       <div class="bd__row">
         <div class="bd__text">
           <h1 class="h2 bd__title">
-            {title} <span class="bd__count num">{items.length}</span>
+            {title} <span class="bd__count num">{views.length}</span>
           </h1>
-          {example ? (
-            <p class="bd__desc">{example.description}</p>
-          ) : (
-            <p class="bd__desc">Boards you create will live here.</p>
-          )}
+          {description && <p class="bd__desc">{description}</p>}
           {example && (
             <p class="bd__flag">
               <Badge tone="outline" size="sm">
@@ -53,36 +94,148 @@ Astro.response.headers.set('Cache-Control', 'no-store');
             </p>
           )}
         </div>
-        <div class="bd__actions">
-          <Button variant="secondary" size="sm" icon="link-simple" disabled>
-            Share
-          </Button>
-          <Button variant="secondary" size="sm" icon="download-simple" disabled>
-            Export CSV
-          </Button>
-        </div>
+        {board ? (
+          <div class="bd__actions">
+            <details class="bd__menu">
+              <summary class="bd__menu-btn">
+                <Icon name="pencil-simple" size={16} />
+                <span>Edit</span>
+              </summary>
+              <div class="bd__panel">
+                <form method="post" action="/account/actions" class="bd__form">
+                  <input type="hidden" name="intent" value="rename" />
+                  <input type="hidden" name="board" value={board.slug} />
+                  <input type="hidden" name="back" value={self} />
+                  <label for="bd-name">Name</label>
+                  <input
+                    id="bd-name"
+                    name="name"
+                    required
+                    maxlength={NAME_MAX}
+                    value={board.name}
+                  />
+                  <label for="bd-desc">Note</label>
+                  <input
+                    id="bd-desc"
+                    name="description"
+                    maxlength={280}
+                    value={board.description ?? ''}
+                  />
+                  <Button type="submit" variant="primary" size="sm">
+                    Save changes
+                  </Button>
+                </form>
+                <form method="post" action="/account/actions" class="bd__form bd__form--danger">
+                  <input type="hidden" name="intent" value="delete" />
+                  <input type="hidden" name="board" value={board.slug} />
+                  <input type="hidden" name="back" value={self} />
+                  <Button type="submit" variant="secondary" size="sm" icon="trash">
+                    Delete board
+                  </Button>
+                </form>
+              </div>
+            </details>
+            <Button
+              href={`/account/export/${board.slug}.csv`}
+              variant="secondary"
+              size="sm"
+              icon="download-simple"
+              rel="nofollow"
+            >
+              Export CSV
+            </Button>
+          </div>
+        ) : (
+          <div class="bd__actions">
+            <Button variant="secondary" size="sm" icon="download-simple" disabled>
+              Export CSV
+            </Button>
+          </div>
+        )}
       </div>
     </header>
 
-    {items.length > 0 ? (
+    {views.length > 0 ? (
       <div class="grid grid--sections bd__grid">
-        {items.map((s, i) => (
-          <SectionCard
-            href={s.href}
-            crop={{ src: s.crop.src, width: s.crop.width, height: s.crop.height }}
-            device={s.device}
-            typeName={s.type.name}
-            storeLabel={s.store.display_name}
-            meta={`${s.theme?.name ?? 'Custom theme'} · ${pageTypeName(s.page_type)} · ${s.device}`}
-            app={s.app ? { name: s.app.name, iconUrl: s.app.icon_url } : null}
-            eager={i < 4}
-          />
+        {views.map((v, i) => (
+          <div class="bd__item">
+            {v.kind === 'section' ? (
+              <SectionCard
+                href={v.card.href}
+                crop={{
+                  src: v.card.crop.src,
+                  width: v.card.crop.width,
+                  height: v.card.crop.height,
+                }}
+                device={v.card.device}
+                typeName={v.card.type.name}
+                storeLabel={v.card.store.display_name}
+                meta={sectionMeta(v.card)}
+                app={v.card.app ? { name: v.card.app.name, iconUrl: v.card.app.icon_url } : null}
+                eager={i < 4}
+              />
+            ) : (
+              <a class="tile" href={v.href}>
+                <span class="tile__media">
+                  {v.image ? (
+                    <img
+                      src={v.image.src}
+                      width={v.image.width}
+                      height={v.image.height}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : v.iconUrl ? (
+                    <img
+                      class="tile__icon"
+                      src={v.iconUrl}
+                      width="64"
+                      height="64"
+                      alt=""
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Icon
+                      name={
+                        v.type === 'theme'
+                          ? 'paint-brush'
+                          : v.type === 'app'
+                            ? 'puzzle-piece'
+                            : 'storefront'
+                      }
+                      size={28}
+                    />
+                  )}
+                </span>
+                <span class="tile__title">{v.title}</span>
+                <span class="tile__meta">{v.meta}</span>
+              </a>
+            )}
+            {board && (
+              <form method="post" action="/account/actions" class="bd__remove">
+                <input type="hidden" name="intent" value="remove" />
+                <input type="hidden" name="board" value={board.slug} />
+                <input type="hidden" name="type" value={v.type} />
+                <input type="hidden" name="id" value={v.id} />
+                <input type="hidden" name="back" value={self} />
+                <button
+                  type="submit"
+                  class="bd__remove-btn"
+                  aria-label={`Remove ${v.kind === 'section' ? v.card.type.name : v.title} from this board`}
+                >
+                  <Icon name="x" size={14} />
+                  <span>Remove</span>
+                </button>
+              </form>
+            )}
+          </div>
         ))}
       </div>
     ) : (
       <EmptyState
         title="Nothing on this board yet"
-        body="Use Save on any store, page or section to add it here. Saving opens with accounts."
+        body="Use Save on any store, theme, app or section to add it here."
         icon="bookmark-simple"
       >
         <Button href="/sections" variant="primary" size="sm">
@@ -97,6 +250,155 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 </BaseLayout>
 
 <style>
+  .flash {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink);
+    font-size: var(--text-sm);
+  }
+  .flash--error {
+    box-shadow: inset 0 0 0 1.5px var(--critical);
+  }
+  .bd__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  .bd__remove {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .bd__remove-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--ink-3);
+    font: inherit;
+    font-size: var(--text-xs, 0.8125rem);
+    cursor: pointer;
+  }
+  .bd__remove-btn:hover {
+    color: var(--critical);
+    background: var(--critical-soft);
+  }
+  .tile {
+    display: grid;
+    gap: 2px;
+    padding: var(--space-3);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-xs);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .tile:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong, var(--line)),
+      var(--shadow-sm);
+  }
+  .tile__media {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    margin-bottom: var(--space-2);
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--bg-subtle);
+    color: var(--ink-3);
+  }
+  .tile__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  .tile__media img.tile__icon {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    border-radius: 14px;
+  }
+  .tile__title {
+    font-weight: var(--weight-semibold);
+    overflow-wrap: anywhere;
+  }
+  .tile__meta {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .bd__menu {
+    position: relative;
+  }
+  .bd__menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-control, 10px);
+    box-shadow: inset 0 0 0 1px var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium, 500);
+    cursor: pointer;
+    list-style: none;
+  }
+  .bd__menu-btn::-webkit-details-marker {
+    display: none;
+  }
+  .bd__panel {
+    display: grid;
+    gap: var(--space-4);
+    width: min(320px, calc(100vw - 2 * var(--page-gutter)));
+    margin-top: var(--space-2);
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-sm);
+  }
+  @media (min-width: 640px) {
+    .bd__panel {
+      position: absolute;
+      right: 0;
+      z-index: 5;
+    }
+  }
+  .bd__form {
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .bd__form input {
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+  }
+  .bd__form--danger {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+  }
+
   .bd__head {
     padding-block: var(--space-8) var(--space-6);
   }

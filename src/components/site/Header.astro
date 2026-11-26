@@ -74,7 +74,7 @@ const SECONDARY_NAV = [
       <ThemeToggle class="header__desktop" />
       {!minimal && (
         <>
-          <Button href="/sign-in" variant="ghost" class="header__desktop">
+          <Button href="/sign-in" variant="ghost" class="header__desktop" data-auth-link>
             Sign in
           </Button>
           <Button href="/pro" variant="primary" class="header__desktop header__pro">
@@ -135,7 +135,7 @@ const SECONDARY_NAV = [
         </nav>
       </div>
       <div class="menu__cta container">
-        <Button href="/sign-in" variant="secondary" size="lg" full>
+        <Button href="/sign-in" variant="secondary" size="lg" full data-auth-link>
           Sign in
         </Button>
         <Button href="/pro" variant="primary" size="lg" full>
@@ -147,6 +147,16 @@ const SECONDARY_NAV = [
 </header>
 
 <script>
+  // Public pages are cached for everyone, so "signed in" is read from the readable vt_in flag
+  // cookie (no credential in it) and the header link is swapped here.
+  if (/(?:^|;\s*)vt_in=1(?:;|$)/.test(document.cookie)) {
+    document.querySelectorAll<HTMLAnchorElement>('a[data-auth-link]').forEach((a) => {
+      a.href = '/account';
+      const label = a.querySelector('.btn__label') ?? a;
+      label.textContent = 'Account';
+    });
+  }
+
   // Search trigger: if the command palette is mounted it handles the event; otherwise we fall
   // through to the /search page (works without JS too).
   document.querySelectorAll<HTMLAnchorElement>('[data-palette-open]').forEach((el) => {

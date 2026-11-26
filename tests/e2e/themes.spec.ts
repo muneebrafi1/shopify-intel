@@ -169,7 +169,10 @@ test.describe('theme detail', () => {
       'href',
       '#compare',
     );
-    await expect(actions.getByRole('link', { name: 'Save' })).toHaveAttribute('href', /^\/sign-in/);
+    await expect(actions.getByRole('link', { name: 'Save' })).toHaveAttribute(
+      'href',
+      `/account/save?item=${encodeURIComponent('theme:prestige')}&back=${encodeURIComponent('/themes/prestige')}`,
+    );
     const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
     expect(ld.join('\n')).toContain('BreadcrumbList');
   });

@@ -7,5 +7,7 @@ declare namespace App {
     admin?: import('./guard.ts').AdminSession;
     /** Which sign-in method the admin uses (or why it is locked). Set on admin routes only. */
     adminAuth?: { mode: 'access' | 'password' | 'locked'; reason?: string };
+    /** The signed-in visitor, set by src/middleware.ts on /account/** and /auth/** only. */
+    user?: import('../account/sessions.ts').SessionUser | null;
   }
 }

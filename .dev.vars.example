@@ -17,3 +17,25 @@ IP_HASH_SALT=
 # Optional: recipient of admin notifications (new removal requests). Without a mail transport
 # nothing is sent; one line without personal data is logged instead.
 # ADMIN_NOTIFY_EMAIL=
+
+# Accounts + Pro via Whop (docs/ACCOUNTS.md). All optional: without them sign-in says "not open
+# yet", the Pro buttons explain that, and /api/whop/webhook answers 503.
+# Signs the OAuth state cookie (32+ random characters). Needed for any sign-in.
+# USER_SESSION_SECRET=
+# Local only: '1' adds a dev sign-in form on 127.0.0.1/localhost (never works elsewhere).
+# DEV_SIGN_IN=1
+# Whop OAuth app (Developer dashboard → OAuth). Public client + PKCE; the secret is optional.
+# WHOP_CLIENT_ID=
+# WHOP_CLIENT_SECRET=
+# 'sandbox' to use sandbox-api.whop.com (no real money) while testing.
+# WHOP_ENVIRONMENT=sandbox
+# Webhook secret Whop shows for the endpoint <origin>/api/whop/webhook (starts with ws_).
+# WHOP_WEBHOOK_SECRET=
+# Product ids that grant Pro and Team (prod_…).
+# WHOP_PRO_PRODUCT_ID=
+# WHOP_TEAM_PRODUCT_ID=
+# Checkout links (https) for each plan and billing period.
+# WHOP_CHECKOUT_PRO_MONTHLY=
+# WHOP_CHECKOUT_PRO_YEARLY=
+# WHOP_CHECKOUT_TEAM_MONTHLY=
+# WHOP_CHECKOUT_TEAM_YEARLY=
