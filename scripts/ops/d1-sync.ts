@@ -129,9 +129,9 @@ const ROOT = resolve(new URL('../..', import.meta.url).pathname);
 function localDb(file?: string): DatabaseSync {
   if (file) return new DatabaseSync(resolve(file), { readOnly: true });
   const dir = join(ROOT, '.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
-  const file = readdirSync(dir).find((f) => f.endsWith('.sqlite') && f !== 'metadata.sqlite');
-  if (!file) throw new Error('No local D1. Run `npm run setup` first.');
-  return new DatabaseSync(join(dir, file), { readOnly: true });
+  const name = readdirSync(dir).find((f) => f.endsWith('.sqlite') && f !== 'metadata.sqlite');
+  if (!name) throw new Error('No local D1. Run `npm run setup` first.');
+  return new DatabaseSync(join(dir, name), { readOnly: true });
 }
 
 function wrangler(args: string[], attempts = 4): string {
