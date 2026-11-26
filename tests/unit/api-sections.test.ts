@@ -101,8 +101,20 @@ describe('sections library', () => {
 describe('teardowns', () => {
   it('lists and resolves notes to sections', async () => {
     const list = await api.listTeardowns();
-    expect(list.data.items.map((t) => t.slug).sort()).toEqual(['fishwife', 'thesill', 'youngla']);
-    expect(list.data.items.every((t) => t.is_sample)).toBe(true);
+    expect(list.data.items.map((t) => t.slug).sort()).toEqual([
+      'fishwife',
+      'lskd',
+      'negativeunderwear',
+      'thesill',
+      'thursdayboots',
+      'youngla',
+    ]);
+    expect(
+      list.data.items
+        .filter((t) => t.is_sample)
+        .map((t) => t.slug)
+        .sort(),
+    ).toEqual(['fishwife', 'thesill', 'youngla']);
     expect(list.data.items.find((t) => t.slug === 'youngla')).toMatchObject({
       is_sample: true,
       note_count: 5,
