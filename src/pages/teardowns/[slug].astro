@@ -41,7 +41,7 @@ const others = ordered.filter((t) => t.slug !== teardown.slug).slice(0, 3);
 
 const body = renderMarkdown(teardown.body_md);
 // Method notes ("How this was written", "Note.") live on /methodology, not in the article.
-body.html = body.html.replace(/<blockquote>[\s\S]*?<\/blockquote>\s*/g, '');
+body.html = body.html.replace(/<(blockquote|aside)[^>]*>[\s\S]*?<\/\1>\s*/g, '');
 const words =
   teardown.body_md.split(/\s+/).length + notes.reduce((n, x) => n + x.body.split(/\s+/).length, 0);
 const minutes = Math.max(1, Math.round(words / 220));
