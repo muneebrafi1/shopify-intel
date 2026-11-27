@@ -11,7 +11,6 @@ import { rebuildDerived } from '../repo/maintenance.ts';
 import { normalizeDomain } from '../lib/slug.ts';
 import { auditStatement, diffFields } from './audit.ts';
 
-/** The subset of an R2 bucket the admin needs (R2Bucket satisfies it). */
 export interface MediaObject {
   text(): Promise<string>;
 }
