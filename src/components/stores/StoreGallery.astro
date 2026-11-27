@@ -100,73 +100,66 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       <Breadcrumbs slot="top" items={crumbs} />
     </PageHeader>
 
-    {
-      pills.length > 0 && (
-        <nav class="gallery__pills" aria-label={pillsLabel ?? 'Related'}>
-          {pills.map((p) => (
-            <a
-              href={p.href}
-              class:list={['gallery__pill', { 'is-on': p.selected }]}
-              aria-current={p.selected ? 'page' : undefined}
-            >
-              <span>{p.label}</span>
-              {p.count != null && <span class="gallery__n num">{p.count}</span>}
-            </a>
-          ))}
-        </nav>
-      )
-    }
-    {pills.some((x) => x.selected) && (
-      <script is:inline>
-        (function () {
-          var el = document.querySelector('.gallery__pills .is-on');
-          if (el) el.scrollIntoView({ inline: 'center', block: 'nearest' });
-        })();
-      </script>
+    {pills.length > 0 && (
+      <nav class="gallery__pills" aria-label={pillsLabel ?? 'Related'}>
+        {pills.map((p) => (
+          <a
+            href={p.href}
+            class:list={['gallery__pill', { 'is-on': p.selected }]}
+            aria-current={p.selected ? 'page' : undefined}
+          >
+            <span>{p.label}</span>
+            {p.count != null && <span class="gallery__n num">{p.count}</span>}
+          </a>
+        ))}
+      </nav>
     )}
+    {pills.some((x) => x.selected) && <script is:inline>
+      (function () {
+        var el = document.querySelector('.gallery__pills .is-on');
+        if (el) el.scrollIntoView({ inline: 'center', block: 'nearest' });
+      })();
+    </script>}
 
     <div class="grid grid--shots gallery__grid">
-      {
-        items.map((s, i) => (
-          <StoreCard
-            domain={s.domain}
-            name={s.name}
-            href={s.href}
-            shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
-            meta={s.name ? s.domain : (s.category?.name ?? 'Store')}
-            eager={i < 4}
-          >
-            <span slot="aside" class="gallery__aside">
-              {showTheme && (
-                <span class:list={['gallery__theme', { 'is-muted': !s.theme.name }]}>
-                  {themeName(s.theme)}
-                </span>
-              )}
-              <span class="gallery__apps num">
-                {s.app_count} {s.app_count === 1 ? 'app' : 'apps'}
+      {items.map((s, i) => (
+        <StoreCard
+          domain={s.domain}
+          name={s.name}
+          href={s.href}
+          shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
+          meta={s.name ? s.domain : (s.category?.name ?? 'Store')}
+          eager={i < 2}
+          priority={i === 0}
+        >
+          <span slot="aside" class="gallery__aside">
+            {showTheme && (
+              <span class:list={['gallery__theme', { 'is-muted': !s.theme.name }]}>
+                {themeName(s.theme)}
               </span>
+            )}
+            <span class="gallery__apps num">
+              {s.app_count} {s.app_count === 1 ? 'app' : 'apps'}
             </span>
-          </StoreCard>
-        ))
-      }
+          </span>
+        </StoreCard>
+      ))}
     </div>
 
-    {
-      (nextHref || firstHref) && (
-        <div class="gallery__paging">
-          {firstHref && (
-            <Button href={firstHref} variant="ghost" size="sm">
-              First page
-            </Button>
-          )}
-          {nextHref && (
-            <Button href={nextHref} variant="secondary" iconRight="arrow-right">
-              Next page
-            </Button>
-          )}
-        </div>
-      )
-    }
+    {(nextHref || firstHref) && (
+      <div class="gallery__paging">
+        {firstHref && (
+          <Button href={firstHref} variant="ghost" size="sm">
+            First page
+          </Button>
+        )}
+        {nextHref && (
+          <Button href={nextHref} variant="secondary" iconRight="arrow-right">
+            Next page
+          </Button>
+        )}
+      </div>
+    )}
   </div>
 </BaseLayout>
 
