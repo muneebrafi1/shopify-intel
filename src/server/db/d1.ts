@@ -44,15 +44,65 @@ export function d1Db(d1: D1Database): Db {
     lastRowId: meta.last_row_id ?? null,
   });
 
+  // Coalesce all()/first() that start in the same tick into one D1 batch so a
+  // Promise.all of reads is one round trip, not N concurrent D1 statements.
+  type Pending = {
+    kind: 'all' | 'first';
+    sql: string;
+    params?: readonly SqlValue[];
+    resolve: (value: unknown) => void;
+    reject: (err: unknown) => void;
+  };
+  let pending: Pending[] = [];
+  let scheduled = false;
+
+  const flush = async () => {
+    const items = pending;
+    pending = [];
+    scheduled = false;
+    if (items.length === 0) return;
+    if (items.length === 1) {
+      const it = items[0]!;
+      try {
+        if (it.kind === 'first') it.resolve(await withRetry(() => bind(it.sql, it.params).first()));
+        else {
+          const res = await withRetry(() => bind(it.sql, it.params).all());
+          it.resolve(res.results);
+        }
+      } catch (err) {
+        it.reject(err);
+      }
+      return;
+    }
+    try {
+      const results = await withRetry(() => d1.batch(items.map((s) => bind(s.sql, s.params))));
+      items.forEach((it, i) => {
+        const rows = results[i]?.results ?? [];
+        it.resolve(it.kind === 'first' ? (rows[0] ?? null) : rows);
+      });
+    } catch (err) {
+      for (const it of items) it.reject(err);
+    }
+  };
+
+  const enqueue = <T>(kind: 'all' | 'first', sql: string, params?: readonly SqlValue[]) =>
+    new Promise<T>((resolve, reject) => {
+      meter(1);
+      pending.push({ kind, sql, params, resolve: resolve as (v: unknown) => void, reject });
+      if (!scheduled) {
+        scheduled = true;
+        queueMicrotask(() => {
+          void flush();
+        });
+      }
+    });
+
   return {
-    async all<Row>(sql: string, params?: readonly SqlValue[]): Promise<Row[]> {
-      meter(1);
-      const res = await withRetry(() => bind(sql, params).all<Row>());
-      return res.results;
+    all<Row>(sql: string, params?: readonly SqlValue[]): Promise<Row[]> {
+      return enqueue<Row[]>('all', sql, params);
     },
-    async first<Row>(sql: string, params?: readonly SqlValue[]): Promise<Row | null> {
-      meter(1);
-      return withRetry(() => bind(sql, params).first<Row>());
+    first<Row>(sql: string, params?: readonly SqlValue[]): Promise<Row | null> {
+      return enqueue<Row | null>('first', sql, params);
     },
     async run(sql: string, params?: readonly SqlValue[]): Promise<RunResult> {
       meter(1);
