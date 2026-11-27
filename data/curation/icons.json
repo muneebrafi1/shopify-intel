@@ -2128,6 +2128,12 @@
    "w": 128,
    "h": 25
   },
+  "acemarks.com": {
+   "from": "https://www.acemarks.com/cdn/shop/files/acemarks-logo.jpg?v=1748560910&width=256",
+   "key": "icons/stores/acemarks.com.12460203.webp",
+   "w": 128,
+   "h": 69
+  },
   "achillesheel.co.uk": {
    "from": "https://www.achillesheel.co.uk/cdn/shop/files/AH_Display_White.png?v=1756725293&width=180",
    "key": "icons/stores/achillesheel.co.uk.40534c59.webp",
@@ -2194,6 +2200,12 @@
    "w": 76,
    "h": 128
   },
+  "alisonlou.com": {
+   "from": "https://www.alisonlou.com/cdn/shop/files/alisonlou-logo_878x.webp?v=1716284813&width=256",
+   "key": "icons/stores/alisonlou.com.c4721735.webp",
+   "w": 126,
+   "h": 17
+  },
   "almadalabel.com": {
    "from": "https://almadalabel.com/cdn/shop/files/ALMADA_logo.svg?crop=center&height=32&v=1786458577&width=32",
    "key": "icons/stores/almadalabel.com.3c5d2e66.webp",
@@ -2217,6 +2229,18 @@
    "key": "icons/stores/andar.com.552ba54d.webp",
    "w": 98,
    "h": 67
+  },
+  "andaseat.com": {
+   "from": "https://www.andaseat.com/cdn/shop/files/logo_512x512_2024c977-4d20-4a24-ab25-9ed77fb8249f.png?v=1659945384&width=256",
+   "key": "icons/stores/andaseat.com.90a9fc43.webp",
+   "w": 128,
+   "h": 115
+  },
+  "antler.co.uk": {
+   "from": "https://antler-uk-dev.myshopify.com/cdn/shop/files/pandectes-banner-logo.png?v=1794497335&width=256",
+   "key": "icons/stores/antler.co.uk.6e604249.webp",
+   "w": 128,
+   "h": 128
   },
   "aoiofficial.com": {
    "from": "https://cdn.sanity.io/images/gpcykai7/production/824f8eebb6a5bcd6d534bb4a8a5edbbbeccf1751-96x96.png?w=180&h=180&q=90&auto=format",
@@ -2246,6 +2270,18 @@
    "from": "https://armra.com/cdn/shop/files/Profile_Social_Update_4.23.25_228x228.jpg?v=1745955590&width=256",
    "key": "icons/stores/armra.com.05850508.webp",
    "w": 128,
+   "h": 128
+  },
+  "artifactpuzzles.com": {
+   "from": "https://www.artifactpuzzles.com/cdn/shop/files/logo-transparent_v2.png?v=1737503020&width=256",
+   "key": "icons/stores/artifactpuzzles.com.e4ae525c.webp",
+   "w": 128,
+   "h": 77
+  },
+  "artofplay.com": {
+   "from": "https://www.artofplay.com/cdn/shop/files/artofplay-square-black.png?v=1730663316&width=256",
+   "key": "icons/stores/artofplay.com.b951e468.webp",
+   "w": 125,
    "h": 128
   },
   "asturiaskincare.com": {
@@ -2320,6 +2356,12 @@
    "w": 102,
    "h": 128
   },
+  "ayaneo.com": {
+   "from": "https://ayaneo-1305909189.cos.ap-guangzhou.myqcloud.com/ayaneo_com/image/product/2026/ayaneo_pocket_museum/pocket-museum-logo-en.webp",
+   "key": "icons/stores/ayaneo.com.f9e15db5.webp",
+   "w": 127,
+   "h": 61
+  },
   "azuretan.com.au": {
    "from": "https://www.azuretan.com.au/cdn/shop/files/AzureTan.tiles-falicon.png?crop=center&height=32&v=1738120487&width=32",
    "key": "icons/stores/azuretan.com.au.960ae262.webp",
@@ -2331,6 +2373,12 @@
    "key": "icons/stores/babylist.com.e6f69085.webp",
    "w": 128,
    "h": 128
+  },
+  "babymori.com": {
+   "from": "https://babymori.com/cdn/shop/files/Christmas_MORI_logo_2024.png?v=1759302272&width=256",
+   "key": "icons/stores/babymori.com.ddf05a46.webp",
+   "w": 128,
+   "h": 57
   },
   "badshirt.club": {
    "from": "https://badshirt.club/cdn/shop/files/Bad-Shirt-Club-Pink-Icon.png?crop=center&height=96&v=1751867764&width=96",
@@ -2356,11 +2404,23 @@
    "w": 32,
    "h": 24
   },
+  "banditrunning.com": {
+   "from": "https://banditrunning.com/cdn/shop/files/BANDIT_ICON_WORDMARK_05_WEB.gif?v=1726057239&width=256",
+   "key": "icons/stores/banditrunning.com.7aa305b8.webp",
+   "w": 127,
+   "h": 25
+  },
   "bareminerals.com": {
    "from": "https://www.bareminerals.com/cdn/shop/files/bareMinerals_favicon-png.png?v=1677791337&width=256",
    "key": "icons/stores/bareminerals.com.6b8d448a.webp",
    "w": 26,
    "h": 16
+  },
+  "baseus.com": {
+   "from": "https://www.baseus.com/cdn/shop/files/Baseus_Logo_2026_96-96_96x.png?v=1774507965&width=256",
+   "key": "icons/stores/baseus.com.af04aa12.webp",
+   "w": 96,
+   "h": 96
   },
   "baublebar.com": {
    "from": "https://www.baublebar.com/cdn/shop/files/BB_holiday_logo.png?v=1791504070&width=256",
@@ -2476,6 +2536,12 @@
    "w": 128,
    "h": 30
   },
+  "birdiebean.com": {
+   "from": "https://birdiebean.com/cdn/shop/files/upcart_header_logo_1751975235159.png?v=1751975237&width=256",
+   "key": "icons/stores/birdiebean.com.21fc93b7.webp",
+   "w": 128,
+   "h": 113
+  },
   "birdies.com": {
    "from": "https://birdies.com/cdn/shop/files/Birdies_Logo_Symbol_StichFix.png?v=1665445737&width=180",
    "key": "icons/stores/birdies.com.b468140b.webp",
@@ -2493,6 +2559,12 @@
    "key": "icons/stores/blacksheepniagara.com.22d9c266.webp",
    "w": 38,
    "h": 45
+  },
+  "blancamonrosgomez.com": {
+   "from": "https://blancamonrosgomez.com/cdn/shop/files/BMG_wordmark_1600x311_black.png?v=1704305345&width=256",
+   "key": "icons/stores/blancamonrosgomez.com.c7f4dbff.webp",
+   "w": 128,
+   "h": 16
   },
   "blkandbold.com": {
    "from": "https://blkandbold.com/cdn/shop/files/bnb_logo_horizontal2_color_RGB.png?v=1651958288&width=256",
@@ -2566,6 +2638,12 @@
    "w": 128,
    "h": 26
   },
+  "branchfurniture.com": {
+   "from": "https://cdn.shopify.com/s/files/1/0124/5662/4187/files/branch-logo-new_600x.png?width=256",
+   "key": "icons/stores/branchfurniture.com.2b358354.webp",
+   "w": 128,
+   "h": 31
+  },
   "brigadeoverland.com": {
    "from": "https://brigadeoverland.com/cdn/shop/files/brigade-overland-favicon.png?crop=center&height=32&v=1758018618&width=32",
    "key": "icons/stores/brigadeoverland.com.1bdbf45c.webp",
@@ -2583,6 +2661,12 @@
    "key": "icons/stores/brooklinen.com.3bd3e3cc.webp",
    "w": 21,
    "h": 30
+  },
+  "brothervellies.com": {
+   "from": "https://brothervellies.com/cdn/shop/files/brother-vellies-website-logo-peacock-feather-black.png?v=1784074232&width=256",
+   "key": "icons/stores/brothervellies.com.b3627a6e.webp",
+   "w": 114,
+   "h": 128
   },
   "bruvi.com": {
    "from": "https://cdn.shopify.com/s/files/1/0078/7582/1620/files/PartnerLogo-Lamill.svg?v=1634572900&width=256",
@@ -2607,6 +2691,18 @@
    "key": "icons/stores/bumbede.com.2863ee1b.webp",
    "w": 117,
    "h": 35
+  },
+  "bumkins.com": {
+   "from": "https://www.bumkins.com/cdn/shop/files/Bumkins-Stacked-Color_copy.jpg?v=1724186877&width=256",
+   "key": "icons/stores/bumkins.com.6a369597.webp",
+   "w": 128,
+   "h": 119
+  },
+  "burga.com": {
+   "from": "https://burga.com/cdn/shop/files/burga-B-favicon.svg?v=1728465680&width=256",
+   "key": "icons/stores/burga.com.2c080d12.webp",
+   "w": 128,
+   "h": 128
   },
   "burlapandbarrel.com": {
    "from": "https://www.burlapandbarrel.com/cdn/shop/files/bb_logo_-_2000.png?v=1614295224&width=256",
@@ -2686,6 +2782,12 @@
    "w": 32,
    "h": 32
   },
+  "camcamcopenhagen.com": {
+   "from": "https://camcamcopenhagen.com/cdn/shop/files/Camcam_logo_brown.png?v=1724310869&width=256",
+   "key": "icons/stores/camcamcopenhagen.com.0b3ecc04.webp",
+   "w": 128,
+   "h": 74
+  },
   "camillebrinch.com": {
    "from": "https://camillebrinch.com/cdn/shop/files/CB_Logo.svg?v=9289276290628634&width=256",
    "key": "icons/stores/camillebrinch.com.dc56979d.webp",
@@ -2697,6 +2799,18 @@
    "key": "icons/stores/campfireaudio.com.9e4e2478.webp",
    "w": 128,
    "h": 27
+  },
+  "cannonkeys.com": {
+   "from": "https://cannonkeys.com/cdn/shop/files/ck-logo-full-smaller-navy-stroke.png?v=1652298695&width=256",
+   "key": "icons/stores/cannonkeys.com.ebcec6b1.webp",
+   "w": 128,
+   "h": 30
+  },
+  "carbon38.com": {
+   "from": "https://carbon38.com/cdn/shop/files/Flavicon_C38-Flavicon-WHT.png?v=1646793024&width=256",
+   "key": "icons/stores/carbon38.com.94217d58.webp",
+   "w": 67,
+   "h": 67
   },
   "cardigang.com.au": {
    "from": "https://cardigang.com.au/cdn/shop/files/CARDIGANG_FLAV_32x32_CG.png?crop=center&height=32&v=1753317767&width=32",
@@ -2757,6 +2871,12 @@
    "key": "icons/stores/cheekbonebeauty.ca.ae916f40.webp",
    "w": 128,
    "h": 19
+  },
+  "chiptheorygames.com": {
+   "from": "https://chiptheorygames.com/cdn/shop/files/ctg_checkout_logo_3bccdc0d-ef66-41f5-946c-ad0bc48df560.png?v=1747930821&width=256",
+   "key": "icons/stores/chiptheorygames.com.b575af8a.webp",
+   "w": 128,
+   "h": 20
   },
   "chomps.com": {
    "from": "https://pub-706175b95e174365aef5953329eef2d8.r2.dev/assets/web-app-manifest-512x512.png",
@@ -2824,6 +2944,12 @@
    "w": 56,
    "h": 57
   },
+  "coloredorganics.com": {
+   "from": "https://coloredorganics.com/cdn/shop/files/coloredorganics-logo-favicon.png?v=1768234376&width=256",
+   "key": "icons/stores/coloredorganics.com.0be36f87.webp",
+   "w": 43,
+   "h": 31
+  },
   "colorfulstandard.com": {
    "from": "https://colorfulstandard.com/cdn/shop/files/cs_favicon_2024.png?v=1722845595&width=256",
    "key": "icons/stores/colorfulstandard.com.f06e9274.webp",
@@ -2847,6 +2973,12 @@
    "key": "icons/stores/conzuri.com.f8d1106b.webp",
    "w": 109,
    "h": 11
+  },
+  "copperpearl.com": {
+   "from": "https://copperpearl.com/cdn/shop/files/favicon-32x32_0d879f20-ec90-435a-bcbf-f4244c74d275.png?v=1744716849&width=256",
+   "key": "icons/stores/copperpearl.com.9db78345.webp",
+   "w": 32,
+   "h": 32
   },
   "coppolahome.com.au": {
    "from": "https://coppolahome.com.au/cdn/shop/files/logo_720a6750-6cc0-4483-ad5e-77ee3f1cb006.jpg?v=1716521003&width=256",
@@ -2889,6 +3021,12 @@
    "key": "icons/stores/crickstore.com.86cc4bac.webp",
    "w": 23,
    "h": 23
+  },
+  "cymbiotika.com": {
+   "from": "https://cymbiotika.com/apple-touch-icon.png",
+   "key": "icons/stores/cymbiotika.com.1d5e2262.webp",
+   "w": 128,
+   "h": 128
   },
   "dagnedover.com": {
    "from": "https://cdn.shopify.com/s/files/1/0260/1439/files/logo-text_637feb4d-c44c-4d22-913d-efec726fc3ec.png?4979095607573253400=&width=256",
@@ -2938,6 +3076,12 @@
    "w": 32,
    "h": 24
   },
+  "dearfrances.com": {
+   "from": "https://cdn.shopify.com/s/files/1/1116/3466/files/icon-df.svg?v=1659478082&width=256",
+   "key": "icons/stores/dearfrances.com.75f6678c.webp",
+   "w": 81,
+   "h": 128
+  },
   "deargrain.com": {
    "from": "https://deargrain.com/cdn/shop/files/DG-Stamp_1x1-01_600x200_72991709-9bec-4900-a152-a6f769669c46_32x32.png?v=1630549992",
    "key": "icons/stores/deargrain.com.487f95fc.webp",
@@ -2986,6 +3130,12 @@
    "w": 27,
    "h": 27
   },
+  "dooney.com": {
+   "from": "https://g6aze3-rt.myshopify.com/cdn/shop/files/pandectes-banner-logo.png?v=1793506481411%5C&width=256",
+   "key": "icons/stores/dooney.com.91b52cc8.webp",
+   "w": 122,
+   "h": 128
+  },
   "dosfemmes.com": {
    "from": "https://dosfemmes.com/cdn/shop/files/Master_File-19_5efd805f-0d25-4ff1-92a1-7190cc3bb63d.png?v=1777604773&width=256",
    "key": "icons/stores/dosfemmes.com.4212a436.webp",
@@ -3016,6 +3166,12 @@
    "w": 17,
    "h": 28
   },
+  "drinklmnt.com": {
+   "from": "https://res.cloudinary.com/drinklmnt/image/upload/v1699902980/lmnt-logo_hm2t6r.avif",
+   "key": "icons/stores/drinklmnt.com.07364671.webp",
+   "w": 128,
+   "h": 37
+  },
   "drinknolow.com": {
    "from": "https://drinknolow.com/cdn/shop/files/redlogo_hori_med_cc6beeca-9897-4f8c-ad14-729e43145bb6.png?v=1675177099&width=256",
    "key": "icons/stores/drinknolow.com.77947472.webp",
@@ -3034,11 +3190,29 @@
    "w": 26,
    "h": 26
   },
+  "duckfeetusa.com": {
+   "from": "https://us.duckfeet.com/cdn/shop/files/Duckfeet_logo-Multi.webp?v=1786354823&width=256",
+   "key": "icons/stores/duckfeetusa.com.431998ea.webp",
+   "w": 128,
+   "h": 128
+  },
+  "eagle-gryphon.com": {
+   "from": "https://www.eagle-gryphon.com/cdn/shop/files/Eagle-Gryphon_Games-logo_32x32px_32x32.png?v=1749750458&width=256",
+   "key": "icons/stores/eagle-gryphon.com.710a6daf.webp",
+   "w": 32,
+   "h": 27
+  },
   "earthbath.com": {
    "from": "https://earthbath.com/cdn/shop/files/earthbathLeaf_logoRGB_8dde847b-ab0d-48b6-b3df-a5d989997c6a.png?v=1680199497&width=256",
    "key": "icons/stores/earthbath.com.8c2fd9b1.webp",
    "w": 128,
    "h": 28
+  },
+  "earthrated.com": {
+   "from": "https://www.earthrated.com/cdn/shop/files/Earth_Rated_Logo_450x_64f99b30-a74c-4f5e-bba4-ace376adac5d.png?v=1679093720&width=256",
+   "key": "icons/stores/earthrated.com.016039e0.webp",
+   "w": 128,
+   "h": 16
   },
   "eastfork.com": {
    "from": "https://eastfork.com/cdn/shop/files/favicon_32x32.png?v=1614744781&width=256",
@@ -3051,6 +3225,12 @@
    "key": "icons/stores/eatfishwife.com.67d01a69.webp",
    "w": 128,
    "h": 42
+  },
+  "ecobee.com": {
+   "from": "https://www.ecobee.com/icons/icon-512x512-734feff26a6e5c7f6120af9310c5db7c.png",
+   "key": "icons/stores/ecobee.com.573ffbad.webp",
+   "w": 128,
+   "h": 128
   },
   "edgeeyewear.com": {
    "from": "https://edgeeyewear.com/cdn/shop/files/Horizontal_Logo_-_BlackLG_1_200x.png?v=1647960830",
@@ -3130,6 +3310,12 @@
    "w": 128,
    "h": 102
   },
+  "etq-amsterdam.com": {
+   "from": "https://etq-amsterdam.myshopify.com/cdn/shop/files/pandectes-reopen-logo.png?v=1794159205378&width=256",
+   "key": "icons/stores/etq-amsterdam.com.b6fc0c05.webp",
+   "w": 128,
+   "h": 128
+  },
   "ettitude.com": {
    "from": "https://www.ettitude.com/cdn/shop/files/ettitude_holiday_logo.png?v=1732306864&width=256",
    "key": "icons/stores/ettitude.com.0a242173.webp",
@@ -3147,6 +3333,18 @@
    "key": "icons/stores/evolisproducts.com.1ea48f78.webp",
    "w": 128,
    "h": 35
+  },
+  "evryjewels.com": {
+   "from": "https://evryjewels.com/cdn/shop/files/EvryLogoDesktop.png?v=1780407424&width=256",
+   "key": "icons/stores/evryjewels.com.83786c6e.webp",
+   "w": 124,
+   "h": 13
+  },
+  "explodingkittens.com": {
+   "from": "https://www.explodingkittens.com/cdn/shop/files/exploding-kittens-logo_2x_a3315505-208d-4d31-be17-e68040abe1a5_464x.png?v=1668701605&width=256",
+   "key": "icons/stores/explodingkittens.com.a733bc10.webp",
+   "w": 127,
+   "h": 26
   },
   "fablepets.com": {
    "from": "https://fablepets.com/cdn/shop/files/logo4.png?v=1629750900&width=256",
@@ -3214,6 +3412,18 @@
    "w": 128,
    "h": 27
   },
+  "fillingpieces.com": {
+   "from": "https://www.fillingpieces.com/cdn/shop/files/Favicon_Logo_Black_Only.png?v=1692114125&width=256",
+   "key": "icons/stores/fillingpieces.com.2e52b24a.webp",
+   "w": 117,
+   "h": 128
+  },
+  "filson.com": {
+   "from": "https://customers.seomanager.com/knowledgegraph/logo/cb3d2b-00_myshopify_com_logo.jpg?cache=7381",
+   "key": "icons/stores/filson.com.5377bcde.webp",
+   "w": 128,
+   "h": 31
+  },
   "flexfit.com.au": {
    "from": "https://flexfit.com.au/cdn/shop/files/Flexfit-YP_Favicon_Bl_90cc4ec1-3d79-4430-ab1f-0cd1b0200c9f.png?crop=center&height=32&v=1749594165&width=32",
    "key": "icons/stores/flexfit.com.au.4be5e052.webp",
@@ -3237,6 +3447,12 @@
    "key": "icons/stores/flybyjing.com.e395a8db.webp",
    "w": 128,
    "h": 25
+  },
+  "foundrae.com": {
+   "from": "https://cdn.shopify.com/s/files/1/0510/0047/5838/files/fr_logo.png?width=256",
+   "key": "icons/stores/foundrae.com.2c4fbfd4.webp",
+   "w": 128,
+   "h": 19
   },
   "foursigmatic.com": {
    "from": "https://us.foursigmatic.com/cdn/shop/files/favicon-32.png?v=1710911333&width=256",
@@ -3274,6 +3490,12 @@
    "w": 28,
    "h": 18
   },
+  "gathre.com": {
+   "from": "https://gathre.com/cdn/shop/files/gathre_logo.svg?v=1694206846&width=256",
+   "key": "icons/stores/gathre.com.d049bd62.webp",
+   "w": 128,
+   "h": 16
+  },
   "ginasnailssupplies.com": {
    "from": "https://cdn.shopify.com/s/files/1/0680/3786/9722/files/logo_without_background_1.svg?v=1750513342&width=256",
    "key": "icons/stores/ginasnailssupplies.com.3b56f781.webp",
@@ -3286,11 +3508,23 @@
    "w": 112,
    "h": 22
   },
+  "girlfriendcollective.com": {
+   "from": "https://girlfriend.com/cdn/shop/files/Logo_112x.svg?v=1707856067&width=256",
+   "key": "icons/stores/girlfriendcollective.com.53654fd5.webp",
+   "w": 112,
+   "h": 22
+  },
   "glacierpcgaming.com": {
    "from": "https://glacierpcgaming.com/cdn/shop/files/glacier_pc_gaming_logo.png?crop=center&height=32&v=1727405520&width=32",
    "key": "icons/stores/glacierpcgaming.com.f5ab8698.webp",
    "w": 21,
    "h": 29
+  },
+  "glerups.com": {
+   "from": "https://www.glerups.dk/cdn/shop/files/glerups_logo_110x.svg?v=1678099416&width=256",
+   "key": "icons/stores/glerups.com.09150996.webp",
+   "w": 128,
+   "h": 71
   },
   "gloriousgaming.com": {
    "from": "https://www.gloriousgaming.com/cdn/shop/files/checkout-favicon_32x32.png?v=1714398827&width=256",
@@ -3327,6 +3561,12 @@
    "key": "icons/stores/gorjana.com.7768038d.webp",
    "w": 128,
    "h": 128
+  },
+  "goumikids.com": {
+   "from": "https://goumikids.com/cdn/shop/files/goumi_wordmark_putty_300ppi_3758x.png?v=1710280675&width=256",
+   "key": "icons/stores/goumikids.com.e4d0dc27.webp",
+   "w": 127,
+   "h": 76
   },
   "graedance.com": {
    "from": "https://graedance.com/cdn/shop/files/ae_logomark_favicon.png?crop=center&height=250&v=1649252439&width=250",
@@ -3400,6 +3640,12 @@
    "w": 128,
    "h": 9
   },
+  "habitual.com": {
+   "from": "https://habitual.com/cdn/shop/files/HABITUAL_LOGO_HIGH_RES_b509b0cb-5914-4c37-b15e-5acf136a2633.png?v=1791481221&width=256",
+   "key": "icons/stores/habitual.com.f2a9528a.webp",
+   "w": 127,
+   "h": 35
+  },
   "halcyon.co.nz": {
    "from": "https://www.halcyon.co.nz/cdn/shop/files/Halcyon_Lighting_1982.png?v=1762747648&width=180",
    "key": "icons/stores/halcyon.co.nz.316a15ee.webp",
@@ -3429,6 +3675,12 @@
    "key": "icons/stores/hardnheavy.style.5c8e43c6.webp",
    "w": 124,
    "h": 37
+  },
+  "harimari.com": {
+   "from": "https://www.harimari.com/cdn/shop/files/Joint_Logos_01f1c708-cda8-4832-a195-c920e7c1cfa1.png?v=1709590842&width=256",
+   "key": "icons/stores/harimari.com.db39c77b.webp",
+   "w": 128,
+   "h": 30
   },
   "harrys.com": {
    "from": "https://www.harrys.com/apple-touch-icon.png",
@@ -3580,10 +3832,22 @@
    "w": 32,
    "h": 32
   },
+  "hopeandhenry.com": {
+   "from": "https://hopeandhenry.com/cdn/shop/files/H_H_Logo_Website_Header2.png?v=1667941836&width=256",
+   "key": "icons/stores/hopeandhenry.com.98d3635a.webp",
+   "w": 128,
+   "h": 11
+  },
   "hudstonehome.com": {
    "from": "https://hudstonehome.com/cdn/shop/files/hudstone-white-logo.png?v=1794186868&width=256",
    "key": "icons/stores/hudstonehome.com.dab8cc52.webp",
    "w": 126,
+   "h": 128
+  },
+  "huel.com": {
+   "from": "https://cdn.sanity.io/images/sy0wkh9n/productionv29/42f110658670adfa45c630cb635357c772f73995-593x876.png?auto=format&fit=max&q=75&w=3840",
+   "key": "icons/stores/huel.com.7c81b29b.webp",
+   "w": 87,
    "h": 128
   },
   "hueylightshop.com": {
@@ -3688,6 +3952,24 @@
    "w": 128,
    "h": 10
   },
+  "janewin.com": {
+   "from": "https://janewin.com/cdn/shop/files/JW_FullColor1_8bb92622-b8bd-4eef-b0fe-52f05310dcce.png?v=1685889406&width=256",
+   "key": "icons/stores/janewin.com.d9f568fe.webp",
+   "w": 128,
+   "h": 30
+  },
+  "janji.com": {
+   "from": "https://janji.com/cdn/shop/files/JANJI_LOGO-HORIZON-BLUE_1.png?v=1720548185&width=256",
+   "key": "icons/stores/janji.com.71089d8a.webp",
+   "w": 128,
+   "h": 45
+  },
+  "jenniferfisher.com": {
+   "from": "https://jenniferfisher.com/cdn/shop/files/Logo.svg?v=1784650565&width=256",
+   "key": "icons/stores/jenniferfisher.com.e7bcbc7d.webp",
+   "w": 126,
+   "h": 8
+  },
   "jennifermeyer.com": {
    "from": "https://cdn.shopify.com/s/files/1/1255/5759/files/logo-checkout_fdc20781-f73a-4c64-93b6-47bc6ae2e0ef.png?pad_color=ffffff&v=1613750392&width=256",
    "key": "icons/stores/jennifermeyer.com.9a90d4c5.webp",
@@ -3736,6 +4018,12 @@
    "w": 128,
    "h": 128
   },
+  "jsaux.com": {
+   "from": "https://jsaux.com/cdn/shop/files/JSAUX_GAMING_LOGO_favicon.png?v=1749029036&width=256",
+   "key": "icons/stores/jsaux.com.19bb4827.webp",
+   "w": 128,
+   "h": 127
+  },
   "judydoll.com": {
    "from": "https://judydoll.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1770708542&width=32",
    "key": "icons/stores/judydoll.com.9413d72b.webp",
@@ -3747,6 +4035,12 @@
    "key": "icons/stores/juicedbikes.com.ed55c39a.webp",
    "w": 128,
    "h": 26
+  },
+  "july.com": {
+   "from": "https://july.com/android-chrome-512x512.png",
+   "key": "icons/stores/july.com.fd4b0ff1.webp",
+   "w": 64,
+   "h": 128
   },
   "junaidjamshed.com": {
    "from": "https://www.junaidjamshed.com/cdn/shop/files/favicon.svg?crop=center&height=48&v=1765461191&width=48",
@@ -3772,6 +4066,12 @@
    "w": 30,
    "h": 30
   },
+  "justfoodfordogs.com": {
+   "from": "https://justfoodfordogs.com/cdn/shop/files/jffd-logo.svg?v=1774642054&width=256",
+   "key": "icons/stores/justfoodfordogs.com.9e2435f1.webp",
+   "w": 128,
+   "h": 15
+  },
   "kamadojoe.com": {
    "from": "https://kamado-joe.myshopify.com/cdn/shop/files/pandectes-banner-logo.png?v=1795527037&width=256",
    "key": "icons/stores/kamadojoe.com.63e6cfaa.webp",
@@ -3795,6 +4095,18 @@
    "key": "icons/stores/katemarkerhome.com.af48d17d.webp",
    "w": 116,
    "h": 39
+  },
+  "katequinn.com": {
+   "from": "https://katequinn.com/cdn/shop/files/KQ_Logo_TREE_400x400-01.png?v=1743799464&width=256",
+   "key": "icons/stores/katequinn.com.4592ccc5.webp",
+   "w": 115,
+   "h": 128
+  },
+  "keababies.com": {
+   "from": "https://keababies.com/cdn/shop/files/Untitled_300_x_70_px_300_x_65_px_300_x_62_px_300x300_4993ac79-88b1-4203-84b5-06e42243087b.png?v=1644388608&width=256",
+   "key": "icons/stores/keababies.com.d85fe4e4.webp",
+   "w": 128,
+   "h": 26
   },
   "keenfootwear.com": {
    "from": "https://cdn.shopify.com/s/files/1/0607/3263/7348/files/keen-logo-bw-social-4.jpg?v=1755278398&width=256",
@@ -3838,11 +4150,23 @@
    "w": 128,
    "h": 20
   },
+  "kinderfeets.com": {
+   "from": "https://kinderfeets.com/cdn/shop/files/KF_LOGO_RGB_2019.jpg?v=1685546481&width=256",
+   "key": "icons/stores/kinderfeets.com.aa014f49.webp",
+   "w": 128,
+   "h": 97
+  },
   "kindredofireland.com": {
    "from": "https://kindredofireland.com/cdn/shop/files/Untitled_design_53_32x32.png?v=1781801422",
    "key": "icons/stores/kindredofireland.com.a6040a70.webp",
    "w": 32,
    "h": 32
+  },
+  "kinnstudio.com": {
+   "from": "https://kinnstudio.com/cdn/shop/files/Kinn_logo_black.png?v=861403673227038154&width=256",
+   "key": "icons/stores/kinnstudio.com.37a023b1.webp",
+   "w": 128,
+   "h": 48
   },
   "kirrinfinch.com": {
    "from": "https://kirrinfinch.com/cdn/shop/files/Untitled_design_1_fc8dfe2a-2bf8-481b-9585-eba1a51bb9bc.png?v=1767977491&width=256",
@@ -3873,6 +4197,12 @@
    "key": "icons/stores/kjaerweis.com.dbacd97e.webp",
    "w": 128,
    "h": 30
+  },
+  "knitato.com": {
+   "from": "https://knitato.com/cdn/shop/files/KNITATO_Wordmark_RGB__Solid_Yellow.png?v=1666960052&width=256",
+   "key": "icons/stores/knitato.com.c123176c.webp",
+   "w": 126,
+   "h": 28
   },
   "knix.com": {
    "from": "https://knix.com/cdn/shop/files/knixlogo-sm_192x192_c6add9a6-f316-4042-b521-600c7da81c1f.avif?v=1756875926&width=256",
@@ -3928,11 +4258,23 @@
    "w": 19,
    "h": 24
   },
+  "lalo.com": {
+   "from": "https://lalo.com/cdn/shop/files/logo_text_Artboard_1_4x_300x.png?v=1613796693&width=256",
+   "key": "icons/stores/lalo.com.0105c400.webp",
+   "w": 128,
+   "h": 26
+  },
   "lastobject.com": {
    "from": "https://cdn.shopify.com/s/files/1/0225/3393/1085/files/lastobject-logo.png?width=256",
    "key": "icons/stores/lastobject.com.25e34aaf.webp",
    "w": 112,
    "h": 23
+  },
+  "lastresortab.com": {
+   "from": "https://www.lastresortab.com/cdn/shop/files/globe-logo_8420646d-13b8-42d3-ab6f-90b9441d9267.png?v=1744795059&width=256",
+   "key": "icons/stores/lastresortab.com.dd1fbd50.webp",
+   "w": 128,
+   "h": 114
   },
   "lauramercier.com": {
    "from": "https://www.lauramercier.com/cdn/shop/files/Screenshot_2023-02-03_at_2.44.18_PM.png?v=1675698611&width=256",
@@ -3970,6 +4312,12 @@
    "w": 128,
    "h": 41
   },
+  "libertypuzzles.com": {
+   "from": "https://libertypuzzles.com/cdn/shop/files/high_res_logo_with_name.jpg?v=1681755220&width=256",
+   "key": "icons/stores/libertypuzzles.com.abfddc87.webp",
+   "w": 128,
+   "h": 54
+  },
   "libertysafe.com": {
    "from": "https://libertysafe.com/cdn/shop/files/Liberty-Logo-favicon-A.png?crop=center&height=32&v=1737857421&width=32",
    "key": "icons/stores/libertysafe.com.454dd2a2.webp",
@@ -3988,6 +4336,12 @@
    "w": 128,
    "h": 45
   },
+  "linusbike.com": {
+   "from": "https://www.linusbike.com/cdn/shop/files/Linus_Logo_Type_2019_1_-01_150x.png?v=1613770405&width=256",
+   "key": "icons/stores/linusbike.com.bd4dd122.webp",
+   "w": 128,
+   "h": 30
+  },
   "liquiddeath.com": {
    "from": "https://liquiddeath.com/cdn/shop/files/Liquiddeath-Skull-Favicon_32x32.png?v=1682460908",
    "key": "icons/stores/liquiddeath.com.bdf9a05d.webp",
@@ -3999,6 +4353,12 @@
    "key": "icons/stores/littleampscoffee.com.b1dad69c.webp",
    "w": 128,
    "h": 19
+  },
+  "littlebeast.co": {
+   "from": "https://littlebeast.co/cdn/shop/t/224/assets/logo.svg?v=72212046758616774541794147735&width=256",
+   "key": "icons/stores/littlebeast.co.b25c3617.webp",
+   "w": 102,
+   "h": 64
   },
   "littlebigbikes.com": {
    "from": "https://www.littlebigbikes.com/cdn/shop/files/littlebig_logo_square_favicon_full.png?v=1795120265&width=256",
@@ -4108,6 +4468,12 @@
    "w": 119,
    "h": 128
   },
+  "maap.cc": {
+   "from": "https://maap.cc/_next/static/media/brandLogo.6f652e57.svg",
+   "key": "icons/stores/maap.cc.4554dda7.webp",
+   "w": 104,
+   "h": 28
+  },
   "mackage.com": {
    "from": "https://www.mackage.com/cdn/shop/files/favicon.svg?v=1676482266&width=256",
    "key": "icons/stores/mackage.com.c0101499.webp",
@@ -4138,6 +4504,12 @@
    "w": 25,
    "h": 19
   },
+  "maileg.com": {
+   "from": "https://maileg.com/cdn/shop/files/maileg_favicon_b4bc2da1-86de-4983-b66b-ce98835df240.png?v=1702892606&width=256",
+   "key": "icons/stores/maileg.com.14eb1a79.webp",
+   "w": 32,
+   "h": 30
+  },
   "makeblock.com": {
    "from": "https://www.makeblock.com/cdn/shop/files/makeblock-logo-450-png_460f4b07-9b97-4c5c-b538-9efabd462470.png?v=1672732225&width=256",
    "key": "icons/stores/makeblock.com.1779dfcb.webp",
@@ -4162,6 +4534,12 @@
    "w": 32,
    "h": 25
   },
+  "margauxny.com": {
+   "from": "https://margauxny.com/cdn/shop/files/Margaux_PrimaryMark_Favicon.png?v=1692043958&width=256",
+   "key": "icons/stores/margauxny.com.1cb5f2f8.webp",
+   "w": 103,
+   "h": 128
+  },
   "mariaeluisa.com": {
    "from": "https://mariaeluisa.com/cdn/shop/files/AA0005_32x32.jpg?v=1710946481",
    "key": "icons/stores/mariaeluisa.com.bb9f32ae.webp",
@@ -4179,6 +4557,12 @@
    "key": "icons/stores/marmaladefreshclothing.com.0c81dda7.webp",
    "w": 32,
    "h": 32
+  },
+  "marrowfine.com": {
+   "from": "https://www.marrowfine.com/cdn/shop/files/Marrow_logo_blue.png?width=256",
+   "key": "icons/stores/marrowfine.com.01d63e19.webp",
+   "w": 128,
+   "h": 17
   },
   "masienda.com": {
    "from": "https://masienda.com/cdn/shop/files/masienda_logoheader_fullcolor_blackwordmark_85dc8ee1-3f6b-44d9-ae76-39ded94447d3.png?v=1790370365&width=256",
@@ -4270,6 +4654,18 @@
    "w": 128,
    "h": 128
   },
+  "mgemi.com": {
+   "from": "https://mgemi.com/cdn/shop/t/2223/assets/mgemi_wordmark_black_header.png?v=24239138577590015231794940092&width=256",
+   "key": "icons/stores/mgemi.com.cd5abf4a.webp",
+   "w": 128,
+   "h": 20
+  },
+  "microkickboard.com": {
+   "from": "https://microkickboard.com/cdn/shop/files/Micro_Kickboard_Footer_Logo_1cabd219-d45d-4793-aba1-2ac6d540de61.svg?v=1757500819&width=256",
+   "key": "icons/stores/microkickboard.com.38ecd02d.webp",
+   "w": 127,
+   "h": 45
+  },
   "microplaynewmarket.com": {
    "from": "https://microplaynewmarket.com/cdn/shop/files/3_9ae2e511-1ab0-4b05-b422-185dca14f22d_152x152.jpg?v=1710184539",
    "key": "icons/stores/microplaynewmarket.com.4e78f4c3.webp",
@@ -4348,6 +4744,18 @@
    "w": 128,
    "h": 26
   },
+  "modernbeast.com": {
+   "from": "https://modernbeast.com/cdn/shop/files/FAVICON.png?v=1742316688&width=256",
+   "key": "icons/stores/modernbeast.com.28744279.webp",
+   "w": 100,
+   "h": 82
+  },
+  "monicaandandy.com": {
+   "from": "https://cdn.shopify.com/s/files/1/2338/2917/files/M_A_HorizontalLogoLockup_Black.svg?v=1693279251&width=256",
+   "key": "icons/stores/monicaandandy.com.13a31319.webp",
+   "w": 128,
+   "h": 14
+  },
   "monos.com": {
    "from": "https://monos.com/cdn/shop/files/monos-logo.png?width=256",
    "key": "icons/stores/monos.com.f9d33adf.webp",
@@ -4383,6 +4791,12 @@
    "key": "icons/stores/mountainsmith.com.e0d22257.webp",
    "w": 128,
    "h": 71
+  },
+  "mpgsport.com": {
+   "from": "https://mpgsport.com/cdn/shop/files/mpg_logo_512.png?v=1625851906&width=256",
+   "key": "icons/stores/mpgsport.com.b9db4ce6.webp",
+   "w": 128,
+   "h": 115
   },
   "muckbootcompany.com": {
    "from": "https://muckbootcompany.com/cdn/shop/files/muck_logo_with_padding.svg?v=1752090484&width=256",
@@ -4456,6 +4870,12 @@
    "w": 128,
    "h": 28
   },
+  "nativepet.com": {
+   "from": "https://nativepet.com/cdn/shop/files/NP_Favicon-3_abe22479-5523-44be-bb17-5e590f0defc1.png?v=1673929835&width=256",
+   "key": "icons/stores/nativepet.com.ed792530.webp",
+   "w": 32,
+   "h": 31
+  },
   "nativeunion.com": {
    "from": "https://www.nativeunion.com/cdn/shop/files/NEW_Website-Logo_450x.png?v=1705309483&width=256",
    "key": "icons/stores/nativeunion.com.d3b3d668.webp",
@@ -4522,6 +4942,12 @@
    "w": 64,
    "h": 64
   },
+  "nicksboots.com": {
+   "from": "https://nicksboots.com/cdn/shop/files/Untitled_design_3.png?v=1756937180&width=256",
+   "key": "icons/stores/nicksboots.com.c55a1b67.webp",
+   "w": 128,
+   "h": 85
+  },
   "nisolo.com": {
    "from": "https://nisolo.com/cdn/shop/files/Untitled_design_21.png?v=1770300715&width=256",
    "key": "icons/stores/nisolo.com.35744921.webp",
@@ -4546,6 +4972,12 @@
    "w": 128,
    "h": 119
   },
+  "nobodinoz.com": {
+   "from": "https://nobodinoz.com/cdn/shop/files/New-logo-Nobodinoz_d7c88310-bf2b-4dac-b12e-5a586bb62971.png?v=1788958125&width=256",
+   "key": "icons/stores/nobodinoz.com.de72d8bf.webp",
+   "w": 20,
+   "h": 24
+  },
   "noevalleybakery.com": {
    "from": "https://noevalleybakery.com/cdn/shop/files/37006044_10156579142693966_244211634292129792_n_32x32.jpg?v=1614288508",
    "key": "icons/stores/noevalleybakery.com.960a1d1f.webp",
@@ -4564,6 +4996,18 @@
    "w": 64,
    "h": 64
   },
+  "nomnomnow.com": {
+   "from": "https://www.nomnomnow.com/images/logo/nom_nom_straight.svg",
+   "key": "icons/stores/nomnomnow.com.cad84a0a.webp",
+   "w": 128,
+   "h": 20
+  },
+  "nootie.com": {
+   "from": "https://nootie.com/cdn/shop/files/nootie-logo.png?v=1620931705&width=256",
+   "key": "icons/stores/nootie.com.e526c56f.webp",
+   "w": 128,
+   "h": 46
+  },
   "nothing.tech": {
    "from": "https://cdn.shopify.com/oxygen-v2/43495/38485/80939/5223377/assets/h1vz1cxz.png?width=256",
    "key": "icons/stores/nothing.tech.fab95db3.webp",
@@ -4575,6 +5019,12 @@
    "key": "icons/stores/nothingnew.com.de763307.webp",
    "w": 128,
    "h": 22
+  },
+  "novelkeys.com": {
+   "from": "https://cdn.shopify.com/s/files/1/3099/8088/files/icon_logo.png?v=1738159181&width=256",
+   "key": "icons/stores/novelkeys.com.8a214377.webp",
+   "w": 128,
+   "h": 128
   },
   "nudebarre.com": {
    "from": "https://nudebarre.com/cdn/shop/files/NudeBarre_PrimaryWordmark_Black_32x32.png?v=1613571474",
@@ -4642,6 +5092,12 @@
    "w": 128,
    "h": 103
   },
+  "olliella.com": {
+   "from": "https://uk.dinkumdolls.com/cdn/shop/files/DD_Web_Klaviyo_Logo_200x@2x.png?v=1775791248&width=256",
+   "key": "icons/stores/olliella.com.ecd256d1.webp",
+   "w": 127,
+   "h": 74
+  },
   "olly.com": {
    "from": "https://www.olly.com/cdn/shop/t/319/assets/apple-icon-180x180.png?v=5&v=24677483267002611191793846143",
    "key": "icons/stores/olly.com.f67175ec.webp",
@@ -4660,11 +5116,23 @@
    "w": 128,
    "h": 11
   },
+  "onnit.com": {
+   "from": "https://www.onnit.com/cdn/shop/files/Vector.svg?v=1747790668&width=256",
+   "key": "icons/stores/onnit.com.5dac0b3f.webp",
+   "w": 82,
+   "h": 16
+  },
   "ooni.com": {
    "from": "https://ooni.com/cdn/shop/files/Ooni-PrimaryLogo-301x182-c1fe72b_1_43062e30-e2a7-46b8-ab6e-d5e8f31c8e7a_1.png?v=1766747585&width=256",
    "key": "icons/stores/ooni.com.28852006.webp",
    "w": 128,
    "h": 78
+  },
+  "openfarmpet.com": {
+   "from": "https://openfarmpet.com/cdn/shop/files/logo.png?v=1718040940&width=256",
+   "key": "icons/stores/openfarmpet.com.44a54772.webp",
+   "w": 118,
+   "h": 128
   },
   "optionblend.com": {
    "from": "https://optionblend.com/cdn/shop/files/logo-black.png?v=1726553059&width=256",
@@ -4689,6 +5157,12 @@
    "key": "icons/stores/organicbasics.com.945d1154.webp",
    "w": 32,
    "h": 22
+  },
+  "ostroy.com": {
+   "from": "https://www.ostroy.com/cdn/shop/files/Ostroy_Yellow_Logo_small_copy_32x32.png?v=1762368164&width=256",
+   "key": "icons/stores/ostroy.com.5fecae8b.webp",
+   "w": 32,
+   "h": 31
   },
   "otterbox.com": {
    "from": "https://www.otterbox.com/cdn/shop/files/Logo.png?v=1775829289&width=256",
@@ -4762,11 +5236,23 @@
    "w": 128,
    "h": 35
   },
+  "pasnormalstudios.com": {
+   "from": "https://pasnormalstudios.com/logo-w-int.svg",
+   "key": "icons/stores/pasnormalstudios.com.d6a6b85a.webp",
+   "w": 127,
+   "h": 48
+  },
   "patrickta.com": {
    "from": "https://patrickta.com/cdn/shop/files/favicon.png?v=1781872690&width=256",
    "key": "icons/stores/patrickta.com.905d30bc.webp",
    "w": 72,
    "h": 96
+  },
+  "pehr.com": {
+   "from": "https://pehr.com/cdn/shop/files/Pehr_Logo.png?v=1614315150&width=256",
+   "key": "icons/stores/pehr.com.300fdf46.webp",
+   "w": 128,
+   "h": 41
   },
   "pelacase.com": {
    "from": "https://pelacase.com/cdn/shop/files/logo.svg?v=1678112781&width=256",
@@ -4804,6 +5290,12 @@
    "w": 97,
    "h": 33
   },
+  "picassotiles.com": {
+   "from": "https://www.picassotiles.com/cdn/shop/files/PicassoTiles_Circle_Logo__Stacked_Colored_WHTBG.png?v=1669403570&width=256",
+   "key": "icons/stores/picassotiles.com.ccb84ba7.webp",
+   "w": 128,
+   "h": 128
+  },
   "pinkngreens.com": {
    "from": "https://www.pinkngreens.com/cdn/shop/files/36a0138e1dbe8c261282627c255444f3.png?crop=center&height=32&v=1774185240&width=32",
    "key": "icons/stores/pinkngreens.com.2d3a76ae.webp",
@@ -4828,6 +5320,12 @@
    "w": 110,
    "h": 36
   },
+  "plusplususa.com": {
+   "from": "https://www.plusplususa.com/cdn/shop/files/Plus-Plus_Logo_Blue.png?v=1755522916&width=256",
+   "key": "icons/stores/plusplususa.com.62cfed1e.webp",
+   "w": 104,
+   "h": 128
+  },
   "polarpro.com": {
    "from": "https://www.polarpro.com/cdn/shop/files/polarpro-logo-icon-desktop_d2ecd52d-867e-459a-9968-2a47a5658186.svg?v=1754516664&width=256",
    "key": "icons/stores/polarpro.com.5906239f.webp",
@@ -4839,6 +5337,24 @@
    "key": "icons/stores/poler.com.0536ff84.webp",
    "w": 128,
    "h": 80
+  },
+  "poppybarley.com": {
+   "from": "https://poppybarley.com/cdn/shop/t/33/assets/pb-favicon-2021.png?v=89759342706599311931777992415&width=256",
+   "key": "icons/stores/poppybarley.com.2b07b74e.webp",
+   "w": 32,
+   "h": 21
+  },
+  "poshpeanut.com": {
+   "from": "https://poshpeanut.com/cdn/shop/files/PP-LOGO_32x32.png?v=1613167848&width=256",
+   "key": "icons/stores/poshpeanut.com.0772cf2a.webp",
+   "w": 22,
+   "h": 32
+  },
+  "pranapets.com": {
+   "from": "https://www.pranapets.com/cdn/shop/files/prana-pets-favicon-blue.png?v=1686657624&width=256",
+   "key": "icons/stores/pranapets.com.56f1520c.webp",
+   "w": 87,
+   "h": 96
   },
   "pravi.pe": {
    "from": "https://www.pravi.pe/cdn/shop/files/logo_sin_urban_2515c367-7432-492b-833c-de47804e6031_32x32.png?v=1613724869",
@@ -4857,6 +5373,12 @@
    "key": "icons/stores/primalpetfoods.com.9108eafd.webp",
    "w": 127,
    "h": 116
+  },
+  "primary.com": {
+   "from": "https://www.primary.com/cdn/shop/t/42/assets/favicon-32x32.png?v=169958644815825876461756234123&width=256",
+   "key": "icons/stores/primary.com.367d7f71.webp",
+   "w": 12,
+   "h": 20
   },
   "promgirl.com": {
    "from": "https://www.promgirl.com/cdn/shop/files/favicon.png?crop=center&height=32&v=1662448155&width=32",
@@ -4905,6 +5427,12 @@
    "key": "icons/stores/pupcuppup.com.85cf4037.webp",
    "w": 47,
    "h": 48
+  },
+  "pupford.com": {
+   "from": "https://pupford.com/cdn/shop/files/pupford-logo.png?v=1726521768&width=256",
+   "key": "icons/stores/pupford.com.712c65af.webp",
+   "w": 128,
+   "h": 34
   },
   "puravidabracelets.com": {
    "from": "https://www.puravidabracelets.com/cdn/shop/files/favicon_ba011f2f-6f19-469d-b82d-d161fdb2a2df.png?v=1755536169&width=256",
@@ -4960,6 +5488,12 @@
    "w": 128,
    "h": 128
   },
+  "ramaworks.store": {
+   "from": "https://ramaworks.store/cdn/shop/files/RW-LOGO-SQR-B_SEASON_2_32x32.png?v=1613715203&width=256",
+   "key": "icons/stores/ramaworks.store.da993cb5.webp",
+   "w": 23,
+   "h": 20
+  },
   "ranavat.com": {
    "from": "https://www.ranavat.com/cdn/shop/files/Ranavat_Logo_Green_1.svg?v=1698648721&width=256",
    "key": "icons/stores/ranavat.com.a83c08e7.webp",
@@ -5007,6 +5541,12 @@
    "key": "icons/stores/retrospec.com.6744e102.webp",
    "w": 128,
    "h": 109
+  },
+  "rhinoshield.io": {
+   "from": "https://cdn.shopify.com/s/files/1/0274/8717/files/rhino-logo.jpg?width=256",
+   "key": "icons/stores/rhinoshield.io.b29790c7.webp",
+   "w": 113,
+   "h": 123
   },
   "rhodeskin.com": {
    "from": "https://www.rhodeskin.com/cdn/shop/files/rhode_favicon_8da6df3c-158d-4380-a3f0-27db973b0355.png?v=1774388508&width=256",
@@ -5116,6 +5656,12 @@
    "w": 96,
    "h": 94
   },
+  "sarahflint.com": {
+   "from": "https://www.sarahflint.com/cdn/shop/files/Sarah_Flint_Made_in_Italy_Logo_Site.png?pad_color=fff&v=1695655282&width=256",
+   "key": "icons/stores/sarahflint.com.61a72fd3.webp",
+   "w": 128,
+   "h": 34
+  },
   "satechi.com": {
    "from": "https://satechi.com/cdn/shop/files/favicon.png?v=1768466907&width=256",
    "key": "icons/stores/satechi.com.0339b4d5.webp",
@@ -5145,6 +5691,18 @@
    "key": "icons/stores/schoolhouse.com.f2165890.webp",
    "w": 128,
    "h": 10
+  },
+  "seavees.com": {
+   "from": "https://www.seavees.com/cdn/shop/files/seavees-logo.png?v=1777339091&width=256",
+   "key": "icons/stores/seavees.com.6dc349c0.webp",
+   "w": 128,
+   "h": 22
+  },
+  "secretlab.co": {
+   "from": "https://images.secretlab.co/theme/common/logo.png",
+   "key": "icons/stores/secretlab.co.0a155d95.webp",
+   "w": 128,
+   "h": 41
   },
   "seedjewelry.com": {
    "from": "https://seedjewelry.com/cdn/shop/files/site-logo-white-01.svg?v=1777530189&width=256",
@@ -5181,6 +5739,12 @@
    "key": "icons/stores/shoesandlemons.com.bca77d55.webp",
    "w": 32,
    "h": 32
+  },
+  "shokz.com": {
+   "from": "https://shokz.com/cdn/shop/files/favicon.webp?v=1739256606&width=256",
+   "key": "icons/stores/shokz.com.50b3142f.webp",
+   "w": 87,
+   "h": 128
   },
   "shop.goldsgym.com": {
    "from": "https://shop.goldsgym.com/cdn/shop/files/black_golds_gym_logo_transparent_32x32.png?v=1740172669",
@@ -5284,6 +5848,12 @@
    "w": 128,
    "h": 34
   },
+  "skullnco.com": {
+   "from": "https://www.savage-raven.com/cdn/shop/files/logo_dad8ac64-3116-491c-b124-493fed5cc7cb.svg?v=1676479737&width=256",
+   "key": "icons/stores/skullnco.com.5e6dedcb.webp",
+   "w": 128,
+   "h": 128
+  },
   "slidejewels.com": {
    "from": "https://slidejewels.com/cdn/shop/files/WhatsApp_Image_2025-09-05_at_10.03.14_32x32.jpg?v=1757059541",
    "key": "icons/stores/slidejewels.com.5a9ff00b.webp",
@@ -5295,6 +5865,12 @@
    "key": "icons/stores/smartwool.com.2b2090f1.webp",
    "w": 128,
    "h": 20
+  },
+  "smartypantsvitamins.com": {
+   "from": "https://www.smartypantsvitamins.com/cdn/shop/t/119/assets/apple-icon-180x180.png?v=0&v=106920200007613714581794883268&width=256",
+   "key": "icons/stores/smartypantsvitamins.com.8cd0d461.webp",
+   "w": 88,
+   "h": 127
   },
   "smithey.com": {
    "from": "https://smithey.com/cdn/shop/files/fav_32x32.png?v=1613538879&width=256",
@@ -5314,6 +5890,18 @@
    "w": 32,
    "h": 28
   },
+  "sollybaby.com": {
+   "from": "https://sollybaby.com/cdn/shop/files/solly_logo_black_transparent_52175c67-3c6f-40e9-8e7c-d881f47fa1a6_1200x.png?v=1752605603&width=256",
+   "key": "icons/stores/sollybaby.com.b3579588.webp",
+   "w": 127,
+   "h": 33
+  },
+  "soludos.com": {
+   "from": "https://soludos.com/cdn/shop/files/Soludos_Logo_small_b6c801bc-14c0-4a14-abc4-d0854d29fb25.svg?v=1762461138&width=256",
+   "key": "icons/stores/soludos.com.e4c04845.webp",
+   "w": 127,
+   "h": 19
+  },
   "sooo.me": {
    "from": "https://sooo.me/cdn/shop/files/Untitled_design.png?crop=center&height=32&v=1732110353&width=32",
    "key": "icons/stores/sooo.me.deda3ba1.webp",
@@ -5332,6 +5920,18 @@
    "w": 99,
    "h": 62
   },
+  "soylent.com": {
+   "from": "https://soylent.com/cdn/shop/files/soylent_logo-01.png?v=1613688881&width=256",
+   "key": "icons/stores/soylent.com.4b31c5e5.webp",
+   "w": 128,
+   "h": 61
+  },
+  "spearmintlove.com": {
+   "from": "https://spearmintlove.com/cdn/shop/files/spearmint-main-logo.png?v=1777978635&width=256",
+   "key": "icons/stores/spearmintlove.com.be7d2854.webp",
+   "w": 128,
+   "h": 17
+  },
   "spectrausa.net": {
    "from": "https://spectrausa.net/cdn/shop/files/SpectraUSA-Logo_1.svg?v=1741072676&width=1810",
    "key": "icons/stores/spectrausa.net.65dfde32.webp",
@@ -5349,6 +5949,30 @@
    "key": "icons/stores/spigen.com.05ac1542.webp",
    "w": 113,
    "h": 128
+  },
+  "spinellikilcollin.com": {
+   "from": "https://spinellikilcollin.com/cdn/shop/files/sk-circle-drop-shadow-512_2.png?v=1793645882&width=256",
+   "key": "icons/stores/spinellikilcollin.com.a9b109b8.webp",
+   "w": 128,
+   "h": 128
+  },
+  "spiritualgangster.com": {
+   "from": "https://spiritualgangster108.myshopify.com/cdn/shop/files/pandectes-reopen-logo.png?width=256",
+   "key": "icons/stores/spiritualgangster.com.6e604249.webp",
+   "w": 128,
+   "h": 128
+  },
+  "spitfireaudio.com": {
+   "from": "https://www.spitfireaudio.com/cdn/shop/files/favicon.png?v=1756303850&width=256",
+   "key": "icons/stores/spitfireaudio.com.df1290d9.webp",
+   "w": 52,
+   "h": 53
+  },
+  "splits59.com": {
+   "from": "https://scdn.speedsize.com/e17372e1-b32a-4157-a818-981c1ed8441c/https://www.splits59.com/cdn/shop/files/favicon.png?v=1739198070&width=256",
+   "key": "icons/stores/splits59.com.47869ce6.webp",
+   "w": 111,
+   "h": 49
   },
   "sprinkler.net.au": {
    "from": "https://sprinkler.net.au/cdn/shop/files/SprinklerFavicon.png?crop=center&height=32&v=1730262345&width=32",
@@ -5500,6 +6124,12 @@
    "w": 88,
    "h": 41
   },
+  "supernote.com": {
+   "from": "https://supernote.com/cdn/shop/files/Hi-res_logo_SN_d9ec91f5-6580-4e02-bc48-ee2bb55f63b4_1.webp?v=1713345508&width=256",
+   "key": "icons/stores/supernote.com.bbf8e066.webp",
+   "w": 126,
+   "h": 18
+  },
   "surfstitch.com": {
    "from": "https://surfstitch.com/cdn/shop/files/Navigation_text_3.svg?v=1760279159&width=256",
    "key": "icons/stores/surfstitch.com.c78a42c6.webp",
@@ -5535,6 +6165,12 @@
    "key": "icons/stores/switch-nails.com.6e604249.webp",
    "w": 128,
    "h": 128
+  },
+  "taftclothing.com": {
+   "from": "https://taftclothing.com/cdn/shop/files/taft_logo.svg?v=1695245936&width=256",
+   "key": "icons/stores/taftclothing.com.195d23f7.webp",
+   "w": 128,
+   "h": 28
   },
   "tailsandfin.com": {
    "from": "https://tailsandfin.com/cdn/shop/files/tf-favicon.png?v=1792598731&width=256",
@@ -5626,6 +6262,12 @@
    "w": 21,
    "h": 26
   },
+  "thatsmine.com": {
+   "from": "https://thatsmine.com/cdn/shop/files/thatsmine_small_logo_color_RGB.png?v=1779886443&width=256",
+   "key": "icons/stores/thatsmine.com.056aa93f.webp",
+   "w": 128,
+   "h": 30
+  },
   "thebalconygarden.eu": {
    "from": "https://thebalconygarden.eu/cdn/shop/files/favicon.webp?crop=center&height=48&v=1721777417&width=48",
    "key": "icons/stores/thebalconygarden.eu.e1e8aa94.webp",
@@ -5716,6 +6358,12 @@
    "w": 104,
    "h": 78
   },
+  "tinylandus.com": {
+   "from": "https://www.tinylandus.com/cdn/shop/files/15351735788685_.pic_96x96.png?v=1735790029&width=256",
+   "key": "icons/stores/tinylandus.com.ddd0513d.webp",
+   "w": 95,
+   "h": 96
+  },
   "tlfapparel.com": {
    "from": "https://cdn.shopify.com/oxygen-v2/23996/8003/16183/5217565/assets/tlf-logo-yXDVwSrz.png?width=256",
    "key": "icons/stores/tlfapparel.com.99d2d160.webp",
@@ -5733,6 +6381,12 @@
    "key": "icons/stores/tomboyx.com.fe3f6ea1.webp",
    "w": 128,
    "h": 28
+  },
+  "tomtoc.com": {
+   "from": "https://www.tomtoc.com/cdn/shop/files/tlogo_icon_1_96x96.png?v=1700036125&width=256",
+   "key": "icons/stores/tomtoc.com.cdea1f47.webp",
+   "w": 26,
+   "h": 46
   },
   "tonal.com": {
    "from": "https://tonal.com/cdn/shop/files/387023500_731552585677207_1548618460505744642_n.jpg?v=1724387204&width=256",
@@ -5854,6 +6508,24 @@
    "w": 128,
    "h": 54
   },
+  "uaudio.com": {
+   "from": "https://www.uaudio.com/cdn/shop/files/universal-audio-logo-square.png?width=256",
+   "key": "icons/stores/uaudio.com.ab5aae71.webp",
+   "w": 128,
+   "h": 95
+  },
+  "ucon-acrobatics.com": {
+   "from": "https://ucon-acrobatics.com/cdn/shop/files/logo_ucon_2_f00311e8-deab-4f08-bec6-6c955d0f9c9c.png?v=1763370803&width=256",
+   "key": "icons/stores/ucon-acrobatics.com.20d6ab24.webp",
+   "w": 128,
+   "h": 41
+  },
+  "ugreen.com": {
+   "from": "https://www.ugreen.com/cdn/shop/files/ugreen_logo-_1_e168f1f4-de2e-4509-bd2e-8ea001ac3a12.svg?v=1761026731&width=256",
+   "key": "icons/stores/ugreen.com.970df2d6.webp",
+   "w": 67,
+   "h": 11
+  },
   "ultraviolette.com.au": {
    "from": "https://ultraviolette.com.au/cdn/shop/t/318/assets/apple-touch-icon.png?v=34055212983479192961792529076",
    "key": "icons/stores/ultraviolette.com.au.7dd9e95f.webp",
@@ -5878,6 +6550,12 @@
    "w": 128,
    "h": 32
   },
+  "us.blundstone.com": {
+   "from": "https://75c2e5-41.myshopify.com/cdn/shop/files/pandectes-reopen-logo.png?v=1795324162&width=256",
+   "key": "icons/stores/us.blundstone.com.6e604249.webp",
+   "w": 128,
+   "h": 128
+  },
   "us.esteem-clothing.com": {
    "from": "https://us.esteem-clothing.com/cdn/shop/files/fav.png?crop=center&height=48&v=1613709936&width=48",
    "key": "icons/stores/us.esteem-clothing.com.a02f33f4.webp",
@@ -5901,6 +6579,12 @@
    "key": "icons/stores/velasca.com.647a43a7.webp",
    "w": 128,
    "h": 113
+  },
+  "verabradley.com": {
+   "from": "https://verabradley.com/cdn/shop/files/Favicon-v2.png?v=1789572372&width=256",
+   "key": "icons/stores/verabradley.com.150027a5.webp",
+   "w": 121,
+   "h": 128
   },
   "vervecoffee.com": {
    "from": "https://www.vervecoffee.com/cdn/shop/files/favicon_33d2d288-2905-49cf-86a5-8525204526bc.png?v=1650427325&width=256",
@@ -6016,6 +6700,30 @@
    "w": 25,
    "h": 30
   },
+  "westpaw.com": {
+   "from": "https://www.westpaw.com/cdn/shop/files/Logo_horizontal_150x.svg?v=1690319106&width=256",
+   "key": "icons/stores/westpaw.com.0cc6e7f7.webp",
+   "w": 128,
+   "h": 26
+  },
+  "whitesboots.com": {
+   "from": "https://whitesboots.com/cdn/shop/t/42/assets/header-logo.svg?v=143166497177135163861794867739&width=256",
+   "key": "icons/stores/whitesboots.com.2c2eb6a8.webp",
+   "w": 128,
+   "h": 22
+  },
+  "wildbird.co": {
+   "from": "https://wildbird.co/cdn/shop/files/wildbird-fav_32x32.png?v=1613564379&width=256",
+   "key": "icons/stores/wildbird.co.aeea5154.webp",
+   "w": 23,
+   "h": 32
+  },
+  "wilderdog.com": {
+   "from": "https://www.wilderdog.com/cdn/shop/files/favicon6_32x32.png?v=1674666873&width=256",
+   "key": "icons/stores/wilderdog.com.9d8b86b3.webp",
+   "w": 32,
+   "h": 32
+  },
   "wildertoys.com": {
    "from": "https://wildertoys.com/cdn/shop/files/WILDER_LOGO_WHITE.png?v=1748886455&width=1414",
    "key": "icons/stores/wildertoys.com.c4903bc7.webp",
@@ -6027,6 +6735,18 @@
    "key": "icons/stores/wildone.com.9bf29d51.webp",
    "w": 25,
    "h": 16
+  },
+  "wishbonedesign.com": {
+   "from": "https://nz.wishbonedesign.com/cdn/shop/t/25/assets/logo.png?v=50011564398757758661714774882&width=256",
+   "key": "icons/stores/wishbonedesign.com.58a8c184.webp",
+   "w": 101,
+   "h": 104
+  },
+  "wonderandwise.com": {
+   "from": "https://wonderandwise.com/cdn/shop/files/wonder-wise-logo-brown.png?v=1751467663&width=256",
+   "key": "icons/stores/wonderandwise.com.86b54793.webp",
+   "w": 128,
+   "h": 26
   },
   "woodturnerscatalog.com": {
    "from": "https://woodturnerscatalog.com/cdn/shop/files/csusa-horiz-logo-white-2024.svg?v=1719866904&width=256",
@@ -6106,6 +6826,12 @@
    "w": 48,
    "h": 66
   },
+  "zenapet.com": {
+   "from": "https://zenapet.com/cdn/shop/files/Zena_Transparent_Logo.png?v=1770714722&width=256",
+   "key": "icons/stores/zenapet.com.4db47310.webp",
+   "w": 127,
+   "h": 42
+  },
   "zestypaws.com": {
    "from": "https://zestypaws.com/cdn/shop/files/Zesty_Logo_Orange_Web_ec7700.png?v=1712155388&width=256",
    "key": "icons/stores/zestypaws.com.575614bd.webp",
@@ -6139,12 +6865,15 @@
    "alaglow.com",
    "bamboounderwear.com",
    "beautyinstem.com",
+   "beckettsimonon.com",
+   "brentneale.com",
    "collectivco.com",
    "figforkids.com",
    "goodboybob.com",
+   "greentoys.com",
    "heathceramics.com",
    "herbivorebotanicals.com",
-   "knitato.com",
+   "liquid-iv.com",
    "taylorstitch.com",
    "untuckit.com"
   ]
