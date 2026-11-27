@@ -93,7 +93,7 @@ const fail = (domain: string, page: string, device: string, reason: string) => {
   console.log(`  FAIL ${domain} ${page} ${device}: ${reason.split('\n')[0]}`);
 };
 try {
-  const { items } = await listCaptureTargets(local.db, { scope: 'curated', limit: 500 });
+  const { items } = await listCaptureTargets(local.db, { scope: 'curated', limit: only ? 5000 : 500 });
   let targets = only ? items.filter((t) => only.has(t.domain)) : items;
   if (values.limit) targets = targets.slice(0, Number(values.limit));
   if (only && targets.length < only.size)
