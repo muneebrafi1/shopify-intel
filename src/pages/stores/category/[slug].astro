@@ -40,7 +40,7 @@ const pills = cats.map((c) => ({
   selected: c.value === slug,
   count: c.count,
 }));
-const ogShot = items.map((s) => (s.preview ? ogCaptureSrc({ ...s.preview.image, device: s.preview.device }) : null)).find(Boolean);
+const ogShot = items.map((s) => (s.preview ? ogCaptureSrc({ image: s.preview.image }) : null)).find(Boolean);
 const lower = name.toLowerCase();
 const canonical = `/stores/category/${slug}`;
 ---

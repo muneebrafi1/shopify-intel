@@ -37,7 +37,7 @@ const total = res.meta.pagination?.total ?? items.length;
 const nextCursor = res.meta.pagination?.next_cursor ?? null;
 const canonical = `${theme.href}/stores`;
 const ogShot = items
-  .map((s) => (s.preview ? ogCaptureSrc({ ...s.preview.image, device: s.preview.device }) : null))
+  .map((s) => (s.preview ? ogCaptureSrc({ image: s.preview.image }) : null))
   .find(Boolean);
 ---
 

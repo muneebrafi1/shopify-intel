@@ -12,13 +12,12 @@ import Segmented from '~/components/ui/Segmented.astro';
 import BrowseBar, { type FilterGroup } from '~/components/ui/BrowseBar.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
 import StoreCard from '~/components/domain/StoreCard.astro';
 import StoreIndex from '~/components/stores/StoreIndex.astro';
 import { api, isApiError } from '~/server/api';
 import type { Facet, ListStoresOutput, PageInfo } from '~/server/api/v1/types';
-import { formatCount, formatDate } from '~/lib/format';
+import { formatCount } from '~/lib/format';
 import {
   STORE_SORTS,
   apiFilters,
@@ -178,7 +177,6 @@ const noun =
     : total === 1
       ? 'store'
       : 'stores';
-const asOf = formatDate(meta.data_as_of);
 
 // ---- SEO ----------------------------------------------------------------------------------
 const singleParam =
@@ -239,19 +237,6 @@ const title = hasFilters
       count={counts.stores_scanned}
       description="Shopify stores with the theme and apps we detected on them. Curated stores are mapped page by page, section by section."
     >
-      <p slot="meta" class="stores__facts">
-        <span>{formatCount(facets.scope.curated)} curated</span>
-        <span class="stores__sep" aria-hidden="true">
-          ·
-        </span>
-        <span>{formatCount(counts.stores_scanned)} scanned</span>
-        <span class="stores__sep" aria-hidden="true">
-          ·
-        </span>
-        <span>
-          data <time datetime={meta.data_as_of}>{asOf}</time>
-        </span>
-      </p>
       <div slot="actions" class="stores__scope">
         <Segmented
           label="Which stores"
@@ -411,8 +396,6 @@ const title = hasFilters
         </Button>
       </aside>
     )}
-
-    <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
   </div>
 </BaseLayout>
 

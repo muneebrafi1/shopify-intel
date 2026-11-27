@@ -5,6 +5,9 @@
 #
 # Usage: scripts/ops/sqlite-backup.sh <source.sqlite> <dest.sqlite>
 set -euo pipefail
+# sqlite3 is not on PATH on the box; it ships with the Android platform-tools.
+for d in /home/box/Android/platform-tools /usr/local/bin; do [ -x "$d/sqlite3" ] && PATH="$PATH:$d"; done
+command -v sqlite3 >/dev/null || { echo "sqlite3 not found" >&2; exit 1; }
 if [ $# -ne 2 ]; then
   echo "usage: $0 <source.sqlite> <dest.sqlite>" >&2
   exit 2
