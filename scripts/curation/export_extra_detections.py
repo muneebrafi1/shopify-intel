@@ -19,7 +19,8 @@ for s in cur:
         continue
     o = scans.get(d)
     sc = o and o["scan"]
-    if not sc or sc.get("platform") != "shopify" or (sc.get("http_status") or 200) >= 400 or o.get("note"):
+    platform = (sc or {}).get("platform") or ""
+    if not sc or not str(platform).startswith("shopify") or (sc.get("http_status") or 200) >= 500 or o.get("note"):
         missing.append(d)
         continue
     t = sc.get("theme") or {}
