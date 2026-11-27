@@ -18,6 +18,7 @@ import EmptyState from '~/components/ui/EmptyState.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
 import type { AppDetail, StoreListItem } from '~/server/api/v1/types';
 import type { Device } from '~/lib/taxonomy';
+import { pinFitsTopThumb } from '~/lib/media';
 import StoreShotGrid from '~/components/domain/StoreShotGrid.astro';
 import PinnedCapture from './PinnedCapture.astro';
 import { pageName, sectionViewerHref } from './helpers';
@@ -55,13 +56,16 @@ const byDevice = {
 };
 const activeDevice: Device = byDevice[device].length > 0 ? device : (all[0]?.device ?? device);
 const shown = byDevice[activeDevice].slice(0, 12);
-const active = shown.find((s) => s.id === selected) ?? shown[0];
-const storesWithSections = seen.stores.filter((s) => s.sections.length > 0);
-const variant = all.length > 0 ? 'pinned' : seen.stores.length > 0 ? 'installed' : 'unseen';
-const appSectionsHref = `/sections?app=${encodeURIComponent(app.slug)}`;
 const mobile = activeDevice === 'mobile';
 // Stage frame: desktop pages in a 4:3 frame filling the stage; phones in a 9:16 frame.
 const ratio = mobile ? 9 / 16 : 4 / 3;
+// Prefer a section that fits the pre-cut top thumbnail (~100 KB) over a full-page
+// capture (often 400–650 KB) so LCP stays under 2.5s. ?seen= still wins.
+const active =
+  shown.find((s) => s.id === selected) ?? shown.find((s) => pinFitsTopThumb(s, ratio)) ?? shown[0];
+const storesWithSections = seen.stores.filter((s) => s.sections.length > 0);
+const variant = all.length > 0 ? 'pinned' : seen.stores.length > 0 ? 'installed' : 'unseen';
+const appSectionsHref = `/sections?app=${encodeURIComponent(app.slug)}`;
 // Distinct stores among the pinned sections; the curated-store list above is only its first 12
 // stores by position, which need not be the ones with a pinned section.
 const storeCount = new Set(all.map((s) => s.store.domain)).size || storesWithSections.length;

@@ -308,6 +308,12 @@
       "url": "https://cdn.shopify.com/app-store/listing_images/74f3a88ca9004748ce9210ea2cda82ca/icon/CMKZ_Z_RoowDEAE=.png",
       "key": "icons/apps/bundle-deals.ad57caaf.webp"
     },
+    "bundler-bundles": {
+      "url": "https://www.bundler.app/public/assets/images/bundler-logo.png",
+      "key": "icons/apps/bundler-bundles.edbf1a3c.webp",
+      "w": 128,
+      "h": 21
+    },
     "bundler-product-bundles": {
       "url": "https://cdn.shopify.com/app-store/listing_images/d9d0cab92dc90366549d3dddaef00f84/icon/CLi92uraqI8DEAE=.png",
       "key": "icons/apps/bundler-product-bundles.02e278dd.webp"
@@ -1598,6 +1604,12 @@
       "url": "https://cdn.shopify.com/app-store/listing_images/7fd143b41c803e6471c1d499493363c0/icon/CPPOjLCzm44DEAE=.png",
       "key": "icons/apps/sam-shipping-protection.488f160d.webp"
     },
+    "sc-easy-redirects": {
+      "url": "https://sherpas.design/cdn/shop/files/home-logo_300x300.png",
+      "key": "icons/apps/sc-easy-redirects.f0d897a1.webp",
+      "w": 128,
+      "h": 61
+    },
     "sc-product-options": {
       "url": "https://cdn.shopify.com/app-store/listing_images/9a0bf1159f79c6ab0660ec422f350445/icon/CP2Uwo_GuYIDEAE=.png",
       "key": "icons/apps/sc-product-options.77ed27b2.webp"
@@ -1643,6 +1655,12 @@
     "selly": {
       "url": "https://cdn.shopify.com/app-store/listing_images/c467075f4670f6d3f86982713f5af1ac/icon/CNyv9cf0lu8CEAE=.jpg",
       "key": "icons/apps/selly.f30d25db.webp"
+    },
+    "sendlane": {
+      "url": "https://cdn.prod.website-files.com/5fcfd42a1d06cd880266a30a/63d80c63467f31a41754e07c_sendlane-new-logo.svg",
+      "key": "icons/apps/sendlane.82cb1bb4.webp",
+      "w": 128,
+      "h": 25
     },
     "seo-master": {
       "url": "https://cdn.shopify.com/app-store/listing_images/89f080b72a27e71e4d48c9ad2493e78d/icon/CJe604Pr8ZUDEAE=.png",
@@ -7298,10 +7316,7 @@
   "missing": {
     "apps": [
       "app25967",
-      "sc-easy-redirects",
-      "sendlane",
-      "whatsapp-chat-for-support",
-      "bundler-bundles"
+      "whatsapp-chat-for-support"
     ],
     "stores": [
       "alaglow.com",

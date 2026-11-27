@@ -75,8 +75,18 @@ export function tidyStoreSubtitle(subtitle: string | null | undefined): string |
   return name + tail;
 }
 
+/** Names from our StorePeek signatures when the App Store listing is gone or mis-titled. */
+const APP_DISPLAY_NAMES: Record<string, string> = {
+  app25967: 'Searchspring',
+  'bundler-bundles': 'Bundler',
+  'sc-easy-redirects': 'Easy Redirects',
+  sendlane: 'Sendlane',
+  'whatsapp-chat-for-support': 'Pushdaddy WhatsApp',
+};
+
 /** Dead App Store listings come back as "Oh no! That page doesn't exist." — show a real name. */
 export function tidyAppName(name: string | null | undefined, slug: string): string {
+  if (APP_DISPLAY_NAMES[slug]) return APP_DISPLAY_NAMES[slug];
   const raw = (name ?? '').trim();
   if (raw && !/^oh no!/i.test(raw)) return raw;
   const digits = /^app(\d+)$/i.exec(slug);

@@ -114,7 +114,6 @@ const jsonLd = [
       <SectionHeader
         id="on-the-page"
         title="On the page"
-        description={`Where it sits on ${s.store.display_name}'s ${pageLabel(s.page_type).toLowerCase()}, among the sections around it.`}
         href={fullPageHref}
         linkLabel="Open in the store viewer"
       />
@@ -131,7 +130,6 @@ const jsonLd = [
         <SectionHeader
           id="more-like-this"
           title={`Similar ${s.type.name.toLowerCase()} sections`}
-          description="On other stores. Same app, theme or device first."
           href={s.type.href}
           linkLabel={`All ${fmt(detail.in_type.total)}`}
         />

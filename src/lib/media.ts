@@ -30,6 +30,31 @@ export const THUMB_TOP: Record<Device, number> = { desktop: 1, mobile: 2.9 };
 export const THUMB_TOP_PX: Record<Device, number> = { desktop: 960, mobile: 600 };
 const CAPTURE_W: Record<Device, number> = { desktop: 1440, mobile: 390 };
 
+/**
+ * Whether a PinnedCapture of this section, in a frame of `ratio` (width/height), can be
+ * served from the pre-cut top thumbnail instead of the full-page capture. Keep the offset
+ * math in sync with PinnedCapture.astro.
+ */
+export function pinFitsTopThumb(
+  section: {
+    device: Device;
+    rect: { y: number; h: number };
+    screenshot: { width: number; height: number };
+  },
+  ratio: number,
+): boolean {
+  const imgW = section.screenshot.width;
+  const imgH = section.screenshot.height;
+  const frameH = imgW / ratio;
+  const ctx = Math.max(
+    imgW * (section.device === 'mobile' ? 0.14 : 0.1),
+    (frameH - section.rect.h) / 2,
+  );
+  const offset = Math.max(0, Math.min(section.rect.y - ctx, imgH - frameH));
+  const served = Math.min(imgH, Math.ceil(offset + frameH + 2));
+  return served <= CAPTURE_W[section.device] * THUMB_TOP[section.device];
+}
+
 /** `/media/shots/<domain>/<page>/<device>/<stamp>.webp` → its device, else null. */
 export function captureDevice(src: string): Device | null {
   const m = /\/shots\/[^/]+\/[^/]+\/(desktop|mobile)\/[^/]+\.webp$/.exec(src.split('?')[0] ?? '');

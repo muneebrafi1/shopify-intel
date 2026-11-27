@@ -8,23 +8,21 @@ import type { IconName } from '~/components/ui/icons';
 Astro.response.status = 404;
 Astro.response.headers.set('Cache-Control', 'no-store');
 
-const WAYS: { href: string; label: string; note: string; icon: IconName }[] = [
-  { href: '/stores', label: 'Stores', note: 'Real storefronts, page by page', icon: 'storefront' },
+const WAYS: { href: string; label: string; icon: IconName }[] = [
+  { href: '/stores', label: 'Stores', icon: 'storefront' },
   {
     href: '/themes',
     label: 'Themes',
-    note: 'Every theme on the stores using it',
     icon: 'paint-brush',
   },
-  { href: '/apps', label: 'Apps', note: 'Where each app shows up', icon: 'puzzle-piece' },
+  { href: '/apps', label: 'Apps', icon: 'puzzle-piece' },
   {
     href: '/sections',
     label: 'Sections',
-    note: 'Headers, heroes, buy boxes and more',
     icon: 'stack',
   },
-  { href: '/teardowns', label: 'Teardowns', note: 'One store, read closely', icon: 'article' },
-  { href: '/compare', label: 'Compare', note: 'Apps and themes side by side', icon: 'scales' },
+  { href: '/teardowns', label: 'Teardowns', icon: 'article' },
+  { href: '/compare', label: 'Compare', icon: 'scales' },
 ];
 ---
 
@@ -33,9 +31,7 @@ const WAYS: { href: string; label: string; note: string; icon: IconName }[] = [
     <div class="nf__intro">
       <p class="eyebrow">Error 404</p>
       <h1 class="display-md nf__title">We can’t find that page.</h1>
-      <p class="lead nf__sub">
-        Search for it, or start from one of these.
-      </p>
+      <p class="lead nf__sub">Search for it, or start from one of these.</p>
 
       <form class="nf__search" action="/search" method="get" role="search">
         <label class="visually-hidden" for="nf-q">
@@ -55,7 +51,6 @@ const WAYS: { href: string; label: string; note: string; icon: IconName }[] = [
           Search
         </Button>
       </form>
-
     </div>
 
     <nav class="nf__ways" aria-label="Start from">
@@ -65,7 +60,6 @@ const WAYS: { href: string; label: string; note: string; icon: IconName }[] = [
             <a href={w.href} class="nf__way">
               <Icon name={w.icon} size={20} class="nf__icon" />
               <span class="nf__label">{w.label}</span>
-              <span class="nf__note">{w.note}</span>
               <Icon name="arrow-right" size={16} class="nf__arrow" />
             </a>
           </li>
