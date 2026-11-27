@@ -165,13 +165,13 @@ export function factSentences(cmp: ComparisonDetail): string[] {
       );
     }
     out.push(
-      `We detect ${a.name} on ${formatCount(a.stores)} and ${b.name} on ${formatCount(b.stores)} of ${formatCount(a.denominator)} scanned stores; ${cmp.shared_stores.total > 0 ? `${pluralStores(cmp.shared_stores.total)} run both` : 'none runs both'}.`,
+      `${a.name} is on ${formatCount(a.stores)} stores, ${b.name} on ${formatCount(b.stores)}; ${cmp.shared_stores.total > 0 ? `${pluralStores(cmp.shared_stores.total)} run both` : 'none run both'}.`,
     );
     const sa = cmp.apps.a.seen_on.section_total;
     const sb = cmp.apps.b.seen_on.section_total;
     if (sa + sb > 0)
       out.push(
-        `Our section library attributes ${formatCount(sa)} ${sa === 1 ? 'section' : 'sections'} to ${a.name} and ${formatCount(sb)} to ${b.name}.`,
+        `${formatCount(sa)} ${sa === 1 ? 'section' : 'sections'} on stores running ${a.name}, ${formatCount(sb)} on ${b.name}.`,
       );
     return out;
   }
@@ -190,10 +190,10 @@ export function factSentences(cmp: ComparisonDetail): string[] {
       : `${a.name} is ${pa} and ${b.name} is ${pb} at list price.`,
   );
   out.push(
-    `We detect ${a.name} on ${formatCount(a.stores)} and ${b.name} on ${formatCount(b.stores)} of ${formatCount(a.denominator)} scanned stores; ${cmp.shared_stores.total > 0 ? `${pluralStores(cmp.shared_stores.total)} ran both at some point` : 'none has run both'}.`,
+    `${a.name} is on ${formatCount(a.stores)} stores, ${b.name} on ${formatCount(b.stores)}; ${cmp.shared_stores.total > 0 ? `${pluralStores(cmp.shared_stores.total)} have run both` : 'none have run both'}.`,
   );
   out.push(
-    `We have seen ${ta.versions.length} ${ta.versions.length === 1 ? 'version' : 'versions'} of ${a.name} and ${tb.versions.length} of ${b.name} on live stores.`,
+    `${ta.versions.length} ${ta.versions.length === 1 ? 'version' : 'versions'} of ${a.name}, ${tb.versions.length} of ${b.name}.`,
   );
   if (cmp.shared_apps.length > 0)
     out.push(

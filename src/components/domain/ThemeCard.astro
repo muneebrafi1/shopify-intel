@@ -108,13 +108,11 @@ const ordered = [...deck].reverse();
     <span class="theme-card__count-n num">{storesCount.toLocaleString('en-US')}</span>
     <span class="theme-card__count-l">
       {storesCount === 1 ? 'store' : 'stores'}
-      {typeof share === 'number' ? (
+      {typeof share === 'number' && (
         <>
           {' · '}
           <span class="num">{`${(share * 100).toFixed(1)}%`}</span>
         </>
-      ) : (
-        ' in our scan'
       )}
     </span>
     {rank ? (

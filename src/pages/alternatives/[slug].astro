@@ -301,8 +301,8 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
           <div class="altp__novisual">
             <p>
               {isApp
-                ? `We haven’t attributed a visible section to ${name} on a curated store yet.`
-                : `No curated store runs ${name} yet.`}
+                ? `No page crop for ${name} yet.`
+                : `No store using ${name} yet.`}
             </p>
           </div>
         )}
@@ -351,8 +351,8 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
         </div>
       ) : (
         <EmptyState
-          title="No alternatives in our data yet"
-          body={`We don’t track another ${isApp ? 'app in this category' : 'theme close to this one'} yet. Browse the full catalogue instead.`}
+          title={`No other ${isApp ? 'apps in this category' : 'close themes'} yet`}
+          body=""
           align="start"
         >
           <Button href={isApp ? '/apps' : '/themes'} variant="secondary">

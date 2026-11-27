@@ -149,10 +149,6 @@ const comparisons = detail.comparisons;
 const compareHref =
   similar.length > 0 || comparisons.length > 0 ? '#compare' : `/alternatives/${slug}`;
 
-const lead =
-  usage.stores > 0
-    ? `Running on ${formatCount(usage.stores)} of the ${formatCount(usage.denominator)} Shopify stores in our scan, shown here on a real storefront, page by page.`
-    : `Not yet seen on the ${formatCount(usage.denominator)} Shopify stores in our scan.`;
 // Section types by how often they appear; the rest are one click away in the library.
 const TYPE_CHIPS = 10;
 const typeChips = [...detail.sections.by_type].sort((a, b) => b.count - a.count);
@@ -376,8 +372,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         />
         {stores.length === 0 ? (
           <EmptyState
-            title={`No store in our scan runs ${theme.name} right now`}
-            body="A theme drops out of this list when we stop detecting it on a store's storefront."
+            title={`No stores using ${theme.name}`}
+            body=""
             size="sm"
             level={3}
             class="th-empty"
