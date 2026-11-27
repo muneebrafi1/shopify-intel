@@ -11,6 +11,7 @@ import { screenshotImage, sectionCropImage } from '../media/urls.ts';
 import { ftsPrefixQuery } from './fts.ts';
 import { jsonIds } from './refs.ts';
 import { tidyStoreSubtitle } from '~/lib/format';
+import { appLogoSrc } from '~/lib/icons';
 
 export const SEARCH_KINDS: ReadonlyArray<{ kind: SearchKind; label: string }> = [
   { kind: 'theme', label: 'Themes' },
@@ -69,7 +70,9 @@ async function visuals(ctx: Ctx, rows: IndexRow[]) {
           'SELECT slug, icon_url FROM apps WHERE slug IN (SELECT value FROM json_each(?))',
           [jsonIds(apps)],
         )
-        .then((r) => r.forEach((a) => icons.set(key('app', a.slug), a.icon_url))),
+        .then((r) =>
+          r.forEach((a) => icons.set(key('app', a.slug), appLogoSrc(a.slug) ?? a.icon_url)),
+        ),
     );
   }
   const addShots = (kind: SearchKind, sql: string, ids: string[]) => {

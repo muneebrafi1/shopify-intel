@@ -14,28 +14,26 @@ interface Props {
 const { stores, class: className } = Astro.props;
 ---
 
-{
-  stores.length > 0 && (
-    <div class:list={['grid', 'grid--shots', 'shotgrid', className]}>
-      {stores.map((s) => (
-        <StoreCard
-          domain={s.domain}
-          name={s.name}
-          href={s.href}
-          shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
-          meta={`${themeName(s.theme)} · ${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`}
-        />
-      ))}
-    </div>
-  )
-}
+{stores.length > 0 && (
+  <div class:list={['grid', 'grid--shots', 'shotgrid', className]}>
+    {stores.map((s) => (
+      <StoreCard
+        domain={s.domain}
+        name={s.name}
+        href={s.href}
+        shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
+        meta={`${themeName(s.theme)} · ${s.app_count} ${s.app_count === 1 ? 'app' : 'apps'}`}
+      />
+    ))}
+  </div>
+)}
 
 <style>
   .shotgrid {
     margin-bottom: var(--space-8);
   }
   @media (max-width: 639px) {
-    .shotgrid > :nth-child(n + 5) {
+    .shotgrid > :nth-child(n + 7) {
       display: none;
     }
   }

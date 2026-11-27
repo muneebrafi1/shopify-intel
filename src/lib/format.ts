@@ -74,3 +74,12 @@ export function tidyStoreSubtitle(subtitle: string | null | undefined): string |
   if (isHandle) name = 'Custom theme';
   return name + tail;
 }
+
+/** Dead App Store listings come back as "Oh no! That page doesn't exist." — show a real name. */
+export function tidyAppName(name: string | null | undefined, slug: string): string {
+  const raw = (name ?? '').trim();
+  if (raw && !/^oh no!/i.test(raw)) return raw;
+  const digits = /^app(\d+)$/i.exec(slug);
+  if (digits) return `App ${digits[1]}`;
+  return slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}

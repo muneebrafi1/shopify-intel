@@ -106,7 +106,11 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
     ),
     db.all<{ slug: string }>("SELECT slug FROM themes WHERE status = 'active' ORDER BY slug"),
     db.all<{ slug: string; checked_on: string | null }>(
-      "SELECT slug, checked_on FROM apps WHERE status = 'active' ORDER BY slug",
+      `SELECT a.slug, a.checked_on
+       FROM apps a
+       LEFT JOIN app_stats st ON st.app_id = a.id
+       WHERE a.status = 'active' AND COALESCE(st.store_count, 0) > 0
+       ORDER BY a.slug`,
     ),
     db.all<{ slug: string }>(
       `SELECT ac.slug FROM app_categories ac

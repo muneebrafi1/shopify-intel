@@ -14,12 +14,11 @@ import Segmented from '~/components/ui/Segmented.astro';
 import Window from '~/components/ui/Window.astro';
 import Icon from '~/components/ui/Icon.astro';
 import Button from '~/components/ui/Button.astro';
-import Card from '~/components/ui/Card.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
-import Shot from '~/components/media/Shot.astro';
-import type { AppDetail } from '~/server/api/v1/types';
+import type { AppDetail, StoreListItem } from '~/server/api/v1/types';
 import type { Device } from '~/lib/taxonomy';
+import StoreShotGrid from '~/components/domain/StoreShotGrid.astro';
 import PinnedCapture from './PinnedCapture.astro';
 import { pageName, sectionViewerHref } from './helpers';
 
@@ -34,8 +33,18 @@ interface Props {
   seenHref: (id: number) => string;
   /** Total detected stores (for the empty variant). */
   storesTotal: number;
+  /** Captured stores running the app, shown as a screenshot grid. */
+  storeShots?: StoreListItem[];
 }
-const { detail, device, selected, deviceHref, seenHref, storesTotal } = Astro.props;
+const {
+  detail,
+  device,
+  selected,
+  deviceHref,
+  seenHref,
+  storesTotal,
+  storeShots = [],
+} = Astro.props;
 const app = detail.app;
 const name = app.short_name;
 const seen = detail.seen_on;
@@ -49,9 +58,6 @@ const shown = byDevice[activeDevice].slice(0, 12);
 const active = shown.find((s) => s.id === selected) ?? shown[0];
 const storesWithSections = seen.stores.filter((s) => s.sections.length > 0);
 const variant = all.length > 0 ? 'pinned' : seen.stores.length > 0 ? 'installed' : 'unseen';
-const surfaces = detail.surfaces;
-const surfaceList = surfaces.map((s) => s.name).join(' and ');
-const pages = [...new Set(all.map((s) => pageName(s.page_type).toLowerCase()))];
 const appSectionsHref = `/sections?app=${encodeURIComponent(app.slug)}`;
 const mobile = activeDevice === 'mobile';
 // Stage frame: desktop pages in a 4:3 frame filling the stage; phones in a 9:16 frame.
@@ -77,12 +83,9 @@ const altFor = (s: (typeof all)[number]) =>
         </>
       )}
       {variant === 'installed' && (
-        <>
-          <h2 class="seen__title" id="where-title">
-            On {seen.stores.length} {seen.stores.length === 1 ? 'store' : 'stores'}, no
-            section to pin
-          </h2>
-        </>
+        <h2 class="seen__title" id="where-title">
+          Seen on {seen.stores.length} {seen.stores.length === 1 ? 'store' : 'stores'}
+        </h2>
       )}
       {variant === 'unseen' && (
         <h2 class="seen__title" id="where-title">
@@ -196,43 +199,17 @@ const altFor = (s: (typeof all)[number]) =>
     </Window>
   )}
 
+  {storeShots.length > 0 && variant !== 'unseen' && (
+    <StoreShotGrid stores={storeShots} class="seen__shots" />
+  )}
+
   {variant === 'pinned' && (
     <div class="seen__foot">
       <a href={appSectionsHref} class="seen__more">
-        All {seen.section_total} in the sections library
+        All sections
         <Icon name="arrow-right" size={14} />
       </a>
     </div>
-  )}
-
-  {variant === 'installed' && (
-    <ul class="seen__stores">
-      {seen.stores.slice(0, 6).map((s, i) => (
-        <li>
-          {s.preview ? (
-            <Card href={s.store.href} padding="sm" class="seen__store">
-              <Shot
-                slot="media"
-                src={s.preview.image.src}
-                width={s.preview.image.width}
-                height={s.preview.image.height}
-                device={s.preview.device}
-                alt={`${s.store.display_name} ${pageName(s.preview.page_type).toLowerCase()} page, ${s.preview.device} (layout preview)`}
-                eager={i < 2}
-                flush
-              />
-              <span class="seen__store-name">{s.store.display_name}</span>
-              <span class="seen__store-meta">{pageName(s.preview.page_type)} page</span>
-            </Card>
-          ) : (
-            <Card href={s.store.href} padding="sm" class="seen__store">
-              <span class="seen__store-name">{s.store.display_name}</span>
-              <span class="seen__store-meta">Not captured yet</span>
-            </Card>
-          )}
-        </li>
-      ))}
-    </ul>
   )}
 
   {variant === 'installed' && (
@@ -245,12 +222,7 @@ const altFor = (s: (typeof all)[number]) =>
   )}
 
   {variant === 'unseen' && (
-    <EmptyState
-      title="Not on a curated store yet"
-      level={3}
-      icon="storefront"
-      body={`We detect ${name} on ${storesTotal.toLocaleString('en-US')} scanned ${storesTotal === 1 ? 'store' : 'stores'}, but none of the stores we capture page by page runs it, so there is no section to pin yet.${surfaces.length > 0 ? ` Apps in this category usually render as ${surfaceList.toLowerCase()}.` : ''}`}
-    >
+    <EmptyState title="Not on a captured store yet" level={3} icon="storefront">
       <Button href="#stores" size="sm" iconRight="arrow-right">
         Stores running {name}
       </Button>
@@ -291,6 +263,9 @@ const altFor = (s: (typeof all)[number]) =>
 </script>
 
 <style>
+  .seen__shots {
+    margin-top: var(--space-5);
+  }
   .seen__head {
     display: flex;
     flex-wrap: wrap;

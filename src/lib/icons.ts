@@ -4,6 +4,7 @@ import manifest from '../../data/curation/icons.json';
 type StoreIcon = { key: string; w?: number; h?: number };
 const stores = (manifest as { stores: Record<string, StoreIcon> }).stores;
 const themes = (manifest as { themes?: Record<string, StoreIcon> }).themes ?? {};
+const apps = (manifest as { apps?: Record<string, StoreIcon> }).apps ?? {};
 
 export type StoreLogo = { src: string; w: number; h: number };
 
@@ -24,4 +25,10 @@ export function themeLogo(slug: string): StoreLogo | null {
   const hit = themes[slug];
   if (!hit) return null;
   return { src: `/media/${hit.key}`, w: hit.w ?? 256, h: hit.h ?? 256 };
+}
+
+/** Mirrored App Store (or detection) icon, when we have one in the manifest. */
+export function appLogoSrc(slug: string): string | null {
+  const hit = apps[slug];
+  return hit?.key ? `/media/${hit.key}` : null;
 }

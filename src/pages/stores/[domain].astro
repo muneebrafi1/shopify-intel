@@ -282,16 +282,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       </aside>
 
       <section id="apps" class="store__apps" aria-labelledby="apps-title">
-        <SectionHeader
-          id="apps-title"
-          title="Detected apps"
-          count={store.app_count}
-          description={
-            hasPlates
-              ? `The theme and apps detected on ${lastSeen}, by category, with the section each app is attributed to on the pages above.`
-              : `The theme and apps detected on ${lastSeen}, by category, with where apps of each kind usually render.`
-          }
-        />
+        <SectionHeader id="apps-title" title="Detected apps" count={store.app_count} />
         <StackSheet detail={detail} basePath={basePath} class="store__stack" />
       </section>
     </div>

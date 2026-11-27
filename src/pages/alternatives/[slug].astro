@@ -18,7 +18,6 @@ import EmptyState from '~/components/ui/EmptyState.astro';
 import FactsCard from '~/components/ui/FactsCard.astro';
 import Icon from '~/components/ui/Icon.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
 import Window from '~/components/ui/Window.astro';
 import AltRow from '~/components/compare/AltRow.astro';
 import InContext from '~/components/compare/InContext.astro';
@@ -26,7 +25,7 @@ import PairCard from '~/components/compare/PairCard.astro';
 import { api, orNotFound } from '~/server/api';
 import type { SectionCard } from '~/server/api/v1/types';
 import { APP_CATEGORY_SURFACES, type SectionType } from '~/lib/taxonomy';
-import { formatCount, formatDate } from '~/lib/format';
+import { formatCount } from '~/lib/format';
 import { appPairLine, sharePct, themePairLine } from '~/components/compare/compare';
 import { thumbUrl } from '~/lib/media';
 
@@ -44,13 +43,9 @@ const app = alt.app;
 const theme = alt.theme;
 const name = app?.short_name ?? theme?.name ?? alt.slug;
 const usage = app?.usage ?? theme!.usage;
-const scan = Object.entries(meta.sources).find(([k]) => k.startsWith('storepeek-scan'))?.[1];
-const asOf = formatDate(meta.data_as_of);
-
 // Apps: one crop of where each app renders, from the category's primary surface.
 const crops = new Map<string, SectionCard>();
 let categoryTotal: number | null = null;
-let surfaceName: string | null = null;
 if (isApp && alt.category) {
   const surface = (APP_CATEGORY_SURFACES[alt.category.name] ?? [])[0] as SectionType | undefined;
   const [sections, catApps] = await Promise.all([
@@ -60,7 +55,6 @@ if (isApp && alt.category) {
   categoryTotal = catApps.meta.pagination?.total ?? null;
   if (sections && surface) {
     for (const s of sections.data.items) {
-      surfaceName ??= s.type.name;
       if (s.app && !crops.has(s.app.slug)) crops.set(s.app.slug, s);
     }
     // Apps that render this section but fell outside the first page of results.
@@ -201,7 +195,8 @@ const description = isApp
 const altTitleLong = isApp
   ? `${name} alternatives: ${count} ${alt.category?.name ? `${alt.category.name} ` : ''}apps ranked by use`
   : `Themes like ${name}: ${count} alternatives`;
-const altTitle = altTitleLong.length <= 62 ? altTitleLong : `${name} alternatives on real Shopify stores`;
+const altTitle =
+  altTitleLong.length <= 62 ? altTitleLong : `${name} alternatives on real Shopify stores`;
 const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Themes'].join(' · ');
 ---
 
@@ -209,6 +204,7 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
   title={altTitle}
   description={description}
   canonical={`/alternatives/${alt.slug}`}
+  noindex={count === 0}
   jsonLd={jsonLd}
 >
   <div class="container altp">
@@ -224,9 +220,11 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
     <header class="altp__head">
       <div class="altp__intro">
         <div class="altp__id">
-          {theme
-            ? <ThemeMark slug={theme.slug} name={name} size={56} />
-            : <AppIcon src={app?.icon_url ?? null} name={name} size={56} />}
+          {theme ? (
+            <ThemeMark slug={theme.slug} name={name} size={56} />
+          ) : (
+            <AppIcon src={app?.icon_url ?? null} name={name} size={56} />
+          )}
           <p class="eyebrow">{eyebrow}</p>
         </div>
         <h1 class="display-md altp__title">Alternatives to {name}</h1>
@@ -306,11 +304,7 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
           </>
         ) : (
           <div class="altp__novisual">
-            <p>
-              {isApp
-                ? `No page crop for ${name} yet.`
-                : `No store using ${name} yet.`}
-            </p>
+            <p>{isApp ? `No page crop for ${name} yet.` : `No store using ${name} yet.`}</p>
           </div>
         )}
       </figure>
@@ -322,11 +316,6 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
         eyebrow={isApp ? 'Ranked by usage' : 'Ranked by closeness'}
         title={isApp ? `Other ${alt.category?.name ?? ''} apps` : `Themes close to ${name}`}
         count={count}
-        description={
-          isApp
-            ? `Position is how many scanned stores run each app, not how good it is.${surfaceName ? ` Crops show the ${surfaceName.toLowerCase()} each one renders.` : ''}`
-            : 'Position is how much each theme has in common with the original, not how good it is.'
-        }
       />
       {count > 0 ? (
         <div class="altp__table">
@@ -367,24 +356,11 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
           </Button>
         </EmptyState>
       )}
-      <SourceNote
-        class="altp__source"
-        source={`${scan?.label ?? 'our scan of public storefronts'}; ratings and prices from each listing. The order is ${isApp ? 'usage in our scan' : 'overlap in vendor, price and apps'}, not a judgement of quality`}
-      />
     </section>
 
     <section class="altp__block altp__facts" aria-labelledby="facts-title">
       <div class="altp__facts-main">
-        <SectionHeader
-          id="facts-title"
-          eyebrow="Facts"
-          title={`${name}, compared`}
-          description={
-            pairs.length > 0
-              ? `Side-by-side pages for ${name} and the alternatives with the most data behind them.`
-              : `No side-by-side page for ${name} yet: we only publish comparisons for popular pairs.`
-          }
-        />
+        <SectionHeader id="facts-title" eyebrow="Facts" title={`${name}, compared`} />
         {pairs.length > 0 ? (
           <ul class="altp__pairs">
             {pairs.map((p) => (
@@ -408,12 +384,7 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
           </a>
         )}
       </div>
-      <FactsCard
-        title={`${name} at a glance`}
-        items={facts}
-        source={isApp ? 'App Store listing and our scan' : 'Theme listing and our scan'}
-        asOf={asOf}
-      />
+      <FactsCard title={`${name} at a glance`} items={facts} />
     </section>
 
     <nav class="altp__foot" aria-label="More">

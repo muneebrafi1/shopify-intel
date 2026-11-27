@@ -10,6 +10,8 @@ import {
   type PageType,
   type SectionType,
 } from '../../lib/taxonomy.ts';
+import { tidyAppName } from '../../lib/format.ts';
+import { appLogoSrc } from '../../lib/icons.ts';
 import { hrefs } from '../api/v1/hrefs.ts';
 import type { Ctx } from '../api/v1/context.ts';
 import type {
@@ -105,9 +107,9 @@ export interface AppRefRow {
 
 export const appRef = (r: AppRefRow): AppRef => ({
   slug: r.app_slug,
-  name: r.app_name,
-  short_name: r.app_short_name ?? r.app_name,
-  icon_url: r.app_icon_url,
+  name: tidyAppName(r.app_name, r.app_slug),
+  short_name: tidyAppName(r.app_short_name ?? r.app_name, r.app_slug),
+  icon_url: appLogoSrc(r.app_slug) ?? r.app_icon_url,
   href: hrefs.app(r.app_slug),
   category: categoryRef(r.app_cat_slug, r.app_cat_name),
 });
@@ -118,8 +120,8 @@ export const entityRef = (
 ): EntityRef => ({
   kind,
   slug: r.slug,
-  name: r.name,
-  icon_url: r.icon_url ?? null,
+  name: kind === 'app' ? tidyAppName(r.name, r.slug) : r.name,
+  icon_url: (kind === 'app' ? appLogoSrc(r.slug) : null) ?? r.icon_url ?? null,
   href: kind === 'app' ? hrefs.app(r.slug) : hrefs.theme(r.slug),
 });
 
