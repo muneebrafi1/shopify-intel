@@ -178,20 +178,6 @@
     "detected_at": "2026-11-27T03:47:29.508Z"
   },
   {
-    "domain": "analuisa.com",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [
-      "edgetag",
-      "helpdesk",
-      "impact-1",
-      "intelligems",
-      "mouseflow"
-    ],
-    "currency": null,
-    "detected_at": "2026-11-27T19:51:24.702Z"
-  },
-  {
     "domain": "anbernic.com",
     "theme": "Impact",
     "theme_custom": false,
@@ -2693,16 +2679,6 @@
     "detected_at": "2026-11-27T07:40:14.960Z"
   },
   {
-    "domain": "furbo.com",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [
-      "builder-io"
-    ],
-    "currency": null,
-    "detected_at": "2026-11-27T19:50:16.655Z"
-  },
-  {
     "domain": "fuzzyard.com",
     "theme": "Aurora",
     "theme_custom": false,
@@ -2842,25 +2818,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T08:07:31.004Z"
-  },
-  {
-    "domain": "goalzero.com",
-    "theme": "Inferno",
-    "theme_custom": false,
-    "apps": [
-      "accesswidget",
-      "bazaarvoice",
-      "blockify",
-      "fit-analytics",
-      "gdpr-backpack",
-      "klaviyo",
-      "loyaltylion",
-      "nofraud",
-      "rebuy",
-      "redo"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T19:52:07.543Z"
   },
   {
     "domain": "goli.com",
@@ -6934,18 +6891,6 @@
     "detected_at": "2026-11-27T03:53:27.050Z"
   },
   {
-    "domain": "sakara.com",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [
-      "impact-1",
-      "ketch",
-      "kustomer"
-    ],
-    "currency": null,
-    "detected_at": "2026-11-27T19:50:42.900Z"
-  },
-  {
     "domain": "sarahandsebastian.com",
     "theme": "Sarah & Sebastian",
     "theme_custom": false,
@@ -9166,14 +9111,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T07:49:47.891Z"
-  },
-  {
-    "domain": "vrai.com",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [],
-    "currency": null,
-    "detected_at": "2026-11-27T19:51:53.710Z"
   },
   {
     "domain": "vuoriclothing.com",
