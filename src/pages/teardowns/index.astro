@@ -9,7 +9,6 @@ import PageHeader from '~/components/ui/PageHeader.astro';
 import Icon from '~/components/ui/Icon.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
-import Badge from '~/components/ui/Badge.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
 import TeardownCard from '~/components/domain/TeardownCard.astro';
 import LeadTeardown from '~/components/teardowns/LeadTeardown.astro';
@@ -22,7 +21,6 @@ const items = [...data.items].sort(
     (b.published_at ?? '').localeCompare(a.published_at ?? '') || b.note_count - a.note_count,
 );
 const [lead, ...rest] = items;
-const allSamples = items.length > 0 && items.every((t) => t.is_sample);
 const asOf = formatDate(meta.data_as_of);
 
 const site = Astro.site ?? Astro.url;
@@ -51,19 +49,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     <PageHeader
       title="Teardowns"
       count={items.length}
-      description="One store at a time: the theme, every app we detected and where each one lands on the page. Written from what the scan found, never from estimates."
     >
-      {allSamples && (
-        <p slot="meta" class="tds__samples">
-          <Badge tone="caution" size="sm">
-            Samples
-          </Badge>
-          <span>
-            These show the format, from the {asOf} scan. Page layouts are previews until the first
-            capture run.
-          </span>
-        </p>
-      )}
     </PageHeader>
 
     {lead ? (
@@ -112,18 +98,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 <style>
   .tds {
     padding-bottom: var(--space-16);
-  }
-  .tds__samples {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-    margin-top: var(--space-4);
-    color: var(--ink-3);
-    font-size: var(--text-sm);
-    line-height: 1.45;
-  }
-  .tds__samples :global(.badge) {
-    transform: translateY(-1px);
   }
   .tds__below {
     display: grid;

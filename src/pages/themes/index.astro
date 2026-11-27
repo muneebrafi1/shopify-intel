@@ -205,11 +205,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     <PageHeader
       title={state.q ? 'Themes' : facetFiltered ? heading : 'Themes'}
       count={filtered ? total : allTotal}
-      description={
-        state.q
-          ? `Matching “${state.q}”, shown on the real stores that run them.`
-          : 'Every Shopify theme we track, shown on the real stores that run it.'
-      }
     >
       <Fragment slot="actions">
         <Button href="/compare?kind=theme" variant="secondary" icon="scales">
