@@ -71,15 +71,15 @@ const altFor = (s: (typeof all)[number]) =>
         <>
           <h2 class="seen__title" id="where-title">
             {partial
-              ? `Seen in ${seen.section_total.toLocaleString('en-US')} sections on curated stores`
-              : `Seen on ${storeCount} curated ${storeCount === 1 ? 'store' : 'stores'}`}
+              ? `Seen in ${seen.section_total.toLocaleString('en-US')} sections`
+              : `Seen on ${storeCount} ${storeCount === 1 ? 'store' : 'stores'}`}
           </h2>
         </>
       )}
       {variant === 'installed' && (
         <>
           <h2 class="seen__title" id="where-title">
-            On {seen.stores.length} curated {seen.stores.length === 1 ? 'store' : 'stores'}, no
+            On {seen.stores.length} {seen.stores.length === 1 ? 'store' : 'stores'}, no
             section to pin
           </h2>
         </>

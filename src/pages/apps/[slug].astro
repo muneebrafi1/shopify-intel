@@ -849,7 +849,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     .tabbar :global(.tabbar__tabs) {
       margin-right: calc(var(--page-gutter) * -1);
       padding-right: var(--page-gutter);
-      mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+      mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
     }
   }
 

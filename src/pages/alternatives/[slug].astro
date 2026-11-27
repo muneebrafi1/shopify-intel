@@ -277,7 +277,7 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
           </>
         ) : ownPreview ? (
           <>
-            <Window title="Home page · curated store">
+            <Window title="Home page">
               <a href={theme!.href} class="altp__shot" data-theme="light">
                 <img
                   src={thumbUrl(ownPreview.image.src, {
@@ -293,7 +293,7 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
               </a>
             </Window>
             <figcaption class="altp__cap">
-              {name} on a curated store, top of the home page
+              {name} on the home page
               {ownPreview.is_placeholder && ' (layout preview)'}
             </figcaption>
           </>

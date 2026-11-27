@@ -47,6 +47,7 @@ const { items, label, size = 'md', class: className } = Astro.props;
     box-shadow: inset 0 -1px 0 var(--line);
     overflow-x: auto;
     scrollbar-width: none;
+    padding-right: 2px;
   }
   .tabs::-webkit-scrollbar {
     display: none;
@@ -65,7 +66,7 @@ const { items, label, size = 'md', class: className } = Astro.props;
     transition: color var(--dur-fast) var(--ease-out);
   }
   .tabs--sm {
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
   .tabs--sm .tabs__item {
     height: 36px;
@@ -126,5 +127,11 @@ const { items, label, size = 'md', class: className } = Astro.props;
     transition:
       transform var(--dur-base) var(--ease-out),
       width var(--dur-base) var(--ease-out);
+  }
+  @media (max-width: 639px) {
+    .tabs {
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+      mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+    }
   }
 </style>
