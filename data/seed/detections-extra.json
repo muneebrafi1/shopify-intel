@@ -77,23 +77,6 @@
     "detected_at": "2026-11-26T11:47:06.764Z"
   },
   {
-    "domain": "alexmill.com",
-    "theme": "Alex Mill",
-    "theme_custom": false,
-    "apps": [
-      "amp-back-in-stock",
-      "black-crow-ai",
-      "global-e-crossborder",
-      "helpdesk",
-      "klaviyo",
-      "loop-returns",
-      "rakuten-advertising",
-      "shopmy"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T08:07:18.774Z"
-  },
-  {
     "domain": "almadalabel.com",
     "theme": "coi",
     "theme_custom": false,
@@ -1496,23 +1479,6 @@
     "detected_at": "2026-11-27T08:07:17.758Z"
   },
   {
-    "domain": "ember.com",
-    "theme": "Dawn",
-    "theme_custom": false,
-    "apps": [
-      "accesswidget",
-      "bazaarvoice",
-      "hubspot-2",
-      "klaviyo",
-      "onetrust",
-      "recharge",
-      "route",
-      "yotpo"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T07:45:32.189Z"
-  },
-  {
     "domain": "emilynixon.com",
     "theme": "The Barn",
     "theme_custom": false,
@@ -1547,20 +1513,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T03:44:55.086Z"
-  },
-  {
-    "domain": "epicprovisions.com",
-    "theme": "Venue",
-    "theme_custom": false,
-    "apps": [
-      "bazaarvoice",
-      "klaviyo",
-      "onetrust",
-      "rebuy",
-      "recharge"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T07:40:02.062Z"
   },
   {
     "domain": "estudioniksen.com",
@@ -1654,22 +1606,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-26T11:49:27.433Z"
-  },
-  {
-    "domain": "feastables.com",
-    "theme": "Feastables",
-    "theme_custom": false,
-    "apps": [
-      "intelligems",
-      "klaviyo",
-      "kustomer",
-      "onetrust",
-      "postscript",
-      "rebuy",
-      "tolstoy"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T07:46:46.340Z"
   },
   {
     "domain": "feelreformed.com",
@@ -1994,23 +1930,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T03:41:01.898Z"
-  },
-  {
-    "domain": "grundens.com",
-    "theme": "Dawn",
-    "theme_custom": false,
-    "apps": [
-      "bazaarvoice",
-      "gdpr-cookie-consent",
-      "instafeed",
-      "kiwi-sizing",
-      "klaviyo",
-      "rebuy",
-      "shogun",
-      "shopify-forms"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T07:51:37.851Z"
   },
   {
     "domain": "guayaki.com",
@@ -2542,30 +2461,6 @@
     "detected_at": "2026-11-27T07:47:02.962Z"
   },
   {
-    "domain": "jennifermeyer.com",
-    "theme": "JM By WIP",
-    "theme_custom": false,
-    "apps": [
-      "affirm",
-      "backinstock",
-      "foursixty",
-      "gdpr-backpack",
-      "gift-card-loyalty-program",
-      "global-e-crossborder",
-      "google-shopping-feed",
-      "helpdesk",
-      "klaviyo",
-      "mailchimp",
-      "nosto-personalization-for-shopify",
-      "postscript",
-      "tidio-chat",
-      "wetracked-io-connect",
-      "wishlistplus"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T07:41:27.272Z"
-  },
-  {
     "domain": "jennikayne.com",
     "theme": "JenniKayne Shopify Theme",
     "theme_custom": false,
@@ -3037,25 +2932,6 @@
     "detected_at": "2026-11-27T03:48:00.842Z"
   },
   {
-    "domain": "ledbury.com",
-    "theme": "Symmetry",
-    "theme_custom": false,
-    "apps": [
-      "accesswidget",
-      "amp-back-in-stock",
-      "backinstock",
-      "gdpr-cookie-consent",
-      "gift-card-loyalty-program",
-      "helpdesk",
-      "intelligems",
-      "okendo-reviews",
-      "retention-com",
-      "returngo"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T08:07:40.612Z"
-  },
-  {
     "domain": "levoit.com",
     "theme": "Levoit",
     "theme_custom": false,
@@ -3478,32 +3354,6 @@
     "detected_at": "2026-11-27T07:42:10.046Z"
   },
   {
-    "domain": "missoma.com",
-    "theme": "MISSOMA",
-    "theme_custom": false,
-    "apps": [
-      "accessibly-app",
-      "amp-back-in-stock",
-      "backinstock",
-      "bazaarvoice",
-      "digitalgenius",
-      "global-e-crossborder",
-      "intelligems",
-      "klevu-smart-search",
-      "nudgify",
-      "pagefly",
-      "pushowl",
-      "shopify-forms",
-      "shopmy",
-      "swap-shipping-returns",
-      "tolstoy",
-      "wishlistplus",
-      "zigpoll"
-    ],
-    "currency": "GBP",
-    "detected_at": "2026-11-27T07:47:43.297Z"
-  },
-  {
     "domain": "mociun.com",
     "theme": "Mociun",
     "theme_custom": false,
@@ -3561,22 +3411,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T07:47:59.696Z"
-  },
-  {
-    "domain": "morphe.com",
-    "theme": "Shiro",
-    "theme_custom": false,
-    "apps": [
-      "helpdesk",
-      "intelligems",
-      "klaviyo",
-      "klevu-smart-search",
-      "onetrust",
-      "rebuy",
-      "tolstoy"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T08:10:14.847Z"
   },
   {
     "domain": "motelrocks.com",
@@ -4041,21 +3875,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T07:37:43.448Z"
-  },
-  {
-    "domain": "orbitkey.com",
-    "theme": "Flow",
-    "theme_custom": false,
-    "apps": [
-      "a-b-convert-price-a-b-test",
-      "helpdesk",
-      "hreflang-tags",
-      "klaviyo",
-      "nofraud",
-      "okendo-reviews"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T07:42:54.274Z"
   },
   {
     "domain": "orgain.com",
@@ -5193,32 +5012,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T07:44:06.720Z"
-  },
-  {
-    "domain": "statebags.com",
-    "theme": "Simplistic",
-    "theme_custom": false,
-    "apps": [
-      "alia",
-      "amp-back-in-stock",
-      "backinstock",
-      "black-crow-ai",
-      "essential-post-purchase-upsell",
-      "free-shipping-bar",
-      "govalo",
-      "helpdesk",
-      "judgeme",
-      "klaviyo",
-      "loop-returns",
-      "postscript",
-      "regios-automatic-discounts",
-      "shogun",
-      "shopmy",
-      "upcart",
-      "visually-io"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T07:50:09.972Z"
   },
   {
     "domain": "staud.clothing",
