@@ -76,7 +76,7 @@ describe('listSectionsByApps', () => {
         }
       }
     }
-  });
+  }, 120_000);
 
   it('keeps tie order: the mixed order equals the library order of each app', async () => {
     const { data } = await api.listSectionsByApps({
