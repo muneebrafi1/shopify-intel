@@ -60,46 +60,16 @@ function sectionWhere(f: SectionFilters, omit: readonly Key[] = []) {
 
 const FROM = "FROM sections s JOIN stores st ON st.id = s.store_id AND st.status = 'active'";
 
-async function sectionFacets(ctx: Ctx, f: SectionFilters): Promise<ListSectionsOutput['facets']> {
-  const run = <Row>(omit: Key[], sql: (where: string) => string) => {
-    const w = sectionWhere(f, omit);
-    return ctx.db.all<Row>(sql(w.sql), w.params);
-  };
-  type Count = { value: string; count: number };
-  const [types, groups, pages, devices, themes, apps] = await Promise.all([
-    run<Count>(
-      ['type', 'group'],
-      (w) =>
-        `SELECT s.section_type AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.section_type`,
-    ),
-    run<Count>(
-      ['type', 'group'],
-      (w) => `SELECT ty.group_slug AS value, COUNT(*) AS count ${FROM}
-        JOIN section_types ty ON ty.slug = s.section_type WHERE ${w} GROUP BY ty.group_slug`,
-    ),
-    run<Count>(
-      ['page_type'],
-      (w) =>
-        `SELECT s.page_type AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.page_type`,
-    ),
-    run<Count>(
-      ['device'],
-      (w) => `SELECT s.device AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.device`,
-    ),
-    run<Facet>(
-      ['themeId'],
-      (w) => `SELECT t.slug AS value, t.name AS label, COUNT(*) AS count ${FROM}
-        JOIN themes t ON t.id = s.theme_id WHERE ${w}
-        GROUP BY t.id ORDER BY count DESC, t.name LIMIT 30`,
-    ),
-    run<Facet>(
-      ['appId'],
-      (w) => `SELECT a.slug AS value, a.short_name AS label, COUNT(*) AS count ${FROM}
-        JOIN apps a ON a.id = s.app_id WHERE ${w}
-        GROUP BY a.id ORDER BY count DESC, a.short_name LIMIT 30`,
-    ),
-  ]);
-  // Taxonomy order for fixed vocabularies.
+type Count = { value: string; count: number };
+
+function shapeFacets(
+  types: Count[],
+  groups: Count[],
+  pages: Count[],
+  devices: Count[],
+  themes: Facet[],
+  apps: Facet[],
+): ListSectionsOutput['facets'] {
   const ordered = <T extends { slug: string; name: string }>(vocab: readonly T[], rows: Count[]) =>
     vocab.flatMap((v): Facet[] => {
       const hit = rows.find((r) => r.value === v.slug);
@@ -122,6 +92,92 @@ async function sectionFacets(ctx: Ctx, f: SectionFilters): Promise<ListSectionsO
     themes,
     apps,
   };
+}
+
+/** Precomputed counts cover the unfiltered library and a single type filter. */
+function facetScope(f: SectionFilters): string | null {
+  if (
+    f.group !== undefined ||
+    f.page_type !== undefined ||
+    f.device !== undefined ||
+    f.themeId !== undefined ||
+    f.appId !== undefined ||
+    f.storeId !== undefined
+  )
+    return null;
+  return f.type ?? '';
+}
+
+async function precomputedFacets(
+  ctx: Ctx,
+  scope: string,
+): Promise<ListSectionsOutput['facets'] | null> {
+  type Row = { facet: string; value: string; label: string; count: number };
+  let rows: Row[];
+  try {
+    rows = await ctx.db.all<Row>(
+      `SELECT facet, value, label, count FROM section_facet_counts WHERE scope = ?`,
+      [scope],
+    );
+  } catch {
+    return null;
+  }
+  if (rows.length === 0) return null;
+  const of = (facet: string) => rows.filter((r) => r.facet === facet);
+  return shapeFacets(
+    of('type').map((r) => ({ value: r.value, count: r.count })),
+    of('group').map((r) => ({ value: r.value, count: r.count })),
+    of('page_type').map((r) => ({ value: r.value, count: r.count })),
+    of('device').map((r) => ({ value: r.value, count: r.count })),
+    of('theme').map((r) => ({ value: r.value, label: r.label, count: r.count })),
+    of('app').map((r) => ({ value: r.value, label: r.label, count: r.count })),
+  );
+}
+
+async function sectionFacets(ctx: Ctx, f: SectionFilters): Promise<ListSectionsOutput['facets']> {
+  const scope = facetScope(f);
+  if (scope !== null) {
+    const pre = await precomputedFacets(ctx, scope);
+    if (pre) return pre;
+  }
+  const runSql = (omit: Key[], sql: (where: string) => string) => {
+    const w = sectionWhere(f, omit);
+    return { sql: sql(w.sql), params: w.params };
+  };
+  const [types, groups, pages, devices, themes, apps] = (await ctx.db.allBatch([
+    runSql(
+      ['type', 'group'],
+      (w) =>
+        `SELECT s.section_type AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.section_type`,
+    ),
+    runSql(
+      ['type', 'group'],
+      (w) => `SELECT ty.group_slug AS value, COUNT(*) AS count ${FROM}
+        JOIN section_types ty ON ty.slug = s.section_type WHERE ${w} GROUP BY ty.group_slug`,
+    ),
+    runSql(
+      ['page_type'],
+      (w) =>
+        `SELECT s.page_type AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.page_type`,
+    ),
+    runSql(
+      ['device'],
+      (w) => `SELECT s.device AS value, COUNT(*) AS count ${FROM} WHERE ${w} GROUP BY s.device`,
+    ),
+    runSql(
+      ['themeId'],
+      (w) => `SELECT t.slug AS value, t.name AS label, COUNT(*) AS count ${FROM}
+        JOIN themes t ON t.id = s.theme_id WHERE ${w}
+        GROUP BY t.id ORDER BY count DESC, t.name LIMIT 30`,
+    ),
+    runSql(
+      ['appId'],
+      (w) => `SELECT a.slug AS value, a.short_name AS label, COUNT(*) AS count ${FROM}
+        JOIN apps a ON a.id = s.app_id WHERE ${w}
+        GROUP BY a.id ORDER BY count DESC, a.short_name LIMIT 30`,
+    ),
+  ])) as [Count[], Count[], Count[], Count[], Facet[], Facet[]];
+  return shapeFacets(types, groups, pages, devices, themes, apps);
 }
 
 /**

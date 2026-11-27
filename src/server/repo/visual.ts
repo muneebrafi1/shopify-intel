@@ -306,28 +306,28 @@ export async function screenshotDetails(
   const out = new Map<number, ScreenshotDetail>();
   if (shotIds.length === 0) return out;
   const ids = jsonIds(shotIds);
-  const [shots, sections] = await Promise.all([
-    ctx.db.all<ShotRow>(
-      `SELECT ${THUMB_COLS}, sh.viewport_w, sh.is_current,
+  const [shots, sections] = (await ctx.db.allBatch([
+    {
+      sql: `SELECT ${THUMB_COLS}, sh.viewport_w, sh.is_current,
          st.domain AS store_domain, st.name AS store_name, st.is_curated AS store_is_curated,
          t.slug AS theme_slug, t.name AS theme_name, t.vendor AS theme_vendor
        FROM screenshots sh
        JOIN stores st ON st.id = sh.store_id AND st.status = 'active'
        LEFT JOIN themes t ON t.id = sh.theme_id
        WHERE sh.id IN (SELECT value FROM json_each(?))`,
-      [ids],
-    ),
-    ctx.db.all<ShotSectionRow>(
-      `SELECT s.id, s.screenshot_id, s.section_type, s.x, s.y, s.w, s.height, s.order_index,
+      params: [ids],
+    },
+    {
+      sql: `SELECT s.id, s.screenshot_id, s.section_type, s.x, s.y, s.w, s.height, s.order_index,
          s.theme_section_name, s.r2_key_crop, s.is_placeholder, s.hints_json, ${APP_REF_COLS}
        FROM sections s
        LEFT JOIN apps a ON a.id = s.app_id
        LEFT JOIN app_categories ac ON ac.id = a.category_id
        WHERE s.screenshot_id IN (SELECT value FROM json_each(?))
        ORDER BY s.screenshot_id, s.order_index`,
-      [ids],
-    ),
-  ]);
+      params: [ids],
+    },
+  ])) as [ShotRow[], ShotSectionRow[]];
   const bySho = new Map<number, ShotSectionRow[]>();
   for (const s of sections) bySho.set(s.screenshot_id, [...(bySho.get(s.screenshot_id) ?? []), s]);
   for (const r of shots) {

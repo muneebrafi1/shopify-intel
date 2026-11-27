@@ -419,6 +419,20 @@ async function main() {
     const written = [...out.matchAll(/"rows_written": (\d+)/g)].at(-1)?.[1] ?? '?';
     console.log(`  applied ${file.split('/').pop()} (${written} rows written)`);
   }
+  // Refresh precomputed section facets so library pages do not scan 38k rows per request.
+  const facetSql = join(ROOT, 'scripts/ops/rebuild-section-facet-counts.sql');
+  wranglerOnce([
+    'd1',
+    'execute',
+    values.db!,
+    '--remote',
+    '--yes',
+    '--config',
+    config,
+    '--file',
+    facetSql,
+  ]);
+  console.log('  rebuilt section_facet_counts');
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {

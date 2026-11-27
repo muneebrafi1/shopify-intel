@@ -406,28 +406,28 @@ interface StoreAppRow extends AppRefRow {
 }
 
 async function storeApps(ctx: Ctx, storeId: number): Promise<StoreDetail['apps']> {
-  const [rows, unresolved, seen] = await Promise.all([
-    ctx.db.all<StoreAppRow>(
-      `SELECT a.id AS app_id, sa.confidence, sa.first_seen, sa.last_seen, st.store_count, ${APP_REF_COLS}
+  const [rows, unresolved, seen] = (await ctx.db.allBatch([
+    {
+      sql: `SELECT a.id AS app_id, sa.confidence, sa.first_seen, sa.last_seen, st.store_count, ${APP_REF_COLS}
        FROM store_apps sa
        JOIN apps a ON a.id = sa.app_id AND a.status = 'active'
        LEFT JOIN app_categories ac ON ac.id = a.category_id
        LEFT JOIN app_stats st ON st.app_id = a.id
        WHERE sa.store_id = ? AND sa.removed_at IS NULL
        ORDER BY ac.position IS NULL, ac.position, st.store_count DESC, a.slug`,
-      [storeId],
-    ),
-    ctx.db.all<{ detection_slug: string }>(
-      `SELECT detection_slug FROM store_unresolved_apps
+      params: [storeId],
+    },
+    {
+      sql: `SELECT detection_slug FROM store_unresolved_apps
        WHERE store_id = ? AND removed_at IS NULL ORDER BY detection_slug`,
-      [storeId],
-    ),
-    ctx.db.all<{ app_id: number; section_type: string }>(
-      `SELECT DISTINCT app_id, section_type FROM sections
+      params: [storeId],
+    },
+    {
+      sql: `SELECT DISTINCT app_id, section_type FROM sections
        WHERE store_id = ? AND is_current = 1 AND app_id IS NOT NULL ORDER BY section_type`,
-      [storeId],
-    ),
-  ]);
+      params: [storeId],
+    },
+  ])) as [StoreAppRow[], { detection_slug: string }[], { app_id: number; section_type: string }[]];
   const groups: StoreDetail['apps']['groups'] = [];
   for (const r of rows) {
     const app: StoreApp = {
