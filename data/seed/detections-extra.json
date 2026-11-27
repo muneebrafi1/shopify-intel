@@ -257,17 +257,6 @@
     "detected_at": "2026-11-27T03:39:58.290Z"
   },
   {
-    "domain": "babylist.com",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [
-      "mouseflow",
-      "osano-cmp"
-    ],
-    "currency": null,
-    "detected_at": "2026-11-27T03:39:59.938Z"
-  },
-  {
     "domain": "balmoralrunning.com",
     "theme": "Mill3 Shopify Boilerplate",
     "theme_custom": false,
@@ -1224,16 +1213,6 @@
     "detected_at": "2026-11-27T03:49:34.449Z"
   },
   {
-    "domain": "hatch.co",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [
-      "osano-cmp"
-    ],
-    "currency": null,
-    "detected_at": "2026-11-27T03:50:03.483Z"
-  },
-  {
     "domain": "hatchsleep.com",
     "theme": "Dawn",
     "theme_custom": false,
@@ -1613,24 +1592,6 @@
     "detected_at": "2026-11-27T03:51:22.799Z"
   },
   {
-    "domain": "loefflerrandall.com",
-    "theme": "Loeffler Randall",
-    "theme_custom": false,
-    "apps": [
-      "afterpay-messaging",
-      "global-e-crossborder",
-      "helpdesk",
-      "klaviyo",
-      "loop-returns",
-      "okendo-reviews",
-      "rapid-insite",
-      "shopmy",
-      "wishlist-king"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T03:51:48.999Z"
-  },
-  {
     "domain": "lofliballs.com",
     "theme": "LoFli",
     "theme_custom": false,
@@ -1770,29 +1731,6 @@
     "detected_at": "2026-11-27T03:48:10.868Z"
   },
   {
-    "domain": "mansurgavriel.com",
-    "theme": "Mansur Gavriel Theme",
-    "theme_custom": false,
-    "apps": [
-      "amp-back-in-stock",
-      "app25967",
-      "attentive",
-      "black-crow-ai",
-      "checkmate",
-      "depict",
-      "global-e-crossborder",
-      "klaviyo",
-      "loop-returns",
-      "nofraud",
-      "route",
-      "shopmy",
-      "weglot",
-      "wishlist-king"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T03:52:04.430Z"
-  },
-  {
     "domain": "mejuri.com",
     "theme": null,
     "theme_custom": false,
@@ -1807,21 +1745,6 @@
     ],
     "currency": null,
     "detected_at": "2026-11-27T03:39:51.895Z"
-  },
-  {
-    "domain": "meowmeowtweet.com",
-    "theme": "Broadcast",
-    "theme_custom": false,
-    "apps": [
-      "junip",
-      "klaviyo",
-      "recharge",
-      "swell",
-      "userway-accessibility",
-      "yotpo"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T03:44:46.658Z"
   },
   {
     "domain": "monos.com",
@@ -2103,21 +2026,6 @@
     "detected_at": "2026-11-26T11:53:23.818Z"
   },
   {
-    "domain": "peakdesign.com",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [
-      "alia",
-      "bazaarvoice",
-      "gladly",
-      "heatmap-com",
-      "klaviyo",
-      "onetrust"
-    ],
-    "currency": null,
-    "detected_at": "2026-11-27T03:47:48.743Z"
-  },
-  {
     "domain": "pelacase.com",
     "theme": "Pela Case rebuild",
     "theme_custom": false,
@@ -2143,24 +2051,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T03:42:37.123Z"
-  },
-  {
-    "domain": "petlibro.com",
-    "theme": "Dawn",
-    "theme_custom": false,
-    "apps": [
-      "aftership-reviews",
-      "attribuly",
-      "automizely-messages",
-      "avada-seo-suite",
-      "cookieyes",
-      "freegifts",
-      "google-shopping-feed",
-      "recharge",
-      "xcotton-free-return"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T03:53:09.503Z"
   },
   {
     "domain": "plantoys.com",
@@ -2378,26 +2268,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T03:53:27.050Z"
-  },
-  {
-    "domain": "sanuk.com",
-    "theme": "Broadcast",
-    "theme_custom": false,
-    "apps": [
-      "bazaarvoice",
-      "eu-cookies-notification",
-      "freegifts",
-      "global-e-crossborder",
-      "helpdesk",
-      "judgeme",
-      "klaviyo",
-      "redo",
-      "sc-easy-redirects",
-      "smartsize",
-      "video-shopping"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T03:50:40.881Z"
   },
   {
     "domain": "satechi.com",
@@ -2968,22 +2838,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-26T11:56:51.319Z"
-  },
-  {
-    "domain": "uppercasemagazine.com",
-    "theme": "Motion",
-    "theme_custom": false,
-    "apps": [
-      "backinstock",
-      "bold-subscriptions",
-      "boldupsell",
-      "free-shipping-bar",
-      "gempages",
-      "product-upsell",
-      "sc-product-options"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-27T03:42:19.670Z"
   },
   {
     "domain": "velasca.com",
