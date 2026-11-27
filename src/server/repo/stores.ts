@@ -560,6 +560,20 @@ const relatedStoreIdsSql = `SELECT ? AS id
    )`;
 
 export async function getStoreDetail(ctx: Ctx, domain: string): Promise<StoreDetail> {
+  try {
+    const cached = await ctx.db.first<{ payload: string }>(
+      'SELECT payload FROM store_page_cache WHERE domain = ?',
+      [domain],
+    );
+    if (cached?.payload) return JSON.parse(cached.payload) as StoreDetail;
+  } catch {
+    // Table missing (migration not applied yet).
+  }
+  return computeStoreDetail(ctx, domain);
+}
+
+/** Live D1 path used to fill store_page_cache and as a fallback when the row is missing. */
+export async function computeStoreDetail(ctx: Ctx, domain: string): Promise<StoreDetail> {
   const row = await findActiveStore(ctx, domain);
   if (!row) throw notFound(`Store '${domain}'`);
   const id = row.id;
