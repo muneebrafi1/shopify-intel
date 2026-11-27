@@ -6877,11 +6877,7 @@
    "taylorstitch.com",
    "untuckit.com"
   ],
-  "themes": [
-   "athens",
-   "enterprise",
-   "stretch"
-  ]
+  "themes": []
  },
  "themes": {
   "dawn": {
@@ -6983,6 +6979,24 @@
   "blockshop": {
    "from": "https://cdn.shopify.com/theme-store/zde7i7i05yf9aowge5bjlzijjv6i.jpg",
    "key": "icons/themes/blockshop.0da6f770.webp",
+   "w": 256,
+   "h": 256
+  },
+  "enterprise": {
+   "from": "https://cdn.shopify.com/theme-store/yfzeg2zo5n0x3l2ziczvanoc21cs.jpg",
+   "key": "icons/themes/enterprise.fa4b898e.webp",
+   "w": 256,
+   "h": 256
+  },
+  "stretch": {
+   "from": "https://cdn.shopify.com/theme-store/n2fjkvkp6fvx48gird4lbj6shunv.jpg",
+   "key": "icons/themes/stretch.953e0993.webp",
+   "w": 256,
+   "h": 256
+  },
+  "athens": {
+   "from": "https://cdn.shopify.com/theme-store/ywrxx149wk8058wtokocchw77831.jpg",
+   "key": "icons/themes/athens.2ea49937.webp",
    "w": 256,
    "h": 256
   }
