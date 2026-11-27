@@ -50,8 +50,29 @@ export function stableKey(obj: Record<string, unknown>): string {
   return parts.join('&') || 'default';
 }
 
+/** Filename-safe cache key; long keys are hashed so R2/FS paths stay short. */
+export function safeCacheKey(key: string): string {
+  if (key.length <= 160) return key;
+  return `h_${cyrb64(key)}_${key.length}`;
+}
+
+function cyrb64(str: string, seed = 0): string {
+  let h1 = 0xdeadbeef ^ seed;
+  let h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+}
+
 export function r2ObjectKey(version: string, type: string, key: string): string {
-  return `page-cache/${version}/${type}/${key}.json`;
+  return `page-cache/${version}/${type}/${safeCacheKey(key)}.json`;
 }
 
 let manifestMemo: { at: number; value: Promise<PageCacheManifest | null> } | null = null;
@@ -116,7 +137,7 @@ export async function readPageCache<T>(
   const man = await readManifest(store);
   if (!man) return null;
   const r2Key = r2ObjectKey(man.version, type, key);
-  const cacheUrl = `${CACHE_ORIGIN}/${man.version}/${type}/${encodeURIComponent(key)}`;
+  const cacheUrl = `${CACHE_ORIGIN}/${man.version}/${type}/${encodeURIComponent(safeCacheKey(key))}`;
   const cached = await cacheGet<T>(cacheUrl);
   if (cached) return cached;
   if (!store?.get) return null;
