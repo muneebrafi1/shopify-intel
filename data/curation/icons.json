@@ -6876,6 +6876,115 @@
    "liquid-iv.com",
    "taylorstitch.com",
    "untuckit.com"
+  ],
+  "themes": [
+   "athens",
+   "enterprise",
+   "stretch"
   ]
+ },
+ "themes": {
+  "dawn": {
+   "from": "https://cdn.shopify.com/theme-store/m5ynz26bt6in8bdrej5f6aifpelm.jpg",
+   "key": "icons/themes/dawn.472172c2.webp",
+   "w": 256,
+   "h": 256
+  },
+  "horizon": {
+   "from": "https://cdn.shopify.com/theme-store/re0gschewfw562p5jdyj75iwaqr5.jpg",
+   "key": "icons/themes/horizon.c74df1df.webp",
+   "w": 256,
+   "h": 256
+  },
+  "prestige": {
+   "from": "https://cdn.shopify.com/theme-store/qy4yognu4d9fphex6m0ss0bb6h65.jpg",
+   "key": "icons/themes/prestige.7a8a3837.webp",
+   "w": 256,
+   "h": 256
+  },
+  "concept": {
+   "from": "https://cdn.shopify.com/theme-store/vup9svq8eale7riwmr9solqj4p1j.jpg",
+   "key": "icons/themes/concept.6c18b607.webp",
+   "w": 256,
+   "h": 256
+  },
+  "impulse": {
+   "from": "https://cdn.shopify.com/theme-store/3ayv9hxjm9m9ekj0htxmij86f8et.jpg",
+   "key": "icons/themes/impulse.baef74ae.webp",
+   "w": 256,
+   "h": 256
+  },
+  "flow": {
+   "from": "https://cdn.shopify.com/theme-store/vqrllm7zltg032nh4ecx8k4debju.jpg",
+   "key": "icons/themes/flow.b17e72c2.webp",
+   "w": 256,
+   "h": 256
+  },
+  "shapes": {
+   "from": "https://cdn.shopify.com/theme-store/kfzgkwighwh7f713rxfkn1lsksgs.jpg",
+   "key": "icons/themes/shapes.3049f21f.webp",
+   "w": 256,
+   "h": 256
+  },
+  "atlantic": {
+   "from": "https://cdn.shopify.com/theme-store/89y61tzhu7utvwj3m7nszro5j3se.jpg",
+   "key": "icons/themes/atlantic.da033f5b.webp",
+   "w": 256,
+   "h": 256
+  },
+  "barcelona": {
+   "from": "https://cdn.shopify.com/theme-store/yp3977iz1jaopekq51hklmaj5ooz.jpg",
+   "key": "icons/themes/barcelona.eec5ed13.webp",
+   "w": 256,
+   "h": 256
+  },
+  "berlin": {
+   "from": "https://cdn.shopify.com/theme-store/cyvjarkjc17f7hui8ls9gprb04r7.jpg",
+   "key": "icons/themes/berlin.0673d54a.webp",
+   "w": 256,
+   "h": 256
+  },
+  "bespoke": {
+   "from": "https://cdn.shopify.com/theme-store/rvuivs4ppq4f0bv9tx4qw2eqk3uz.jpg",
+   "key": "icons/themes/bespoke.b35be512.webp",
+   "w": 256,
+   "h": 256
+  },
+  "broadcast": {
+   "from": "https://cdn.shopify.com/theme-store/pvcgrihz2cz8vtkfc040ovokk7sj.jpg",
+   "key": "icons/themes/broadcast.7a098122.webp",
+   "w": 256,
+   "h": 256
+  },
+  "hyper": {
+   "from": "https://cdn.shopify.com/theme-store/9492906qlhqivsyp576u3ykkfbz4.jpg",
+   "key": "icons/themes/hyper.58e58dc8.webp",
+   "w": 256,
+   "h": 256
+  },
+  "impact": {
+   "from": "https://cdn.shopify.com/theme-store/t0tg1rthej82fjkh4heyyxd4682d.jpg",
+   "key": "icons/themes/impact.f2478450.webp",
+   "w": 256,
+   "h": 256
+  },
+  "symmetry": {
+   "from": "https://cdn.shopify.com/theme-store/y7m9r9admivgt3dkl9qncoetr3dz.jpg",
+   "key": "icons/themes/symmetry.1f3d94ca.webp",
+   "w": 256,
+   "h": 256
+  },
+  "be-yours": {
+   "from": "https://cdn.shopify.com/theme-store/9zudktofzn2hmuujhprlbfj788x0.jpg",
+   "key": "icons/themes/be-yours.00735f87.webp",
+   "w": 256,
+   "h": 256
+  },
+  "blockshop": {
+   "from": "https://cdn.shopify.com/theme-store/zde7i7i05yf9aowge5bjlzijjv6i.jpg",
+   "key": "icons/themes/blockshop.0da6f770.webp",
+   "w": 256,
+   "h": 256
+  }
  }
 }

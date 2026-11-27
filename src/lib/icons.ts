@@ -1,8 +1,9 @@
-/** Original store logos mirrored in R2 (data/curation/icons.json, written by scripts/icons/fetch.ts). */
+/** Original store logos and official Theme Store thumbnails mirrored in R2 (data/curation/icons.json). */
 import manifest from '../../data/curation/icons.json';
 
 type StoreIcon = { key: string; w?: number; h?: number };
 const stores = (manifest as { stores: Record<string, StoreIcon> }).stores;
+const themes = (manifest as { themes?: Record<string, StoreIcon> }).themes ?? {};
 
 export type StoreLogo = { src: string; w: number; h: number };
 
@@ -16,4 +17,11 @@ export function storeLogo(domain: string): StoreLogo | null {
   const hit = stores[domain.replace(/^www\./, '')];
   if (!hit) return null;
   return { src: `/media/${hit.key}`, w: hit.w ?? 128, h: hit.h ?? 128 };
+}
+
+/** Official Theme Store thumbnail, mirrored for theme marks. */
+export function themeLogo(slug: string): StoreLogo | null {
+  const hit = themes[slug];
+  if (!hit) return null;
+  return { src: `/media/${hit.key}`, w: hit.w ?? 256, h: hit.h ?? 256 };
 }

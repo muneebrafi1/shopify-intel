@@ -6,6 +6,7 @@
  * Below 640px vendor, price and share fold into the theme cell.
  */
 import Badge from '~/components/ui/Badge.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import { thumbCropHeight, thumbUrl } from '~/lib/media';
 import { formatCount, formatPercent } from '~/lib/format';
 import type { ThemeListItem } from '~/server/api/v1/types';
@@ -80,9 +81,12 @@ const thumb = (t: ThemeListItem) => {
                   )}
                 </span>
                 <span class="ttable__id">
-                  <a href={t.href} class="ttable__name stretched-link">
-                    {t.name}
-                  </a>
+                  <span class="ttable__line">
+                    <ThemeMark slug={t.slug} name={t.name} size={28} />
+                    <a href={t.href} class="ttable__name stretched-link">
+                      {t.name}
+                    </a>
+                  </span>
                   <span class="ttable__sub">
                     {[t.vendor ?? 'Unknown vendor', price, formatPercent(t.usage.share * 100)].join(
                       ' · ',
@@ -156,6 +160,12 @@ const thumb = (t: ThemeListItem) => {
   .ttable__id {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+  }
+  .ttable__line {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     min-width: 0;
   }
   .ttable__name {

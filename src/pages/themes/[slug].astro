@@ -13,6 +13,7 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { ogCaptureSrc } from '~/lib/media';
 import PageHeader from '~/components/ui/PageHeader.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
@@ -248,6 +249,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 >
   <div class="container th">
     <PageHeader title={theme.name} class="th-id">
+      <ThemeMark slot="mark" slug={theme.slug} name={theme.name} size={56} />
       <Breadcrumbs
         slot="top"
         items={[

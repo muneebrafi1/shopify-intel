@@ -1,0 +1,77 @@
+---
+/**
+ * A theme's avatar: the official Theme Store hero thumbnail, cropped from the top
+ * into a rounded-square tile. When we have no thumbnail, a letter on a StoreMark-style
+ * tone tile. Decorative; the name is always shown beside it.
+ */
+import { toneFor } from '~/lib/tone';
+import { themeLogo } from '~/lib/icons';
+
+interface Props {
+  slug: string;
+  name: string;
+  size?: number;
+  class?: string;
+}
+const { slug, name, size = 32, class: className } = Astro.props;
+const t = toneFor(slug);
+const initial = name.trim().charAt(0).toUpperCase();
+const logo = themeLogo(slug);
+const radius = Math.max(4, Math.round(size * 0.2));
+---
+
+<span
+  class:list={['theme-mark', className]}
+  style={`--s:${size}px;--r:${radius}px;--mark-bg:${t.mark};--mark-fg:${t.markInk}`}
+  aria-hidden="true"
+>
+  {initial}
+  {logo && (
+    <img
+      src={logo.src}
+      alt=""
+      width={logo.w}
+      height={logo.h}
+      loading="lazy"
+      decoding="async"
+      onerror="this.remove()"
+    />
+  )}
+</span>
+
+<style>
+  .theme-mark {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: var(--s);
+    height: var(--s);
+    border-radius: var(--r);
+    background: var(--mark-bg);
+    color: var(--mark-fg);
+    font-size: calc(var(--s) * 0.44);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    overflow: hidden;
+  }
+  .theme-mark img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: inherit;
+    background: var(--surface);
+  }
+  .theme-mark::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--shot-ring);
+    pointer-events: none;
+  }
+</style>

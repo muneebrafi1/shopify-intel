@@ -11,6 +11,7 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
@@ -145,11 +146,15 @@ const pairs = alt.comparisons.map((c) => {
     a: {
       name: na ?? c.a.name,
       iconUrl: c.a.icon_url,
+      kind: isApp ? 'app' : 'theme',
+      slug: c.a.slug,
       stores: aa?.usage.stores ?? ta?.usage.stores ?? null,
     },
     b: {
       name: nb ?? c.b.name,
       iconUrl: c.b.icon_url,
+      kind: isApp ? 'app' : 'theme',
+      slug: c.b.slug,
       stores: ab?.usage.stores ?? tb?.usage.stores ?? null,
     },
     line: aa && ab ? appPairLine(aa, ab) : ta && tb ? themePairLine(ta, tb) : c.title,
@@ -219,7 +224,9 @@ const eyebrow = ['Alternatives', isApp ? (alt.category?.name ?? 'Apps') : 'Theme
     <header class="altp__head">
       <div class="altp__intro">
         <div class="altp__id">
-          <AppIcon src={app?.icon_url ?? null} name={name} size={56} />
+          {theme
+            ? <ThemeMark slug={theme.slug} name={name} size={56} />
+            : <AppIcon src={app?.icon_url ?? null} name={name} size={56} />}
           <p class="eyebrow">{eyebrow}</p>
         </div>
         <h1 class="display-md altp__title">Alternatives to {name}</h1>

@@ -15,6 +15,7 @@ import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
 import Icon from '~/components/ui/Icon.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import CompareHead from '~/components/compare/CompareHead.astro';
 import Stage from '~/components/compare/Stage.astro';
 import FactMatrix, { type ExtraRow } from '~/components/compare/FactMatrix.astro';
@@ -222,11 +223,15 @@ const related = cmp.related.map((r) => {
     a: {
       name: na ?? r.a.name,
       iconUrl: r.a.icon_url,
+      kind: isApp ? 'app' : 'theme',
+      slug: r.a.slug,
       stores: appA?.usage.stores ?? thA?.usage.stores ?? null,
     },
     b: {
       name: nb ?? r.b.name,
       iconUrl: r.b.icon_url,
+      kind: isApp ? 'app' : 'theme',
+      slug: r.b.slug,
       stores: appB?.usage.stores ?? thB?.usage.stores ?? null,
     },
     shared: r.shared_stores ?? null,
@@ -425,7 +430,7 @@ const sections: Array<[string, string]> = [
         <p class="eyebrow">Looking for a replacement?</p>
         {[a, b].map((s) => (
           <a href={s.alternativesHref} class="cmp__alt">
-            <AppIcon src={s.iconUrl} name={s.name} size={32} />
+            {s.kind === 'theme' ? <ThemeMark slug={s.slug} name={s.name} size={32} /> : <AppIcon src={s.iconUrl} name={s.name} size={32} />}
             <span class="cmp__alt-text">
               <span class="cmp__alt-k">Alternatives to</span>
               <span class="cmp__alt-name">{s.name}</span>

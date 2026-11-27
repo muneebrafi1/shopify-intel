@@ -9,6 +9,7 @@
  * sides as left/right columns, so every side-by-side block further down keeps its labels.
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import Rating from '~/components/ui/Rating.astro';
 import Button from '~/components/ui/Button.astro';
 import Icon from '~/components/ui/Icon.astro';
@@ -85,7 +86,9 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
           aria-labelledby={`side-${s.side}`}
         >
           <div class="ch__id">
-            <AppIcon src={s.iconUrl} name={s.name} size={52} class="ch__icon" />
+            {s.kind === 'theme'
+                ? <ThemeMark slug={s.slug} name={s.name} size={52} class="ch__icon" />
+                : <AppIcon src={s.iconUrl} name={s.name} size={52} class="ch__icon" />}
             <div class="ch__id-text">
               <h2 class="ch__name" id={`side-${s.side}`}>
                 {s.name}
@@ -171,7 +174,7 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
     <div class="cbar__sides" aria-hidden="true">
       {items.map((s) => (
         <span class="cbar__side">
-          <AppIcon src={s.iconUrl} name={s.name} size={20} />
+          {s.kind === 'theme' ? <ThemeMark slug={s.slug} name={s.name} size={20} /> : <AppIcon src={s.iconUrl} name={s.name} size={20} />}
           <span class="cbar__side-name">{s.name}</span>
         </span>
       ))}

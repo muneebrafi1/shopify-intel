@@ -12,6 +12,8 @@ import PairMark from './PairMark.astro';
 interface PairSide {
   name: string;
   iconUrl?: string | null;
+  kind?: 'app' | 'theme';
+  slug?: string;
   stores?: number | null;
 }
 interface Props {

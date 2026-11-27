@@ -206,8 +206,8 @@ const cardFor = (c: ComparisonLink) => {
     const a = appBySlug.get(c.a.slug);
     const b = appBySlug.get(c.b.slug);
     return {
-      a: { name: a?.short_name ?? c.a.name, iconUrl: c.a.icon_url, stores: a?.usage.stores },
-      b: { name: b?.short_name ?? c.b.name, iconUrl: c.b.icon_url, stores: b?.usage.stores },
+      a: { name: a?.short_name ?? c.a.name, iconUrl: c.a.icon_url, kind: 'app', slug: c.a.slug, stores: a?.usage.stores },
+      b: { name: b?.short_name ?? c.b.name, iconUrl: c.b.icon_url, kind: 'app', slug: c.b.slug, stores: b?.usage.stores },
       line: a && b ? appPairLine(a, b) : c.title,
       preview: null,
     };
@@ -216,8 +216,8 @@ const cardFor = (c: ComparisonLink) => {
   const b = themeBySlug.get(c.b.slug);
   const shot = (t?: ThemeListItem) => t?.previews[0] ?? null;
   return {
-    a: { name: a?.name ?? c.a.name, stores: a?.usage.stores },
-    b: { name: b?.name ?? c.b.name, stores: b?.usage.stores },
+    a: { name: a?.name ?? c.a.name, kind: 'theme', slug: c.a.slug, stores: a?.usage.stores },
+    b: { name: b?.name ?? c.b.name, kind: 'theme', slug: c.b.slug, stores: b?.usage.stores },
     line: a && b ? themePairLine(a, b) : c.title,
     preview: { a: shot(a), b: shot(b) },
   };

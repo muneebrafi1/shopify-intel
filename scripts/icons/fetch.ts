@@ -41,7 +41,8 @@ const refetchWeak = Boolean(values['refetch-weak']);
 type Manifest = {
   apps: Record<string, { url: string; key: string }>;
   stores: Record<string, { from: string; key: string; w?: number; h?: number }>;
-  missing: { apps: string[]; stores: string[] };
+  themes?: Record<string, { from: string; key: string; w?: number; h?: number }>;
+  missing: { apps: string[]; stores: string[]; themes?: string[] };
 };
 const manifest: Manifest = existsSync(MANIFEST)
   ? JSON.parse(readFileSync(MANIFEST, 'utf8'))
@@ -499,8 +500,10 @@ const sorted = <T>(o: Record<string, T>) =>
   Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)));
 manifest.apps = sorted(manifest.apps);
 manifest.stores = sorted(manifest.stores);
+if (manifest.themes) manifest.themes = sorted(manifest.themes);
 manifest.missing.stores.sort();
+if (manifest.missing.themes) manifest.missing.themes.sort();
 writeFileSync(MANIFEST, JSON.stringify(manifest, null, 1) + '\n');
 console.log(
-  `manifest: ${Object.keys(manifest.apps).length} app icons, ${Object.keys(manifest.stores).length} store logos; missing ${manifest.missing.apps.length} apps, ${manifest.missing.stores.length} stores`,
+  `manifest: ${Object.keys(manifest.apps).length} app icons, ${Object.keys(manifest.stores).length} store logos${manifest.themes ? `, ${Object.keys(manifest.themes).length} theme marks` : ''}; missing ${manifest.missing.apps.length} apps, ${manifest.missing.stores.length} stores`,
 );

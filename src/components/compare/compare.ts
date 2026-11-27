@@ -1,3 +1,4 @@
+import { themeLogo } from '~/lib/icons';
 /**
  * Helpers for the compare and alternatives pages: neutral summaries built from facts only,
  * fact-matrix cells and explanations, pair-card lines, and the "Seen on" capture frames.
@@ -81,7 +82,7 @@ export function sides(cmp: ComparisonDetail): [SideInfo, SideInfo] {
       name: t.name,
       fullName: t.name,
       href: t.href,
-      iconUrl: null,
+      iconUrl: themeLogo(t.slug)?.src ?? null,
       maker: t.vendor,
       makerHref: t.vendor_info?.href ?? null,
       stores: t.usage.stores,
