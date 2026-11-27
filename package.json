@@ -31,7 +31,8 @@
     "ops:preflight": "node scripts/ops/preflight.ts",
     "ops:smoke": "node scripts/ops/preflight.ts --smoke",
     "seed:import-apps": "node scripts/seed/import-storepeek-apps.ts",
-    "crawl:export-rules": "node scripts/crawl/export-rules.ts"
+    "crawl:export-rules": "node scripts/crawl/export-rules.ts",
+    "ops:page-cache": "node scripts/ops/rebuild-page-cache.ts"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.8",

@@ -234,6 +234,11 @@ removal_requests(id, domain, email, reason, status, created_at, handled_at)
   pre-generated widths). Lazy-load grids; blur-up placeholders.
 - Store pages beyond ~20K: server-render on demand + cache, not static files.
 - D1 read budget: cache API responses at the edge (Cache API) keyed by URL + data version.
+
+- Public catalog pages: precomputed JSON in R2 (`page-cache/<data_version>/...`, rebuilt from
+  the local snapshot after every `d1-sync` by `npm run ops:page-cache`). Pages read R2 (and
+  Cache API) first and fall back to D1 on a miss. `/api/v1` and MCP keep using live D1.
+
 - Keep the API versioned (`/api/v1`) and typed (shared TS types / zod) so the MCP server can reuse
   it unchanged.
 - Opt-out: when a store is removed, hide it everywhere, delete its R2 objects, and keep only a

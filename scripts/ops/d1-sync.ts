@@ -446,6 +446,9 @@ async function main() {
     typeStatsSql,
   ]);
   console.log('  rebuilt section_type_stats');
+  console.log(
+    '  next: npm run ops:page-cache -- --local-file <snapshot> --out-dir <dir> [--upload]',
+  );
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
