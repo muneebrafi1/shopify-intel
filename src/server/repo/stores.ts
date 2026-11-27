@@ -418,7 +418,26 @@ function assembleStoreApps(
   unresolved: { detection_slug: string }[],
   seen: { app_id: number; section_type: string }[],
 ): StoreDetail['apps'] {
-  return assembleStoreApps(rows, unresolved, seen);
+  const groups: StoreDetail['apps']['groups'] = [];
+  for (const r of rows) {
+    const app: StoreApp = {
+      ...appRef(r),
+      confidence: r.confidence,
+      first_seen: r.first_seen,
+      last_seen: r.last_seen,
+      seen_in: seen.filter((s) => s.app_id === r.app_id).map((s) => sectionTypeRef(s.section_type)),
+      surfaces: categorySurfaces(r.app_cat_name),
+    };
+    const last = groups[groups.length - 1];
+    if (last && last.category?.slug === app.category?.slug) last.apps.push(app);
+    else groups.push({ category: app.category, apps: [app] });
+  }
+  return {
+    total: rows.length + unresolved.length,
+    resolved: rows.length,
+    unresolved: { count: unresolved.length, slugs: unresolved.map((u) => u.detection_slug) },
+    groups,
+  };
 }
 
 function assembleStorePages(
