@@ -62,7 +62,11 @@ async function cachedPublic(context: Ctx, next: Next): Promise<Response> {
   const cookie = request.headers.get('Cookie') ?? '';
   if (/(?:^|;\s*)(?:session|__session|sid|auth|cf_auth)=/i.test(cookie)) return next();
 
-  const key = new Request(request.url, { method: 'GET' });
+  // Version the cache key so a new deploy is not stuck behind the previous HTML.
+  const key = new Request(request.url, {
+    method: 'GET',
+    headers: { 'X-Vitrine-Build': String(import.meta.env.VITRINE_BUILD ?? '0') },
+  });
   try {
     const hit = await caches.default.match(key);
     if (hit) {
