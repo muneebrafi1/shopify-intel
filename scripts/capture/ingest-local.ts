@@ -31,6 +31,11 @@ try {
       counts.blocked = (counts.blocked ?? 0) + 1;
       continue;
     }
+    // Bot-wall stubs (~2–5 KB, viewport-only) must not replace a real capture.
+    if ((capture.bytes ?? 0) < 8_000) {
+      counts.stub = (counts.stub ?? 0) + 1;
+      continue;
+    }
     // Captures from before thumbnails existed get their top thumbnail cut now.
     const thumb = topThumbKey(capture.r2_key);
     if (existsSync(objectPath(capture.r2_key)) && !existsSync(objectPath(thumb)))
