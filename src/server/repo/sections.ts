@@ -236,6 +236,32 @@ const noFacets = (): ListSectionsOutput['facets'] => ({
   apps: [],
 });
 
+/** Totals for unfiltered / type-only lists, from precomputed tables. Null → caller COUNTs. */
+async function precomputedTotal(ctx: Ctx, f: SectionFilters): Promise<number | null> {
+  const scope = facetScope(f);
+  if (scope === null) return null;
+  try {
+    if (scope === '') {
+      const row = await ctx.db.first<{ n: number | null }>(
+        'SELECT SUM(n) AS n FROM section_type_stats',
+      );
+      return row?.n ?? null;
+    }
+    const row = await ctx.db.first<{ n: number }>(
+      'SELECT n FROM section_type_stats WHERE section_type = ?',
+      [scope],
+    );
+    if (row) return row.n;
+    const facet = await ctx.db.first<{ count: number }>(
+      "SELECT count FROM section_facet_counts WHERE scope = ? AND facet = 'type' AND value = ?",
+      [scope, scope],
+    );
+    return facet?.count ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function listSections(ctx: Ctx, p: ListSectionsParams) {
   const f: SectionFilters = {
     type: p.type,
@@ -277,7 +303,11 @@ export async function listSections(ctx: Ctx, p: ListSectionsParams) {
       seek ? [...w.params, ...seek] : w.params,
       `ORDER BY ${SECTION_ORDER[mixed ? 'mixed' : 'id']} LIMIT ${p.limit + 1}`,
     ),
-    ctx.db.first<{ n: number }>(`SELECT COUNT(*) AS n ${FROM} WHERE ${w.sql}`, w.params),
+    (async () => {
+      const pre = await precomputedTotal(ctx, f);
+      if (pre !== null) return { n: pre };
+      return ctx.db.first<{ n: number }>(`SELECT COUNT(*) AS n ${FROM} WHERE ${w.sql}`, w.params);
+    })(),
     withFacets ? sectionFacets(ctx, f) : Promise.resolve(noFacets()),
     p.type && withFacets ? sectionTypeInfos(ctx, [p.type]) : Promise.resolve([]),
   ]);
@@ -366,30 +396,77 @@ export async function listSectionsByApps(ctx: Ctx, p: ListSectionsByAppsParams) 
 // ---------------------------------------------------------------------------------------------
 // Section types
 // ---------------------------------------------------------------------------------------------
+type TypeStatRow = {
+  section_type: string;
+  n: number;
+  stores: number;
+  themes: number;
+  preview_section_id: number | null;
+};
+
+/** Stats for `only` types, or every type. Prefers section_type_stats; falls back to a scoped scan. */
+async function loadTypeStats(
+  ctx: Ctx,
+  slugs: readonly string[],
+  scoped: boolean,
+): Promise<TypeStatRow[]> {
+  const inList = 'IN (SELECT value FROM json_each(?))';
+  const params = scoped ? [jsonIds(slugs)] : [];
+  try {
+    const rows = await ctx.db.all<TypeStatRow>(
+      scoped
+        ? `SELECT section_type, n, stores, themes, preview_section_id
+           FROM section_type_stats WHERE section_type ${inList}`
+        : 'SELECT section_type, n, stores, themes, preview_section_id FROM section_type_stats',
+      params,
+    );
+    if (rows.length > 0) return rows;
+  } catch {
+    // Table missing (migration not applied yet).
+  }
+  const typeFilter = scoped ? `AND s.section_type ${inList}` : '';
+  const previewFilter = scoped ? `AND x.section_type ${inList}` : '';
+  const [counts, previews] = await Promise.all([
+    ctx.db.all<{ section_type: string; n: number; stores: number; themes: number }>(
+      `SELECT s.section_type, COUNT(*) AS n, COUNT(DISTINCT s.store_id) AS stores,
+         COUNT(DISTINCT s.theme_id) AS themes
+       ${FROM} WHERE s.is_current = 1 ${typeFilter} GROUP BY s.section_type`,
+      params,
+    ),
+    ctx.db.all<{ section_type: string; id: number }>(
+      `SELECT section_type, id FROM (
+         SELECT x.section_type, x.id, ROW_NUMBER() OVER (
+           PARTITION BY x.section_type ORDER BY x.is_placeholder, x.device, x.store_id, x.id) AS rn
+         FROM sections x JOIN stores y ON y.id = x.store_id AND y.status = 'active'
+         WHERE x.is_current = 1 ${previewFilter}) WHERE rn = 1`,
+      params,
+    ),
+  ]);
+  const previewByType = new Map(previews.map((p) => [p.section_type, p.id]));
+  return counts.map((c) => ({
+    ...c,
+    preview_section_id: previewByType.get(c.section_type) ?? null,
+  }));
+}
+
 export async function sectionTypeInfos(
   ctx: Ctx,
   only?: readonly SectionType[],
 ): Promise<SectionTypeInfo[]> {
   const types = only ? SECTION_TYPES.filter((t) => only.includes(t.slug)) : SECTION_TYPES;
-  const [counts, previews] = await Promise.all([
-    ctx.db.all<{ section_type: string; n: number; stores: number; themes: number }>(
-      `SELECT s.section_type, COUNT(*) AS n, COUNT(DISTINCT s.store_id) AS stores,
-         COUNT(DISTINCT s.theme_id) AS themes
-       ${FROM} WHERE s.is_current = 1 GROUP BY s.section_type`,
-    ),
-    sectionCards(
-      ctx,
-      `s.id IN (SELECT id FROM (
-         SELECT x.id, ROW_NUMBER() OVER (
-           PARTITION BY x.section_type ORDER BY x.is_placeholder, x.device, x.store_id, x.id) AS rn
-         FROM sections x JOIN stores y ON y.id = x.store_id AND y.status = 'active'
-         WHERE x.is_current = 1) WHERE rn = 1)`,
-      [],
-    ),
-  ]);
+  const slugs = types.map((t) => t.slug);
+  const stats = await loadTypeStats(ctx, slugs, Boolean(only));
+  const previewIds = stats
+    .map((s) => s.preview_section_id)
+    .filter((id): id is number => id != null);
+  const previews =
+    previewIds.length === 0
+      ? []
+      : await sectionCards(ctx, 's.id IN (SELECT value FROM json_each(?))', [jsonIds(previewIds)]);
+  const byType = new Map(stats.map((s) => [s.section_type, s]));
   return types.map((t) => {
     const ref = sectionTypeRef(t.slug);
-    const c = counts.find((x) => x.section_type === t.slug);
+    const c = byType.get(t.slug);
     return {
       slug: t.slug,
       name: t.name,

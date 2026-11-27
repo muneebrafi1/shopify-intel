@@ -18,8 +18,8 @@ const OVERLOAD =
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/** Retry D1 reads that hit the 10-second resource window; leave other errors alone. */
-async function withRetry<T>(fn: () => Promise<T>, attempts = 5): Promise<T> {
+/** One short retry on the 10-second D1 window. More retries kept the window full and inflated p95. */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 2): Promise<T> {
   let last: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
@@ -28,7 +28,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 5): Promise<T> {
       last = err;
       const msg = err instanceof Error ? err.message : String(err);
       if (!OVERLOAD.test(msg) || i === attempts - 1) throw err;
-      await sleep(80 * 2 ** i + Math.random() * 80);
+      await sleep(80 + Math.random() * 80);
     }
   }
   throw last;

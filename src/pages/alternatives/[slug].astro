@@ -48,30 +48,25 @@ const crops = new Map<string, SectionCard>();
 let categoryTotal: number | null = null;
 if (isApp && alt.category) {
   const surface = (APP_CATEGORY_SURFACES[alt.category.name] ?? [])[0] as SectionType | undefined;
-  const [sections, catApps] = await Promise.all([
-    surface ? api.listSections({ type: surface, device: 'desktop', limit: 60 }) : null,
-    api.listApps({ category: alt.category.slug, limit: 1 }),
+  const wanted = [alt.slug, ...alt.items.map((i) => i.app?.slug).filter((x): x is string => !!x)];
+  // One windowed query for a crop per app — not a 60-row faceted list plus one query per miss.
+  const [byApp, catApps] = await Promise.all([
+    surface
+      ? api
+          .listSectionsByApps({
+            apps: wanted,
+            type: surface,
+            device: 'desktop',
+            per_app: 1,
+          })
+          .catch(() => null)
+      : null,
+    api.listApps({ category: alt.category.slug, limit: 1, facets: false }),
   ]);
   categoryTotal = catApps.meta.pagination?.total ?? null;
-  if (sections && surface) {
-    for (const s of sections.data.items) {
-      if (s.app && !crops.has(s.app.slug)) crops.set(s.app.slug, s);
-    }
-    // Apps that render this section but fell outside the first page of results.
-    const wanted = new Set([
-      alt.slug,
-      ...alt.items.map((i) => i.app?.slug).filter((x): x is string => !!x),
-    ]);
-    const missing = sections.data.facets.apps
-      .map((f) => f.value)
-      .filter((v) => wanted.has(v) && !crops.has(v));
-    const more = await Promise.all(
-      missing.map((a) =>
-        api.listSections({ type: surface, app: a, device: 'desktop', limit: 1 }).catch(() => null),
-      ),
-    );
-    for (const m of more) {
-      const s = m?.data.items[0];
+  if (byApp) {
+    for (const row of byApp.data.items) {
+      const s = row.sections[0];
       if (s?.app) crops.set(s.app.slug, s);
     }
   }

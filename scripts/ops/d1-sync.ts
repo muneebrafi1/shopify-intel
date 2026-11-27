@@ -433,6 +433,19 @@ async function main() {
     facetSql,
   ]);
   console.log('  rebuilt section_facet_counts');
+  const typeStatsSql = join(ROOT, 'scripts/ops/rebuild-section-type-stats.sql');
+  wranglerOnce([
+    'd1',
+    'execute',
+    values.db!,
+    '--remote',
+    '--yes',
+    '--config',
+    config,
+    '--file',
+    typeStatsSql,
+  ]);
+  console.log('  rebuilt section_type_stats');
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
