@@ -327,19 +327,19 @@
     },
     {
       "domain": "threadwallets.com",
-      "name": "Thread®",
+      "name": "Thread\u00ae",
       "category": "Bags & accessories",
       "country": null
     },
     {
       "domain": "ekster.com",
-      "name": "Ekster®",
+      "name": "Ekster\u00ae",
       "category": "Bags & accessories",
       "country": null
     },
     {
       "domain": "beistravel.com",
-      "name": "Béis",
+      "name": "B\u00e9is",
       "category": "Bags & accessories",
       "country": null
     },
@@ -387,7 +387,7 @@
     },
     {
       "domain": "hulken.com",
-      "name": "Hulken®",
+      "name": "Hulken\u00ae",
       "category": "Bags & accessories",
       "country": null
     },
@@ -723,7 +723,7 @@
     },
     {
       "domain": "stussy.com",
-      "name": "Stüssy",
+      "name": "St\u00fcssy",
       "category": "Apparel",
       "country": null
     },
@@ -801,7 +801,7 @@
     },
     {
       "domain": "sooo.me",
-      "name": "Sooo.me™",
+      "name": "Sooo.me\u2122",
       "category": "Health & wellness",
       "country": null
     },
@@ -957,7 +957,7 @@
     },
     {
       "domain": "alaglow.com",
-      "name": "À La Glow",
+      "name": "\u00c0 La Glow",
       "category": "Beauty",
       "country": null
     },
@@ -975,7 +975,7 @@
     },
     {
       "domain": "plantkos.co",
-      "name": "Plantkos®",
+      "name": "Plantkos\u00ae",
       "category": "Beauty",
       "country": null
     },
@@ -1011,7 +1011,7 @@
     },
     {
       "domain": "evolisproducts.com",
-      "name": "évolis® USA",
+      "name": "\u00e9volis\u00ae USA",
       "category": "Home & garden",
       "country": null
     },
@@ -1029,7 +1029,7 @@
     },
     {
       "domain": "aede.com.au",
-      "name": "Aéde",
+      "name": "A\u00e9de",
       "category": "Health & wellness",
       "country": "AU"
     },
@@ -1455,7 +1455,7 @@
     },
     {
       "domain": "bumbede.com",
-      "name": "Bumbédé",
+      "name": "Bumb\u00e9d\u00e9",
       "category": "Jewelry",
       "country": null
     },
@@ -1815,7 +1815,7 @@
     },
     {
       "domain": "apinistudio.com",
-      "name": "Àpini Studio",
+      "name": "\u00c0pini Studio",
       "category": "Jewelry",
       "country": null
     },
@@ -1863,13 +1863,13 @@
     },
     {
       "domain": "cafebinocle.com",
-      "name": "Café Binocle",
+      "name": "Caf\u00e9 Binocle",
       "category": "Food & drink",
       "country": null
     },
     {
       "domain": "caffemilani.it",
-      "name": "Caffé Milani",
+      "name": "Caff\u00e9 Milani",
       "category": "Food & drink",
       "country": "IT"
     },
@@ -1881,7 +1881,7 @@
     },
     {
       "domain": "cocoonblanket.com",
-      "name": "Co’Cōōn",
+      "name": "Co\u2019C\u014d\u014dn",
       "category": "Home & garden",
       "country": null
     },
@@ -2061,7 +2061,7 @@
     },
     {
       "domain": "stroms.com",
-      "name": "Ströms",
+      "name": "Str\u00f6ms",
       "category": "Apparel",
       "country": null
     },
@@ -2379,7 +2379,7 @@
     },
     {
       "domain": "cervelo.com",
-      "name": "Cervélo",
+      "name": "Cerv\u00e9lo",
       "category": "Sports & outdoors",
       "country": null
     },
@@ -3118,7 +3118,7 @@
     {
       "domain": "guayaki.com",
       "category": "Food & drink",
-      "name": "Guayakí",
+      "name": "Guayak\u00ed",
       "country": null
     },
     {
@@ -3310,7 +3310,7 @@
     {
       "domain": "teaforte.com",
       "category": "Food & drink",
-      "name": "Tea Forté",
+      "name": "Tea Fort\u00e9",
       "country": null
     },
     {
@@ -3568,7 +3568,7 @@
     {
       "domain": "puravidabracelets.com",
       "category": "Jewelry",
-      "name": "Pura Vida Bracelets®",
+      "name": "Pura Vida Bracelets\u00ae",
       "country": null
     },
     {
@@ -3592,7 +3592,7 @@
     {
       "domain": "thorlo.com",
       "category": "Activewear",
-      "name": "Thorlo®",
+      "name": "Thorlo\u00ae",
       "country": null
     },
     {
@@ -3837,7 +3837,7 @@
     },
     {
       "domain": "eliou.com",
-      "name": "éliou",
+      "name": "\u00e9liou",
       "category": "Jewelry",
       "country": null
     },
@@ -3867,7 +3867,7 @@
     },
     {
       "domain": "necessaire.com",
-      "name": "Nécessaire",
+      "name": "N\u00e9cessaire",
       "category": "Beauty",
       "country": null
     },
@@ -3995,6 +3995,762 @@
       "domain": "pact.com",
       "name": "PACT",
       "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "acemarks.com",
+      "category": "Footwear",
+      "name": "Acemarks",
+      "country": null
+    },
+    {
+      "domain": "alisonlou.com",
+      "category": "Jewelry",
+      "name": "Alison Lou",
+      "country": null
+    },
+    {
+      "domain": "andaseat.com",
+      "category": "Electronics",
+      "name": "Andaseat",
+      "country": null
+    },
+    {
+      "domain": "antler.co.uk",
+      "category": "Bags & accessories",
+      "name": "Antler\u00ae Luggage Official Store",
+      "country": "GB"
+    },
+    {
+      "domain": "artifactpuzzles.com",
+      "category": "Toys & hobbies",
+      "name": "Artifact Puzzles",
+      "country": null
+    },
+    {
+      "domain": "artofplay.com",
+      "category": "Toys & hobbies",
+      "name": "Art of Play",
+      "country": null
+    },
+    {
+      "domain": "ayaneo.com",
+      "category": "Electronics",
+      "name": "Ayaneo",
+      "country": null
+    },
+    {
+      "domain": "babymori.com",
+      "category": "Kids & baby",
+      "name": "Sleepsuit & Pyjamas",
+      "country": null
+    },
+    {
+      "domain": "banditrunning.com",
+      "category": "Activewear",
+      "name": "Bandit Running",
+      "country": null
+    },
+    {
+      "domain": "baseus.com",
+      "category": "Electronics",
+      "name": "Baseus Official",
+      "country": null
+    },
+    {
+      "domain": "beckettsimonon.com",
+      "category": "Footwear",
+      "name": "Welcome to the World of Beckett Simonon",
+      "country": null
+    },
+    {
+      "domain": "birdiebean.com",
+      "category": "Kids & baby",
+      "name": "Birdiebean",
+      "country": null
+    },
+    {
+      "domain": "blancamonrosgomez.com",
+      "category": "Jewelry",
+      "name": "Blanca Monr\u00f3s G\u00f3mez",
+      "country": null
+    },
+    {
+      "domain": "branchfurniture.com",
+      "category": "Home & garden",
+      "name": "Branch",
+      "country": null
+    },
+    {
+      "domain": "brentneale.com",
+      "category": "Jewelry",
+      "name": "Brent Neale",
+      "country": null
+    },
+    {
+      "domain": "brothervellies.com",
+      "category": "Footwear",
+      "name": "Brother Vellies",
+      "country": null
+    },
+    {
+      "domain": "bumkins.com",
+      "category": "Kids & baby",
+      "name": "Bumkins",
+      "country": null
+    },
+    {
+      "domain": "burga.com",
+      "category": "Bags & accessories",
+      "name": "Burga",
+      "country": null
+    },
+    {
+      "domain": "camcamcopenhagen.com",
+      "category": "Kids & baby",
+      "name": "Cam Cam Copenhagen",
+      "country": null
+    },
+    {
+      "domain": "cannonkeys.com",
+      "category": "Electronics",
+      "name": "CannonKeys",
+      "country": null
+    },
+    {
+      "domain": "carbon38.com",
+      "category": "Activewear",
+      "name": "Carbon38",
+      "country": null
+    },
+    {
+      "domain": "chiptheorygames.com",
+      "category": "Toys & hobbies",
+      "name": "Chip Theory Games",
+      "country": null
+    },
+    {
+      "domain": "coloredorganics.com",
+      "category": "Kids & baby",
+      "name": "Colored Organics\u00ae",
+      "country": null
+    },
+    {
+      "domain": "copperpearl.com",
+      "category": "Kids & baby",
+      "name": "Trendy & Premium Baby Products",
+      "country": null
+    },
+    {
+      "domain": "cymbiotika.com",
+      "category": "Health & wellness",
+      "name": "Cymbiotika",
+      "country": null
+    },
+    {
+      "domain": "dearfrances.com",
+      "category": "Footwear",
+      "name": "Dear Frances",
+      "country": null
+    },
+    {
+      "domain": "dooney.com",
+      "category": "Bags & accessories",
+      "name": "Dooney & Bourke",
+      "country": null
+    },
+    {
+      "domain": "drinklmnt.com",
+      "category": "Health & wellness",
+      "name": "LMNT",
+      "country": null
+    },
+    {
+      "domain": "duckfeetusa.com",
+      "category": "Footwear",
+      "name": "Duckfeet",
+      "country": null
+    },
+    {
+      "domain": "eagle-gryphon.com",
+      "category": "Toys & hobbies",
+      "name": "Eagle-Gryphon Games",
+      "country": null
+    },
+    {
+      "domain": "earthrated.com",
+      "category": "Pets",
+      "name": "Earth Rated",
+      "country": null
+    },
+    {
+      "domain": "ecobee.com",
+      "category": "Electronics",
+      "name": "Smart Thermostats & Smart Home Devices",
+      "country": null
+    },
+    {
+      "domain": "etq-amsterdam.com",
+      "category": "Footwear",
+      "name": "ETQ Amsterdam",
+      "country": null
+    },
+    {
+      "domain": "evryjewels.com",
+      "category": "Jewelry",
+      "name": "Evry Jewels",
+      "country": null
+    },
+    {
+      "domain": "explodingkittens.com",
+      "category": "Toys & hobbies",
+      "name": "Exploding Kittens",
+      "country": null
+    },
+    {
+      "domain": "fillingpieces.com",
+      "category": "Apparel",
+      "name": "Filling Pieces\u00ae Official Webshop",
+      "country": null
+    },
+    {
+      "domain": "filson.com",
+      "category": "Bags & accessories",
+      "name": "Filson",
+      "country": null
+    },
+    {
+      "domain": "foundrae.com",
+      "category": "Jewelry",
+      "name": "FoundRae",
+      "country": null
+    },
+    {
+      "domain": "gathre.com",
+      "category": "Kids & baby",
+      "name": "Gathre Kids",
+      "country": null
+    },
+    {
+      "domain": "girlfriendcollective.com",
+      "category": "Activewear",
+      "name": "Girlfriend Collective",
+      "country": null
+    },
+    {
+      "domain": "glerups.com",
+      "category": "Footwear",
+      "name": "Slippers",
+      "country": null
+    },
+    {
+      "domain": "goumikids.com",
+      "category": "Kids & baby",
+      "name": "Stay-On Baby Mitts, Booties & Gowns",
+      "country": null
+    },
+    {
+      "domain": "greentoys.com",
+      "category": "Toys & hobbies",
+      "name": "Green Toys\u00ae Official Store",
+      "country": null
+    },
+    {
+      "domain": "habitual.com",
+      "category": "Apparel",
+      "name": "Habitual Denim",
+      "country": null
+    },
+    {
+      "domain": "harimari.com",
+      "category": "Footwear",
+      "name": "Adventure Anywhere Footwear",
+      "country": null
+    },
+    {
+      "domain": "hopeandhenry.com",
+      "category": "Kids & baby",
+      "name": "Hope & Henry",
+      "country": null
+    },
+    {
+      "domain": "huel.com",
+      "category": "Health & wellness",
+      "name": "Huel",
+      "country": null
+    },
+    {
+      "domain": "janewin.com",
+      "category": "Jewelry",
+      "name": "Jane Win",
+      "country": null
+    },
+    {
+      "domain": "janji.com",
+      "category": "Activewear",
+      "name": "Janji",
+      "country": null
+    },
+    {
+      "domain": "jenniferfisher.com",
+      "category": "Jewelry",
+      "name": "Jennifer Fisher",
+      "country": null
+    },
+    {
+      "domain": "jsaux.com",
+      "category": "Electronics",
+      "name": "JSAUX GAMING\u00ae Online Store",
+      "country": null
+    },
+    {
+      "domain": "july.com",
+      "category": "Bags & accessories",
+      "name": "Luggage Bags & Travel Suitcases",
+      "country": null
+    },
+    {
+      "domain": "justfoodfordogs.com",
+      "category": "Pets",
+      "name": "JustFoodforDogs",
+      "country": null
+    },
+    {
+      "domain": "katequinn.com",
+      "category": "Kids & baby",
+      "name": "icon-X",
+      "country": null
+    },
+    {
+      "domain": "keababies.com",
+      "category": "Kids & baby",
+      "name": "KeaBabies",
+      "country": null
+    },
+    {
+      "domain": "kinderfeets.com",
+      "category": "Kids & baby",
+      "name": "Kinderfeets",
+      "country": null
+    },
+    {
+      "domain": "kineticlabs.com",
+      "category": "Electronics",
+      "name": "Kinetic Labs",
+      "country": null
+    },
+    {
+      "domain": "kinnstudio.com",
+      "category": "Jewelry",
+      "name": "Kinn",
+      "country": null
+    },
+    {
+      "domain": "lalo.com",
+      "category": "Footwear",
+      "name": "LALO",
+      "country": null
+    },
+    {
+      "domain": "lastresortab.com",
+      "category": "Footwear",
+      "name": "Last Resort AB",
+      "country": null
+    },
+    {
+      "domain": "libertypuzzles.com",
+      "category": "Toys & hobbies",
+      "name": "Liberty Puzzles",
+      "country": null
+    },
+    {
+      "domain": "linusbike.com",
+      "category": "Sports & outdoors",
+      "name": "Linus",
+      "country": null
+    },
+    {
+      "domain": "liquid-iv.com",
+      "category": "Health & wellness",
+      "name": "Liquid I.V.",
+      "country": null
+    },
+    {
+      "domain": "littlebeast.co",
+      "category": "Pets",
+      "name": "Dog Clothes & Apparel by Little Beast",
+      "country": null
+    },
+    {
+      "domain": "maap.cc",
+      "category": "Activewear",
+      "name": "MAAP",
+      "country": null
+    },
+    {
+      "domain": "maileg.com",
+      "category": "Kids & baby",
+      "name": "Maileg Germany",
+      "country": null
+    },
+    {
+      "domain": "margauxny.com",
+      "category": "Footwear",
+      "name": "Margauxny",
+      "country": null
+    },
+    {
+      "domain": "marrowfine.com",
+      "category": "Jewelry",
+      "name": "Marrow Fine",
+      "country": null
+    },
+    {
+      "domain": "mgemi.com",
+      "category": "Footwear",
+      "name": "M.Gemi",
+      "country": null
+    },
+    {
+      "domain": "microkickboard.com",
+      "category": "Kids & baby",
+      "name": "Micro Kickboard",
+      "country": null
+    },
+    {
+      "domain": "modernbeast.com",
+      "category": "Pets",
+      "name": "Modernbeast",
+      "country": null
+    },
+    {
+      "domain": "monicaandandy.com",
+      "category": "Kids & baby",
+      "name": "Monica + Andy",
+      "country": null
+    },
+    {
+      "domain": "mpgsport.com",
+      "category": "Activewear",
+      "name": "MPG Sport",
+      "country": null
+    },
+    {
+      "domain": "nativepet.com",
+      "category": "Pets",
+      "name": "Native Pet Supplements",
+      "country": null
+    },
+    {
+      "domain": "nicksboots.com",
+      "category": "Footwear",
+      "name": "Nicks Boots",
+      "country": null
+    },
+    {
+      "domain": "nobodinoz.com",
+      "category": "Kids & baby",
+      "name": "Nobodinoz",
+      "country": null
+    },
+    {
+      "domain": "nomnomnow.com",
+      "category": "Pets",
+      "name": "Nom Nom",
+      "country": null
+    },
+    {
+      "domain": "nootie.com",
+      "category": "Pets",
+      "name": "Nootie",
+      "country": null
+    },
+    {
+      "domain": "novelkeys.com",
+      "category": "Electronics",
+      "name": "Novelkeys",
+      "country": null
+    },
+    {
+      "domain": "olliella.com",
+      "category": "Toys & hobbies",
+      "name": "Olli Ella",
+      "country": null
+    },
+    {
+      "domain": "onnit.com",
+      "category": "Health & wellness",
+      "name": "Onnit",
+      "country": null
+    },
+    {
+      "domain": "openfarmpet.com",
+      "category": "Pets",
+      "name": "Best Ethically Sourced Dog & Cat Food",
+      "country": null
+    },
+    {
+      "domain": "ostroy.com",
+      "category": "Activewear",
+      "name": "Ostroy",
+      "country": null
+    },
+    {
+      "domain": "pasnormalstudios.com",
+      "category": "Activewear",
+      "name": "Pas Normal Studios",
+      "country": null
+    },
+    {
+      "domain": "pehr.com",
+      "category": "Kids & baby",
+      "name": "Organic Baby & Toddler Clothes",
+      "country": null
+    },
+    {
+      "domain": "picassotiles.com",
+      "category": "Toys & hobbies",
+      "name": "Picassotiles",
+      "country": null
+    },
+    {
+      "domain": "plusplususa.com",
+      "category": "Toys & hobbies",
+      "name": "Plus-Plus USA",
+      "country": null
+    },
+    {
+      "domain": "poppybarley.com",
+      "category": "Footwear",
+      "name": "Poppy Barley",
+      "country": null
+    },
+    {
+      "domain": "poshpeanut.com",
+      "category": "Kids & baby",
+      "name": "Poshpeanut",
+      "country": null
+    },
+    {
+      "domain": "pranapets.com",
+      "category": "Pets",
+      "name": "Pranapets",
+      "country": null
+    },
+    {
+      "domain": "primary.com",
+      "category": "Kids & baby",
+      "name": "Primary",
+      "country": null
+    },
+    {
+      "domain": "pupford.com",
+      "category": "Pets",
+      "name": "Pupford",
+      "country": null
+    },
+    {
+      "domain": "ramaworks.store",
+      "category": "Electronics",
+      "name": "Rama Works\u00ae Store",
+      "country": null
+    },
+    {
+      "domain": "rhinoshield.io",
+      "category": "Electronics",
+      "name": "Protective Cases & Screen Protectors",
+      "country": null
+    },
+    {
+      "domain": "sarahflint.com",
+      "category": "Footwear",
+      "name": "Sarah Flint",
+      "country": null
+    },
+    {
+      "domain": "seavees.com",
+      "category": "Footwear",
+      "name": "SeaVees Official",
+      "country": null
+    },
+    {
+      "domain": "secretlab.co",
+      "category": "Electronics",
+      "name": "Secretlab",
+      "country": null
+    },
+    {
+      "domain": "shokz.com",
+      "category": "Electronics",
+      "name": "Open-Ear & Bone Conduction Headphones",
+      "country": null
+    },
+    {
+      "domain": "skullnco.com",
+      "category": "Electronics",
+      "name": "Pro Gaming Accessories",
+      "country": null
+    },
+    {
+      "domain": "smartypantsvitamins.com",
+      "category": "Health & wellness",
+      "name": "SmartyPants",
+      "country": null
+    },
+    {
+      "domain": "sollybaby.com",
+      "category": "Kids & baby",
+      "name": "Solly Baby",
+      "country": null
+    },
+    {
+      "domain": "soludos.com",
+      "category": "Footwear",
+      "name": "Soludos",
+      "country": null
+    },
+    {
+      "domain": "soylent.com",
+      "category": "Health & wellness",
+      "name": "Soylent",
+      "country": null
+    },
+    {
+      "domain": "spearmintlove.com",
+      "category": "Kids & baby",
+      "name": "SpearmintLOVE",
+      "country": null
+    },
+    {
+      "domain": "spinellikilcollin.com",
+      "category": "Jewelry",
+      "name": "Spinelli Kilcollin",
+      "country": null
+    },
+    {
+      "domain": "spiritualgangster.com",
+      "category": "Activewear",
+      "name": "Spiritual Gangster",
+      "country": null
+    },
+    {
+      "domain": "spitfireaudio.com",
+      "category": "Electronics",
+      "name": "Spitfire Audio",
+      "country": null
+    },
+    {
+      "domain": "splits59.com",
+      "category": "Activewear",
+      "name": "Women's Workout Clothes & Yoga Apparel",
+      "country": null
+    },
+    {
+      "domain": "statebags.com",
+      "category": "Bags & accessories",
+      "name": "STATE Bags",
+      "country": null
+    },
+    {
+      "domain": "supernote.com",
+      "category": "Electronics",
+      "name": "Supernote",
+      "country": null
+    },
+    {
+      "domain": "taftclothing.com",
+      "category": "Footwear",
+      "name": "TAFT",
+      "country": null
+    },
+    {
+      "domain": "thatsmine.com",
+      "category": "Kids & baby",
+      "name": "That's Mine",
+      "country": null
+    },
+    {
+      "domain": "tinylandus.com",
+      "category": "Toys & hobbies",
+      "name": "Tiny Land Official Site",
+      "country": null
+    },
+    {
+      "domain": "tomtoc.com",
+      "category": "Bags & accessories",
+      "name": "tomtoc",
+      "country": null
+    },
+    {
+      "domain": "uaudio.com",
+      "category": "Electronics",
+      "name": "Universal Audio",
+      "country": null
+    },
+    {
+      "domain": "ucon-acrobatics.com",
+      "category": "Bags & accessories",
+      "name": "Ucon Acrobatics",
+      "country": null
+    },
+    {
+      "domain": "ugreen.com",
+      "category": "Electronics",
+      "name": "UGREEN Official Site",
+      "country": null
+    },
+    {
+      "domain": "us.blundstone.com",
+      "category": "Footwear",
+      "name": "Blundstone",
+      "country": null
+    },
+    {
+      "domain": "verabradley.com",
+      "category": "Bags & accessories",
+      "name": "Vera Bradley\u00ae",
+      "country": null
+    },
+    {
+      "domain": "westpaw.com",
+      "category": "Pets",
+      "name": "Dogs Toys and Treats",
+      "country": null
+    },
+    {
+      "domain": "whitesboots.com",
+      "category": "Footwear",
+      "name": "White's Boots Shop",
+      "country": null
+    },
+    {
+      "domain": "wildbird.co",
+      "category": "Kids & baby",
+      "name": "Wildbird",
+      "country": null
+    },
+    {
+      "domain": "wilderdog.com",
+      "category": "Pets",
+      "name": "Wilderdog",
+      "country": null
+    },
+    {
+      "domain": "wishbonedesign.com",
+      "category": "Kids & baby",
+      "name": "Wishbonedesign",
+      "country": null
+    },
+    {
+      "domain": "wonderandwise.com",
+      "category": "Kids & baby",
+      "name": "Wonder and Wise",
+      "country": null
+    },
+    {
+      "domain": "zenapet.com",
+      "category": "Pets",
+      "name": "Zenapet",
       "country": null
     }
   ]
