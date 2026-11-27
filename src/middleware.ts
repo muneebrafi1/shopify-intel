@@ -51,8 +51,46 @@ async function route(context: Ctx, next: Next): Promise<Response> {
   const userArea = userAreaFor(context.url.pathname);
   if (userArea !== null) return guardUser(context, next, userArea);
   const area = adminAreaFor(context.url.pathname);
-  if (area === null) return next();
+  if (area === null) return cachedPublic(context, next);
   return withAdminHeaders(await guardAdmin(context, next, area));
+}
+
+/** Repeat public GETs from caches.default so SSR does not 500 under modest concurrency. */
+async function cachedPublic(context: Ctx, next: Next): Promise<Response> {
+  const request = context.request;
+  if (request.method !== 'GET') return next();
+  const cookie = request.headers.get('Cookie') ?? '';
+  if (/(?:^|;\s*)(?:session|__session|sid|auth|cf_auth)=/i.test(cookie)) return next();
+
+  const key = new Request(request.url, { method: 'GET' });
+  try {
+    const hit = await caches.default.match(key);
+    if (hit) {
+      const headers = new Headers(hit.headers);
+      headers.set('X-Vitrine-Cache', 'HIT');
+      return new Response(hit.body, { status: hit.status, statusText: hit.statusText, headers });
+    }
+  } catch {
+    // caches.default is missing in some test / dev runtimes.
+  }
+
+  const res = await next();
+  const cc = res.headers.get('Cache-Control') ?? '';
+  const cacheable =
+    res.status === 200 &&
+    !res.headers.has('Set-Cookie') &&
+    !/no-store|private|no-cache/i.test(cc) &&
+    /(?:s-maxage|max-age)=[1-9]\d*/i.test(cc);
+  if (!cacheable) return res;
+  const headers = new Headers(res.headers);
+  headers.set('X-Vitrine-Cache', 'MISS');
+  const miss = new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+  try {
+    await caches.default.put(key, miss.clone());
+  } catch {
+    // Ignore cache write failures; the response is still valid.
+  }
+  return miss;
 }
 
 /**
