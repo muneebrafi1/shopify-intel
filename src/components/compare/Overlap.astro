@@ -127,11 +127,11 @@ const cells = isApp
       <EmptyState
         size="sm"
         align="start"
-        title={isApp ? 'No scanned store runs both' : 'No scanned store has run both'}
+        title={isApp ? 'No store runs both' : 'No store has run both'}
         body={
           isApp
-            ? `${a.name} and ${b.name} don’t share a store in our scan of ${formatCount(a.denominator)}. Stores usually pick one.`
-            : `We haven’t seen a store switch between ${a.name} and ${b.name} yet. Switches show up here as scans repeat.`
+            ? `${a.name} and ${b.name} don’t share a store. Stores usually pick one.`
+            : `No store has switched between ${a.name} and ${b.name} yet.`
         }
       />
     )}
