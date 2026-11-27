@@ -373,6 +373,11 @@ function walkFiles(dir: string, acc: { key: string; file: string }[] = []) {
   return acc;
 }
 const manifestList = walkFiles(filesDir);
+manifestList.sort((a, b) => {
+  const am = a.key.endsWith('page-cache/manifest.json') ? 1 : 0;
+  const bm = b.key.endsWith('page-cache/manifest.json') ? 1 : 0;
+  return am - bm;
+});
 writeFileSync(join(outDir, 'r2-manifest.json'), JSON.stringify(manifestList));
 console.log(`r2-manifest ${manifestList.length} objects`);
 
