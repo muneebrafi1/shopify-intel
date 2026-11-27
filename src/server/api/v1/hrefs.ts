@@ -13,6 +13,6 @@ export const hrefs = {
   teardown: (slug: string) => `/teardowns/${slug}`,
   sectionType: (slug: string) => `/sections/${slug}`,
   section: (type: string, id: number) => `/sections/${type}/${id}`,
-  storeCategory: (slug: string) => `/stores?category=${encodeURIComponent(slug)}`,
+  storeCategory: (slug: string) => `/stores/category/${encodeURIComponent(slug)}`,
   go: (linkId: number) => `/go/${linkId}`,
 } as const;

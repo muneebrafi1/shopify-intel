@@ -92,6 +92,8 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
     comparisons,
     altApps,
     altThemes,
+    niches,
+    themeGalleries,
   ] = await Promise.all([
     db.first<{ value: string }>(
       "SELECT MAX(substr(value, 1, 10)) AS value FROM meta WHERE key IN ('data_as_of', 'crawl_last_at')",
@@ -148,6 +150,25 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
          )
        ORDER BY t.slug`,
     ),
+    // Niche and theme galleries (curated, captured stores only: a gallery needs pictures).
+    db.all<{ slug: string }>(
+      `SELECT sc.slug FROM store_categories sc
+       WHERE EXISTS (
+         SELECT 1 FROM stores st
+         WHERE st.category_slug = sc.slug AND st.is_curated = 1 AND st.is_captured = 1 AND st.status = 'active'
+       )
+       ORDER BY sc.slug`,
+    ),
+    db.all<{ slug: string }>(
+      `SELECT t.slug FROM themes t
+       WHERE t.status = 'active'
+         AND EXISTS (
+           SELECT 1 FROM stores st
+           WHERE st.current_theme_id = t.id AND st.is_curated = 1 AND st.is_captured = 1
+             AND st.status = 'active'
+         )
+       ORDER BY t.slug`,
+    ),
   ]);
 
   const dataDay = isoDay(metaRow?.value);
@@ -161,6 +182,8 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
       lastmod: isoDay(s.last_seen) ?? dataDay,
     })),
     ...themes.map((t) => ({ path: hrefs.theme(t.slug), lastmod: dataDay })),
+    ...niches.map((n) => ({ path: hrefs.storeCategory(n.slug), lastmod: dataDay })),
+    ...themeGalleries.map((t) => ({ path: `${hrefs.theme(t.slug)}/stores`, lastmod: dataDay })),
     ...apps.map((a) => ({
       path: hrefs.app(a.slug),
       lastmod: isoDay(a.checked_on) ?? dataDay,

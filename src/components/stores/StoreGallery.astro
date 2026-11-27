@@ -1,0 +1,242 @@
+---
+/**
+ * A clean-URL gallery of curated stores: breadcrumb → title + count → sibling pills → capture
+ * cards → paging. Used by /stores/category/<niche> and /themes/<slug>/stores.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHeader from '~/components/ui/PageHeader.astro';
+import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
+import Button from '~/components/ui/Button.astro';
+import StoreCard from '~/components/domain/StoreCard.astro';
+import type { StoreListItem } from '~/server/api/v1/types';
+import { themeName } from '~/components/stores/query';
+
+interface Pill {
+  label: string;
+  href: string;
+  selected?: boolean;
+  count?: number | null;
+}
+interface Props {
+  title: string;
+  titleMuted?: string;
+  description: string;
+  canonical: string;
+  crumbs: { label: string; href?: string }[];
+  items: StoreListItem[];
+  total: number;
+  pills?: Pill[];
+  pillsLabel?: string;
+  nextHref?: string | null;
+  firstHref?: string | null;
+  noindex?: boolean;
+  jsonLdName: string;
+  /** Rows already shown on earlier pages (for ItemList positions). */
+  offset?: number;
+  /** Show the theme name on each card (hide it on a theme page, where it is the same for all). */
+  showTheme?: boolean;
+  ogImage?: string | null;
+}
+const {
+  title,
+  titleMuted,
+  description,
+  canonical,
+  crumbs,
+  items,
+  total,
+  pills = [],
+  pillsLabel,
+  nextHref,
+  firstHref,
+  noindex = false,
+  jsonLdName,
+  offset = 0,
+  showTheme = true,
+  ogImage,
+} = Astro.props;
+const site = Astro.site ?? Astro.url;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.label,
+      ...(c.href ? { item: new URL(c.href, site).href } : {}),
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: jsonLdName,
+    numberOfItems: total,
+    itemListElement: items.slice(0, 40).map((s, i) => ({
+      '@type': 'ListItem',
+      position: offset + i + 1,
+      name: s.display_name,
+      url: new URL(s.href, site).href,
+    })),
+  },
+];
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
+---
+
+<BaseLayout
+  title={`${title}${titleMuted ? ` ${titleMuted}` : ''}`}
+  description={description}
+  canonical={canonical}
+  noindex={noindex}
+  jsonLd={jsonLd}
+  ogImage={ogImage ?? undefined}
+  wide
+>
+  <div class="container--wide gallery">
+    <PageHeader title={title} titleMuted={titleMuted} count={total}>
+      <Breadcrumbs slot="top" items={crumbs} />
+    </PageHeader>
+
+    {
+      pills.length > 0 && (
+        <nav class="gallery__pills" aria-label={pillsLabel ?? 'Related'}>
+          {pills.map((p) => (
+            <a
+              href={p.href}
+              class:list={['gallery__pill', { 'is-on': p.selected }]}
+              aria-current={p.selected ? 'page' : undefined}
+            >
+              <span>{p.label}</span>
+              {p.count != null && <span class="gallery__n num">{p.count}</span>}
+            </a>
+          ))}
+        </nav>
+      )
+    }
+
+    <div class="grid grid--shots gallery__grid">
+      {
+        items.map((s, i) => (
+          <StoreCard
+            domain={s.domain}
+            name={s.name}
+            href={s.href}
+            shot={s.preview ? { ...s.preview.image, device: s.preview.device } : null}
+            meta={s.name ? s.domain : (s.category?.name ?? 'Store')}
+            eager={i < 4}
+          >
+            <span slot="aside" class="gallery__aside">
+              {showTheme && (
+                <span class:list={['gallery__theme', { 'is-muted': !s.theme.name }]}>
+                  {themeName(s.theme)}
+                </span>
+              )}
+              <span class="gallery__apps num">
+                {s.app_count} {s.app_count === 1 ? 'app' : 'apps'}
+              </span>
+            </span>
+          </StoreCard>
+        ))
+      }
+    </div>
+
+    {
+      (nextHref || firstHref) && (
+        <div class="gallery__paging">
+          {firstHref && (
+            <Button href={firstHref} variant="ghost" size="sm">
+              First page
+            </Button>
+          )}
+          {nextHref && (
+            <Button href={nextHref} variant="secondary" iconRight="arrow-right">
+              Next page
+            </Button>
+          )}
+        </div>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .gallery {
+    padding-bottom: var(--space-16);
+  }
+  .gallery__pills {
+    display: flex;
+    gap: var(--space-2);
+    margin-block: var(--space-5) var(--space-6);
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .gallery__pills::-webkit-scrollbar {
+    display: none;
+  }
+  .gallery__pill {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill, 999px);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+  .gallery__pill:hover {
+    border-color: var(--ink-3);
+    color: var(--ink);
+  }
+  .gallery__pill.is-on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+  .gallery__n {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .gallery__pill.is-on .gallery__n {
+    color: inherit;
+    opacity: 0.7;
+  }
+  .gallery__aside {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 44%;
+    text-align: right;
+  }
+  .gallery__theme {
+    max-width: 100%;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .gallery__theme.is-muted {
+    color: var(--ink-3);
+  }
+  .gallery__apps {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .gallery__paging {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-8);
+  }
+</style>

@@ -11,6 +11,27 @@ const extractLocs = (xml: string): string[] =>
   [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]!);
 
 describe('XML sitemaps', () => {
+  it('lists niche and theme galleries only once a curated store in them is captured', async () => {
+    const db = seededDb();
+    try {
+      const before = extractLocs(await buildCoreSitemap(db, ORIGIN));
+      expect(before.filter((l) => l.includes('/stores/category/'))).toEqual([]);
+      expect(before.filter((l) => l.endsWith('/stores') && l.includes('/themes/'))).toEqual([]);
+      await db.run(
+        `UPDATE stores SET is_captured = 1 WHERE domain = 'youngla.com'`,
+      );
+      const row = await db.first<{ category_slug: string; theme: string }>(
+        `SELECT s.category_slug, t.slug AS theme FROM stores s JOIN themes t ON t.id = s.current_theme_id
+         WHERE s.domain = 'youngla.com'`,
+      );
+      const locs = extractLocs(await buildCoreSitemap(db, ORIGIN));
+      expect(locs).toContain(`${ORIGIN}/stores/category/${row!.category_slug}`);
+      expect(locs).toContain(`${ORIGIN}/themes/${row!.theme}/stores`);
+    } finally {
+      db.close();
+    }
+  });
+
   it('builds a sitemap index pointing at core and sections sitemaps', async () => {
     const db = seededDb();
     try {

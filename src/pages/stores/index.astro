@@ -185,9 +185,14 @@ const singleParam =
   filterCount === 1 && !q.cursor && !q.q
     ? (['theme', 'app', 'category'] as const).find((k) => q.filters[k])
     : undefined;
-const canonical = singleParam
-  ? `/stores?${singleParam}=${encodeURIComponent(q.filters[singleParam]!)}`
-  : '/stores';
+const canonical =
+  singleParam === 'category' && q.scope === 'curated'
+    ? `/stores/category/${encodeURIComponent(q.filters.category!)}`
+    : singleParam === 'theme' && q.scope === 'curated'
+      ? `/themes/${encodeURIComponent(q.filters.theme!)}/stores`
+      : singleParam
+        ? `/stores?${singleParam}=${encodeURIComponent(q.filters[singleParam]!)}`
+        : '/stores';
 const noindex =
   filterCount >= 2 ||
   q.p > 1 ||

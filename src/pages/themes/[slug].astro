@@ -371,7 +371,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           id="th-stores-title"
           title={`Stores using ${theme.name}`}
           count={storesTotal}
-          description="Every active store in our scan where we detected this theme. Stores without a capture still have a page with their theme and apps."
+          href={curated.length > 0 ? `${theme.href}/stores` : undefined}
+          linkLabel="Gallery"
         />
         {stores.length === 0 ? (
           <EmptyState

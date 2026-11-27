@@ -1,0 +1,63 @@
+---
+/**
+ * /stores/category/<niche>: the curated stores in one niche as capture cards (clean, indexable
+ * URL for what /stores?category= filters). Unknown or empty niches are 404s.
+ */
+import StoreGallery from '~/components/stores/StoreGallery.astro';
+import { api, isApiError } from '~/server/api';
+import { ogCaptureSrc } from '~/lib/media';
+
+const PAGE = 48;
+const slug = (Astro.params.slug ?? '').toLowerCase();
+if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(slug)) return Astro.rewrite('/404');
+const cursor = Astro.url.searchParams.get('cursor') || undefined;
+const p = Math.max(1, Math.min(999, Number.parseInt(Astro.url.searchParams.get('p') ?? '1', 10) || 1));
+
+let res;
+try {
+  res = await api.listStores({
+    category: slug,
+    scope: 'curated',
+    sort: 'rank',
+    limit: PAGE,
+    ...(cursor ? { cursor } : {}),
+  });
+} catch (e) {
+  if (isApiError(e) && e.status === 400 && cursor) return Astro.redirect(`/stores/category/${slug}`, 302);
+  throw e;
+}
+const items = res.data.items;
+if (items.length === 0) return Astro.rewrite('/404');
+const total = res.meta.pagination?.total ?? items.length;
+const nextCursor = res.meta.pagination?.next_cursor ?? null;
+const all = await api.listStores({ scope: 'curated', limit: 1 });
+const cats = [...all.data.facets.categories].sort((a, b) => b.count - a.count);
+const current = cats.find((c) => c.value === slug);
+const name = current?.label ?? items[0]!.category?.name ?? slug;
+const pills = cats.map((c) => ({
+  label: c.label,
+  href: `/stores/category/${c.value}`,
+  selected: c.value === slug,
+  count: c.count,
+}));
+const ogShot = items.map((s) => (s.preview ? ogCaptureSrc({ ...s.preview.image, device: s.preview.device }) : null)).find(Boolean);
+const lower = name.toLowerCase();
+const canonical = `/stores/category/${slug}`;
+---
+
+<StoreGallery
+  title={`Best Shopify stores in ${name}`}
+  description={`${total} hand-picked Shopify ${lower} stores, screenshotted page by page, with the theme and apps detected on each.`}
+  canonical={canonical}
+  noindex={!!cursor}
+  crumbs={[{ label: 'Stores', href: '/stores' }, { label: name }]}
+  items={items}
+  total={total}
+  pills={pills}
+  pillsLabel="Niches"
+  nextHref={nextCursor ? `${canonical}?cursor=${encodeURIComponent(nextCursor)}&p=${p + 1}` : null}
+  firstHref={cursor ? canonical : null}
+  jsonLdName={`Best Shopify stores in ${name}`}
+  offset={(p - 1) * PAGE}
+  ogImage={ogShot}
+/>
