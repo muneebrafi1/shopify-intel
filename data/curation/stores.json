@@ -4650,6 +4650,450 @@
       "category": "Pets",
       "name": "Zenapet",
       "country": null
+    },
+    {
+      "domain": "thefoggydog.com",
+      "name": "The Foggy Dog",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "bark.co",
+      "name": "Bark",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "waggo.com",
+      "name": "Waggo",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "sleepypod.com",
+      "name": "Sleepypod",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "ollydog.com",
+      "name": "OllyDog",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "frenchiebulldog.com",
+      "name": "Frenchie Bulldog",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "lambwolf.co",
+      "name": "Lambwolf Co.",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "becopets.com",
+      "name": "Beco",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "lilyskitchen.co.uk",
+      "name": "Lily's Kitchen",
+      "category": "Pets",
+      "country": "GB"
+    },
+    {
+      "domain": "forthglade.com",
+      "name": "Forthglade",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "fuzzyard.com",
+      "name": "Fuzzyard",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "foufoudog.com",
+      "name": "FouFou Dog",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "wildearth.com",
+      "name": "Wild Earth",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "springerpets.com",
+      "name": "Springer Pets",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "scandipaws.com",
+      "name": "ScandiPaws",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "furbo.com",
+      "name": "Furbo",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "cubebot.com",
+      "name": "Cubebot",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "melissaanddoug.com",
+      "name": "Melissa & Doug",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "shop.lovevery.com",
+      "name": "Lovevery",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "us.grimms.eu",
+      "name": "Grimm's",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "woodenstory.com",
+      "name": "Wooden Story",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "waytoplaytoys.com",
+      "name": "Waytoplay",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "manhattantoy.com",
+      "name": "Manhattan Toy",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "thamesandkosmos.com",
+      "name": "Thames & Kosmos",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "radioflyer.com",
+      "name": "Radio Flyer",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "sakara.com",
+      "name": "Sakara",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "mudwtr.com",
+      "name": "MUD\\WTR",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "goli.com",
+      "name": "Goli",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "ketone.com",
+      "name": "Ketone-IQ",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "kencko.com",
+      "name": "Kencko",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "perelelhealth.com",
+      "name": "Perelel",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "needednutrition.com",
+      "name": "Needed",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "takethesis.com",
+      "name": "Thesis",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "hilma.co",
+      "name": "Hilma",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "floliving.com",
+      "name": "FLO Living",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "dripdrop.com",
+      "name": "DripDrop",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "comvita.com",
+      "name": "Comvita",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "transparentlabs.com",
+      "name": "Transparent Labs",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "dailyharvest.com",
+      "name": "Daily Harvest",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "missoma.com",
+      "name": "Missoma",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "analuisa.com",
+      "name": "Ana Luisa",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "completedworks.com",
+      "name": "Completedworks",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "alighieri.com",
+      "name": "Alighieri",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "otiumberg.com",
+      "name": "Otiumberg",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "hattonlabs.com",
+      "name": "Hatton Labs",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "edgeofember.com",
+      "name": "Edge of Ember",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "pippasmall.com",
+      "name": "Pippa Small",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "anitako.com",
+      "name": "Anita Ko",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "agmesnyc.com",
+      "name": "Agmes",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "wwake.com",
+      "name": "WWAKE",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "vrai.com",
+      "name": "VRAI",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "enewtondesign.com",
+      "name": "E.Newton",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "brookandyork.com",
+      "name": "Brook & York",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "oliveandpiper.com",
+      "name": "Olive & Piper",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "instantpot.com",
+      "name": "Instant Pot",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "bludot.com",
+      "name": "Blu Dot",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "eq3.com",
+      "name": "EQ3",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "maidenhome.com",
+      "name": "Maiden Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "luluandgeorgia.com",
+      "name": "Lulu and Georgia",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "albanypark.com",
+      "name": "Albany Park",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "goodeeworld.com",
+      "name": "Goodee",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "usm.com",
+      "name": "USM",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "interioricons.com",
+      "name": "Interior Icons",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "sprout-home.com",
+      "name": "Sprout Home",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "goalzero.com",
+      "name": "Goal Zero",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "letoyvan.com",
+      "name": "Le Toy Van",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "plus-plus.com",
+      "name": "Plus-Plus",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "tenderleaftoys.com",
+      "name": "Tender Leaf",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "thenueco.com",
+      "name": "The Nue Co.",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "betterandbetter.com",
+      "name": "Better & Better",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "jadetrau.com",
+      "name": "Jade Trau",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "stoneandstrand.com",
+      "name": "Stone and Strand",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "uncommonjames.com",
+      "name": "Uncommon James",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "shayjewelry.com",
+      "name": "SHAY",
+      "category": "Jewelry",
+      "country": null
     }
   ]
 }
