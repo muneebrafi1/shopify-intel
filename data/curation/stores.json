@@ -2166,6 +2166,804 @@
       "name": "Woodwrights",
       "category": "Home & garden",
       "country": "NZ"
+    },
+    {
+      "domain": "aeropress.com",
+      "name": "AeroPress",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "skims.com",
+      "name": "SKIMS",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "maguireshoes.com",
+      "name": "Maguire Shoes",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "rarebeauty.com",
+      "name": "Rare Beauty",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "anbernic.com",
+      "name": "Anbernic",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "silkandwillow.com",
+      "name": "Silk & Willow",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "terrebleu.ca",
+      "name": "Terre Bleu",
+      "category": "Beauty",
+      "country": "CA"
+    },
+    {
+      "domain": "neweracap.com",
+      "name": "New Era",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "areaware.com",
+      "name": "Areaware",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "rains.com",
+      "name": "Rains",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "herschel.com",
+      "name": "Herschel Supply Co.",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "aventon.com",
+      "name": "Aventon",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "athleticbrewing.com",
+      "name": "Athletic Brewing",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "wearlively.com",
+      "name": "Lively",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "atlascoffeeclub.com",
+      "name": "Atlas Coffee Club",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "auratenewyork.com",
+      "name": "Aurate",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "mejuri.com",
+      "name": "Mejuri",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "awaytravel.com",
+      "name": "Away",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "babylist.com",
+      "name": "Babylist",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "bedjet.com",
+      "name": "BedJet",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "bareminerals.com",
+      "name": "bareMinerals",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "bioliteenergy.com",
+      "name": "BioLite",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "baublebar.com",
+      "name": "BaubleBar",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "beachriot.com",
+      "name": "Beach Riot",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "blueair.com",
+      "name": "Blueair",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "lovewellness.com",
+      "name": "Love Wellness",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "nisolo.com",
+      "name": "Nisolo",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "summersalt.com",
+      "name": "Summersalt",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "greats.com",
+      "name": "Greats",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "olivercabell.com",
+      "name": "Oliver Cabell",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "tatcha.com",
+      "name": "Tatcha",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "campfireaudio.com",
+      "name": "Campfire Audio",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "blundstone.com",
+      "name": "Blundstone",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "casper.com",
+      "name": "Casper",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "bobochoses.com",
+      "name": "Bobo Choses",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "beefcakeswimwear.com",
+      "name": "Beefcake Swimwear",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "cervelo.com",
+      "name": "Cervélo",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "suta.in",
+      "name": "Suta",
+      "category": "Apparel",
+      "country": "IN"
+    },
+    {
+      "domain": "bollandbranch.com",
+      "name": "Boll & Branch",
+      "category": "Home & garden",
+      "country": null
+    },
+    {
+      "domain": "uppercasemagazine.com",
+      "name": "Uppercase",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "bonobos.com",
+      "name": "Bonobos",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "bruvi.com",
+      "name": "Bruvi",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "bowflex.com",
+      "name": "BowFlex",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "pelacase.com",
+      "name": "Pela",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "cowboy.com",
+      "name": "Cowboy",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "cocofloss.com",
+      "name": "Cocofloss",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "cieleathletics.com",
+      "name": "Ciele Athletics",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "camillebrinch.com",
+      "name": "Camille Brinch",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "velasca.com",
+      "name": "Velasca",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "troubadourgoods.com",
+      "name": "Troubadour",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "blkandbold.com",
+      "name": "BLK & Bold",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "vervecoffee.com",
+      "name": "Verve Coffee Roasters",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "tazachocolate.com",
+      "name": "Taza Chocolate",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "burlapandbarrel.com",
+      "name": "Burlap & Barrel",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "thehoneypot.co",
+      "name": "The Honey Pot",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "butcherbox.com",
+      "name": "ButcherBox",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "elegoo.com",
+      "name": "Elegoo",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "cheekbonebeauty.ca",
+      "name": "Cheekbone Beauty",
+      "category": "Beauty",
+      "country": "CA"
+    },
+    {
+      "domain": "bycharlotte.com",
+      "name": "by charlotte",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "ems.com",
+      "name": "Eastern Mountain Sports",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "meowmeowtweet.com",
+      "name": "Meow Meow Tweet",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "byoma.com",
+      "name": "BYOMA",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "engagepickleball.com",
+      "name": "Engage Pickleball",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "healthyrootsdolls.com",
+      "name": "Healthy Roots Dolls",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "quayaustralia.com",
+      "name": "Quay",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "farmrio.com",
+      "name": "FARM Rio",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "motelrocks.com",
+      "name": "Motel Rocks",
+      "category": "Apparel",
+      "country": null
+    },
+    {
+      "domain": "catalinacrunch.com",
+      "name": "Catalina Crunch",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "lauramercier.com",
+      "name": "Laura Mercier",
+      "category": "Beauty",
+      "country": null
+    },
+    {
+      "domain": "cerebelly.com",
+      "name": "Cerebelly",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "chomps.com",
+      "name": "Chomps",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "galison.com",
+      "name": "Galison",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "counterculturecoffee.com",
+      "name": "Counter Culture Coffee",
+      "category": "Food & drink",
+      "country": null
+    },
+    {
+      "domain": "freshcap.com",
+      "name": "FreshCap",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "hatchsleep.com",
+      "name": "Hug Sleep",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "helinox.com",
+      "name": "Helinox",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "hyperx.com",
+      "name": "HyperX",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "joola.com",
+      "name": "JOOLA",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "juicedbikes.com",
+      "name": "Juiced Bikes",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "kammok.com",
+      "name": "Kammok",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "aloyoga.com",
+      "name": "Alo Yoga",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "farer.com",
+      "name": "Farer",
+      "category": "Jewelry",
+      "country": null
+    },
+    {
+      "domain": "peakdesign.com",
+      "name": "Peak Design",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "nomadgoods.com",
+      "name": "Nomad",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "nothing.tech",
+      "name": "Nothing",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "lectricebikes.com",
+      "name": "Lectric eBikes",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "loftie.com",
+      "name": "Loftie",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "makeblock.com",
+      "name": "Makeblock",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "mudpuppy.com",
+      "name": "Mudpuppy",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "gorillamind.com",
+      "name": "Gorilla Mind",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "nemoequipment.com",
+      "name": "NEMO",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "olukai.com",
+      "name": "OluKai",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "onewheel.com",
+      "name": "Onewheel",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "halopets.com",
+      "name": "Halo Pets",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "otterbox.com",
+      "name": "OtterBox",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "happiestbaby.com",
+      "name": "Happiest Baby",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "hatch.co",
+      "name": "Hatch",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "hyperice.com",
+      "name": "Hyperice",
+      "category": "Health & wellness",
+      "country": null
+    },
+    {
+      "domain": "ironmaster.com",
+      "name": "Ironmaster",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "ridgemontoutfitters.com",
+      "name": "Ridgemont",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "rumpl.com",
+      "name": "Rumpl",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "joby.com",
+      "name": "JOBY",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "sanuk.com",
+      "name": "Sanuk",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "satechi.com",
+      "name": "Satechi",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "satisfyrunning.com",
+      "name": "Satisfy",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "keychron.com",
+      "name": "Keychron",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "selkirk.com",
+      "name": "Selkirk Sport",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "simmsfishing.com",
+      "name": "Simms",
+      "category": "Sports & outdoors",
+      "country": null
+    },
+    {
+      "domain": "sphero.com",
+      "name": "Sphero",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "spigen.com",
+      "name": "Spigen",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "lifx.com",
+      "name": "LIFX",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "store.arduino.cc",
+      "name": "Arduino",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "loefflerrandall.com",
+      "name": "Loeffler Randall",
+      "category": "Footwear",
+      "country": null
+    },
+    {
+      "domain": "switch-bot.com",
+      "name": "SwitchBot",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "magnatiles.com",
+      "name": "Magna-Tiles",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "mansurgavriel.com",
+      "name": "Mansur Gavriel",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "topodesigns.com",
+      "name": "Topo Designs",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "tracksmith.com",
+      "name": "Tracksmith",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "twinkly.com",
+      "name": "Twinkly",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "monos.com",
+      "name": "Monos",
+      "category": "Bags & accessories",
+      "country": null
+    },
+    {
+      "domain": "yoobi.com",
+      "name": "Yoobi",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "zagg.com",
+      "name": "ZAGG",
+      "category": "Electronics",
+      "country": null
+    },
+    {
+      "domain": "nanit.com",
+      "name": "Nanit",
+      "category": "Kids & baby",
+      "country": null
+    },
+    {
+      "domain": "petlibro.com",
+      "name": "Petlibro",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "plantoys.com",
+      "name": "PlanToys",
+      "category": "Toys & hobbies",
+      "country": null
+    },
+    {
+      "domain": "publicrec.com",
+      "name": "NOBULL",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "rabbitgoo.com",
+      "name": "Rabbitgoo",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "ruffwear.com",
+      "name": "Ruffwear",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "ryderwear.com",
+      "name": "Ryderwear",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "stellaandchewys.com",
+      "name": "Stella & Chewy's",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "tlfapparel.com",
+      "name": "TLF Apparel",
+      "category": "Activewear",
+      "country": null
+    },
+    {
+      "domain": "tuftandpaw.com",
+      "name": "Tuft & Paw",
+      "category": "Pets",
+      "country": null
+    },
+    {
+      "domain": "zestypaws.com",
+      "name": "Zesty Paws",
+      "category": "Pets",
+      "country": null
     }
   ]
 }
