@@ -5,7 +5,7 @@
  *
  * Free-plan budget: one store per run keeps CPU well under 10 ms (detection ~2 ms), ~12 D1
  * queries and ~25 rows written per run. At one run every 10 minutes the 930 stores are revisited
- * about weekly (~4k rows written a day). Derived tables (app_stats…) are NOT rebuilt here: a full
+ * about weekly (~4k rows written a day); a transient skip (429, 5xx, timeout) moves on to the next store, up to 3 per run. Derived tables (app_stats…) are NOT rebuilt here: a full
  * rebuild rewrites ~60k rows; they are refreshed by the box-side sync instead.
  *
  * Polite: honours robots.txt for our token, sends an identifying user agent, one request per
@@ -55,10 +55,30 @@ export type CrawlOutcome =
   | { status: 'skipped'; domain: string; reason: string }
   | { status: 'scanned'; domain: string; result: string; theme?: string; apps_added?: number };
 
+const TRANSIENT = /HTTP (429|5\d\d)|robots\.txt 5|timeout|aborted|fetch failed/i;
+
+/** One cron run: scans the next store; a transient skip (429, 5xx, timeout) tries the next one, up to 3. */
 export async function crawlNext(
   env: { DB: D1Database; MEDIA: R2Bucket },
   site: string,
   fetcher: typeof fetch = fetch,
+): Promise<CrawlOutcome & { tried?: string[] }> {
+  const tried: string[] = [];
+  for (let i = 0; i < 3; i++) {
+    const o = await crawlOne(env, site, fetcher);
+    if (o.status !== 'skipped' || !TRANSIENT.test(o.reason)) {
+      return tried.length ? { ...o, tried } : o;
+    }
+    tried.push(`${o.domain}: ${o.reason}`);
+    if (i === 2) return { ...o, tried };
+  }
+  return { status: 'no-stores' };
+}
+
+async function crawlOne(
+  env: { DB: D1Database; MEDIA: R2Bucket },
+  site: string,
+  fetcher: typeof fetch,
 ): Promise<CrawlOutcome> {
   const db = d1Db(env.DB);
   const rules = await loadRules(env.MEDIA);
