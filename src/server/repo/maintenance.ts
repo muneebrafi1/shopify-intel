@@ -167,8 +167,8 @@ const SEARCH_INDEX = [
     CASE
       WHEN s.current_theme_is_custom = 1 THEN 'Custom theme'
       WHEN s.current_theme_name IS NULL THEN 'Theme not detected'
-      WHEN lower(trim(s.current_theme_name, ' /')) NOT GLOB '*[^a-z0-9._-]*'
-        AND lower(trim(s.current_theme_name, ' /')) LIKE '%-%'
+      WHEN lower(replace(trim(s.current_theme_name, ' /'), '/', '-')) NOT GLOB '*[^a-z0-9._-]*'
+        AND lower(trim(s.current_theme_name, ' /')) GLOB '*[-/]*'
         THEN 'Custom theme'
       WHEN lower(trim(s.current_theme_name, ' /')) LIKE '% theme' THEN trim(s.current_theme_name, ' /')
       ELSE s.current_theme_name || ' theme'

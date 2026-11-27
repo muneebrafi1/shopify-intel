@@ -70,7 +70,7 @@ export function tidyStoreSubtitle(subtitle: string | null | undefined): string |
   const tail = split ? split[2] : '';
   let name = head.replace(/\s+theme\s+theme$/i, ' theme');
   const core = name.replace(/\s+theme$/i, '').trim();
-  const isHandle = /^[a-z0-9._-]+\/?$/i.test(core) && /[-/]/.test(core);
+  const isHandle = /^[a-z0-9._-]+(?:\/[a-z0-9._-]+)*\/?$/i.test(core) && /[-/]/.test(core);
   if (isHandle) name = 'Custom theme';
   return name + tail;
 }
