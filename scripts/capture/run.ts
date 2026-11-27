@@ -40,7 +40,7 @@ const { values } = parseArgs({
     devices: { type: 'string', default: 'desktop,mobile' },
     limit: { type: 'string' },
     stitch: { type: 'boolean', default: false },
-    /** Skip pages already captured with the current rules (manifest entries with `raw`). */
+    /** Skip pages that already have detected sections (empty-section captures are retried). */
     resume: { type: 'boolean', default: false },
     /** With --resume: only skip captures taken after this ISO date. */
     since: { type: 'string' },
@@ -110,16 +110,26 @@ try {
        JOIN stores s ON s.id = sa.store_id WHERE s.domain = ? AND sa.removed_at IS NULL`,
       [t.domain],
     );
+    const isStubShot = (bytes: number | undefined, height: number | undefined, device: string) => {
+      const vp = device === 'mobile' ? 844 : 900;
+      return (bytes ?? 0) < 8_000 || (height ?? 0) <= vp + 20;
+    };
     const done = (pageType: string, device: string) =>
       values.resume &&
-      manifest.entries.some(
-        (e) =>
-          e.raw &&
-          e.capture.domain === t.domain &&
-          e.capture.page_type === pageType &&
-          e.capture.device === device &&
-          (!values.since || e.capture.captured_at >= values.since),
-      );
+      manifest.entries.some((e) => {
+        if (
+          !e.raw ||
+          e.capture.domain !== t.domain ||
+          e.capture.page_type !== pageType ||
+          e.capture.device !== device ||
+          (values.since && e.capture.captured_at < values.since)
+        )
+          return false;
+        // Empty-section captures should be retried after detection improvements.
+        const nRaw = e.raw.sections?.length ?? 0;
+        const nSec = e.capture.sections?.length ?? 0;
+        return nRaw > 0 || nSec > 0;
+      });
     if (pages.every((p) => devices.every((d) => done(p, d)))) {
       console.log(`  done ${t.domain}: already captured`);
       return;
@@ -176,6 +186,23 @@ try {
             capturedAt: new Date().toISOString(),
             storeApps: apps.map((a) => a.slug),
           });
+          const prev = manifest.entries.find(
+            (e) =>
+              e.capture.domain === t.domain &&
+              e.capture.page_type === pageType &&
+              e.capture.device === device,
+          );
+          const c0 = entry.capture;
+          const stub = isStubShot(c0.bytes, c0.height, device);
+          const prevGood =
+            prev && !isStubShot(prev.capture.bytes, prev.capture.height, device);
+          if (stub && prevGood) {
+            console.log(
+              `  keep ${t.domain} ${pageType} ${device}: new capture is a stub (${c0.bytes} B, h=${c0.height}); left previous (${prev.capture.bytes} B, h=${prev.capture.height})`,
+            );
+            fail(t.domain, pageType, device, `stub capture ${c0.bytes} B h=${c0.height}; kept previous`);
+            continue;
+          }
           manifest = upsertEntry(manifest, entry);
           writeManifest(manifest);
           ok += 1;

@@ -220,22 +220,110 @@ function readSections(page: Page): Promise<RawSection[]> {
         text: (sec.innerText || '').replace(/\s+/g, ' ').trim().length,
       };
     };
-    return Array.from(
-      document.querySelectorAll<HTMLElement>('.shopify-section[id^="shopify-section-"]'),
-    )
-      .filter((el) => !el.parentElement?.closest('.shopify-section'))
-      .map((el) => {
+    const shopify = Array.from(
+      document.querySelectorAll<HTMLElement>('[id^="shopify-section-"], .shopify-section'),
+    ).filter((el) => !el.parentElement?.closest('[id^="shopify-section-"], .shopify-section'));
+    // Hidden or zero-size wrappers must not block the landmark fallback.
+    const usefulShopify = shopify.filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width >= 40 && r.height >= 40;
+    });
+
+    const landmarks = () => {
+      const out: HTMLElement[] = [];
+      const seen = new Set<HTMLElement>();
+      const add = (el: Element | null | undefined) => {
+        if (!el || !(el instanceof HTMLElement) || seen.has(el)) return;
+        if ([...seen].some((s) => s.contains(el))) return;
+        const tag = el.tagName;
+        if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'LINK', 'META', 'TEMPLATE'].includes(tag)) return;
         const r = el.getBoundingClientRect();
-        return {
-          id: el.id,
-          className: el.className,
-          y: r.top + window.scrollY,
-          height: r.height,
-          appBlocks: Array.from(el.querySelectorAll('.shopify-app-block[id]')).map((b) => b.id),
-          split: productSplit(el),
-          features: features(el),
-        };
-      });
+        if (r.width < 40 || r.height < 40) return;
+        const st = getComputedStyle(el);
+        if (st.display === 'none' || st.visibility === 'hidden' || st.opacity === '0') return;
+        if (st.position === 'fixed' && r.height < window.innerHeight * 0.45) return;
+        // Don't nest a later parent over an already-added child.
+        for (const s of [...seen]) {
+          if (el.contains(s)) return;
+        }
+        seen.add(el);
+        out.push(el);
+      };
+      add(
+        document.querySelector(
+          'header, [role="banner"], .site-header, #header, #shopify-section-header, [id*="announcement" i]',
+        ),
+      );
+      const main = document.querySelector(
+        'main, [role="main"], #MainContent, #main, #main-content, .main-content, #PageContainer, #page-content',
+      );
+      if (main) {
+        const useful = Array.from(main.children).filter((c): c is HTMLElement => {
+          if (!(c instanceof HTMLElement)) return false;
+          if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'LINK', 'META', 'TEMPLATE'].includes(c.tagName))
+            return false;
+          const r = c.getBoundingClientRect();
+          return r.width >= 40 && r.height >= 40;
+        });
+        if (useful.length) useful.forEach(add);
+        else add(main);
+      } else {
+        document
+          .querySelectorAll('body > section, #PageContainer > section, #MainContent > section')
+          .forEach(add);
+      }
+      add(
+        document.querySelector(
+          'footer, [role="contentinfo"], .site-footer, #footer, #shopify-section-footer',
+        ),
+      );
+      return out;
+    };
+
+    const handleFor = (el: HTMLElement, i: number) => {
+      const id = (el.id || '').toLowerCase();
+      const cls = String(el.className || '').toLowerCase();
+      const tag = el.tagName.toLowerCase();
+      const role = (el.getAttribute('role') || '').toLowerCase();
+      const blob = `${id} ${cls} ${tag} ${role}`;
+      if (/announce/.test(blob)) return 'announcement-bar';
+      if (tag === 'header' || role === 'banner' || /(^|[-_\s])header($|[-_\s])/.test(blob))
+        return 'header';
+      if (tag === 'footer' || role === 'contentinfo' || /footer/.test(blob)) return 'footer';
+      if (/hero|masthead|slideshow|banner/.test(blob)) return 'hero';
+      if (/newsletter|subscribe|signup|sign-up/.test(blob)) return 'newsletter';
+      if (/review|testimonial/.test(blob)) return 'reviews';
+      if (/product-grid|featured-collection|featured-product/.test(blob)) return 'featured-collection';
+      if (/collection-list|collections/.test(blob)) return 'collection-list';
+      if (/faq|accordion/.test(blob)) return 'faq';
+      return `block-${i}`;
+    };
+
+    const els = usefulShopify.length ? usefulShopify : landmarks();
+    return els.map((el, i) => {
+      const r = el.getBoundingClientRect();
+      const handle = handleFor(el, i);
+      const isHeader = handle === 'header' || handle === 'announcement-bar';
+      const isFooter = handle === 'footer';
+      const id =
+        el.id && el.id.startsWith('shopify-section-')
+          ? el.id
+          : `shopify-section-${isHeader || isFooter ? 'sections' : 'template'}--dom__${handle}`;
+      const groupClass = isHeader
+        ? ' shopify-section-group-header-group'
+        : isFooter
+          ? ' shopify-section-group-footer-group'
+          : '';
+      return {
+        id,
+        className: `${el.className}${groupClass}`,
+        y: r.top + window.scrollY,
+        height: r.height,
+        appBlocks: Array.from(el.querySelectorAll('.shopify-app-block[id]')).map((b) => b.id),
+        split: productSplit(el),
+        features: features(el),
+      };
+    });
   });
 }
 

@@ -40,7 +40,7 @@ const refetchWeak = Boolean(values['refetch-weak']);
 
 type Manifest = {
   apps: Record<string, { url: string; key: string }>;
-  stores: Record<string, { from: string; key: string }>;
+  stores: Record<string, { from: string; key: string; w?: number; h?: number }>;
   missing: { apps: string[]; stores: string[] };
 };
 const manifest: Manifest = existsSync(MANIFEST)
@@ -58,6 +58,19 @@ const dbPath =
 const db = new DatabaseSync(dbPath, { readOnly: true });
 
 async function get(url: string, accept = '*/*'): Promise<Response> {
+  let delay = 2000;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': UA, Accept: accept },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (res.status !== 429 && res.status !== 503) return res;
+    const ra = res.headers.get('retry-after');
+    const wait = ra && /^\d+$/.test(ra) ? Number(ra) * 1000 : delay;
+    await new Promise((r) => setTimeout(r, Math.min(wait, 30_000)));
+    delay = Math.min(delay * 2, 20_000);
+  }
   return fetch(url, {
     headers: { 'User-Agent': UA, Accept: accept },
     redirect: 'follow',
@@ -81,7 +94,7 @@ function icoToPng(buf: Buffer): Buffer | null {
   }
 }
 
-async function toWebp(buf: Buffer): Promise<{ data: Buffer; w: number } | null> {
+async function toWebp(buf: Buffer): Promise<{ data: Buffer; w: number; h: number } | null> {
   try {
     const meta = await sharp(buf).metadata();
     if (!meta.width || !meta.height) return null;
@@ -113,17 +126,21 @@ async function toWebp(buf: Buffer): Promise<{ data: Buffer; w: number } | null> 
       const variance = lum2 / n - mean * mean;
       if (variance < 25) return null;
     }
-    const side = Math.min(128, Math.max(tmeta.width ?? meta.width, tmeta.height ?? meta.height));
-    const fitted = sharp(src)
-      .resize(side, side, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-      .ensureAlpha();
+    const tw = tmeta.width ?? meta.width;
+    const th = tmeta.height ?? meta.height;
+    const long = Math.max(tw, th);
+    const side = Math.min(128, long);
+    const nw = Math.max(1, Math.round((tw / long) * side));
+    const nh = Math.max(1, Math.round((th / long) * side));
+    const fitted = sharp(src).resize(nw, nh, { fit: 'inside' }).ensureAlpha();
     // Light marks on transparency vanish on our white tile; sit them on ink instead.
     const pipeline =
       n && lum / n > 210
         ? fitted.flatten({ background: '#191816' })
         : fitted;
     const data = await pipeline.webp({ quality: 88 }).toBuffer();
-    return { data, w: meta.width };
+    const outMeta = await sharp(data).metadata();
+    return { data, w: outMeta.width ?? nw, h: outMeta.height ?? nh };
   } catch {
     return null;
   }
@@ -377,7 +394,7 @@ async function storeLogo(domain: string, url: string | null): Promise<string | n
       }
       const out = await toWebp(body);
       if (!out) continue;
-      manifest.stores[domain] = { from: c, key: save('stores', domain, out.data) };
+      manifest.stores[domain] = { from: c, key: save('stores', domain, out.data), w: out.w, h: out.h };
       return c;
     } catch {
       /* next */
