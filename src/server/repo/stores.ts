@@ -559,7 +559,18 @@ const relatedStoreIdsSql = `SELECT ? AS id
      LIMIT 6
    )`;
 
+const storePageCacheKey = (domain: string) => `page-cache/stores/${domain}.json`;
+
 export async function getStoreDetail(ctx: Ctx, domain: string): Promise<StoreDetail> {
+  const fromR2 = ctx.mediaStore?.get;
+  if (fromR2) {
+    try {
+      const obj = await fromR2.call(ctx.mediaStore, storePageCacheKey(domain));
+      if (obj) return JSON.parse(await obj.text()) as StoreDetail;
+    } catch {
+      // Fall through to D1 / live.
+    }
+  }
   try {
     const cached = await ctx.db.first<{ payload: string }>(
       'SELECT payload FROM store_page_cache WHERE domain = ?',
