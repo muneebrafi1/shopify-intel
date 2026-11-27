@@ -29,7 +29,7 @@ import {
   type AppRefRow,
   type StoreThemeRow,
 } from './refs.ts';
-import { homePreviews, screenshotDetails } from './visual.ts';
+import { homePreviews, screenshotDetails, THUMB_COLS, toThumb, type ThumbRow } from './visual.ts';
 
 // ---------------------------------------------------------------------------------------------
 // Rows and hydration
@@ -86,10 +86,12 @@ async function topAppsByStore(
   return out;
 }
 
-export async function hydrateStoreItems(ctx: Ctx, rows: StoreRow[]): Promise<StoreListItem[]> {
-  const ids = rows.map((r) => r.id);
-  const [apps, previews] = await Promise.all([topAppsByStore(ctx, ids, 5), homePreviews(ctx, ids)]);
-  return rows.map((r) => ({
+function toStoreListItem(
+  r: StoreRow,
+  topApps: AppRef[],
+  preview: StoreListItem['preview'],
+): StoreListItem {
+  return {
     ...storeRef(r),
     url: r.url ?? `https://${r.domain}`,
     country: r.country,
@@ -106,12 +108,18 @@ export async function hydrateStoreItems(ctx: Ctx, rows: StoreRow[]): Promise<Sto
     is_captured: bool(r.is_captured),
     theme: storeThemeInfo(r),
     app_count: r.app_count,
-    top_apps: apps.get(r.id) ?? [],
-    preview: previews.get(r.id) ?? null,
+    top_apps: topApps,
+    preview,
     first_seen: r.first_seen,
     last_seen: r.last_seen,
     position: r.list_position,
-  }));
+  };
+}
+
+export async function hydrateStoreItems(ctx: Ctx, rows: StoreRow[]): Promise<StoreListItem[]> {
+  const ids = rows.map((r) => r.id);
+  const [apps, previews] = await Promise.all([topAppsByStore(ctx, ids, 5), homePreviews(ctx, ids)]);
+  return rows.map((r) => toStoreListItem(r, apps.get(r.id) ?? [], previews.get(r.id) ?? null));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -405,6 +413,31 @@ interface StoreAppRow extends AppRefRow {
   store_count: number | null;
 }
 
+function assembleStoreApps(
+  rows: StoreAppRow[],
+  unresolved: { detection_slug: string }[],
+  seen: { app_id: number; section_type: string }[],
+): StoreDetail['apps'] {
+  return assembleStoreApps(rows, unresolved, seen);
+}
+
+function assembleStorePages(
+  pages: { id: number; page_type: string; url: string | null; is_placeholder: number }[],
+  shots: { id: number; page_id: number; device: string }[],
+  details: Awaited<ReturnType<typeof screenshotDetails>>,
+): StorePage[] {
+  const pick = (pageId: number, device: string) => {
+    const shot = shots.find((s) => s.page_id === pageId && s.device === device);
+    return shot ? (details.get(shot.id) ?? null) : null;
+  };
+  return pages.map((p) => ({
+    page_type: pageTypeRef(p.page_type),
+    url: p.url,
+    is_placeholder: bool(p.is_placeholder),
+    screenshots: { desktop: pick(p.id, 'desktop'), mobile: pick(p.id, 'mobile') },
+  }));
+}
+
 async function storeApps(ctx: Ctx, storeId: number): Promise<StoreDetail['apps']> {
   const [rows, unresolved, seen] = (await ctx.db.allBatch([
     {
@@ -496,40 +529,159 @@ export async function similarStores(ctx: Ctx, storeId: number, limit = 6) {
   }));
 }
 
+/** This store plus up to 6 similar active stores, same order as similarStores. */
+const relatedStoreIdsSql = `SELECT ? AS id
+   UNION ALL
+   SELECT id FROM (
+     SELECT ss.other_store_id AS id FROM store_similar ss
+     JOIN stores s ON s.id = ss.other_store_id AND s.status = 'active'
+     WHERE ss.store_id = ?
+     ORDER BY ss.score DESC, s.list_position
+     LIMIT 6
+   )`;
+
 export async function getStoreDetail(ctx: Ctx, domain: string): Promise<StoreDetail> {
   const row = await findActiveStore(ctx, domain);
   if (!row) throw notFound(`Store '${domain}'`);
-  const [item] = await hydrateStoreItems(ctx, [row]);
-  if (!item) throw notFound(`Store '${domain}'`);
+  const id = row.id;
+  type HistoryRow = StoreThemeRow & {
+    first_seen: string;
+    last_seen: string;
+    replaced_at: string | null;
+  };
+  type PageRow = { id: number; page_type: string; url: string | null; is_placeholder: number };
+  type ShotRef = { id: number; page_id: number; device: string };
+  type SimilarRow = StoreRow & { same_theme: number; shared_apps: number };
+  const relatedParams = [id, id] as const;
 
-  const [history, apps, pixels, pages, similar, teardown, scan] = await Promise.all([
-    ctx.db.all<
-      StoreThemeRow & { first_seen: string; last_seen: string; replaced_at: string | null }
-    >(
-      `SELECT t.slug AS theme_slug, t.name AS theme_name, t.vendor AS theme_vendor,
+  // One batch after the lookup: subject + similar apps/previews, apps, pages, shots, facts.
+  const [
+    topAppRows,
+    previewRows,
+    history,
+    appRows,
+    unresolved,
+    seen,
+    pixels,
+    pageRows,
+    shotRefs,
+    similarRows,
+    teardownRows,
+    scanRows,
+  ] = (await ctx.db.allBatch([
+    {
+      sql: `SELECT sa.store_id, ${APP_REF_COLS}
+       FROM store_apps sa
+       JOIN apps a ON a.id = sa.app_id AND a.status = 'active'
+       LEFT JOIN app_categories ac ON ac.id = a.category_id
+       LEFT JOIN app_stats st ON st.app_id = a.id
+       WHERE sa.store_id IN (SELECT id FROM (${relatedStoreIdsSql})) AND sa.removed_at IS NULL
+       ORDER BY sa.store_id, st.store_count DESC, a.slug`,
+      params: relatedParams,
+    },
+    {
+      sql: `SELECT ${THUMB_COLS} FROM screenshots sh
+       WHERE sh.store_id IN (SELECT id FROM (${relatedStoreIdsSql})) AND sh.is_current = 1
+         AND sh.page_type = 'home' AND sh.device = 'desktop'
+       ORDER BY sh.is_placeholder, sh.id`,
+      params: relatedParams,
+    },
+    {
+      sql: `SELECT t.slug AS theme_slug, t.name AS theme_name, t.vendor AS theme_vendor,
          st.raw_name AS theme_raw_name, st.version AS theme_version, st.is_custom AS theme_is_custom,
          st.first_seen, st.last_seen, st.replaced_at
        FROM store_themes st LEFT JOIN themes t ON t.id = st.theme_id
        WHERE st.store_id = ? ORDER BY st.first_seen DESC, st.id DESC`,
-      [row.id],
-    ),
-    storeApps(ctx, row.id),
-    ctx.db.all<{ pixel: string }>(
-      'SELECT pixel FROM store_pixels WHERE store_id = ? AND removed_at IS NULL ORDER BY pixel',
-      [row.id],
-    ),
-    storePages(ctx, row.id),
-    similarStores(ctx, row.id),
-    ctx.db.first<{ slug: string; title: string }>(
-      `SELECT slug, title FROM teardowns WHERE store_id = ? AND published_at IS NOT NULL
+      params: [id],
+    },
+    {
+      sql: `SELECT a.id AS app_id, sa.confidence, sa.first_seen, sa.last_seen, st.store_count, ${APP_REF_COLS}
+       FROM store_apps sa
+       JOIN apps a ON a.id = sa.app_id AND a.status = 'active'
+       LEFT JOIN app_categories ac ON ac.id = a.category_id
+       LEFT JOIN app_stats st ON st.app_id = a.id
+       WHERE sa.store_id = ? AND sa.removed_at IS NULL
+       ORDER BY ac.position IS NULL, ac.position, st.store_count DESC, a.slug`,
+      params: [id],
+    },
+    {
+      sql: `SELECT detection_slug FROM store_unresolved_apps
+       WHERE store_id = ? AND removed_at IS NULL ORDER BY detection_slug`,
+      params: [id],
+    },
+    {
+      sql: `SELECT DISTINCT app_id, section_type FROM sections
+       WHERE store_id = ? AND is_current = 1 AND app_id IS NOT NULL ORDER BY section_type`,
+      params: [id],
+    },
+    {
+      sql: 'SELECT pixel FROM store_pixels WHERE store_id = ? AND removed_at IS NULL ORDER BY pixel',
+      params: [id],
+    },
+    {
+      sql: 'SELECT id, page_type, url, is_placeholder FROM pages WHERE store_id = ? ORDER BY id',
+      params: [id],
+    },
+    {
+      sql: `SELECT id, page_id, device FROM screenshots
+       WHERE store_id = ? AND is_current = 1 ORDER BY is_placeholder, id`,
+      params: [id],
+    },
+    {
+      sql: `SELECT ss.same_theme, ss.shared_apps, ${STORE_COLS} ${STORE_FROM}
+       JOIN store_similar ss ON ss.other_store_id = s.id
+       WHERE ss.store_id = ? AND s.status = 'active'
+       ORDER BY ss.score DESC, s.list_position LIMIT 6`,
+      params: [id],
+    },
+    {
+      sql: `SELECT slug, title FROM teardowns WHERE store_id = ? AND published_at IS NOT NULL
        ORDER BY published_at DESC LIMIT 1`,
-      [row.id],
-    ),
-    ctx.db.first<{ source: string; rules_version: string | null }>(
-      'SELECT source, rules_version FROM scans WHERE store_id = ? ORDER BY ran_at DESC LIMIT 1',
-      [row.id],
-    ),
-  ]);
+      params: [id],
+    },
+    {
+      sql: 'SELECT source, rules_version FROM scans WHERE store_id = ? ORDER BY ran_at DESC LIMIT 1',
+      params: [id],
+    },
+  ])) as [
+    (AppRefRow & { store_id: number })[],
+    ThumbRow[],
+    HistoryRow[],
+    StoreAppRow[],
+    { detection_slug: string }[],
+    { app_id: number; section_type: string }[],
+    { pixel: string }[],
+    PageRow[],
+    ShotRef[],
+    SimilarRow[],
+    { slug: string; title: string }[],
+    { source: string; rules_version: string | null }[],
+  ];
+
+  const topApps = new Map<number, AppRef[]>();
+  for (const r of topAppRows) {
+    const list = topApps.get(r.store_id) ?? [];
+    if (list.length < 5) list.push(appRef(r));
+    topApps.set(r.store_id, list);
+  }
+  const previews = new Map<number, ReturnType<typeof toThumb>>();
+  for (const r of previewRows)
+    if (!previews.has(r.store_id)) previews.set(r.store_id, toThumb(r, ctx));
+
+  const item = toStoreListItem(row, topApps.get(id) ?? [], previews.get(id) ?? null);
+  const apps = assembleStoreApps(appRows, unresolved, seen);
+  const details = await screenshotDetails(
+    ctx,
+    shotRefs.map((s) => s.id),
+  );
+  const pages = assembleStorePages(pageRows, shotRefs, details);
+  const similar = similarRows.map((r) => ({
+    store: toStoreListItem(r, topApps.get(r.id) ?? [], previews.get(r.id) ?? null),
+    same_theme: bool(r.same_theme),
+    shared_apps: r.shared_apps ?? 0,
+  }));
+  const teardown = teardownRows[0] ?? null;
+  const scan = scanRows[0] ?? null;
 
   const devices = [
     ...new Set(
