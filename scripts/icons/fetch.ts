@@ -29,10 +29,14 @@ const { values } = parseArgs({
     db: { type: 'string' },
     only: { type: 'string' },
     concurrency: { type: 'string', default: '6' },
+    refetch: { type: 'boolean', default: false },
+    'refetch-weak': { type: 'boolean', default: false },
   },
 });
 if (!values.apps && !values.stores) values.apps = values.stores = true;
 const only = values.only ? new Set(values.only.split(',')) : null;
+const refetch = Boolean(values.refetch);
+const refetchWeak = Boolean(values['refetch-weak']);
 
 type Manifest = {
   apps: Record<string, { url: string; key: string }>;
@@ -90,18 +94,29 @@ async function toWebp(buf: Buffer): Promise<{ data: Buffer; w: number } | null> 
       .catch(() => buf);
     const tmeta = await sharp(trimmed).metadata();
     const src = tmeta.width && tmeta.height ? trimmed : buf;
+    // Quality-check the trimmed source, not the padded square — a wide wordmark in a
+    // 128×128 tile is mostly transparency and would fail an opaque-pixel ratio.
+    const probe = await sharp(src).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    let lum = 0, n = 0, lum2 = 0;
+    const totalPx = probe.data.length / 4;
+    for (let i = 0; i < probe.data.length; i += 4) {
+      if (probe.data[i + 3]! > 40) {
+        const L = probe.data[i]! * 0.3 + probe.data[i + 1]! * 0.59 + probe.data[i + 2]! * 0.11;
+        lum += L;
+        lum2 += L * L;
+        n++;
+      }
+    }
+    if (n < totalPx * 0.06) return null;
+    if (n > totalPx * 0.95) {
+      const mean = lum / n;
+      const variance = lum2 / n - mean * mean;
+      if (variance < 25) return null;
+    }
     const side = Math.min(128, Math.max(tmeta.width ?? meta.width, tmeta.height ?? meta.height));
     const fitted = sharp(src)
       .resize(side, side, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .ensureAlpha();
-    const raw = await fitted.clone().raw().toBuffer({ resolveWithObject: true });
-    let lum = 0, n = 0;
-    for (let i = 0; i < raw.data.length; i += 4) {
-      if (raw.data[i + 3]! > 40) {
-        lum += raw.data[i]! * 0.3 + raw.data[i + 1]! * 0.59 + raw.data[i + 2]! * 0.11;
-        n++;
-      }
-    }
     // Light marks on transparency vanish on our white tile; sit them on ink instead.
     const pipeline =
       n && lum / n > 210
@@ -180,12 +195,38 @@ function absUrl(href: string, base: string): string | null {
   }
 }
 
+function hostTokens(base: string): string[] {
+  try {
+    const label = new URL(base).hostname.replace(/^www\./, '').split('.')[0] ?? '';
+    const toks = new Set<string>([label]);
+    for (const p of ['the', 'my', 'get', 'shop', 'try', 'buy']) {
+      if (label.startsWith(p) && label.length - p.length >= 4) toks.add(label.slice(p.length));
+    }
+    return [...toks].filter((t) => t.length >= 4);
+  } catch {
+    return [];
+  }
+}
+
+function nameHit(href: string, tokens: string[]): boolean {
+  const file = (href.split('?')[0]?.split('/').pop() ?? '').toLowerCase();
+  for (const tok of tokens) {
+    if (file.includes(tok)) return true;
+    for (const part of file.split(/[^a-z0-9]+/).filter((t) => t.length >= 5)) {
+      if (tok.startsWith(part) || part.startsWith(tok)) return true;
+    }
+  }
+  return false;
+}
+
 function logoCandidates(html: string, base: string): Array<{ url: string; score: number }> {
   const out: Array<{ url: string; score: number }> = [];
+  const tokens = hostTokens(base);
   const add = (href: string | undefined | null, score: number) => {
     if (!href || href.startsWith('data:')) return;
     const url = absUrl(href, base);
-    if (url) out.push({ url, score });
+    if (!url) return;
+    out.push({ url, score: score + (nameHit(url, tokens) ? 500 : 0) });
   };
 
   for (const m of html.matchAll(/<link\b[^>]*>/gi)) {
@@ -253,6 +294,18 @@ function logoCandidates(html: string, base: string): Array<{ url: string; score:
     if (src && /logo|brandmark|site-title|wordmark/i.test(blob)) add(src, 1300);
   }
 
+  // Filenames in the HTML (srcset, CSS, JSON) often carry the real wordmark when the
+  // <img> itself has no "logo" class — e.g. Negative_Wordmark_*.svg, sill_logo_new.png.
+  for (const m of html.matchAll(
+    /(?:https?:)?\/\/[^"'\s)]+\/cdn\/shop\/(?:files|t\/[^/]+\/assets)\/[^"'\s)]+/gi,
+  )) {
+    const href = m[0].replace(/&amp;/g, '&');
+    const file = (href.split('?')[0]?.split('/').pop() ?? '').toLowerCase();
+    if (/logo|wordmark|brandmark|logomark|brand-bar|site-logo/.test(file)) {
+      add(href, /wordmark|logomark|logo/.test(file) ? 1800 : 1700);
+    }
+  }
+
   const seen = new Set<string>();
   return out
     .sort((a, b) => b.score - a.score)
@@ -318,8 +371,9 @@ async function storeLogo(domain: string, url: string | null): Promise<string | n
       if (meta?.width && meta.height) {
         const ratio = meta.width / meta.height;
         const looksLikePhoto = ratio > 1.6 || ratio < 0.5;
-        const namedLogo = /logo|icon|brand/i.test(c);
-        if (looksLikePhoto && !namedLogo && (meta.width > 400 || meta.height > 400)) continue;
+        const namedLogo = /logo|icon|brand|wordmark|logomark/i.test(c);
+        const isSvg = /\.svg(\?|$)/i.test(c) || (meta.format === "svg");
+        if (looksLikePhoto && !namedLogo && !isSvg && (meta.width > 400 || meta.height > 400)) continue;
       }
       const out = await toWebp(body);
       if (!out) continue;
@@ -338,12 +392,25 @@ async function doStores() {
       `SELECT domain, url FROM stores WHERE is_curated = 1 AND status = 'active' ORDER BY domain`,
     )
     .all() as Array<{ domain: string; url: string | null }>;
-  const todo = rows.filter((r) => (!only || only.has(r.domain)) && !manifest.stores[r.domain]);
-  console.log(`stores: ${todo.length} to fetch (${rows.length} curated)`);
+  const weak = new Set<string>();
+  if (refetchWeak) {
+    for (const [domain, rec] of Object.entries(manifest.stores)) {
+      if (/(?:width|height)=32|crop=center|favicon|apple-touch/i.test(rec.from)) weak.add(domain);
+    }
+  }
+  const todo = rows.filter((r) => {
+    if (only && !only.has(r.domain)) return false;
+    if (!manifest.stores[r.domain]) return true;
+    return refetch || weak.has(r.domain);
+  });
+  console.log(
+    `stores: ${todo.length} to fetch (${rows.length} curated; refetch=${refetch} weak=${weak.size})`,
+  );
   let n = 0;
   await pool(todo, Number(values.concurrency), async (r) => {
+    const prev = manifest.stores[r.domain];
     const got = await storeLogo(r.domain, r.url).catch(() => null);
-    if (!got && !manifest.missing.stores.includes(r.domain)) manifest.missing.stores.push(r.domain);
+    if (!got && !prev && !manifest.missing.stores.includes(r.domain)) manifest.missing.stores.push(r.domain);
     if (got) manifest.missing.stores = manifest.missing.stores.filter((d) => d !== r.domain);
     if (++n % 25 === 0) console.log(`  ${n}/${todo.length}`);
   });
@@ -404,6 +471,13 @@ manifest.missing.apps = (
 )
   .map((r) => r.slug)
   .filter((s) => !manifest.apps[s]);
+manifest.missing.stores = (
+  db
+    .prepare(`SELECT domain FROM stores WHERE is_curated = 1 AND status = 'active'`)
+    .all() as Array<{ domain: string }>
+)
+  .map((r) => r.domain)
+  .filter((d) => !manifest.stores[d]);
 const sorted = <T>(o: Record<string, T>) =>
   Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)));
 manifest.apps = sorted(manifest.apps);

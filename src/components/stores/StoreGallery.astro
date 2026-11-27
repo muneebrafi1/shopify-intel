@@ -19,6 +19,8 @@ interface Pill {
 }
 interface Props {
   title: string;
+  /** Visible H1; defaults to title. Use this to keep the heading short when title is for SEO. */
+  heading?: string;
   titleMuted?: string;
   description: string;
   canonical: string;
@@ -39,6 +41,7 @@ interface Props {
 }
 const {
   title,
+  heading,
   titleMuted,
   description,
   canonical,
@@ -93,7 +96,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   wide
 >
   <div class="container--wide gallery">
-    <PageHeader title={title} titleMuted={titleMuted} count={total}>
+    <PageHeader title={heading ?? title} titleMuted={titleMuted} count={total}>
       <Breadcrumbs slot="top" items={crumbs} />
     </PageHeader>
 
@@ -113,6 +116,14 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         </nav>
       )
     }
+    {pills.some((x) => x.selected) && (
+      <script is:inline>
+        (function () {
+          var el = document.querySelector('.gallery__pills .is-on');
+          if (el) el.scrollIntoView({ inline: 'center', block: 'nearest' });
+        })();
+      </script>
+    )}
 
     <div class="grid grid--shots gallery__grid">
       {
