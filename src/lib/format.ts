@@ -61,3 +61,16 @@ export function displayDomain(urlOrDomain: string): string {
     .replace(/^www\./, '')
     .replace(/\/$/, '');
 }
+
+/** Clean a store search subtitle: no "theme theme", and kebab theme handles become "Custom theme". */
+export function tidyStoreSubtitle(subtitle: string | null | undefined): string | null {
+  if (!subtitle) return subtitle ?? null;
+  const split = subtitle.match(/^(.*?)( · \d+ apps?)$/i);
+  const head = (split ? split[1] : subtitle).trim();
+  const tail = split ? split[2] : '';
+  let name = head.replace(/\s+theme\s+theme$/i, ' theme');
+  const core = name.replace(/\s+theme$/i, '').trim();
+  const isHandle = /^[a-z0-9._-]+\/?$/i.test(core) && /[-/]/.test(core);
+  if (isHandle) name = 'Custom theme';
+  return name + tail;
+}

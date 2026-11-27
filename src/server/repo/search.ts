@@ -10,6 +10,7 @@ import type { SqlValue } from '../db/types.ts';
 import { screenshotImage, sectionCropImage } from '../media/urls.ts';
 import { ftsPrefixQuery } from './fts.ts';
 import { jsonIds } from './refs.ts';
+import { tidyStoreSubtitle } from '~/lib/format';
 
 export const SEARCH_KINDS: ReadonlyArray<{ kind: SearchKind; label: string }> = [
   { kind: 'theme', label: 'Themes' },
@@ -224,7 +225,7 @@ export async function search(
         kind: r.kind,
         ref: r.ref,
         title: r.title,
-        subtitle: r.subtitle,
+        subtitle: r.kind === 'store' ? tidyStoreSubtitle(r.subtitle) : r.subtitle,
         href: HREF[r.kind](r.ref),
         ...visual(r),
       }));
