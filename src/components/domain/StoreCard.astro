@@ -28,6 +28,7 @@ interface Props {
   /** @deprecated v1 specimen number; ignored. */
   n?: number;
   eager?: boolean;
+  priority?: boolean;
   class?: string;
 }
 const {
@@ -39,6 +40,7 @@ const {
   tag,
   badges = [],
   eager,
+  priority,
   class: className,
 } = Astro.props;
 const title = name || domain;
@@ -54,6 +56,7 @@ const title = name || domain;
         device={shot.device ?? 'desktop'}
         alt={`${title} ${shot.device === 'mobile' ? 'mobile' : 'desktop'} home page`}
         eager={eager}
+        priority={priority}
         tag={tag}
         ratio="16 / 10"
         flush
@@ -166,7 +169,19 @@ const title = name || domain;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 4 / 3;
+    background:
+      linear-gradient(var(--surface-2), var(--surface-2)),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px),
+      linear-gradient(var(--line) 1px, transparent 1px);
+    background-size:
+      auto,
+      16px 16px,
+      16px 16px;
+    background-position:
+      0 0,
+      -1px -1px,
+      -1px -1px;
   }
   .store-card__empty-domain {
     color: var(--ink-2);

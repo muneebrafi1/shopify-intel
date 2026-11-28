@@ -14,6 +14,7 @@ import { CONTACT, SITE_NAME } from '~/config/site';
 import { formatCount, formatDate } from '~/lib/format';
 import { loadMeta } from '~/components/static/meta';
 import { LEGAL_UPDATED } from '~/components/static/content';
+const BOT_NAME = `${SITE_NAME}Bot`;
 
 const meta = await loadMeta();
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
@@ -75,7 +76,7 @@ const toc = [
             <Stat value={asOf ?? '—'} label="Data as of" />
             <Stat value={rules ?? 'Not recorded'} label="Detection rules" />
           </StatList>
-          <SourceNote source={meta.source.label} href="" />
+          <SourceNote source={meta.source.label} href="" force />
         </div>
       )}
     </Fragment>
@@ -99,9 +100,9 @@ const toc = [
 
     <h2 id="what-we-look-at">What we look at</h2>
     <p>
-      Our crawler opens the same pages any shopper can: the home page, a collection, a product and
-      the cart, in a real browser. It never signs in, never enters a password-protected store, never
-      goes through checkout and never touches a store’s admin.
+      Our crawler opens the same pages any shopper can: the home page, a collection and a product,
+      in a real browser. It never adds anything to a cart, never signs in, never enters a
+      password-protected store, never goes through checkout and never touches a store’s admin.
     </p>
     <ul>
       <li>
@@ -113,6 +114,12 @@ const toc = [
       </li>
       <li>
         Stores that block automated visits are left alone; we don’t work around bot protection.
+      </li>
+      <li id="crawler">
+        It says who it is: every request carries <code>{BOT_NAME}</code> in its user agent, with a
+        link to this page. To keep it out, add a <code>User-agent: {BOT_NAME}</code> group with{' '}
+        <code>Disallow: /</code> to your <code>robots.txt</code>, or use the{' '}
+        <a href="/opt-out">removal form</a>.
       </li>
     </ul>
     <p>
@@ -229,21 +236,29 @@ const toc = [
 
     <h2 id="screenshots">Screenshots</h2>
     <p>
-      For curated stores we capture full pages, top to bottom, for each page type (home, collection,
-      product, cart and more) on desktop at 1440px wide and on mobile at 390px wide. Each capture is
-      then sliced into sections such as the header, hero, buy box, reviews and footer. Each section
-      is tagged with its type and, when we can tell, the app that renders it.
+      For curated stores we capture full pages, top to bottom, for each page type (home, collection
+      and product) on desktop at 1440px wide and on mobile at 390px wide. Each capture is then
+      sliced into sections such as the header, hero, buy box, reviews and footer. Each section is
+      tagged with its type and, when we can tell, the app that renders it.
     </p>
     <SlicedPlate />
     <p>
-      <strong>Today these are layout previews.</strong> Until our first capture run, every
-      “screenshot” is drawn from the sections we detected on that page, in the store’s colours, and
-      labelled as a preview. The detection data under them is real. When real captures land, the
-      previews are replaced and every capture shows the date it was taken.
+      Every capture shows the date it was taken. A store we haven’t captured yet shows a layout
+      preview instead: drawn from the sections we detected on that page, in the store’s colours, and
+      labelled as a preview. The detection data under it is real.
     </p>
     <p>
       Screenshots only show public pages, always name the store and link back to it. Store owners
       can ask us to take them down.
+    </p>
+
+    <h2 id="teardowns">Teardowns</h2>
+    <p>
+      A teardown is written from one store’s scan and captures: the theme and version, every app we
+      detect and the tracking pixels, with each note pinned to one section of a capture. Apps are
+      matched to sections from the page code; where an app could render in more than one place we
+      say so. We use no revenue, traffic or conversion estimates, and if the scan didn’t see
+      something, the teardown says so.
     </p>
 
     <h2 id="app-store">App Store and Theme Store facts</h2>

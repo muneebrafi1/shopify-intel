@@ -3,6 +3,7 @@
  * noindex, never opted-out/inactive, never query-filtered). Queries stay well inside D1's free
  * 50-statement request limit.
  */
+import { PRO_ENABLED } from '../../config/flags.ts';
 import { hrefs } from '../api/v1/hrefs.ts';
 import type { Db } from '../db/types.ts';
 
@@ -21,7 +22,6 @@ const STATIC_PATHS = [
   '/teardowns',
   '/compare',
   '/alternatives',
-  '/pro',
   '/about',
   '/methodology',
   '/developers',
@@ -65,7 +65,9 @@ const renderUrlSet = (origin: string, entries: readonly SitemapUrl[]): string =>
 
 export async function buildSitemapIndex(db: Db, origin: string): Promise<string> {
   const base = origin.replace(/\/$/, '');
-  const row = await db.first<{ value: string }>("SELECT value FROM meta WHERE key = 'data_as_of'");
+  const row = await db.first<{ value: string }>(
+    "SELECT MAX(substr(value, 1, 10)) AS value FROM meta WHERE key IN ('data_as_of', 'crawl_last_at')",
+  );
   const lastmod = isoDay(row?.value);
   const tag = lastmod ? `<lastmod>${xmlEscape(lastmod)}</lastmod>` : '';
   return [
@@ -90,8 +92,12 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
     comparisons,
     altApps,
     altThemes,
+    niches,
+    themeGalleries,
   ] = await Promise.all([
-    db.first<{ value: string }>("SELECT value FROM meta WHERE key = 'data_as_of'"),
+    db.first<{ value: string }>(
+      "SELECT MAX(substr(value, 1, 10)) AS value FROM meta WHERE key IN ('data_as_of', 'crawl_last_at')",
+    ),
     db.all<{ domain: string; last_seen: string }>(
       `SELECT domain, last_seen FROM stores
        WHERE status = 'active'
@@ -100,7 +106,11 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
     ),
     db.all<{ slug: string }>("SELECT slug FROM themes WHERE status = 'active' ORDER BY slug"),
     db.all<{ slug: string; checked_on: string | null }>(
-      "SELECT slug, checked_on FROM apps WHERE status = 'active' ORDER BY slug",
+      `SELECT a.slug, a.checked_on
+       FROM apps a
+       LEFT JOIN app_stats st ON st.app_id = a.id
+       WHERE a.status = 'active' AND COALESCE(st.store_count, 0) > 0
+       ORDER BY a.slug`,
     ),
     db.all<{ slug: string }>(
       `SELECT ac.slug FROM app_categories ac
@@ -144,16 +154,40 @@ export async function buildCoreSitemap(db: Db, origin: string): Promise<string> 
          )
        ORDER BY t.slug`,
     ),
+    // Niche and theme galleries (curated, captured stores only: a gallery needs pictures).
+    db.all<{ slug: string }>(
+      `SELECT sc.slug FROM store_categories sc
+       WHERE EXISTS (
+         SELECT 1 FROM stores st
+         WHERE st.category_slug = sc.slug AND st.is_curated = 1 AND st.is_captured = 1 AND st.status = 'active'
+       )
+       ORDER BY sc.slug`,
+    ),
+    db.all<{ slug: string }>(
+      `SELECT t.slug FROM themes t
+       WHERE t.status = 'active'
+         AND EXISTS (
+           SELECT 1 FROM stores st
+           WHERE st.current_theme_id = t.id AND st.is_curated = 1 AND st.is_captured = 1
+             AND st.status = 'active'
+         )
+       ORDER BY t.slug`,
+    ),
   ]);
 
   const dataDay = isoDay(metaRow?.value);
   const entries: SitemapUrl[] = [
-    ...STATIC_PATHS.map((path) => ({ path, lastmod: dataDay })),
+    ...[...STATIC_PATHS, ...(PRO_ENABLED ? ['/pro'] : [])].map((path) => ({
+      path,
+      lastmod: dataDay,
+    })),
     ...stores.map((s) => ({
       path: hrefs.store(s.domain),
       lastmod: isoDay(s.last_seen) ?? dataDay,
     })),
     ...themes.map((t) => ({ path: hrefs.theme(t.slug), lastmod: dataDay })),
+    ...niches.map((n) => ({ path: hrefs.storeCategory(n.slug), lastmod: dataDay })),
+    ...themeGalleries.map((t) => ({ path: `${hrefs.theme(t.slug)}/stores`, lastmod: dataDay })),
     ...apps.map((a) => ({
       path: hrefs.app(a.slug),
       lastmod: isoDay(a.checked_on) ?? dataDay,

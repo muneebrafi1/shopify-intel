@@ -5,6 +5,7 @@
  * row with the legal entity, the data date and the Shopify disclaimer.
  */
 import { LEGAL_ENTITY } from '~/config/site';
+import { PRO_ENABLED } from '~/config/flags';
 import Logo from './Logo.astro';
 import ThemeSwitch from '~/components/ui/ThemeSwitch.astro';
 
@@ -39,7 +40,7 @@ const COLUMNS = [
   {
     title: 'Product',
     links: [
-      { href: '/pro', label: 'Pro' },
+      ...(PRO_ENABLED ? [{ href: '/pro', label: 'Pro' }] : []),
       { href: '/developers', label: 'Developers' },
       { href: '/methodology', label: 'Methodology' },
     ],
@@ -69,9 +70,6 @@ const year = new Date().getFullYear();
       <a href="/" aria-label="Home" class="footer__logo">
         <Logo />
       </a>
-      <p class="footer__pitch">
-        Shopify themes, apps and sections, shown on the live stores that use them.
-      </p>
       <ThemeSwitch class="footer__theme" />
     </div>
     {COLUMNS.map((col) => (
@@ -91,7 +89,6 @@ const year = new Date().getFullYear();
     <p>
       © {year} {LEGAL_ENTITY}
     </p>
-    {dataNote && <p class="footer__data num">{dataNote}</p>}
     <p class="footer__disclaimer">Not affiliated with Shopify Inc.</p>
   </div>
 </footer>

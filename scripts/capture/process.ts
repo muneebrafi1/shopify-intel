@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import sharp from 'sharp';
-import { THUMB_TOP, THUMB_TOP_PX, topThumbKey } from '../../src/lib/media.ts';
+import { THUMB_TOP, THUMB_TOP_PX, ogKey, topThumbKey } from '../../src/lib/media.ts';
 import type { SectionType } from '../../src/lib/taxonomy.ts';
 import type { CapturePageType, PageCapture } from './browser.ts';
 import { classifySection, type Classified } from './classify.ts';
@@ -139,6 +139,18 @@ export async function topThumb(full: Buffer, device: 'desktop' | 'mobile', cssWi
     .toBuffer();
 }
 
+/** 1200×630 social-preview crop (top of a desktop page) as a JPEG every crawler can read. */
+export async function ogCrop(full: Buffer, cssWidth: number) {
+  const meta = await sharp(full, { limitInputPixels: false }).metadata();
+  const pxW = meta.width ?? cssWidth;
+  const h = Math.min(meta.height ?? 0, Math.round((pxW * 630) / 1200));
+  return sharp(full, { limitInputPixels: false })
+    .extract({ left: 0, top: 0, width: pxW, height: h })
+    .resize({ width: 1200, height: 630, fit: 'cover', position: 'top' })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer();
+}
+
 export async function processCapture(opts: {
   domain: string;
   device: 'desktop' | 'mobile';
@@ -159,6 +171,7 @@ export async function processCapture(opts: {
   const webp = await full.clone().webp(WEBP).toBuffer();
   save(r2Key, webp);
   save(topThumbKey(r2Key), await topThumb(png, device, capture.width));
+  if (device === 'desktop') save(ogKey(r2Key), await ogCrop(png, capture.width));
 
   const out = await cropSections({
     domain,

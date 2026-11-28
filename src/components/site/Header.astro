@@ -9,6 +9,7 @@
  *        scroll lock) with nav + live counts, secondary links, theme switch and the Pro CTA.
  */
 import { PRIMARY_NAV } from '~/config/site';
+import { PRO_ENABLED } from '~/config/flags';
 import Logo from './Logo.astro';
 import Icon from '~/components/ui/Icon.astro';
 import Kbd from '~/components/ui/Kbd.astro';
@@ -34,7 +35,7 @@ const SECONDARY_NAV = [
   { href: '/developers', label: 'Developers' },
   { href: '/methodology', label: 'Methodology' },
   { href: '/about', label: 'About' },
-  { href: '/pro', label: 'Pricing' },
+  ...(PRO_ENABLED ? [{ href: '/pro', label: 'Pricing' }] : []),
 ];
 ---
 
@@ -74,12 +75,16 @@ const SECONDARY_NAV = [
       <ThemeToggle class="header__desktop" />
       {!minimal && (
         <>
-          <Button href="/sign-in" variant="ghost" class="header__desktop" data-auth-link>
-            Sign in
-          </Button>
-          <Button href="/pro" variant="primary" class="header__desktop header__pro">
-            Get Pro
-          </Button>
+          {PRO_ENABLED && (
+            <>
+              <Button href="/sign-in" variant="ghost" class="header__desktop" data-auth-link>
+                Sign in
+              </Button>
+              <Button href="/pro" variant="primary" class="header__desktop header__pro">
+                Get Pro
+              </Button>
+            </>
+          )}
           <button
             type="button"
             class="header__menu-btn"
@@ -134,14 +139,16 @@ const SECONDARY_NAV = [
           </div>
         </nav>
       </div>
-      <div class="menu__cta container">
-        <Button href="/sign-in" variant="secondary" size="lg" full data-auth-link>
-          Sign in
-        </Button>
-        <Button href="/pro" variant="primary" size="lg" full>
-          Get Pro
-        </Button>
-      </div>
+      {PRO_ENABLED && (
+        <div class="menu__cta container">
+          <Button href="/sign-in" variant="secondary" size="lg" full data-auth-link>
+            Sign in
+          </Button>
+          <Button href="/pro" variant="primary" size="lg" full>
+            Get Pro
+          </Button>
+        </div>
+      )}
     </dialog>
   )}
 </header>

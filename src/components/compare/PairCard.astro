@@ -12,6 +12,8 @@ import PairMark from './PairMark.astro';
 interface PairSide {
   name: string;
   iconUrl?: string | null;
+  kind?: 'app' | 'theme';
+  slug?: string;
   stores?: number | null;
 }
 interface Props {
@@ -49,9 +51,7 @@ const both =
   typeof shared === 'number'
     ? shared > 0
       ? `${formatCount(shared)} ${shared === 1 ? 'store' : 'stores'} ${sharedVerb} both`
-      : sharedVerb === 'run'
-        ? 'No scanned store runs both'
-        : 'No store has run both'
+      : null
     : null;
 ---
 
@@ -87,7 +87,7 @@ const both =
     ))}
   </dl>
   <Fragment slot="footer">
-    <span class="pcard__both">{both ?? 'Stores in our scan'}</span>
+    <span class="pcard__both">{both ?? 'Stores'}</span>
     <span class="pcard__go" aria-hidden="true">
       <Icon name="arrow-right" size={14} />
     </span>

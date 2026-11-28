@@ -11,11 +11,25 @@
  * Polite: one page per store, a real browser user agent, no logins, no forms, no bypassing of
  * bot checks (a challenge page is reported as such and nothing is ingested).
  */
+import { identify } from './robots.ts';
 import type { Browser } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { ScanInput } from '../../src/server/repo/scans.ts';
+
+export interface StoreProfile {
+  title: string | null;
+  description: string | null;
+  lang: string | null;
+  locale: string | null;
+}
+export interface CrawlOut {
+  scan: ScanInput;
+  country: string | null;
+  profile?: StoreProfile;
+  note: string | null;
+}
 
 export const STOREPEEK_DIR = process.env.STOREPEEK_DIR ?? '/workspace/extensions/storepeek';
 
@@ -65,14 +79,15 @@ export async function loadEngine(): Promise<Engine> {
   };
 }
 
-const UA =
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const UA = identify(
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+);
 
 export async function crawlStore(
   browser: Browser,
   engine: Engine,
   domain: string,
-): Promise<{ scan: ScanInput; country: string | null; note: string | null }> {
+): Promise<CrawlOut> {
   const context = await browser.newContext({
     userAgent: UA,
     viewport: { width: 1440, height: 900 },
@@ -197,6 +212,8 @@ export async function crawlStore(
             },
           },
           siteName: meta('og:site_name'),
+          description: meta('og:description') ?? meta('description'),
+          lang: document.documentElement.lang || null,
           challenge: /captcha|challenge|verify you are human|access denied/i.test(
             document.title + ' ' + (document.body?.innerText ?? '').slice(0, 400),
           ),
@@ -233,6 +250,14 @@ export async function crawlStore(
     return {
       scan,
       country: raw.main.shopify?.country ?? null,
+      /** What the store says about itself (title, meta description, language): used to suggest
+       *  a category when curating; editorial, never shown as a detection. */
+      profile: {
+        title: raw.dom.title?.slice(0, 200) ?? null,
+        description: raw.description?.slice(0, 400) ?? null,
+        lang: raw.lang?.slice(0, 20) ?? null,
+        locale: raw.main.shopify?.locale ?? null,
+      },
       note: raw.challenge ? 'bot check' : null,
     };
   } finally {

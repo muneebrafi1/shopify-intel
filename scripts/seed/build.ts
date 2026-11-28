@@ -6,7 +6,13 @@
  * Used by scripts/build-seed.ts (writes .data/seed.sql) and by the unit tests (in memory).
  */
 import { createHash } from 'node:crypto';
-import { PIXELS, SECTION_GROUPS, SECTION_TYPES } from '../../src/lib/taxonomy.ts';
+import {
+  DEVICES,
+  PAGE_TYPES,
+  PIXELS,
+  SECTION_GROUPS,
+  SECTION_TYPES,
+} from '../../src/lib/taxonomy.ts';
 import { REBUILD_DERIVED_SQL } from '../../src/server/repo/maintenance.ts';
 import { normalizeDomain, slugify } from '../../src/server/lib/slug.ts';
 import {
@@ -24,6 +30,15 @@ import {
   priceToCents,
   shortAppName,
 } from './normalize.ts';
+import {
+  assignIds,
+  pageIdFor,
+  readLedger,
+  sectionIdFor,
+  shotIdFor,
+  type IdKind,
+  type IdLedger,
+} from './ids.ts';
 import { SqlWriter, type Row } from './sql.ts';
 import { parseTeardown } from './teardowns.ts';
 
@@ -53,6 +68,8 @@ export interface SeedReport {
 export interface SeedResult {
   sql: string;
   report: SeedReport;
+  /** The id ledger after this build (new keys appended); scripts/build-seed.ts saves it. */
+  ledger: IdLedger;
 }
 
 interface AppRecord {
@@ -76,10 +93,22 @@ function themeStoreChecked(t: SeedInputs['themeStore']): Record<string, string> 
 const checkedAt = (ts: string | undefined) => (ts ? iso(ts) : null);
 
 export function buildSeedFromRoot(root: string): SeedResult {
-  return buildSeed(loadSeedInputs(root));
+  return buildSeed(loadSeedInputs(root), readLedger(root));
 }
 
-export function buildSeed(inputs: SeedInputs): SeedResult {
+/** The mirrored copy in R2 when we have one for this exact listing icon. */
+function mirroredIcon(
+  m: { url: string; key: string } | undefined,
+  url: string | null,
+): string | null {
+  return m && (url === null || m.url === url) ? `/media/${m.key}` : url;
+}
+
+export function buildSeed(
+  inputs: SeedInputs,
+  ledger: IdLedger = { stores: {}, apps: {}, themes: {}, app_categories: {} },
+): SeedResult {
+  const idOf = (kind: IdKind, key: string) => assignIds(ledger, kind, [key]).get(key)!;
   const warnings: string[] = [];
   const warn = (msg: string) => warnings.push(msg);
   const w = new SqlWriter();
@@ -142,7 +171,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   // Curation overrides (data/curation/overrides.json): wrong App Store matches are dropped, so
   // their detections stay unresolved, and unwanted affiliate links are skipped.
   const unmatched = new Set(inputs.overrides.unmatchDetectionSlugs.map((o) => o.slug));
-  const appInputsRaw = [...inputs.apps, ...inputs.appsExtra];
+  const appInputsRaw = [...inputs.apps, ...inputs.appsExtra, ...inputs.appsStorePeek];
   for (const slug of unmatched) {
     const stores = detections.filter((d) => d.apps.includes(slug)).length;
     if (!appInputsRaw.some((a) => a.slug === slug) && stores === 0)
@@ -193,11 +222,16 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   const categoryNames = [
     ...new Set([...inputs.categories, ...allAppInputs.map((a) => a.category)]),
   ].sort((a, b) => a.localeCompare(b));
-  const categoryId = new Map(categoryNames.map((name, i) => [name, i + 1]));
+  const categoryId = new Map(categoryNames.map((name) => [name, idOf('app_categories', name)]));
   w.comment('app_categories');
   w.insert(
     'app_categories',
-    categoryNames.map((name, i) => ({ id: i + 1, slug: slugify(name), name, position: i })),
+    categoryNames.map((name, i) => ({
+      id: categoryId.get(name)!,
+      slug: slugify(name),
+      name,
+      position: i,
+    })),
   );
 
   // Two detection rules can point at the same App Store listing. Keep the most-detected slug
@@ -222,11 +256,15 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
 
   const apps: AppRecord[] = [];
   const appBySlug = new Map<string, AppRecord>();
-  const fullSlugs = new Set(inputs.apps.map((a) => a.slug));
+  const fullSlugs = new Set([
+    ...inputs.apps.map((a) => a.slug),
+    // Imported listings are complete (plans or features on file) → full profiles.
+    ...inputs.appsStorePeek.filter((a) => a.plans?.length || a.features?.length).map((a) => a.slug),
+  ]);
   for (const input of allAppInputs) {
     if (aliasOf.has(input.slug) || appBySlug.has(input.slug)) continue;
     const rec: AppRecord = {
-      id: apps.length + 1,
+      id: idOf('apps', input.slug),
       slug: input.slug,
       input,
       profile: fullSlugs.has(input.slug) ? 'full' : 'basic',
@@ -249,15 +287,24 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
     if (!appBySlug.has(slug)) warn(`apps curation: unknown app '${slug}'`);
   }
   const autoShort = new Map(apps.map((r) => [r.slug, shortAppName(displayName(r.input))]));
-  const shortCounts = new Map<string, number>();
-  for (const v of autoShort.values())
-    shortCounts.set(v.toLowerCase(), (shortCounts.get(v.toLowerCase()) ?? 0) + 1);
+  // A shared short name ("Klaviyo") goes to the most-detected app; the others keep full names.
+  const shortOwner = new Map<string, AppRecord>();
+  for (const r of apps) {
+    const k = (autoShort.get(r.slug) ?? '').toLowerCase();
+    const cur = shortOwner.get(k);
+    if (
+      !cur ||
+      r.input.scan.stores > cur.input.scan.stores ||
+      (r.input.scan.stores === cur.input.scan.stores && r.slug < cur.slug)
+    )
+      shortOwner.set(k, r);
+  }
   const shortName = (r: AppRecord): string => {
     const override = overrides[r.slug];
     if (override) return override;
     const auto = autoShort.get(r.slug) ?? displayName(r.input);
-    const collides = (shortCounts.get(auto.toLowerCase()) ?? 0) > 1;
-    return collides || auto.length < 3 ? displayName(r.input) : auto;
+    const owns = shortOwner.get(auto.toLowerCase()) === r;
+    return !owns || auto.length < 3 ? displayName(r.input).trim() : auto;
   };
 
   w.comment('apps');
@@ -291,7 +338,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
         tagline: a.tagline,
         rating,
         reviews: a.reviews,
-        icon_url: a.icon_url,
+        icon_url: mirroredIcon(inputs.appIcons[slug], a.icon_url),
         app_store_url: isAppStore ? listingUrl : null,
         website_url: isAppStore ? null : listingUrl,
         launched_on: parseLongDate(a.launched),
@@ -322,7 +369,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   // ------------------------------------------------------------------------------------------
   // Themes
   // ------------------------------------------------------------------------------------------
-  const themes = inputs.themes.map((t, i) => ({ id: i + 1, ...t }));
+  const themes = inputs.themes.map((t) => ({ id: idOf('themes', t.slug), ...t }));
   const themeByName = new Map(themes.map((t) => [t.name.toLowerCase(), t]));
   const themeBySlug = new Map(themes.map((t) => [t.slug, t]));
   w.comment('themes');
@@ -440,12 +487,18 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   const scanRows: Row[] = [];
   const appStoreCounts: Record<string, number> = {};
   const themeStoreCounts: Record<string, number> = {};
+  // The same counts over the 930 scan only, to cross-check against the export's numbers.
+  const baseAppCounts: Record<string, number> = {};
+  const baseThemeCounts: Record<string, number> = {};
+  const baseDomains = new Set(
+    detections.slice(0, inputs.baseDetectionCount ?? detections.length).map((d) => d.domain),
+  );
   const storeIdByDomain = new Map<string, number>();
   const storeApps = new Map<number, AppRecord[]>();
   const storeThemeId = new Map<number, number | null>();
 
-  ordered.forEach((d, i) => {
-    const id = i + 1;
+  ordered.forEach((d) => {
+    const id = idOf('stores', d.domain);
     const seen = iso(d.detected_at);
     const curated = curatedByDomain.get(d.domain);
     const edit = curation.get(d.domain);
@@ -454,7 +507,9 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
     const rawTheme = curated?.theme?.raw_name ?? d.theme;
     const theme = rawTheme ? themeByName.get(rawTheme.toLowerCase()) : undefined;
     storeThemeId.set(id, theme?.id ?? null);
+    const inBase = baseDomains.has(d.domain);
     if (theme) themeStoreCounts[theme.slug] = (themeStoreCounts[theme.slug] ?? 0) + 1;
+    if (theme && inBase) baseThemeCounts[theme.slug] = (baseThemeCounts[theme.slug] ?? 0) + 1;
 
     storeRows.push({
       id,
@@ -502,6 +557,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       if (resolved.has(app.id)) continue; // alias + canonical both detected
       resolved.set(app.id, app);
       appStoreCounts[app.slug] = (appStoreCounts[app.slug] ?? 0) + 1;
+      if (inBase) baseAppCounts[app.slug] = (baseAppCounts[app.slug] ?? 0) + 1;
       storeAppRows.push({
         store_id: id,
         app_id: app.id,
@@ -540,26 +596,27 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   for (const a of allAppInputs) {
     const canonical = aliasOf.get(a.slug) ?? a.slug;
     if (canonical !== a.slug) continue;
-    const ours = appStoreCounts[a.slug] ?? 0;
+    const ours = baseAppCounts[a.slug] ?? 0;
     if (ours !== a.scan.stores) {
       warn(`MISMATCH app ${a.slug}: detections=${ours} export=${a.scan.stores}`);
     }
     if (a.scan.pct_of_scanned !== undefined) {
-      const pct = Math.round((ours / scannedTotal) * 10000) / 100;
+      const pct = Math.round((ours / baseDomains.size) * 10000) / 100;
       if (Math.abs(pct - a.scan.pct_of_scanned) > 0.01) {
         warn(`MISMATCH app ${a.slug} share: ${pct}% vs export ${a.scan.pct_of_scanned}%`);
       }
     }
   }
   for (const t of themes) {
-    const ours = themeStoreCounts[t.slug] ?? 0;
+    const ours = baseThemeCounts[t.slug] ?? 0;
     if (ours !== t.scan.stores) {
       warn(`MISMATCH theme ${t.slug}: detections=${ours} export=${t.scan.stores}`);
     }
   }
+  const baseIds = new Set([...baseDomains].map((d) => storeIdByDomain.get(d)));
   checkCoInstalls(
     inputs.apps.filter((a) => !unmatched.has(a.slug)),
-    storeApps,
+    new Map([...storeApps].filter(([id]) => baseIds.has(id))),
     (slug) => resolveApp(slug) !== undefined,
     warn,
   );
@@ -591,7 +648,10 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
     for (const shot of planStoreCaptures(domain, layoutApps)) {
       let pageId = pageIds.get(shot.pageType);
       if (pageId === undefined) {
-        pageId = pageRows.length + 1;
+        pageId = pageIdFor(
+          storeId,
+          PAGE_TYPES.findIndex((p) => p.slug === shot.pageType),
+        );
         pageIds.set(shot.pageType, pageId);
         pageRows.push({
           id: pageId,
@@ -602,7 +662,10 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
           created_at: CATALOG_TS,
         });
       }
-      const shotId = shotRows.length + 1;
+      const shotId = shotIdFor(
+        pageId,
+        DEVICES.findIndex((d) => d.slug === shot.device),
+      );
       shotRows.push({
         id: shotId,
         page_id: pageId,
@@ -622,7 +685,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       });
       shotHeights.push({ domain, page: shot.pageType, device: shot.device, height: shot.height });
       shot.sections.forEach((s, order) => {
-        const sectionId = sectionRows.length + 1;
+        const sectionId = sectionIdFor(shotId, order);
         const appId = s.appSlug ? (appBySlug.get(s.appSlug)?.id ?? null) : null;
         sectionRows.push({
           id: sectionId,
@@ -646,6 +709,8 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
         });
         const key = `${shot.pageType}|${shot.device}|${s.type}`;
         if (!index.has(key)) index.set(key, { sectionId, shotId });
+        const pageKey = `${shot.pageType}|${shot.device}|*`;
+        if (!index.has(pageKey)) index.set(pageKey, { sectionId, shotId });
       });
     }
   }
@@ -678,12 +743,14 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
       updated_at: CATALOG_TS,
     });
     for (const note of fm.notes) {
-      const hit = sectionIndex
-        .get(domain)
-        ?.get(`${note.page_type}|${note.device}|${note.section_type}`);
-      if (!hit) {
+      const pages = sectionIndex.get(domain);
+      const hit = pages?.get(`${note.page_type}|${note.device}|${note.section_type}`);
+      // Placeholder plans guess the sections; real ones arrive with capture:ingest, which relinks
+      // notes by section type. Only a page we never capture is an error worth flagging.
+      const page = pages?.get(`${note.page_type}|${note.device}|*`);
+      if (!page) {
         warn(
-          `${file.file}: note ${note.n} (${note.page_type}/${note.device}/${note.section_type}) has no matching section`,
+          `${file.file}: note ${note.n} (${note.page_type}/${note.device}) is not a captured page`,
         );
       }
       noteRows.push({
@@ -693,7 +760,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
         page_type: note.page_type,
         device: note.device,
         section_type: note.section_type,
-        screenshot_id: hit?.shotId ?? null,
+        screenshot_id: hit?.shotId ?? page?.shotId ?? null,
         section_id: hit?.sectionId ?? null,
         title: note.title,
         body: note.body,
@@ -855,6 +922,7 @@ export function buildSeed(inputs: SeedInputs): SeedResult {
   return {
     sql: w.toString(),
     report: { dataVersion, counts, warnings, appStoreCounts, themeStoreCounts, shotHeights },
+    ledger,
   };
 }
 

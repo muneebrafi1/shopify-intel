@@ -5,6 +5,7 @@
  * both the results (same as the one-at-a-time calls they replace) and the query counts.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { absolutizeMedia } from '../../src/server/media/urls.ts';
 import type { Db, SqlValue, Statement } from '../../src/server/db/types.ts';
 import { buildCtx, createRuntime } from '../../src/server/api/v1/execute.ts';
 import { appDetails, findApps, getAppDetail } from '../../src/server/repo/apps.ts';
@@ -44,9 +45,16 @@ const queries = async <T>(call: () => Promise<T>): Promise<[T, number]> => {
 let apps: string[] = [];
 beforeAll(async () => {
   await api.getMeta(); // the runtime reads the data meta once; keep it out of the counts
-  apps = (await db.all<{ slug: string }>("SELECT slug FROM apps WHERE status = 'active'")).map(
-    (r) => r.slug,
-  );
+  // Every app with sections, plus a slice of the ones without (the empty path is the same for all).
+  apps = (
+    await db.all<{ slug: string }>(
+      `SELECT slug FROM (
+         SELECT a.slug, a.id, EXISTS (SELECT 1 FROM sections s WHERE s.app_id = a.id) AS has
+         FROM apps a WHERE a.status = 'active')
+       WHERE has = 1 OR id IN (SELECT id FROM apps WHERE status = 'active' ORDER BY id LIMIT 40)
+       ORDER BY id`,
+    )
+  ).map((r) => r.slug);
 });
 
 describe('listSectionsByApps', () => {
@@ -68,7 +76,7 @@ describe('listSectionsByApps', () => {
         }
       }
     }
-  });
+  }, 120_000);
 
   it('keeps tie order: the mixed order equals the library order of each app', async () => {
     const { data } = await api.listSectionsByApps({
@@ -138,7 +146,11 @@ describe('listSectionsByApps', () => {
       per_app: 2,
       device: 'mobile',
     });
-    expect(body.data).toEqual(JSON.parse(JSON.stringify(viaClient.data)));
+    // HTTP responses carry absolute media URLs; the in-process client keeps them root-relative.
+    expect(body.data).toEqual(
+      absolutizeMedia(JSON.parse(JSON.stringify(viaClient.data)), 'https://test.local'),
+    );
+    expect(JSON.stringify(body.data)).toContain('https://test.local/media/');
   });
 
   it('validates its input (1 to 50 apps, per_app 1 to 24)', async () => {

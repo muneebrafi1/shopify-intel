@@ -1,7 +1,7 @@
 /// <reference types="node" />
 /**
  * npm run capture [-- --only youngla.com,thesill.com] [--pages home,collection,product,cart]
- *                 [--devices desktop,mobile] [--limit 5] [--stitch]
+ *                 [--devices desktop,mobile] [--limit 5] [--stitch] [--resume] [--concurrency 3]
  *
  * Captures the curated stores (desktop 1440 px and mobile 390 px) into .data/captures/: WebP
  * objects laid out like the R2 bucket plus manifest.json. Collection and product pages are
@@ -31,7 +31,8 @@ import { readManifest, upsertEntry, writeManifest } from './manifest.ts';
 import { ROOT } from './paths.ts';
 import { processCapture } from './process.ts';
 
-const PAGE_TYPES: CapturePageType[] = ['home', 'collection', 'product', 'cart'];
+// No cart: it needs POST /cart/add.js, which Shopify's robots.txt disallows.
+const PAGE_TYPES: CapturePageType[] = ['home', 'collection', 'product'];
 const { values } = parseArgs({
   options: {
     only: { type: 'string' },
@@ -39,10 +40,12 @@ const { values } = parseArgs({
     devices: { type: 'string', default: 'desktop,mobile' },
     limit: { type: 'string' },
     stitch: { type: 'boolean', default: false },
-    /** Skip pages already captured with the current rules (manifest entries with `raw`). */
+    /** Skip pages that already have detected sections (empty-section captures are retried). */
     resume: { type: 'boolean', default: false },
     /** With --resume: only skip captures taken after this ISO date. */
     since: { type: 'string' },
+    /** Stores captured in parallel (one page at a time per store, so each store sees one visitor). */
+    concurrency: { type: 'string', default: '1' },
   },
 });
 const list = (v: string) => v.split(',').map((d) => d.trim());
@@ -90,36 +93,46 @@ const fail = (domain: string, page: string, device: string, reason: string) => {
   console.log(`  FAIL ${domain} ${page} ${device}: ${reason.split('\n')[0]}`);
 };
 try {
-  const { items } = await listCaptureTargets(local.db, { scope: 'curated', limit: 500 });
+  const { items } = await listCaptureTargets(local.db, { scope: 'curated', limit: only ? 5000 : 500 });
   let targets = only ? items.filter((t) => only.has(t.domain)) : items;
   if (values.limit) targets = targets.slice(0, Number(values.limit));
   if (only && targets.length < only.size)
     console.warn('Some --only domains are not capture targets (not curated, blocked or unknown).');
   console.log(`Capturing ${targets.length} store(s): ${pages.join('+')} × ${devices.join('+')}`);
 
-  for (const t of targets) {
+  const captureStore = async (t: (typeof targets)[number]) => {
     if (await isCaptureBlocked(local.db, t.domain)) {
       console.log(`  skip ${t.domain}: capture blocked`);
-      continue;
+      return;
     }
     const apps = await local.db.all<{ slug: string }>(
       `SELECT a.slug FROM store_apps sa JOIN apps a ON a.id = sa.app_id
        JOIN stores s ON s.id = sa.store_id WHERE s.domain = ? AND sa.removed_at IS NULL`,
       [t.domain],
     );
+    const isStubShot = (bytes: number | undefined, height: number | undefined, device: string) => {
+      const vp = device === 'mobile' ? 844 : 900;
+      return (bytes ?? 0) < 8_000 || (height ?? 0) <= vp + 20;
+    };
     const done = (pageType: string, device: string) =>
       values.resume &&
-      manifest.entries.some(
-        (e) =>
-          e.raw &&
-          e.capture.domain === t.domain &&
-          e.capture.page_type === pageType &&
-          e.capture.device === device &&
-          (!values.since || e.capture.captured_at >= values.since),
-      );
+      manifest.entries.some((e) => {
+        if (
+          !e.raw ||
+          e.capture.domain !== t.domain ||
+          e.capture.page_type !== pageType ||
+          e.capture.device !== device ||
+          (values.since && e.capture.captured_at < values.since)
+        )
+          return false;
+        // Empty-section captures should be retried after detection improvements.
+        const nRaw = e.raw.sections?.length ?? 0;
+        const nSec = e.capture.sections?.length ?? 0;
+        return nRaw > 0 || nSec > 0;
+      });
     if (pages.every((p) => devices.every((d) => done(p, d)))) {
       console.log(`  done ${t.domain}: already captured`);
-      continue;
+      return;
     }
     const needsDiscovery = pages.some((p) => p !== 'home');
     const found = needsDiscovery
@@ -173,6 +186,23 @@ try {
             capturedAt: new Date().toISOString(),
             storeApps: apps.map((a) => a.slug),
           });
+          const prev = manifest.entries.find(
+            (e) =>
+              e.capture.domain === t.domain &&
+              e.capture.page_type === pageType &&
+              e.capture.device === device,
+          );
+          const c0 = entry.capture;
+          const stub = isStubShot(c0.bytes, c0.height, device);
+          const prevGood =
+            prev && !isStubShot(prev.capture.bytes, prev.capture.height, device);
+          if (stub && prevGood) {
+            console.log(
+              `  keep ${t.domain} ${pageType} ${device}: new capture is a stub (${c0.bytes} B, h=${c0.height}); left previous (${prev.capture.bytes} B, h=${prev.capture.height})`,
+            );
+            fail(t.domain, pageType, device, `stub capture ${c0.bytes} B h=${c0.height}; kept previous`);
+            continue;
+          }
           manifest = upsertEntry(manifest, entry);
           writeManifest(manifest);
           ok += 1;
@@ -191,7 +221,13 @@ try {
         }
       }
     }
-  }
+  };
+  const queue = [...targets];
+  await Promise.all(
+    Array.from({ length: Math.max(1, Number(values.concurrency)) }, async () => {
+      for (let t = queue.shift(); t; t = queue.shift()) await captureStore(t);
+    }),
+  );
 } finally {
   await browser.close();
   await local.dispose();

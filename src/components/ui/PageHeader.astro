@@ -11,7 +11,8 @@
  * size: md → display-md (index + detail pages), lg → display-lg (marketing: Pro, About).
  * align: start (default) or center (only the home hero and the pricing header are centred).
  * `titleMuted` renders a two-tone title: "<title> <muted continuation>".
- * Slots: top (breadcrumbs), meta (under the description), actions (right ≥1024), default (below).
+ * Slots: top (breadcrumbs), mark (icon left of the title), meta (under the description),
+ * actions (right ≥1024), default (below).
  * v1 props kept: `lede` (= description), `serif` (ignored: no serif in v2).
  */
 interface Props {
@@ -49,6 +50,11 @@ const shownCount = typeof count === 'number' ? count.toLocaleString('en-US') : c
 <header class:list={['ph', `ph--${size}`, `ph--${align}`, className]}>
   <slot name="top" />
   <div class="ph__row">
+    {Astro.slots.has('mark') && (
+      <div class="ph__mark">
+        <slot name="mark" />
+      </div>
+    )}
     <div class="ph__text">
       {eyebrow && <p class="ph__eyebrow eyebrow">{eyebrow}</p>}
       <h1 class:list={['ph__title', size === 'lg' ? 'display-lg' : 'display-md']}>
@@ -59,9 +65,13 @@ const shownCount = typeof count === 'number' ? count.toLocaleString('en-US') : c
             <span class="tone-muted">{titleMuted}</span>
           </>
         )}
-        {shownCount !== undefined && <span class="ph__count num">{shownCount}</span>}
+        {shownCount !== undefined && (
+          <>
+            {' '}
+            <span class="ph__count num">{shownCount}</span>
+          </>
+        )}
       </h1>
-      {desc && <p class="ph__desc lead">{desc}</p>}
       <slot name="meta" />
     </div>
     {Astro.slots.has('actions') && (
@@ -103,6 +113,11 @@ const shownCount = typeof count === 'number' ? count.toLocaleString('en-US') : c
       justify-content: space-between;
       gap: var(--space-10);
     }
+  }
+  .ph__mark {
+    flex: none;
+    align-self: flex-start;
+    margin-top: 0.15em;
   }
   .ph__text {
     min-width: 0;

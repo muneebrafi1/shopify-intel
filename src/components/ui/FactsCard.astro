@@ -43,21 +43,8 @@ const {
       <slot name="actions" />
     </div>
   )}
-  {(source || asOf || Astro.slots.has('footer')) && (
+  {Astro.slots.has('footer') && (
     <div class="fcard__foot">
-      {(source || asOf) && (
-        <p>
-          {source && <>Source: {source}</>}
-          {source && asOf && ' · '}
-          {asOf && <span class="num">{asOf}</span>}
-          {sourceHref && (
-            <>
-              {' · '}
-              <a href={sourceHref}>Method</a>
-            </>
-          )}
-        </p>
-      )}
       <slot name="footer" />
     </div>
   )}

@@ -19,8 +19,11 @@ export const PAGE_TYPES = [
 ] as const;
 export type PageType = (typeof PAGE_TYPES)[number]['slug'];
 
-/** Page types every curated store is captured on (the core capture plan). */
-export const CORE_PAGE_TYPES: PageType[] = ['home', 'collection', 'product', 'cart'];
+/**
+ * Page types every curated store is captured on (the core capture plan). No cart: a filled cart
+ * needs POST /cart/add.js, which Shopify's robots.txt disallows.
+ */
+export const CORE_PAGE_TYPES: PageType[] = ['home', 'collection', 'product'];
 
 export const DEVICES = [
   { slug: 'desktop', name: 'Desktop', viewport: 1440 },

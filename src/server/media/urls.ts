@@ -61,3 +61,26 @@ export function sectionCropImage(
     is_placeholder: !captured,
   };
 }
+
+/**
+ * For responses that leave the site (public API, MCP): turn root-relative `/media/...` values of
+ * icon_url, logo_url and image `src` into absolute URLs so clients can load them directly.
+ * Pages keep the relative form. Returns a new tree; the input is not mutated.
+ */
+const MEDIA_KEYS = new Set(['icon_url', 'logo_url', 'src']);
+export function absolutizeMedia<T>(value: T, origin: string): T {
+  const base = origin.replace(/\/+$/, '');
+  const walk = (v: unknown, key?: string): unknown => {
+    if (typeof v === 'string') {
+      return key && MEDIA_KEYS.has(key) && v.startsWith('/media/') ? `${base}${v}` : v;
+    }
+    if (Array.isArray(v)) return v.map((x) => walk(x));
+    if (v && typeof v === 'object') {
+      const out: Record<string, unknown> = {};
+      for (const [k, x] of Object.entries(v)) out[k] = walk(x, k);
+      return out;
+    }
+    return v;
+  };
+  return walk(value) as T;
+}

@@ -16,6 +16,7 @@
  */
 import { queryMeter } from './server/db/d1.ts';
 import { defineMiddleware } from 'astro:middleware';
+import { pageCacheHeaderValue, withPageCacheContext } from '~/server/page-cache';
 import {
   adminAreaFor,
   authenticate,
@@ -24,15 +25,19 @@ import {
   isSameOrigin,
   jsonError,
   withAdminHeaders,
+  withSecurityHeaders,
   type AdminArea,
 } from './server/auth/guard.ts';
 
+// Set at build time for pre-launch previews (PUBLIC_NOINDEX=1): noindex on every response.
+const NOINDEX = import.meta.env.PUBLIC_NOINDEX === '1';
+
 export const onRequest = defineMiddleware(async (context, next) => {
-  if (!import.meta.env.DEV) return route(context, next);
+  if (!import.meta.env.DEV) return withSecurityHeaders(await route(context, next), NOINDEX);
   // Dev only: report D1 usage per request (free plan limit: 50 queries per invocation).
   queryMeter.calls = 0;
   queryMeter.statements = 0;
-  const response = await route(context, next);
+  const response = withSecurityHeaders(await route(context, next), NOINDEX);
   const used = `${queryMeter.calls}/${queryMeter.statements}`;
   try {
     response.headers.set('x-d1-queries', used);
@@ -47,8 +52,63 @@ async function route(context: Ctx, next: Next): Promise<Response> {
   const userArea = userAreaFor(context.url.pathname);
   if (userArea !== null) return guardUser(context, next, userArea);
   const area = adminAreaFor(context.url.pathname);
-  if (area === null) return next();
+  if (area === null) return cachedPublic(context, next);
   return withAdminHeaders(await guardAdmin(context, next, area));
+}
+
+/** Repeat public GETs from caches.default so SSR does not 500 under modest concurrency. */
+async function cachedPublic(context: Ctx, next: Next): Promise<Response> {
+  const request = context.request;
+  if (request.method !== 'GET') return next();
+  const cookie = request.headers.get('Cookie') ?? '';
+  if (/(?:^|;\s*)(?:session|__session|sid|auth|cf_auth)=/i.test(cookie)) return next();
+
+  // Version the cache key so a new deploy is not stuck behind the previous HTML.
+  const key = new Request(request.url, {
+    method: 'GET',
+    headers: { 'X-Vitrine-Build': String(import.meta.env.VITRINE_BUILD ?? '0') },
+  });
+  try {
+    const hit = await caches.default.match(key);
+    if (hit) {
+      const headers = new Headers(hit.headers);
+      headers.set('X-Vitrine-Cache', 'HIT');
+      return new Response(hit.body, { status: hit.status, statusText: hit.statusText, headers });
+    }
+  } catch {
+    // caches.default is missing in some test / dev runtimes.
+  }
+
+  let pageCache: string | undefined;
+  const res = await withPageCacheContext(async () => {
+    const r = await next();
+    pageCache = pageCacheHeaderValue();
+    return r;
+  });
+  const cc = res.headers.get('Cache-Control') ?? '';
+  const cacheable =
+    res.status === 200 &&
+    !res.headers.has('Set-Cookie') &&
+    !/no-store|private|no-cache/i.test(cc) &&
+    /(?:s-maxage|max-age)=[1-9]\d*/i.test(cc);
+  if (!cacheable) {
+    if (pageCache) {
+      const headers = new Headers(res.headers);
+      headers.set('X-Vitrine-Page-Cache', pageCache);
+      return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+    }
+    return res;
+  }
+  const headers = new Headers(res.headers);
+  headers.set('X-Vitrine-Cache', 'MISS');
+  if (pageCache) headers.set('X-Vitrine-Page-Cache', pageCache);
+  const miss = new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+  try {
+    await caches.default.put(key, miss.clone());
+  } catch {
+    // Ignore cache write failures; the response is still valid.
+  }
+  return miss;
 }
 
 /**
@@ -65,13 +125,28 @@ function userAreaFor(pathname: string): UserArea | null {
   return null;
 }
 
+function withUserHeaders(response: Response): Response {
+  try {
+    response.headers.set('Cache-Control', 'no-store');
+    response.headers.set('X-Robots-Tag', 'noindex');
+    return response;
+  } catch {
+    const out = new Response(response.body, response);
+    out.headers.set('Cache-Control', 'no-store');
+    out.headers.set('X-Robots-Tag', 'noindex');
+    return out;
+  }
+}
+
 async function guardUser(context: Ctx, next: Next, area: UserArea): Promise<Response> {
   const { request, url, cookies, locals } = context;
   if (!isSafeMethod(request.method) && !isSameOrigin(request, url)) {
-    return new Response('Cross-origin request blocked.', {
-      status: 403,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    });
+    return withUserHeaders(
+      new Response('Cross-origin request blocked.', {
+        status: 403,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      }),
+    );
   }
   // Loaded lazily so the public fast path never touches account code or bindings.
   const [{ accountDb }, { userForSession, SESSION_COOKIE, SIGNED_IN_COOKIE }] = await Promise.all([
@@ -85,18 +160,11 @@ async function guardUser(context: Ctx, next: Next, area: UserArea): Promise<Resp
     cookies.delete(SIGNED_IN_COOKIE, { path: '/' });
   }
   if (area === 'account' && !locals.user) {
-    if (!isSafeMethod(request.method)) return context.redirect('/sign-in', 303);
+    if (!isSafeMethod(request.method)) return withUserHeaders(context.redirect('/sign-in', 303));
     const target = `${url.pathname}${url.search}`;
-    return context.redirect(`/sign-in?next=${encodeURIComponent(target)}`, 302);
+    return withUserHeaders(context.redirect(`/sign-in?next=${encodeURIComponent(target)}`, 302));
   }
-  const response = await next();
-  try {
-    response.headers.set('Cache-Control', 'no-store');
-    response.headers.set('X-Robots-Tag', 'noindex');
-  } catch {
-    // Immutable headers (redirects): nothing to add.
-  }
-  return response;
+  return withUserHeaders(await next());
 }
 
 type Ctx = Parameters<Parameters<typeof defineMiddleware>[0]>[0];

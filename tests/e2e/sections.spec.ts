@@ -30,7 +30,6 @@ test.describe('sections pages are healthy', () => {
     '/sections/reviews?device=mobile',
     '/sections/reviews?view=index',
     '/sections/hero',
-    '/sections/cart-summary',
     '/sections/reviews?theme=no-such-theme',
   ]) {
     test(path, async ({ page }) => {

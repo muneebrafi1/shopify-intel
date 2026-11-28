@@ -8,6 +8,7 @@
  */
 import { thumbCropHeight, thumbUrl } from '~/lib/media';
 import Badge from '~/components/ui/Badge.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 
 interface ShotRef {
   src: string;
@@ -92,6 +93,7 @@ const ordered = [...deck].reverse();
     )}
   </div>
   <div class="theme-card__body">
+    <ThemeMark slug={slug} name={name} size={32} class="theme-card__mark" />
     <div class="theme-card__text">
       <h3 class="theme-card__name">
         <a href={href} class="stretched-link">
@@ -108,13 +110,11 @@ const ordered = [...deck].reverse();
     <span class="theme-card__count-n num">{storesCount.toLocaleString('en-US')}</span>
     <span class="theme-card__count-l">
       {storesCount === 1 ? 'store' : 'stores'}
-      {typeof share === 'number' ? (
+      {typeof share === 'number' && (
         <>
           {' · '}
           <span class="num">{`${(share * 100).toFixed(1)}%`}</span>
         </>
-      ) : (
-        ' in our scan'
       )}
     </span>
     {rank ? (
@@ -236,8 +236,12 @@ const ordered = [...deck].reverse();
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4) 0;
   }
+  .theme-card__body :global(.theme-card__mark) {
+    margin-top: 1px;
+  }
   .theme-card__text {
     min-width: 0;
+    flex: 1;
   }
   .theme-card__name {
     font-size: var(--text-body);

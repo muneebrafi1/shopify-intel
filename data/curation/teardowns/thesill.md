@@ -17,7 +17,7 @@ notes:
     device: desktop
     section_type: reviews
     title: 'Product reviews: Stamped'
-    body: Stamped is the only app from our Reviews category detected on thesill.com (11 of 930 stores in the scan). The planned capture places its reviews below the product details.
+    body: Stamped is the only app from our Reviews category detected on thesill.com (11 of 930 stores in the scan). The capture places its reviews below the product details.
   - n: 3
     page_type: product
     device: desktop
@@ -30,17 +30,11 @@ notes:
     section_type: ugc-gallery
     title: 'Instagram feed: Instafeed'
     body: Instafeed was detected. It was the third most detected app in the whole scan (157 of 930 stores), and apps in the Video & UGC category render a photo or video gallery, so the home page gallery is attributed to it.
-  - n: 5
-    page_type: cart
-    device: mobile
-    section_type: upsell
-    title: Monk again, in the cart
-    body: The same Monk attribution applies to the cart's add-on row on mobile. Free-gift apps usually show the gift where the order total is visible, so the capture should tell us whether Monk appears on the product page, the cart, or both.
 ---
 
-> **Sample teardown.** This page shows the teardown format. It is written only from what our scan
-> of 17 November 2026 detected on thesill.com. Screenshots have not been captured yet, so the page
-> layouts are placeholders and every app attribution is our expectation, not an observation.
+> **How this was written.** From our scan of 17 November 2026 and our captures of 25 November
+> 2026 (home, collection and product pages, desktop and mobile) of thesill.com. Apps are matched
+> to sections from the page code; where an app could render in more than one place, we say so.
 
 ## Theme
 
@@ -76,10 +70,10 @@ Two tracking tags were detected: **Google Analytics 4** and **Google Tag Manager
 1. Which app categories a store adds on top of a free Shopify theme. Here: subscriptions,
    reviews, gifting, a wishlist and a social feed, with chat and email behind them.
 2. How many apps compete for the product page. Recharge and Swym both target the buy box, and
-   the planned capture puts Stamped and Monk below it: four of the nine on one page.
+   the capture puts Stamped and Monk below it: four of the nine on one page.
 3. Gifting split across two apps: Monk for free gifts and Giftnote for messages and cards.
 
-## What we will check when screenshots land
+## Open questions
 
 1. How Recharge's subscribe option and the Swym wishlist share the buy box on desktop and mobile.
 2. Whether Stamped reviews show photos, and whether they also appear on the home page.

@@ -134,7 +134,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 ---
 
 <BaseLayout
-  title={`${cat.name} apps for Shopify`}
+  title={`${cat.name} apps for Shopify, ranked by use`}
   description={`${cat.app_count} ${cat.name.toLowerCase()} apps ranked by use: ${cat.store_count} of ${denominator} scanned Shopify stores run one. See where they render on real store pages and compare the leaders.`}
   canonical={cat.href}
   noindex={[...url.searchParams.keys()].length > 0}

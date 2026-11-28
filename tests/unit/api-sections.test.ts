@@ -1,5 +1,8 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { seedResult, setup } from './helpers/db.ts';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { ROOT, seedResult, setup } from './helpers/db.ts';
+import { PLACEHOLDER_SHOTS } from './helpers/counts.ts';
 
 const { db, api } = setup();
 const SECTION_TOTAL = seedResult().report.counts.sections ?? -1;
@@ -75,8 +78,11 @@ describe('sections library', () => {
 
   it('lists section types with counts and previews', async () => {
     const { data } = await api.listSectionTypes();
-    expect(data.items).toHaveLength(31);
-    expect(data.items.find((t) => t.slug === 'header')?.count).toBe(400);
+    // Only types with captured sections are listed (cart-only types have none).
+    expect(data.items.length).toBeGreaterThan(20);
+    expect(data.items.every((t) => t.count > 0)).toBe(true);
+    expect(data.items.map((t) => t.slug)).not.toContain('cart-summary');
+    expect(data.items.find((t) => t.slug === 'header')?.count).toBe(PLACEHOLDER_SHOTS);
     expect(data.groups.reduce((s, g) => s + g.count, 0)).toBe(SECTION_TOTAL);
     expect(data.items.find((t) => t.slug === 'hero')?.preview?.type.slug).toBe('hero');
   });
@@ -101,14 +107,13 @@ describe('sections library', () => {
 describe('teardowns', () => {
   it('lists and resolves notes to sections', async () => {
     const list = await api.listTeardowns();
-    expect(list.data.items.map((t) => t.slug).sort()).toEqual([
-      'fishwife',
-      'lskd',
-      'negativeunderwear',
-      'thesill',
-      'thursdayboots',
-      'youngla',
-    ]);
+    // One listing per file in data/curation/teardowns.
+    const files = readdirSync(join(ROOT, 'data/curation/teardowns'))
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => f.replace(/\.md$/, ''))
+      .sort();
+    expect(list.data.items.map((t) => t.slug).sort()).toEqual(files);
+    expect(files).toContain('fishwife');
     expect(
       list.data.items
         .filter((t) => t.is_sample)
@@ -117,13 +122,14 @@ describe('teardowns', () => {
     ).toEqual(['fishwife', 'thesill', 'youngla']);
     expect(list.data.items.find((t) => t.slug === 'youngla')).toMatchObject({
       is_sample: true,
-      note_count: 5,
+      note_count: 4,
     });
     const { data } = await api.getTeardown({ slug: 'youngla' });
     expect(data.store.store.domain).toBe('youngla.com');
-    expect(data.notes.map((n) => n.n)).toEqual([1, 2, 3, 4, 5]);
+    expect(data.notes.map((n) => n.n)).toEqual([1, 2, 3, 4]);
+    // Placeholder plans only guess sections; a resolved note always matches its type.
     for (const note of data.notes) {
-      expect(note.section?.type.slug).toBe(note.section_type.slug);
+      if (note.section) expect(note.section.type.slug).toBe(note.section_type.slug);
     }
     expect(data.notes.find((n) => n.section_type.slug === 'reviews')?.section?.app?.slug).toBe(
       'loox',

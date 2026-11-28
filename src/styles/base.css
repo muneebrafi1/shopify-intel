@@ -356,6 +356,7 @@ html.theme-switching *::after {
   font-size: var(--text-body);
   line-height: 1.7;
   color: var(--ink-2);
+  word-spacing: 0.04em; /* Instrument Sans sets tight word gaps at body size */
   max-width: var(--reading-max);
 }
 .prose > * + * {

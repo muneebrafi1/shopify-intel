@@ -9,9 +9,8 @@
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
 import Icon from '~/components/ui/Icon.astro';
-import { formatDate } from '~/lib/format';
 import type { MatrixRow, ResponseMeta } from '~/server/api/v1/types';
-import { ROW_HELP, matrixCell, matrixGroups, type SideInfo } from './compare';
+import { matrixCell, matrixGroups, type SideInfo } from './compare';
 
 export interface ExtraRow {
   /** Source key the row belongs with (it is appended to that group). */
@@ -33,7 +32,7 @@ interface Props {
   /** Overrides for footnote text per source key (e.g. App Store "checked" date). */
   notes?: Record<string, string>;
 }
-const { rows, meta, a, b, extra = [], notes = {} } = Astro.props;
+const { rows, meta, a, b, extra = [] } = Astro.props;
 const groups = matrixGroups(rows, meta);
 const extraFor = (source: string) => extra.filter((e) => e.source === source);
 // Extra rows whose source has no matrix rows get their own group.
@@ -49,13 +48,6 @@ for (const e of extra) {
     });
   }
 }
-const sourceText = (source: string) => {
-  if (notes[source]) return notes[source];
-  const s = meta.sources[source];
-  return s
-    ? `${s.label}${s.as_of && !s.label.includes(formatDate(s.as_of)) ? `, ${formatDate(s.as_of)}` : ''}`
-    : source;
-};
 const sideOf = { a, b };
 const SIDES = ['a', 'b'] as const;
 ---
@@ -87,17 +79,13 @@ const SIDES = ['a', 'b'] as const;
       <tbody class="fm__group" role="rowgroup">
         <tr class="fm__group-row" role="row">
           <th colspan="3" scope="colgroup" role="columnheader">
-            <span class="eyebrow">
-              {g.label}
-              <sup class="fm__fn">{g.n}</sup>
-            </span>
+            <span class="eyebrow">{g.label}</span>
           </th>
         </tr>
         {g.rows.map((row) => (
           <tr class="fm__row" role="row">
             <th scope="row" role="rowheader" class="fm__label">
               <span class="fm__label-name">{row.label}</span>
-              {ROW_HELP[row.key] && <span class="fm__help">{ROW_HELP[row.key]}</span>}
             </th>
             {SIDES.map((side) => {
               const c = matrixCell(row, side, sideOf[side].denominator);
@@ -136,7 +124,6 @@ const SIDES = ['a', 'b'] as const;
           <tr class="fm__row" role="row">
             <th scope="row" role="rowheader" class="fm__label">
               <span class="fm__label-name">{e.label}</span>
-              {e.help && <span class="fm__help">{e.help}</span>}
             </th>
             {e.both !== undefined ? (
               <td colspan="2" class="fm__cell fm__cell--span" role="cell">
@@ -162,15 +149,6 @@ const SIDES = ['a', 'b'] as const;
       </tbody>
     ))}
   </table>
-
-  <ol class="fm__notes">
-    {groups.map((g) => (
-      <li>
-        <span class="fm__notes-n">{g.n}</span>
-        <span>{sourceText(g.source)}.</span>
-      </li>
-    ))}
-  </ol>
 </div>
 
 <style>

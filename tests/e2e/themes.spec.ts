@@ -19,7 +19,7 @@ const ROUTES = [
   '/themes/dawn',
   '/themes/hyper',
   '/themes/enterprise',
-  '/themes/prestige?page=cart&device=mobile',
+  '/themes/prestige?page=collection&device=mobile',
   '/themes/dawn?page=product&device=mobile',
 ];
 
@@ -164,7 +164,7 @@ test.describe('theme detail', () => {
     const cta = actions.locator('.cta a.btn');
     await expect(cta).toHaveAttribute('href', 'https://themes.shopify.com/themes/prestige');
     await expect(cta).not.toHaveAttribute('rel', /sponsored/);
-    await expect(actions.locator('.cta')).toContainText('No affiliate relationship');
+    await expect(actions.locator('.cta')).not.toContainText('No affiliate relationship');
     await expect(actions.getByRole('link', { name: 'Compare' })).toHaveAttribute(
       'href',
       '#compare',
@@ -183,7 +183,7 @@ test.describe('theme detail', () => {
     const cta = page.locator('.th-actions .cta a.btn');
     await expect(cta).toHaveAttribute('href', 'https://themes.shopify.com/themes/hyper');
     await expect(cta).not.toHaveAttribute('rel', /sponsored/);
-    await expect(page.locator('.th-actions .cta')).toContainText('No affiliate relationship');
+    await expect(page.locator('.th-actions .cta')).not.toContainText('No affiliate relationship');
     await expect(page.locator('.th-actions .cta')).not.toContainText('Affiliate link');
     // The dropped affiliate link is gone (owner decision): its redirect id is unused.
     const go = await page.request.get('/go/4', { maxRedirects: 0 });

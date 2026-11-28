@@ -11,6 +11,7 @@ import { env, waitUntil as cfWaitUntil } from 'cloudflare:workers';
 import { d1Db } from '../db/d1.ts';
 import { createNotifier } from '../notify.ts';
 import { createApiClient, type ApiClient } from './v1/client.ts';
+import { withPageCache } from '../page-cache.ts';
 import type { ApiDeps } from './v1/execute.ts';
 import { createApiHandler, type RouterOptions } from './v1/router.ts';
 
@@ -32,8 +33,13 @@ export function workerDeps(): ApiDeps {
   };
 }
 
-/** The in-process client for Astro pages and endpoints. */
-export const api: ApiClient = createApiClient(workerDeps);
+/** The in-process client for Astro pages. Catalog reads go through the R2 page-cache. */
+export const api: ApiClient = withPageCache(createApiClient(workerDeps), () => env.MEDIA ?? null);
+
+/** Live D1 client (no page-cache). Used by scripts that must compute payloads. */
+export function liveApi(): ApiClient {
+  return createApiClient(workerDeps());
+}
 
 let handler: ((request: Request) => Promise<Response>) | null = null;
 

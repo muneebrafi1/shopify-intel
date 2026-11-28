@@ -4,6 +4,7 @@
  * the section boxes from the DOM. No logins, no form submissions, no bypassing of bot checks:
  * a page that does not render plainly is reported as failed.
  */
+import { identify } from '../crawl/robots.ts';
 import type { Browser, BrowserContextOptions, Page } from '@playwright/test';
 import type { RawSection } from './classify.ts';
 
@@ -27,13 +28,13 @@ export const DEVICE_PROFILES: Record<CaptureDevice, DeviceProfile> = {
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 1,
     maxHeight: 14000,
-    context: { userAgent: CHROME_UA },
+    context: { userAgent: identify(CHROME_UA) },
   },
   mobile: {
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
     maxHeight: 8000,
-    context: { userAgent: IPHONE_UA, isMobile: true, hasTouch: true },
+    context: { userAgent: identify(IPHONE_UA), isMobile: true, hasTouch: true },
   },
 };
 
@@ -219,22 +220,110 @@ function readSections(page: Page): Promise<RawSection[]> {
         text: (sec.innerText || '').replace(/\s+/g, ' ').trim().length,
       };
     };
-    return Array.from(
-      document.querySelectorAll<HTMLElement>('.shopify-section[id^="shopify-section-"]'),
-    )
-      .filter((el) => !el.parentElement?.closest('.shopify-section'))
-      .map((el) => {
+    const shopify = Array.from(
+      document.querySelectorAll<HTMLElement>('[id^="shopify-section-"], .shopify-section'),
+    ).filter((el) => !el.parentElement?.closest('[id^="shopify-section-"], .shopify-section'));
+    // Hidden or zero-size wrappers must not block the landmark fallback.
+    const usefulShopify = shopify.filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width >= 40 && r.height >= 40;
+    });
+
+    const landmarks = () => {
+      const out: HTMLElement[] = [];
+      const seen = new Set<HTMLElement>();
+      const add = (el: Element | null | undefined) => {
+        if (!el || !(el instanceof HTMLElement) || seen.has(el)) return;
+        if ([...seen].some((s) => s.contains(el))) return;
+        const tag = el.tagName;
+        if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'LINK', 'META', 'TEMPLATE'].includes(tag)) return;
         const r = el.getBoundingClientRect();
-        return {
-          id: el.id,
-          className: el.className,
-          y: r.top + window.scrollY,
-          height: r.height,
-          appBlocks: Array.from(el.querySelectorAll('.shopify-app-block[id]')).map((b) => b.id),
-          split: productSplit(el),
-          features: features(el),
-        };
-      });
+        if (r.width < 40 || r.height < 40) return;
+        const st = getComputedStyle(el);
+        if (st.display === 'none' || st.visibility === 'hidden' || st.opacity === '0') return;
+        if (st.position === 'fixed' && r.height < window.innerHeight * 0.45) return;
+        // Don't nest a later parent over an already-added child.
+        for (const s of [...seen]) {
+          if (el.contains(s)) return;
+        }
+        seen.add(el);
+        out.push(el);
+      };
+      add(
+        document.querySelector(
+          'header, [role="banner"], .site-header, #header, #shopify-section-header, [id*="announcement" i]',
+        ),
+      );
+      const main = document.querySelector(
+        'main, [role="main"], #MainContent, #main, #main-content, .main-content, #PageContainer, #page-content',
+      );
+      if (main) {
+        const useful = Array.from(main.children).filter((c): c is HTMLElement => {
+          if (!(c instanceof HTMLElement)) return false;
+          if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'LINK', 'META', 'TEMPLATE'].includes(c.tagName))
+            return false;
+          const r = c.getBoundingClientRect();
+          return r.width >= 40 && r.height >= 40;
+        });
+        if (useful.length) useful.forEach(add);
+        else add(main);
+      } else {
+        document
+          .querySelectorAll('body > section, #PageContainer > section, #MainContent > section')
+          .forEach(add);
+      }
+      add(
+        document.querySelector(
+          'footer, [role="contentinfo"], .site-footer, #footer, #shopify-section-footer',
+        ),
+      );
+      return out;
+    };
+
+    const handleFor = (el: HTMLElement, i: number) => {
+      const id = (el.id || '').toLowerCase();
+      const cls = String(el.className || '').toLowerCase();
+      const tag = el.tagName.toLowerCase();
+      const role = (el.getAttribute('role') || '').toLowerCase();
+      const blob = `${id} ${cls} ${tag} ${role}`;
+      if (/announce/.test(blob)) return 'announcement-bar';
+      if (tag === 'header' || role === 'banner' || /(^|[-_\s])header($|[-_\s])/.test(blob))
+        return 'header';
+      if (tag === 'footer' || role === 'contentinfo' || /footer/.test(blob)) return 'footer';
+      if (/hero|masthead|slideshow|banner/.test(blob)) return 'hero';
+      if (/newsletter|subscribe|signup|sign-up/.test(blob)) return 'newsletter';
+      if (/review|testimonial/.test(blob)) return 'reviews';
+      if (/product-grid|featured-collection|featured-product/.test(blob)) return 'featured-collection';
+      if (/collection-list|collections/.test(blob)) return 'collection-list';
+      if (/faq|accordion/.test(blob)) return 'faq';
+      return `block-${i}`;
+    };
+
+    const els = usefulShopify.length ? usefulShopify : landmarks();
+    return els.map((el, i) => {
+      const r = el.getBoundingClientRect();
+      const handle = handleFor(el, i);
+      const isHeader = handle === 'header' || handle === 'announcement-bar';
+      const isFooter = handle === 'footer';
+      const id =
+        el.id && el.id.startsWith('shopify-section-')
+          ? el.id
+          : `shopify-section-${isHeader || isFooter ? 'sections' : 'template'}--dom__${handle}`;
+      const groupClass = isHeader
+        ? ' shopify-section-group-header-group'
+        : isFooter
+          ? ' shopify-section-group-footer-group'
+          : '';
+      return {
+        id,
+        className: `${el.className}${groupClass}`,
+        y: r.top + window.scrollY,
+        height: r.height,
+        appBlocks: Array.from(el.querySelectorAll('.shopify-app-block[id]')).map((b) => b.id),
+        split: productSplit(el),
+        features: features(el),
+      };
+    });
   });
 }
 
@@ -293,41 +382,6 @@ export async function discoverPages(browser: Browser, homeUrl: string): Promise<
   } finally {
     await context.close();
   }
-}
-
-/**
- * Puts one item in the cart so the cart page shows its real layout. This uses the storefront
- * cart API exactly like the theme's own "Add to cart" button: no checkout, no account, nothing
- * personal; the cart lives only in this throwaway browser context.
- */
-async function addOneToCart(page: Page, productUrl: string) {
-  await page.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  const ok = await page.evaluate(async (path) => {
-    type V = { id: number; available: boolean };
-    const add = async (v: V | undefined) => {
-      if (!v) return false;
-      const r = await fetch('/cart/add.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ items: [{ id: v.id, quantity: 1 }] }),
-      }).catch(() => null);
-      return !!r && r.ok;
-    };
-    const json = async <T>(url: string) => {
-      const r = await fetch(url).catch(() => null);
-      return r && r.ok ? ((await r.json().catch(() => null)) as T | null) : null;
-    };
-    const p = await json<{ variants?: V[] }>(`${path.replace(/\/$/, '')}.js`);
-    if (await add(p?.variants?.find((x) => x.available))) return true;
-    // The featured product is sold out (or its variant is restricted): any product in stock.
-    const list = await json<{ products?: Array<{ variants?: V[] }> }>('/products.json?limit=30');
-    for (const item of list?.products ?? []) {
-      const v = item.variants?.find((x) => x.available);
-      if (v) return add(v);
-    }
-    return add(p?.variants?.[0]);
-  }, new URL(productUrl).pathname);
-  if (!ok) throw new CaptureError('empty', 'could not put an item in the cart');
 }
 
 /**
@@ -391,10 +445,9 @@ export async function capturePage(
   });
   try {
     const page = await context.newPage();
-    if (opts.pageType === 'cart') {
-      if (!opts.productUrl) throw new CaptureError('empty', 'no product to put in the cart');
-      await addOneToCart(page, opts.productUrl);
-    }
+    // Cart pages are not captured: filling a cart needs POST /cart/add.js, which Shopify's
+    // robots.txt disallows (owner decision, docs/HANDOFF.md).
+    if (opts.pageType === 'cart') throw new CaptureError('empty', 'cart captures are disabled');
     const res = await page.goto(url, { waitUntil: 'load', timeout: 60_000 }).catch(async (e) => {
       // Pages with endless trackers never fire `load`; the DOM is enough to go on.
       if (!String(e).includes('Timeout')) throw e;
@@ -419,8 +472,6 @@ export async function capturePage(
     await dismissOverlays(page); // popups that open on scroll or after a delay
     await page.waitForTimeout(2500);
     await dismissOverlays(page); // consent tools that mount late (seen ~6 s after load)
-    // Themes open their cart drawer after an add; the page behind it is what we want.
-    if (opts.pageType === 'cart') await page.keyboard.press('Escape').catch(() => {});
 
     const fullHeight = await page.evaluate(() => document.documentElement.scrollHeight);
     if (fullHeight < 300) throw new CaptureError('empty', `page is ${fullHeight}px tall`);

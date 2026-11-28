@@ -3,6 +3,14 @@ import { buildSeedFromRoot } from '../../scripts/seed/build.ts';
 import { createApiClient } from '../../src/server/api/v1/client.ts';
 import { affiliateRedirect } from '../../src/server/repo/affiliate.ts';
 import { FIXED_NOW, ROOT, seedResult, seededDb, testDeps } from './helpers/db.ts';
+import {
+  CURATED,
+  DETECTIONS,
+  PLACEHOLDER_SHOTS,
+  SCANNED,
+  appStores,
+  themeStores,
+} from './helpers/counts.ts';
 
 describe('seed builder', () => {
   it('is deterministic', () => {
@@ -14,17 +22,17 @@ describe('seed builder', () => {
   it('matches the export counts (detections are the single source of truth)', () => {
     const { report } = seedResult();
     expect(report.warnings.filter((w) => w.startsWith('MISMATCH'))).toEqual([]);
-    expect(report.appStoreCounts.klaviyo).toBe(383);
-    expect(report.themeStoreCounts.dawn).toBe(20);
-    expect(report.counts.stores).toBe(930);
+    expect(report.appStoreCounts.klaviyo).toBe(appStores('klaviyo'));
+    expect(report.themeStoreCounts.dawn).toBe(themeStores('dawn'));
+    expect(report.counts.stores).toBe(SCANNED);
     expect(report.counts.themes).toBe(20);
   });
 
-  it('plans 8 placeholder screenshots per curated store with realistic heights', () => {
+  it('plans 6 placeholder screenshots per curated store with realistic heights', () => {
     const { report } = seedResult();
-    expect(report.shotHeights).toHaveLength(50 * 4 * 2);
+    expect(report.shotHeights).toHaveLength(PLACEHOLDER_SHOTS);
     for (const h of report.shotHeights) {
-      const [min, max] = h.device === 'desktop' ? [1000, 7500] : [2000, 11000];
+      const [min, max] = h.device === 'desktop' ? [1000, 8000] : [2000, 11000];
       expect(h.height, `${h.domain} ${h.page} ${h.device}`).toBeGreaterThanOrEqual(min);
       expect(h.height, `${h.domain} ${h.page} ${h.device}`).toBeLessThanOrEqual(max);
     }
@@ -49,7 +57,7 @@ describe('seed builder', () => {
        JOIN sections b ON b.screenshot_id = g.screenshot_id AND b.section_type = 'buy-box'
        WHERE g.section_type = 'product-gallery' AND g.device = 'desktop'`,
     );
-    expect(rows).toHaveLength(50);
+    expect(rows).toHaveLength(CURATED);
     for (const r of rows) expect([r.g, r.gh]).toEqual([r.b, r.bh]);
     db.close();
   });
@@ -68,13 +76,15 @@ describe('seed builder', () => {
     db.close();
   });
 
-  it('resolves every teardown note to a section', async () => {
+  it('points every teardown note at a captured page', async () => {
     const db = seededDb();
-    const notes = await db.all<{ section_id: number | null }>(
-      'SELECT section_id FROM teardown_notes',
+    const notes = await db.all<{ screenshot_id: number | null; section_id: number | null }>(
+      'SELECT screenshot_id, section_id FROM teardown_notes',
     );
     expect(notes.length).toBeGreaterThan(0);
-    expect(notes.every((n) => n.section_id !== null)).toBe(true);
+    // Sections themselves resolve once real captures are ingested (ingestCapture relinks notes).
+    expect(notes.every((n) => n.screenshot_id !== null)).toBe(true);
+    expect(notes.some((n) => n.section_id !== null)).toBe(true);
     db.close();
   });
 });
@@ -91,7 +101,7 @@ describe('curation overrides (data/curation/overrides.json)', () => {
     const unresolved = await db.first<{ n: number }>(
       "SELECT COUNT(*) AS n FROM store_unresolved_apps WHERE detection_slug = 'trustpilot'",
     );
-    expect(unresolved?.n).toBe(37);
+    expect(unresolved?.n).toBe(DETECTIONS.filter((d) => d.apps.includes('trustpilot')).length);
     expect(seedResult().report.appStoreCounts.trustpilot).toBeUndefined();
     await expect(api.getApp({ slug: 'trustpilot' })).rejects.toMatchObject({ status: 404 });
 

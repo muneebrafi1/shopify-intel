@@ -40,6 +40,8 @@ jobs:
         run: npm run build
       - name: Size budgets
         run: npm run size
+      - name: Launch config preflight
+        run: npm run ops:preflight
 
   e2e:
     name: E2E + layout (390px and 1440px)

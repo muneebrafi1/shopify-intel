@@ -20,7 +20,7 @@ const capture = (s: StoreListItem) =>
   s.is_captured
     ? { label: 'Captured', tone: 'positive' as const }
     : s.is_curated
-      ? { label: 'Layout preview', tone: 'neutral' as const }
+      ? { label: 'Preview', tone: 'neutral' as const }
       : { label: 'Not captured', tone: 'outline' as const };
 ---
 
@@ -136,8 +136,16 @@ const capture = (s: StoreListItem) =>
   .tstores__sub {
     display: flex;
     gap: var(--space-2);
+    min-width: 0;
+    overflow: hidden;
     color: var(--ink-3);
     font-size: var(--text-xs);
+    white-space: nowrap;
+  }
+  .tstores__sub > :global(*) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .tstores__sub-v {
     display: none;
@@ -188,9 +196,15 @@ const capture = (s: StoreListItem) =>
     .tstores__sub-v {
       display: inline;
     }
-    .tstores__apps-h,
+    .tstores :global(.table) {
+      width: 100%;
+      table-layout: fixed;
+    }
+    .tstores__apps-h {
+      width: 64px;
+    }
     .tstores__cap-h {
-      width: auto;
+      width: 92px;
     }
     .tstores__unit {
       display: none;

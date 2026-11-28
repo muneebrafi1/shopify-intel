@@ -7,6 +7,7 @@
  * The position is usage (apps) or closeness (themes), never a score.
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import Badge from '~/components/ui/Badge.astro';
 import Button from '~/components/ui/Button.astro';
 import Rating from '~/components/ui/Rating.astro';
@@ -65,7 +66,9 @@ const price = app
   </span>
 
   <div class="alt__id">
-    <AppIcon src={app?.icon_url ?? null} name={name} size={40} />
+    {theme
+      ? <ThemeMark slug={theme.slug} name={name} size={40} />
+      : <AppIcon src={app?.icon_url ?? null} name={name} size={40} />}
     <div class="alt__id-text">
       <h3 class="alt__name">
         <a href={href}>{name}</a>
@@ -278,7 +281,7 @@ const price = app
   }
   .alt__share {
     color: var(--ink-3);
-    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-size: var(--text-2xs);
   }
   .alt__meter {

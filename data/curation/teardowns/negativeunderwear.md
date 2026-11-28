@@ -30,12 +30,6 @@ notes:
     section_type: buy-box
     title: 'Installments in the buy box via Afterpay'
     body: Afterpay On-Site Messaging (18 of 930 scanned stores) sits alongside the product buy box, while Okendo (48 of 930) and Rise (24 of 930) cover loyalty, reviews and store credit.
-  - n: 5
-    page_type: cart
-    device: desktop
-    section_type: cart-summary
-    title: 'Streamlined cart paired with NoFraud protection'
-    body: The cart summary focuses on totals and checkout progression, supported behind the scenes by NoFraud (21 of 930 stores) and Gorgias (76 of 930) for customer support.
 ---
 
 > **Note.** Written from our 17 Nov 2026 scan of 930 Shopify stores (theme, detected apps, tracking tags) and Shopify App Store / Theme Store records. No revenue, traffic or conversion estimates are used.

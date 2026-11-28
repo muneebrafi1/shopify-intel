@@ -125,4 +125,13 @@ export const themeName = (t: {
   name: string | null;
   label: string;
   theme?: { name: string } | null;
-}) => t.theme?.name ?? t.name ?? t.label;
+}) => {
+  if (t.theme?.name) return t.theme.name;
+  // Raw theme names are often a merchant's working label ("[Production] BFCM 11/26", "UAT"):
+  // show those as a custom theme instead of leaking the label.
+  const raw = t.name?.trim();
+  if (!raw || INTERNAL_THEME_LABEL.test(raw)) return raw ? 'Custom theme' : t.label;
+  return raw;
+};
+const INTERNAL_THEME_LABEL =
+  /^\[|\b(production|staging|uat|bfcm|black friday|cyber|post[- ]sale|copy of|backup|refs\/|branch|github|live)\b|\d{1,2}[/-]\d{1,2}\b|^main\b|\/main$/i;

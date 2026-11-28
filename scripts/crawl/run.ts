@@ -2,6 +2,7 @@
 /**
  * npm run crawl -- --domains a.com,b.com      crawl these stores
  * npm run crawl -- --curated                  crawl every curated store in the local D1
+ * npm run crawl -- --all [--since ISO]        crawl every active store (resume: skip ones scanned since)
  *
  * Writes .data/crawl/scans.json (one ScanInput per store, plus the storefront country and a note)
  * for `npm run crawl:ingest`. Nothing is sent anywhere by this step. Stores that are blocked
@@ -23,6 +24,10 @@ const { values } = parseArgs({
     domains: { type: 'string' },
     curated: { type: 'boolean', default: false },
     concurrency: { type: 'string', default: '3' },
+    /** Every store in the local D1 (the whole scan set), not just the curated ones. */
+    all: { type: 'boolean', default: false },
+    /** Skip stores already in scans.json that were scanned after this ISO date. */
+    since: { type: 'string' },
   },
 });
 if (!existsSync(join(STOREPEEK_DIR, 'src/lib/match.js'))) {
@@ -38,6 +43,12 @@ if (values.curated) {
   );
   domains.push(...rows.map((r) => r.domain));
 }
+if (values.all) {
+  const rows = await local.db.all<{ domain: string }>(
+    "SELECT domain FROM stores WHERE status = 'active' ORDER BY is_curated DESC, list_position, id",
+  );
+  domains.push(...rows.map((r) => r.domain));
+}
 domains = [...new Set(domains)];
 const allowed: string[] = [];
 for (const d of domains) {
@@ -47,15 +58,36 @@ for (const d of domains) {
 await local.dispose();
 
 const engine = await loadEngine();
-const browser = await chromium.launch();
+let browser = await chromium.launch();
+/** A wedged browser turns every later page into a timeout: relaunch after a run of them. */
+let timeoutsInARow = 0;
+const relaunchIfWedged = async (failed: boolean) => {
+  timeoutsInARow = failed ? timeoutsInARow + 1 : 0;
+  if (timeoutsInARow < 6) return;
+  timeoutsInARow = 0;
+  console.log('  (6 timeouts in a row; relaunching the browser)');
+  const old = browser;
+  browser = await chromium.launch();
+  await old.close().catch(() => undefined);
+};
 type Out = Awaited<ReturnType<typeof crawlStore>> & { error?: string };
 const previous: Record<string, Out> = existsSync(SCANS_FILE)
   ? Object.fromEntries(
       (JSON.parse(readFileSync(SCANS_FILE, 'utf8')) as Out[]).map((o) => [o.scan.domain, o]),
     )
   : {};
-const queue = [...allowed];
+const queue = values.since
+  ? allowed.filter((d) => !(previous[d] && previous[d]!.scan.scanned_at >= values.since!))
+  : [...allowed];
 const results: Record<string, Out> = { ...previous };
+/** Written as it goes so a long run can be resumed with --since. */
+let unsaved = 0;
+const save = () => {
+  mkdirSync(dirname(SCANS_FILE), { recursive: true });
+  writeFileSync(SCANS_FILE, JSON.stringify(Object.values(results), null, 2));
+  unsaved = 0;
+};
+console.log(`Crawling ${queue.length} store(s)`);
 const worker = async () => {
   for (let d = queue.shift(); d; d = queue.shift()) {
     try {
@@ -67,6 +99,8 @@ const worker = async () => {
       const out = await crawlStore(browser, engine, d);
       if (robots.crawlDelay) await new Promise((r) => setTimeout(r, robots.crawlDelay! * 1000));
       results[d] = out;
+      await relaunchIfWedged(false);
+      if (++unsaved >= 10) save();
       const s = out.scan;
       console.log(
         `  ok   ${d}: ${s.platform}, ${s.theme ? `${s.theme.name} ${s.theme.version ?? ''}` : 'no theme'}, ` +
@@ -74,6 +108,7 @@ const worker = async () => {
       );
     } catch (e) {
       console.log(`  FAIL ${d}: ${String(e).split('\n')[0]}`);
+      await relaunchIfWedged(/Timeout/.test(String(e)));
     }
   }
 };
@@ -82,8 +117,7 @@ try {
 } finally {
   await browser.close();
 }
-mkdirSync(dirname(SCANS_FILE), { recursive: true });
-writeFileSync(SCANS_FILE, JSON.stringify(Object.values(results), null, 2));
+save();
 console.log(
   `Wrote ${Object.keys(results).length} scan(s) to .data/crawl/scans.json. Next: npm run crawl:ingest`,
 );

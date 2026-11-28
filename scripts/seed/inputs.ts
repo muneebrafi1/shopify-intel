@@ -183,9 +183,13 @@ export interface TeardownFile {
 export interface SeedInputs {
   apps: AppInput[];
   appsExtra: AppInput[];
+  /** Detected apps with a full listing from StorePeek's App Store crawl (seed:import-apps). */
+  appsStorePeek: AppInput[];
   themes: ThemeInput[];
   curatedStores: CuratedStoreInput[];
   detections: DetectionInput[];
+  /** Leading detections that come from the 930 scan; the rest were found by our own crawl. */
+  baseDetectionCount?: number;
   programs: AffiliateProgramInput[];
   links: AffiliateLinkInput[];
   categories: string[];
@@ -195,6 +199,8 @@ export interface SeedInputs {
   themeStore: ThemeStoreInput;
   teardowns: TeardownFile[];
   /** Raw bytes of every input, for the data_version hash. */
+  /** Mirrored app icons (scripts/icons/fetch.ts): slug → original listing URL and R2 key. */
+  appIcons: Record<string, { url: string; key: string }>;
   rawFiles: Array<{ name: string; content: string }>;
 }
 
@@ -221,12 +227,23 @@ export function loadSeedInputs(root: string): SeedInputs {
         .map((f) => ({ file: f, source: read(`data/curation/teardowns/${f}`) }))
     : [];
 
+  const baseDetections = json('data/seed/detections-930.json', z.array(DetectionInput));
+  const extraDetections = existsSync(join(root, 'data/seed/detections-extra.json'))
+    ? json('data/seed/detections-extra.json', z.array(DetectionInput))
+    : [];
   return {
     apps: json('data/seed/apps.json', z.array(AppInput)),
     appsExtra: json('data/seed/apps-extra.json', z.array(AppInput)),
+    appsStorePeek: existsSync(join(root, 'data/seed/apps-storepeek.json'))
+      ? json('data/seed/apps-storepeek.json', z.array(AppInput))
+      : [],
     themes: json('data/seed/themes.json', z.array(ThemeInput)),
     curatedStores: json('data/seed/stores.json', z.array(CuratedStoreInput)),
-    detections: json('data/seed/detections-930.json', z.array(DetectionInput)),
+    // The 930-store scan, plus curated stores found later by our own crawl (domains outside the
+    // scan, e.g. design-award picks), exported by scripts/curation/export_extra_detections.py.
+    detections: [...baseDetections, ...extraDetections],
+    /** How many leading detections come from the 930 scan (the export's numbers cover only those). */
+    baseDetectionCount: baseDetections.length,
     programs: json('data/seed/affiliate-programs.json', z.array(AffiliateProgramInput)),
     links: json('data/seed/affiliate-links.json', z.array(AffiliateLinkInput)),
     categories: json('data/seed/categories.json', z.array(z.string())),
@@ -239,6 +256,14 @@ export function loadSeedInputs(root: string): SeedInputs {
       ? json('data/curation/theme-store.json', ThemeStoreInput)
       : { _note: 'none', themes: {} },
     teardowns,
+    appIcons: existsSync(join(root, 'data/curation/icons.json'))
+      ? json(
+          'data/curation/icons.json',
+          z
+            .object({ apps: z.record(z.string(), z.object({ url: z.string(), key: z.string() })) })
+            .loose(),
+        ).apps
+      : {},
     rawFiles,
   };
 }

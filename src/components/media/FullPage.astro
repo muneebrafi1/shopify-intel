@@ -18,6 +18,7 @@
  */
 import type { Device } from '~/lib/taxonomy';
 import AppIcon from '~/components/ui/AppIcon.astro';
+import { THUMB_TOP, captureDevice, isPlaceholderSrc, topThumbKey } from '~/lib/media';
 
 export interface FullPageSection {
   id: string | number;
@@ -64,6 +65,12 @@ const {
   bare = false,
   class: className,
 } = Astro.props;
+// Eager viewers paint the small pre-cut top of the page first (it is the LCP); the full-page
+// capture loads behind it at low priority.
+const poster =
+  eager && captureDevice(src) && !src.endsWith('.top.webp') && !isPlaceholderSrc(src)
+    ? topThumbKey(src)
+    : null;
 const ordered = [...sections].sort((a, b) => a.y - b.y);
 const pct = (n: number) => `${((n / height) * 100).toFixed(4)}%`;
 const pctX = (n: number) => `${((n / width) * 100).toFixed(4)}%`;
@@ -120,8 +127,22 @@ const isSmall = (s: FullPageSection) => s.height / width < (device === 'mobile' 
         width={width}
         height={height}
         loading={eager ? 'eager' : 'lazy'}
+        fetchpriority={eager ? (poster ? 'low' : 'high') : undefined}
         decoding="async"
       />
+      {poster && (
+        <img
+          class="fp__poster"
+          src={poster}
+          alt=""
+          aria-hidden="true"
+          width={width}
+          height={Math.min(height, Math.round(width * THUMB_TOP[device]))}
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      )}
       {ordered.map((s, i) => (
         <div
           class:list={['fp__region', { 'fp__region--small': isSmall(s) }]}
@@ -412,6 +433,11 @@ const isSmall = (s: FullPageSection) => s.height / width < (device === 'mobile' 
     width: 100%;
     height: 100%;
   }
+  .fp__canvas .fp__poster {
+    bottom: auto;
+    height: auto;
+    pointer-events: none;
+  }
 
   /* Regions: an inset dashed outline per section, accent when hovered/current/targeted. */
   .fp__region {
@@ -483,7 +509,7 @@ const isSmall = (s: FullPageSection) => s.height / width < (device === 'mobile' 
   }
   .fp__region.is-hover :is(.fp__tag-n, .fp__tag-app),
   .fp__region:target :is(.fp__tag-n, .fp__tag-app) {
-    color: color-mix(in srgb, var(--accent-fg) 72%, transparent);
+    color: var(--accent-fg);
   }
   /* Captures drawn small (a phone page in a card or hero window): compact tags. */
   .fp__canvas {

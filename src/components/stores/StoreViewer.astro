@@ -33,7 +33,10 @@ const tabs = pages.map((p) => ({
   label: p.page_type.name,
   href: plateHref(basePath, p.page_type.slug, device, '#plates'),
   selected: p.page_type.slug === current.page_type.slug,
-  count: p.screenshots[device]?.sections.length ?? p.screenshots.desktop?.sections.length ?? null,
+  count: (() => {
+    const n = p.screenshots[device]?.sections.length ?? p.screenshots.desktop?.sections.length ?? 0;
+    return n > 0 ? n : null;
+  })(),
 }));
 const hasMobile = pages.some((p) => p.screenshots.mobile);
 const hasDesktop = pages.some((p) => p.screenshots.desktop);
@@ -100,7 +103,8 @@ const address = current.url
       <span class="viewer__page">{current.page_type.name} page</span>
       {shot && (
         <span class="viewer__dims mono num">
-          {formatCount(shot.viewport_w)} px · {shot.sections.length} sections
+          {formatCount(shot.viewport_w)} px
+          {shot.sections.length > 0 && ` · ${shot.sections.length} sections`}
           {withApps > 0 && ` · ${withApps} by apps`}
         </span>
       )}

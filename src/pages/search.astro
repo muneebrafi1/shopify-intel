@@ -112,15 +112,6 @@ const asOf = dataAsOf ? formatDate(dataAsOf) : '';
           'Search'
         )}
       </h1>
-      <p class="srch__lede">
-        {failed
-          ? 'Search is unavailable right now.'
-          : hasResults
-            ? `${totalLabel} ${total === 1 ? 'match' : 'matches'} across ${groups.length} ${groups.length === 1 ? 'kind' : 'kinds'} of result.`
-            : q
-              ? 'No matches.'
-              : 'Find any store, theme, app, section type or teardown we have scanned.'}
-      </p>
       <div class="srch__form">
         <SearchForm q={q} type={type} autofocus={!q} />
       </div>
@@ -150,7 +141,7 @@ const asOf = dataAsOf ? formatDate(dataAsOf) : '';
           <>
             <EmptyState
               title={`Nothing matches “${q}”`}
-              body="Search matches the start of words. Check the spelling, try a shorter word, or search for a store domain, a theme or an app by name."
+              body="Try a shorter word or a store domain."
             >
               <div class="srch__ways">
                 <Button href="/stores" variant="secondary">
@@ -288,27 +279,6 @@ const asOf = dataAsOf ? formatDate(dataAsOf) : '';
               ))}
             </ul>
           </div>
-        )}
-        <div class="aside__block">
-          <h2 class="eyebrow">How search works</h2>
-          <p class="aside__text">
-            Matches the start of words in store names and domains, themes, vendors, apps, app
-            categories and section types. “judge” finds Judge.me; “udge” doesn’t.
-          </p>
-          <p class="aside__text aside__kbd">
-            Press <Kbd>/</Kbd> or{' '}
-            <span class="aside__combo" data-kbd-hint>
-              <Kbd>⌘</Kbd>
-              <Kbd>K</Kbd>
-            </span>{' '}
-            anywhere for instant results.
-          </p>
-        </div>
-        {asOf && (
-          <p class="aside__asof">
-            Data as of <span class="num">{asOf}</span> ·{' '}
-            <a href="/methodology">How we collect it</a>
-          </p>
         )}
       </aside>
     </div>

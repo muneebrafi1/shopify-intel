@@ -11,6 +11,7 @@
  */
 import { z } from 'zod';
 import { SITE_URL } from '../../../config/site.ts';
+import { absolutizeMedia } from '../../media/urls.ts';
 import type { Ctx, Principal } from './context.ts';
 import type { EndpointDef } from './define.ts';
 import { ApiError, isApiError } from './errors.ts';
@@ -298,7 +299,12 @@ export function createApiHandler(
         if (result.envelope.meta.canonical) {
           headers.Link = `<${SITE_URL}${result.envelope.meta.canonical}>; rel="canonical"`;
         }
-        return respond(result.envelope, result.status, headers, isHead);
+        return respond(
+          absolutizeMedia(result.envelope, url.origin),
+          result.status,
+          headers,
+          isHead,
+        );
       } catch (err) {
         return errorResponse(err, publicRoute);
       }

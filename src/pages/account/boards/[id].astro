@@ -367,6 +367,10 @@ const self = `/account/boards/${id}`;
     width: min(320px, calc(100vw - 2 * var(--page-gutter)));
     margin-top: var(--space-2);
     padding: var(--space-4);
+    /* Floats under its button so opening it never widens the row (it sits first, so left: 0 fits). */
+    position: absolute;
+    left: 0;
+    z-index: 5;
     border-radius: var(--radius-card);
     background: var(--surface);
     box-shadow:
@@ -375,9 +379,8 @@ const self = `/account/boards/${id}`;
   }
   @media (min-width: 640px) {
     .bd__panel {
-      position: absolute;
+      left: auto;
       right: 0;
-      z-index: 5;
     }
   }
   .bd__form {

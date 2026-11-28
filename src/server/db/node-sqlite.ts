@@ -54,5 +54,22 @@ export function openNodeDb(path = ':memory:'): NodeDb {
         throw err;
       }
     },
+    async allBatch<Row>(statements: readonly Statement[]): Promise<Row[][]> {
+      if (statements.length === 0) return [];
+      raw.exec('BEGIN');
+      try {
+        const results = statements.map((s) =>
+          raw
+            .prepare(s.sql)
+            .all(...args(s.params))
+            .map((r) => plain<Row>(r)),
+        );
+        raw.exec('COMMIT');
+        return results;
+      } catch (err) {
+        raw.exec('ROLLBACK');
+        throw err;
+      }
+    },
   };
 }

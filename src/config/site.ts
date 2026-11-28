@@ -36,4 +36,4 @@ export const API_VERSION = 'v1';
  * While store screenshots are drawn placeholders (no capture run yet), a slim notice explains
  * it on every page. Set to false once real captures are live.
  */
-export const SHOW_CAPTURE_PREVIEW_NOTICE = true;
+export const SHOW_CAPTURE_PREVIEW_NOTICE = false;

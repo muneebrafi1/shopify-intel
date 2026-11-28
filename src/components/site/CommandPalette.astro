@@ -434,11 +434,9 @@ import Skeleton from '~/components/ui/Skeleton.astro';
     function renderResults(q: string, groups: Group[]) {
       const total = groups.reduce((n, g) => n + g.items.length, 0);
       if (!total) {
-        render([], q);
-        showState(
-          `No matches for “${q}”`,
-          'Search matches the start of words. Try a store domain, a theme or an app name, or press ↵ to search every page.',
-        );
+        render([{ label: 'Browse instead', rows: JUMP }], '');
+        showState(`No matches for “${q}”`, 'Try a shorter word or a store domain.');
+        setActive(0, false);
         count.textContent = '0 results';
         return;
       }

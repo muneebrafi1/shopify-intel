@@ -1,10 +1,12 @@
 ---
 /**
- * A store's avatar until we capture real favicons: a rounded square in the store's own tone
- * (the same palette as its captures) with its initial. 32px by default. Decorative; the name is
- * always shown beside it.
+ * A store's avatar: its own logo over a rounded-square tile. Wide wordmarks get a wider
+ * tile and tighter padding so they stay readable; square marks keep even padding.
+ * The initial only shows when no logo exists or it fails to load. Decorative; the name
+ * is always shown beside it. 32px tall by default.
  */
 import { toneFor } from '~/lib/tone';
+import { storeLogo } from '~/lib/icons';
 
 interface Props {
   domain: string;
@@ -20,15 +22,32 @@ const initial = (name || domain)
   .trim()
   .charAt(0)
   .toUpperCase();
-const radius = Math.max(4, Math.round(size * 0.25));
+const logo = storeLogo(domain);
+const aspect = logo ? logo.w / logo.h : 1;
+const wide = aspect > 1.35;
+const tileW = wide ? Math.round(size * Math.min(1.85, Math.max(1.35, aspect))) : size;
+const tileH = size;
+const radius = Math.max(4, Math.round(Math.min(tileW, tileH) * 0.2));
+const pad = wide ? '6%' : aspect < 0.75 ? '8%' : '12%';
 ---
 
 <span
-  class:list={['store-mark', className]}
-  style={`--s:${size}px;--r:${radius}px;--mark-bg:${t.mark};--mark-fg:${t.markInk}`}
+  class:list={['store-mark', { 'is-wide': wide }, className]}
+  style={`--s-w:${tileW}px;--s-h:${tileH}px;--r:${radius}px;--pad:${pad};--mark-bg:${t.mark};--mark-fg:${t.markInk}`}
   aria-hidden="true"
 >
   {initial}
+  {logo && (
+    <img
+      src={logo.src}
+      alt=""
+      width={logo.w}
+      height={logo.h}
+      loading="eager"
+      decoding="async"
+      onerror="this.remove()"
+    />
+  )}
 </span>
 
 <style>
@@ -37,15 +56,26 @@ const radius = Math.max(4, Math.round(size * 0.25));
     display: inline-grid;
     place-items: center;
     flex: none;
-    width: var(--s);
-    height: var(--s);
+    width: var(--s-w);
+    height: var(--s-h);
     border-radius: var(--r);
     background: var(--mark-bg);
     color: var(--mark-fg);
-    font-size: calc(var(--s) * 0.44);
+    font-size: calc(var(--s-h) * 0.44);
     font-weight: var(--weight-semibold);
     line-height: 1;
     letter-spacing: -0.02em;
+  }
+  .store-mark img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    padding: var(--pad);
+    border-radius: inherit;
+    background: #fff; /* logos are drawn for light backgrounds, in dark mode too */
   }
   .store-mark::after {
     content: '';

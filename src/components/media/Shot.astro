@@ -19,6 +19,8 @@ interface Props {
   href?: string;
   /** Load immediately (above-the-fold tiles). */
   eager?: boolean;
+  /** Mark the LCP image. Only the first visible tile should set this. */
+  priority?: boolean;
   /** Well aspect ratio; defaults per device. */
   ratio?: string;
   /** Small label in the top-left corner, e.g. the page type. */
@@ -38,6 +40,7 @@ const {
   alt,
   href,
   eager = false,
+  priority = false,
   ratio,
   tag,
   flush = false,
@@ -60,9 +63,9 @@ const Tag = href ? 'a' : 'div';
     alt={alt}
     width={width}
     height={cropH}
-    loading={eager ? 'eager' : 'lazy'}
+    loading={eager || priority ? 'eager' : 'lazy'}
     decoding="async"
-    fetchpriority={eager ? 'high' : undefined}
+    fetchpriority={priority ? 'high' : undefined}
   />
   {tag && <span class="shot__tag">{tag}</span>}
   <slot />
@@ -110,6 +113,20 @@ const Tag = href ? 'a' : 'div';
     box-shadow: var(--shadow-shot);
     background: var(--capture-bg);
     transition: transform var(--dur-slow) var(--ease-out);
+    animation: shot-in 0.4s var(--ease-out) both;
+  }
+  @keyframes shot-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shot__img {
+      animation: none;
+    }
   }
   .shot--mobile .shot__img {
     border-radius: 14px 14px 0 0;

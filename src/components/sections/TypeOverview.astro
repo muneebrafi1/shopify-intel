@@ -22,9 +22,6 @@ const shown = types.filter((t) => t.count > 0);
     <h2 id="tov-title" class="tov__title">
       Browse by type
     </h2>
-    <p class="tov__desc">
-      {shown.length} types in {groupCount} groups, from the announcement bar to the footer.
-    </p>
     <a class="tov__skip" href="#all-sections">
       All {fmt(shown.reduce((n, t) => n + t.count, 0))} sections
       <span aria-hidden="true">↓</span>

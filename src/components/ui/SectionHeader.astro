@@ -64,7 +64,6 @@ const kicker = eyebrow ?? label;
         <span class="sh__count num">{count.toLocaleString('en-US')}</span>
       )}
     </H>
-    {description && <p class="sh__desc">{description}</p>}
   </div>
   {(href || Astro.slots.has('default')) && (
     <div class="sh__actions">

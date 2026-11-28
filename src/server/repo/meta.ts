@@ -24,7 +24,7 @@ export async function getDataMeta(ctx: Ctx): Promise<DataMeta> {
       (SELECT COUNT(*) FROM screenshots sh JOIN stores s ON s.id = sh.store_id AND s.status = 'active'
          WHERE sh.is_current = 1 AND sh.is_placeholder = 1) AS screenshots_placeholder,
       (SELECT COUNT(*) FROM sections x JOIN stores s ON s.id = x.store_id AND s.status = 'active'
-         WHERE x.is_current = 1) AS sections,
+         WHERE x.is_current = 1 AND x.is_placeholder = 0) AS sections,
       (SELECT COUNT(*) FROM section_types) AS section_types,
       (SELECT COUNT(*) FROM teardowns td JOIN stores s ON s.id = td.store_id AND s.status = 'active'
          WHERE td.published_at IS NOT NULL) AS teardowns,

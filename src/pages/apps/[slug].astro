@@ -9,6 +9,7 @@
  * URL state: ?device=mobile (Seen on), ?seen=<section id> (Seen on rail), ?p=<n> (stores).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { shareOgSrc } from '~/lib/share-og';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
 import Badge from '~/components/ui/Badge.astro';
@@ -21,7 +22,6 @@ import Notice from '~/components/ui/Notice.astro';
 import Pagination from '~/components/ui/Pagination.astro';
 import Rating from '~/components/ui/Rating.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
 import Tabs from '~/components/ui/Tabs.astro';
 import AffiliateCta from '~/components/domain/AffiliateCta.astro';
@@ -32,7 +32,7 @@ import ShareList from '~/components/apps/ShareList.astro';
 import AltCard from '~/components/apps/AltCard.astro';
 import PairList, { type Pair } from '~/components/apps/PairList.astro';
 import { api, orNotFound } from '~/server/api';
-import type { AppListItem, AppStoreRow } from '~/server/api/v1/types';
+import type { AppListItem, AppStoreRow, StoreListItem } from '~/server/api/v1/types';
 import type { Device } from '~/lib/taxonomy';
 import { formatDate } from '~/lib/format';
 import {
@@ -85,6 +85,12 @@ if (storesPage > 1) {
   ).items;
 }
 
+// Real captures of stores running it, for the seen-on grid (the table below lists them all).
+const shotStores: StoreListItem[] = await api
+  .listStores({ app: app.slug, captured: true, limit: 12, facets: false })
+  .then((r) => r.data.items.filter((s) => s.preview))
+  .catch(() => []);
+
 const alternatives = await api.getAlternatives({ slug: app.slug, kind: 'app' }).catch(() => null);
 
 // ---- Facts ----
@@ -93,7 +99,6 @@ const full = app.name !== app.short_name ? app.name : null;
 const isBasic = app.profile === 'basic';
 const listingRead = Boolean(app.checked_on);
 const src = meta.sources;
-const scan = src[app.usage.source];
 const listingSource = appStoreSource(app.checked_on);
 const appStoreAsOf = src['shopify-app-store']?.as_of;
 const hasRating = typeof app.rating === 'number' && app.rating > 0;
@@ -248,10 +253,31 @@ const crumbs = [
   ...(app.category ? [{ label: app.category.name, href: app.category.href }] : []),
   { label: name, href: app.href },
 ];
-const title = `${name}: where it shows up on real Shopify stores`;
-const description = `${name}${full ? ` (${full})` : ''} runs on ${app.usage.stores} of ${denominator} scanned Shopify stores${
-  hasRating ? `, rated ${app.rating!.toFixed(1)} on the App Store` : ''
-}. See its sections on real store pages, plans, co-installed apps and alternatives.`;
+const longTitle = `${name} for Shopify: stores using it, pricing, alternatives`;
+const title = longTitle.length <= 62 ? longTitle : `${name}: Shopify app on real stores`;
+const pricedPlans = app.plans.filter((p) => typeof p.price_cents === 'number');
+const paidPlans = pricedPlans.filter((p) => (p.price_cents ?? 0) > 0);
+const hasFreePlan = pricedPlans.some((p) => p.price_cents === 0);
+const cheapest = paidPlans.length
+  ? Math.min(...paidPlans.map((p) => p.price_cents ?? 0)) / 100
+  : null;
+const priceBit =
+  cheapest !== null
+    ? `${hasFreePlan ? 'Free plan, paid from ' : 'Plans from '}$${Number.isInteger(cheapest) ? cheapest : cheapest.toFixed(2)}${paidPlans.find((p) => (p.price_cents ?? 0) / 100 === cheapest)?.period === 'month' ? '/mo' : ''}`
+    : hasFreePlan
+      ? 'Free plan'
+      : null;
+const description = [
+  `${name} is ${app.category ? `${/^[aeiou]/i.test(app.category.name) ? 'an' : 'a'} ${app.category.name} app` : 'an app'} for Shopify${app.developer && app.developer !== name ? ` by ${app.developer}` : ''}, found on ${app.usage.stores.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')} scanned stores${
+    hasRating ? ` and rated ${app.rating!.toFixed(1)} on the App Store` : ''
+  }.`,
+  priceBit ? `${priceBit}.` : null,
+  detail.seen_on.section_total
+    ? 'See where it renders on real store pages, with alternatives.'
+    : 'See the stores running it and its alternatives.',
+]
+  .filter(Boolean)
+  .join(' ');
 
 const base = Astro.site ?? url;
 const offers = app.plans
@@ -270,7 +296,7 @@ const softwareLd: Record<string, unknown> = {
   url: new URL(app.href, base).href,
   applicationCategory: 'BusinessApplication',
   applicationSubCategory: app.category?.name,
-  operatingSystem: 'Shopify',
+  operatingSystem: 'Web',
   description: app.tagline ?? undefined,
   image: app.icon_url ?? undefined,
   datePublished: app.launched_on ?? undefined,
@@ -287,10 +313,20 @@ if (hasRating && typeof app.reviews === 'number' && app.reviews > 0) {
     bestRating: 5,
     worstRating: 1,
   };
-  softwareLd.isBasedOn = app.app_store_url ?? undefined;
   softwareLd.dateModified = app.checked_on ?? undefined;
 }
-const jsonLd = [softwareLd, breadcrumbLd(base, crumbs)];
+const storesLd = {
+  '@type': 'ItemList',
+  name: `Stores running ${name}`,
+  numberOfItems: storesTotal,
+  itemListElement: storeRows.slice(0, 20).map((row, i) => ({
+    '@type': 'ListItem',
+    position: (storesPage - 1) * STORES_PAGE + i + 1,
+    name: row.store.display_name,
+    url: new URL(row.store.href, base).href,
+  })),
+};
+const jsonLd = [softwareLd, breadcrumbLd(base, crumbs), storesLd];
 
 const params = [...url.searchParams.keys()];
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
@@ -300,7 +336,9 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   title={title}
   description={description}
   canonical={app.href}
-  noindex={params.length > 0}
+  noindex={params.length > 0 || app.usage.stores === 0}
+  ogImage={shareOgSrc('app', slug)}
+  ogImageAlt={`${name} on real stores`}
   jsonLd={jsonLd}
 >
   <div class="container app">
@@ -358,9 +396,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
             size="md"
             class="head__cta"
           />
-        ) : (
-          <p class="head__nocta">No official listing on file yet.</p>
-        )}
+        ) : null}
       </div>
     </header>
   </div>
@@ -374,16 +410,12 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   <div class="container">
     <div class="layout">
       <div class="layout__item layout__seen">
-        {isBasic && (
-          <Notice tone="info" title="Basic profile" class="basic">
-            {`${knownListing > 0 ? 'Only part of' : 'None of'} ${name}’s App Store listing is on file yet, so some facts are missing. Complete: where it was detected (${app.usage.stores.toLocaleString('en-US')} scanned stores), where it shows up on curated stores, and the apps and themes it runs with.`}
-          </Notice>
-        )}
         <SeenOn
           detail={detail}
           device={device}
           selected={Number.isFinite(seenParam) ? seenParam : null}
           storesTotal={storesTotal}
+          storeShots={shotStores}
           deviceHref={(d) =>
             `${urlWith(url, { device: d === 'desktop' ? null : d, seen: null }, true)}#where`
           }
@@ -392,38 +424,19 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       </div>
 
       <aside class="layout__aside" aria-label={`${name} facts`}>
-        <FactsCard title={`${name} at a glance`} items={facts} sticky class="facts">
-          <Fragment slot="footer">
-            <p>
-              Listing: Shopify App Store,{' '}
-              {listingRead ? `checked ${formatDate(app.checked_on)}` : 'not read yet'}.
-            </p>
-            <p>
-              Stores and rank: {scan?.label ?? `our scan of ${denominator} stores`}.{' '}
-              <a href="/methodology">Method</a>
-            </p>
-          </Fragment>
-        </FactsCard>
+        <FactsCard title={`${name} at a glance`} items={facts} sticky class="facts" />
       </aside>
 
       {app.plans.length > 0 && (
         <section class="layout__item block" id="plans" aria-labelledby="plans-title">
-          <SectionHeader
-            title="Pricing"
-            id="plans-title"
-            description={`${app.plans.length} ${app.plans.length === 1 ? 'plan' : 'plans'} as listed on the Shopify App Store, checked ${formatDate(app.checked_on)}. Prices in USD.`}
-          />
+          <SectionHeader title="Pricing" id="plans-title" />
           <PlanCards plans={app.plans} />
         </section>
       )}
 
       {(app.features.length > 0 || app.works_with.length > 0 || languages.length > 0) && (
         <section class="layout__item block" id="listing" aria-labelledby="listing-title">
-          <SectionHeader
-            title="From the listing"
-            id="listing-title"
-            description={`What ${name}’s App Store listing says it does, checked ${formatDate(app.checked_on)}.`}
-          />
+          <SectionHeader title="From the listing" id="listing-title" />
           <Card padding="none" class="listing">
             {app.features.length > 0 && (
               <ul class="listing__features">
@@ -460,12 +473,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       )}
 
       <section class="layout__item block" id="stores" aria-labelledby="stores-title">
-        <SectionHeader
-          title={`Stores running ${name}`}
-          id="stores-title"
-          count={storesTotal}
-          description={`Found on ${storesTotal.toLocaleString('en-US')} of ${denominator.toLocaleString('en-US')} scanned stores (${sharePct(app.usage.share)}). Curated stores are mapped page by page.`}
-        />
+        <SectionHeader title={`Stores running ${name}`} id="stores-title" count={storesTotal} />
         <div class="table-wrap stores-wrap">
           <table class="table stores">
             <caption class="visually-hidden">Stores running{name}</caption>
@@ -541,11 +549,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
       {(coInstalled.length > 0 || themes.length > 0) && (
         <section class="layout__item block" id="related" aria-labelledby="related-title">
-          <SectionHeader
-            title="Runs alongside"
-            id="related-title"
-            description={`Apps and themes on the ${storesTotal.toLocaleString('en-US')} stores running ${name}, by share of those stores.`}
-          />
+          <SectionHeader title="Runs alongside" id="related-title" />
           <div class="related">
             {coInstalled.length > 0 && (
               <Card padding="sm" class="related__card">
@@ -567,7 +571,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
                   shareOf={`of ${name} stores`}
                   label={`Themes on stores running ${name}`}
                 />
-                <p class="related__note">Tracked themes only; custom themes are left out.</p>
               </Card>
             )}
           </div>
@@ -580,11 +583,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
             title={`Alternatives to ${name}`}
             id="alts-title"
             count={alts.length || undefined}
-            description={
-              app.category
-                ? `Other ${app.category.name.toLowerCase()} apps, by stores running them.`
-                : 'Apps that do the same job, by stores running them.'
-            }
             href={alts.length ? altHref : undefined}
             linkLabel="All alternatives"
           />
@@ -606,29 +604,11 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           {pairs.length > 0 && (
             <div class="compare" id="compare">
               <h3 class="compare__title">Head to head</h3>
-              <p class="compare__text">
-                Curated side-by-side pages: where each renders, stores, ratings and plans.
-              </p>
               <PairList items={pairs.slice(0, 6)} label={`Comparisons with ${name}`} />
             </div>
           )}
         </section>
       )}
-
-      <footer class="layout__item block sources">
-        <SourceNote
-          source={`${scan?.label ?? 'Our scan'}: stores, share, rank, co-installs, themes`}
-        />
-        <SourceNote
-          source={
-            listingRead
-              ? 'Shopify App Store listing: rating, reviews, plans, features, languages'
-              : 'Shopify App Store listing: not read yet for this app'
-          }
-          asOf={listingRead ? `checked ${formatDate(app.checked_on)}` : undefined}
-          href=""
-        />
-      </footer>
     </div>
   </div>
 </BaseLayout>
@@ -829,7 +809,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     .tabbar :global(.tabbar__tabs) {
       margin-right: calc(var(--page-gutter) * -1);
       padding-right: var(--page-gutter);
-      mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+      mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
     }
   }
 

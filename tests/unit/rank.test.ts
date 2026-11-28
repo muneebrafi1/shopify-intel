@@ -24,21 +24,30 @@ describe('usage ranks in the API', () => {
   it('ties share a theme rank, the next rank skips, and ties list by name', async () => {
     const { data } = await api.listThemes({ sort: 'usage', limit: 100 });
     const at = (slug: string) => data.items.find((t) => t.slug === slug)?.usage;
-    // Hyper, Impact and Impulse are each detected on 8 stores; Flow and Symmetry on 7.
-    expect([at('hyper'), at('impact'), at('impulse')].map((u) => u?.stores)).toEqual([8, 8, 8]);
-    expect(at('hyper')?.rank).toBe(6);
-    expect(at('impact')?.rank).toBe(6);
-    expect(at('impulse')?.rank).toBe(6);
-    expect(at('flow')?.rank).toBe(9);
-    expect(at('symmetry')?.rank).toBe(9);
+    // Find a tie group (themes detected on the same number of stores) and check it shares a rank.
+    const byCount = new Map<number, typeof data.items>();
+    for (const t of data.items) byCount.set(t.usage.stores, [...(byCount.get(t.usage.stores) ?? []), t]);
+    const [tieCount, tie] = [...byCount.entries()]
+      .filter(([n, g]) => n > 0 && g.length >= 2)
+      .sort((x, y) => y[1].length - x[1].length || y[0] - x[0])[0]!;
+    const above = (n: number) => data.items.filter((t) => t.usage.stores > n).length;
+    const rankTie = 1 + above(tieCount);
+    for (const t of tie) expect(t.usage.rank).toBe(rankTie);
+    // The next rank skips past the tie.
+    const next = data.items
+      .filter((t) => t.usage.stores < tieCount && t.usage.stores > 0)
+      .sort((x, y) => y.usage.stores - x.usage.stores)[0];
+    if (next) expect(next.usage.rank).toBe(rankTie + tie.length);
+    // Ties list by name.
     const order = data.items.map((t) => t.slug);
-    expect(order.indexOf('hyper')).toBeLessThan(order.indexOf('impact'));
-    expect(order.indexOf('impact')).toBeLessThan(order.indexOf('impulse'));
+    expect(tie.map((t) => order.indexOf(t.slug))).toEqual(
+      [...tie].sort((x, y) => x.name.localeCompare(y.name)).map((t) => order.indexOf(t.slug)),
+    );
     // Every rank equals 1 + the number of themes with strictly more stores.
     const counts = data.items.map((t) => t.usage.stores);
     expect(data.items.map((t) => t.usage.rank)).toEqual(competitionRanks(counts));
     // getTheme reports the same rank as the list.
-    expect((await api.getTheme({ slug: 'impulse' })).data.theme.usage.rank).toBe(6);
+    expect((await api.getTheme({ slug: tie[0]!.slug })).data.theme.usage.rank).toBe(rankTie);
   });
 
   it('ranks apps overall and within their category with competition ranking', async () => {

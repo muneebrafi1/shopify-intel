@@ -1,0 +1,63 @@
+---
+/**
+ * /themes/<slug>/stores: the curated stores running a theme, as capture cards. Themes with no
+ * curated store are 404s (the theme page still lists every detected store).
+ */
+import StoreGallery from '~/components/stores/StoreGallery.astro';
+import { api, isApiError, orNotFound } from '~/server/api';
+import { shareOgSrc } from '~/lib/share-og';
+
+const PAGE = 48;
+const slug = (Astro.params.slug ?? '').toLowerCase();
+if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(slug)) return Astro.rewrite('/404');
+const cursor = Astro.url.searchParams.get('cursor') || undefined;
+const p = Math.max(
+  1,
+  Math.min(999, Number.parseInt(Astro.url.searchParams.get('p') ?? '1', 10) || 1),
+);
+
+const themeRes = await orNotFound(api.getTheme({ slug, stores_limit: 0 }));
+if (!themeRes) return Astro.rewrite('/404');
+const theme = themeRes.data.theme;
+if (theme.slug !== Astro.params.slug) return Astro.redirect(`${theme.href}/stores`, 301);
+
+let res;
+try {
+  res = await api.listStores({
+    theme: slug,
+    scope: 'curated',
+    sort: 'rank',
+    limit: PAGE,
+    ...(cursor ? { cursor } : {}),
+  });
+} catch (e) {
+  if (isApiError(e) && e.status === 400) return Astro.redirect(`${theme.href}/stores`, 302);
+  throw e;
+}
+const items = res.data.items;
+if (items.length === 0) return Astro.rewrite('/404');
+const total = res.meta.pagination?.total ?? items.length;
+const nextCursor = res.meta.pagination?.next_cursor ?? null;
+const canonical = `${theme.href}/stores`;
+---
+
+<StoreGallery
+  title={`Shopify stores using ${theme.name}`}
+  heading={`Stores using ${theme.name}`}
+  description={`${total} Shopify ${total === 1 ? 'store' : 'stores'} running the ${theme.name} theme, screenshotted page by page, with the apps detected on each.`}
+  canonical={canonical}
+  noindex={!!cursor}
+  crumbs={[
+    { label: 'Themes', href: '/themes' },
+    { label: theme.name, href: theme.href },
+    { label: 'Stores' },
+  ]}
+  items={items}
+  total={total}
+  nextHref={nextCursor ? `${canonical}?cursor=${encodeURIComponent(nextCursor)}&p=${p + 1}` : null}
+  firstHref={cursor ? canonical : null}
+  jsonLdName={`Shopify stores using ${theme.name}`}
+  offset={(p - 1) * PAGE}
+  showTheme={false}
+  ogImage={shareOgSrc('theme', theme.slug)}
+/>

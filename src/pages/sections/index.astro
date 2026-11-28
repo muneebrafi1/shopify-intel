@@ -8,7 +8,6 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import PageHeader from '~/components/ui/PageHeader.astro';
 import Segmented from '~/components/ui/Segmented.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
 import LibraryBrowse from '~/components/sections/LibraryBrowse.astro';
 import TypeOverview from '~/components/sections/TypeOverview.astro';
 import {
@@ -17,7 +16,6 @@ import {
   apiSort,
   buildFilterGroups,
   buildSort,
-  cropSource,
   deviceItems,
   filterQuery,
   fmt,
@@ -76,10 +74,11 @@ const nextHref = nextCursor
   ? `/sections${filterQuery(filters, { cursor: nextCursor, p: String(page + 1) })}`
   : null;
 const groups = buildFilterGroups(data.facets, null, filters);
-const source = cropSource(meta, data.items);
-const typeCount = counts.section_types || SECTION_TYPES.length;
+const deviceAll = (data.facets.devices.find((d) => d.value === 'desktop')?.count ?? 0)
+  + (data.facets.devices.find((d) => d.value === 'mobile')?.count ?? 0);
+const libraryCount = deviceAll || counts.sections;
 
-const description = `${fmt(counts.sections)} page sections (headers, heroes, buy boxes, reviews, carts and more) sliced from ${counts.stores_with_capture_plan} Shopify stores on desktop and mobile. Filter by type, page, device, theme and app.`;
+const description = `${fmt(counts.sections)} page sections (headers, heroes, buy boxes, reviews, footers and more) sliced from ${counts.stores_with_capture_plan} Shopify stores on desktop and mobile. Filter by type, page, device, theme and app.`;
 
 const jsonLd = {
   '@type': 'CollectionPage',
@@ -111,15 +110,8 @@ const jsonLd = {
     <PageHeader
       class="sx__header"
       title="Sections"
-      count={counts.sections}
-      description={`Every page of ${counts.stores_with_capture_plan} stores, sliced into ${typeCount} kinds of section. Headers, heroes, buy boxes, reviews and footers, on desktop and mobile.`}
+      count={libraryCount}
     >
-      <SourceNote
-        slot="meta"
-        class="sx__source"
-        source={`${source.label} of ${fmt(counts.screenshots)} pages`}
-        asOf={source.asOf}
-      />
       <Segmented
         slot="actions"
         label="Device"
@@ -164,7 +156,6 @@ const jsonLd = {
           <TypeOverview types={types.data.items} groupCount={SECTION_GROUPS.length} />
           <h2 id="all-sections" class="sx__feed">
             All sections
-            <span class="sx__feed-note">Mixed across stores, richest sections first</span>
           </h2>
         </Fragment>
       )}
@@ -175,9 +166,6 @@ const jsonLd = {
 <style>
   .sx {
     padding-bottom: var(--section-y-app);
-  }
-  .sx :global(.sx__source) {
-    margin-top: var(--space-3);
   }
   .sx__feed {
     display: flex;
@@ -191,12 +179,6 @@ const jsonLd = {
     font-weight: var(--weight-semibold);
     letter-spacing: -0.015em;
     scroll-margin-top: calc(var(--header-h) + 72px);
-  }
-  .sx__feed-note {
-    color: var(--ink-3);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-regular);
-    letter-spacing: 0;
   }
   .sx :global(.sx__browse) {
     margin-top: 0;

@@ -25,12 +25,6 @@ notes:
     title: 'Collection merchandising paired with Algolia'
     body: lskd.co is one of only 4 stores in the 930-store scan detected with Algolia AI Search & Discovery, sitting alongside Impulse’s built-in collection header and filtering layout.
   - n: 4
-    page_type: cart
-    device: desktop
-    section_type: cart-items
-    title: 'Post-purchase returns handled by Loop Returns'
-    body: Loop Returns & Exchanges (21 of 930 scanned stores) is the single Shipping & Returns app detected on lskd.co, paired with an in-cart item list and newsletter footer.
-  - n: 5
     page_type: home
     device: desktop
     section_type: footer

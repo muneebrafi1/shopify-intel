@@ -21,7 +21,7 @@ describe('search', () => {
     const klav = await api.search({ q: 'klav' });
     const app = klav.data.groups.find((g) => g.kind === 'app')?.items[0];
     expect(app?.ref).toBe('klaviyo');
-    expect(app?.icon_url).toMatch(/^https:\/\//);
+    expect(app?.icon_url).toMatch(/^(https:\/\/|\/media\/icons\/apps\/)/);
     const store = await api.search({ q: 'youngla', kinds: ['store'] });
     expect(store.data.groups.map((g) => g.kind)).toEqual(['store']);
     expect(store.data.groups[0]?.items[0]?.href).toBe('/stores/youngla.com');
@@ -30,6 +30,12 @@ describe('search', () => {
   it('matches multi-word queries on every word', async () => {
     const out = await api.search({ q: 'judge rev' });
     expect(out.data.groups.find((g) => g.kind === 'app')?.items[0]?.ref).toBe('judgeme');
+  });
+
+  it('forgives a one or two letter typo when nothing matches', async () => {
+    const out = await api.search({ q: 'klavyo' });
+    expect(out.data.groups.find((g) => g.kind === 'app')?.items[0]?.ref).toBe('klaviyo');
+    expect((await api.search({ q: 'zzzqx' })).data.groups).toEqual([]);
   });
 
   it('returns suggestions for an empty query and nothing for punctuation', async () => {

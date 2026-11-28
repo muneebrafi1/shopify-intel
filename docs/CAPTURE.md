@@ -93,3 +93,41 @@ from `/media/<key>`, and sections with an `r2_key_crop` show their real crop.
   `npm run capture:reprocess` skips them: re-capture those stores instead.
 - Captured images are third-party store content: they stay out of git (`.data/` is ignored)
   and go to R2 only once the owner approves the production pipeline.
+
+## 8. Page-cache (after every D1 sync)
+
+Catalog pages should not hit live D1: the data only changes when a batch is ingested. After
+`d1-sync --apply --keep-remote-crawl`, rebuild the R2 page-cache from the same local snapshot,
+then deploy.
+
+```bash
+npm run ops:page-cache -- \
+  --local-file /path/to/snapshot.sqlite \
+  --out-dir /tmp/page-cache \
+  --origin https://<preview-or-production-origin> \
+  --upload
+```
+
+This writes `page-cache/<data_version>/<method>/<key>.json` (and `page-cache/manifest.json`)
+into the existing `vitrine-preview-media` bucket. Astro pages read those objects first (with a
+Cache API layer) and fall back to D1 only on a miss. `/api/v1` and MCP keep using live D1.
+
+`--skip-sections` skips the ~38k section-detail and current-screenshot payloads when you only
+need to refresh the rest. Re-run the full command before a crawl-facing deploy.
+
+## 9. Share images (after captures, with every batch)
+
+Catalog pages use typographic Open Graph / Twitter images (1200×630) stored in the media bucket
+under `og/`. Generate them from the local snapshot and captures after ingest, then upload:
+
+```bash
+npm run ops:og-images -- \
+  --local-file /path/to/snapshot.sqlite \
+  --out-dir /tmp/og-share \
+  --upload
+```
+
+This writes `og/home.jpg`, `og/store/<domain>.jpg`, `og/app/<slug>.jpg`, `og/theme/<slug>.jpg`,
+`og/gallery/<slug>.jpg`, `og/compare/<pair>.jpg` and `og/compare.jpg`, and refreshes
+`public/og-default.png`. Pages read `/media/og/...`. Run this in the same batch as
+`ops:page-cache`, before deploy.

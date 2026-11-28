@@ -19,12 +19,6 @@ notes:
     title: 'Editorial hero slideshow on Atlantic'
     body: Atlantic opens with a full-width slideshow followed by stacked campaign hero bands and customer review proof further down the home page.
   - n: 3
-    page_type: cart
-    device: desktop
-    section_type: cart-items
-    title: 'Returns stack: Redo and Loop Returns both detected'
-    body: Both Redo (43 of 930 stores) and Loop Returns & Exchanges (21 of 930) were detected on thursdayboots.com, making it a live example of overlapping Shipping & Returns scripts.
-  - n: 4
     page_type: home
     device: desktop
     section_type: footer

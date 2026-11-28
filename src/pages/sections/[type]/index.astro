@@ -79,6 +79,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 const { data, meta } = list;
 const info = whole.data.section_type ?? data.section_type;
 if (!info) return Astro.rewrite('/404');
+// A type with nothing captured (cart-only types) has no page.
+if ((whole.meta.pagination?.total ?? whole.data.items.length) === 0) return Astro.rewrite('/404');
 
 const taxonomy = SECTION_TYPES.find((t) => t.slug === type)!;
 const total = meta.pagination?.total ?? data.items.length;
@@ -158,12 +160,7 @@ const jsonLd = [
   wide
 >
   <div class="container--wide tx">
-    <PageHeader
-      eyebrow={info.group.name}
-      title={info.name}
-      count={info.count}
-      description={info.description}
-    >
+    <PageHeader eyebrow={info.group.name} title={info.name} count={info.count}>
       <Breadcrumbs
         slot="top"
         items={[{ label: 'Sections', href: '/sections' }, { label: info.name }]}
@@ -249,11 +246,7 @@ const jsonLd = [
     />
 
     <section class="tx__block" aria-labelledby="rendered-by">
-      <SectionHeader
-        id="rendered-by"
-        title={`Who renders ${lower} sections`}
-        description={`Across all ${fmt(info.count)} in the library. Pick a name to filter the grid to it.`}
-      />
+      <SectionHeader id="rendered-by" title={`Who renders ${lower} sections`} />
       <RenderedBy
         typeName={info.name}
         total={info.count}

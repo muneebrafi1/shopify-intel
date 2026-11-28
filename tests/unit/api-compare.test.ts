@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { setup } from './helpers/db.ts';
+import { appStores, themeStores } from './helpers/counts.ts';
 
 const { db, api } = setup();
 afterAll(() => db.close());
@@ -24,7 +25,12 @@ describe('compare', () => {
   it('builds a facts matrix with sources and objective winners only', async () => {
     const { data, meta } = await api.getComparison({ pair: 'judgeme-vs-loox' });
     const byKey = new Map(data.matrix.map((r) => [r.key, r]));
-    expect(byKey.get('stores')).toMatchObject({ a: 221, b: 54, winner: 'a', better: 'higher' });
+    expect(byKey.get('stores')).toMatchObject({
+      a: appStores('judgeme'),
+      b: appStores('loox'),
+      winner: 'a',
+      better: 'higher',
+    });
     expect(byKey.get('from_price')).toMatchObject({
       a: 1500,
       b: 4999,
@@ -40,8 +46,8 @@ describe('compare', () => {
     const { data } = await api.getComparison({ pair: 'horizon-vs-dawn' });
     expect(data.kind).toBe('theme');
     expect(data.canonical_slug).toBe('dawn-vs-horizon');
-    expect(data.themes?.a.theme.usage.stores).toBe(20);
-    expect(data.themes?.b.theme.usage.stores).toBe(14);
+    expect(data.themes?.a.theme.usage.stores).toBe(themeStores('dawn'));
+    expect(data.themes?.b.theme.usage.stores).toBe(themeStores('horizon'));
     expect(data.shared_apps.length).toBeGreaterThan(0);
   });
 

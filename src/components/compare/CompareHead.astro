@@ -9,6 +9,7 @@
  * sides as left/right columns, so every side-by-side block further down keeps its labels.
  */
 import AppIcon from '~/components/ui/AppIcon.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import Rating from '~/components/ui/Rating.astro';
 import Button from '~/components/ui/Button.astro';
 import Icon from '~/components/ui/Icon.astro';
@@ -16,7 +17,7 @@ import AffiliateCta from '~/components/domain/AffiliateCta.astro';
 import PairMark from './PairMark.astro';
 import { formatCount, formatDate } from '~/lib/format';
 import type { ComparisonDetail, ResponseMeta } from '~/server/api/v1/types';
-import { sharePct, sides, summary } from './compare';
+import { sharePct, sides } from './compare';
 
 interface Props {
   cmp: ComparisonDetail;
@@ -69,12 +70,7 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
       <h1 class="ch__title display-md">
         {a.name} <span class="tone-muted">vs</span> {b.name}
       </h1>
-      <p class="ch__lede">{summary(cmp)}</p>
     </div>
-    <p class="ch__asof">
-      <Icon name="clock" size={14} />
-      Data as of {formatDate(meta.data_as_of)}
-    </p>
   </div>
 
   <div class="ch__pair" data-ch-pair>
@@ -90,7 +86,9 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
           aria-labelledby={`side-${s.side}`}
         >
           <div class="ch__id">
-            <AppIcon src={s.iconUrl} name={s.name} size={52} class="ch__icon" />
+            {s.kind === 'theme'
+                ? <ThemeMark slug={s.slug} name={s.name} size={52} class="ch__icon" />
+                : <AppIcon src={s.iconUrl} name={s.name} size={52} class="ch__icon" />}
             <div class="ch__id-text">
               <h2 class="ch__name" id={`side-${s.side}`}>
                 {s.name}
@@ -176,7 +174,7 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
     <div class="cbar__sides" aria-hidden="true">
       {items.map((s) => (
         <span class="cbar__side">
-          <AppIcon src={s.iconUrl} name={s.name} size={20} />
+          {s.kind === 'theme' ? <ThemeMark slug={s.slug} name={s.name} size={20} /> : <AppIcon src={s.iconUrl} name={s.name} size={20} />}
           <span class="cbar__side-name">{s.name}</span>
         </span>
       ))}
@@ -361,7 +359,7 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
   }
   .ch__share {
     color: var(--ink-3);
-    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-size: var(--text-2xs);
   }
   .ch__meter {
@@ -407,6 +405,12 @@ const eyebrow = ['Compare', isApp ? 'Apps' : 'Themes', category?.name].filter(Bo
     overflow-x: auto;
     scrollbar-width: none;
     box-shadow: inset 0 -1px 0 var(--line);
+  }
+  @media (max-width: 639px) {
+    .ch__toc {
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+      mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+    }
   }
   .ch__toc::-webkit-scrollbar {
     display: none;

@@ -26,7 +26,7 @@ import { api, orNotFound } from '~/server/api';
 import { formatCount, formatDate } from '~/lib/format';
 import { parsePlate } from '~/components/stores/plates';
 import { themeName } from '~/components/stores/query';
-import { ogCaptureSrc } from '~/lib/media';
+import { shareOgSrc } from '~/lib/share-og';
 
 const param = (Astro.params.domain ?? '').trim();
 const res = param ? await orNotFound(api.getStore({ domain: param })) : null;
@@ -44,11 +44,6 @@ const teardownRes = detail.teardown
   : null;
 const basePath = store.href;
 const hasPlates = detail.pages.length > 0;
-const ogShot =
-  detail.pages.find((p) => p.page_type.slug === 'home')?.screenshots.desktop ??
-  detail.pages[0]?.screenshots.desktop ??
-  detail.pages[0]?.screenshots.mobile;
-const ogImage = ogCaptureSrc(ogShot);
 const { page, device } = parsePlate(
   Astro.url,
   detail.pages.map((p) => p.page_type.slug),
@@ -70,7 +65,7 @@ if (store.country) {
   }
 }
 
-const facts: Fact[] = [
+const allFacts: Fact[] = [
   {
     label: 'Theme',
     value: store.theme.label,
@@ -104,6 +99,8 @@ const facts: Fact[] = [
     mono: true,
   },
 ];
+// Facts we have no value for are left out rather than shown as a dash.
+const facts = allFacts.filter((f) => f.value !== '—' && f.value !== 'Not ranked');
 const hasSimilar = detail.similar.length > 0;
 
 // ---- SEO ----------------------------------------------------------------------------------
@@ -135,8 +132,25 @@ const jsonLd = [
     },
   },
 ];
+// A short factual intro built only from this store's own data.
+const joinList = (xs: string[]) =>
+  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+const allApps = detail.apps.groups.flatMap((g) => g.apps);
+const topNames = store.top_apps.slice(0, 3).map((a) => a.short_name);
+const placed = allApps
+  .filter((a) => a.seen_in.length > 0)
+  .slice(0, 3)
+  .map((a) => `${a.short_name} (${a.seen_in[0]!.name.toLowerCase()})`);
+const introParts = [
+  `${title} runs ${store.theme.label}${store.app_count ? ` and ${store.app_count} detected ${store.app_count === 1 ? 'app' : 'apps'}${topNames.length ? `, including ${joinList(topNames)}` : ''}` : ''}.`,
+  placed.length ? `On its captured pages we can place ${joinList(placed)} in the layout.` : null,
+  hasPlates
+    ? `${detail.pages.length} ${detail.pages.length === 1 ? 'page type is' : 'page types are'} mapped section by section, on desktop and mobile.`
+    : null,
+].filter(Boolean) as string[];
+const intro = introParts.join(' ');
 const description = hasPlates
-  ? `${title} runs ${store.theme.label} with ${store.app_count} detected apps. See its home, collection, product and cart pages on desktop and mobile, section by section, and where each app renders.`
+  ? `${title} runs ${store.theme.label} with ${store.app_count} detected apps${topNames.length ? `, including ${joinList(topNames)}` : ''}. See its home, collection and product pages on desktop and mobile, section by section.`
   : `${store.domain} runs ${store.theme.label} with ${store.app_count} detected Shopify apps (scan of ${asOf}). Screenshots are not captured yet.`;
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
@@ -151,8 +165,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   description={description}
   canonical={basePath}
   noindex={!hasPlates}
-  ogImage={ogImage}
-  ogImageAlt={ogImage ? `${title} home page capture` : undefined}
+  ogImage={shareOgSrc('store', store.domain)}
+  ogImageAlt={`${title} on Vitrine`}
   jsonLd={jsonLd}
   wide
 >
@@ -263,16 +277,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       </aside>
 
       <section id="apps" class="store__apps" aria-labelledby="apps-title">
-        <SectionHeader
-          id="apps-title"
-          title="Detected apps"
-          count={store.app_count}
-          description={
-            hasPlates
-              ? `The theme and apps detected on ${lastSeen}, by category, with the section each app is attributed to on the pages above.`
-              : `The theme and apps detected on ${lastSeen}, by category, with where apps of each kind usually render.`
-          }
-        />
+        <SectionHeader id="apps-title" title="Detected apps" count={store.app_count} />
         <StackSheet detail={detail} basePath={basePath} class="store__stack" />
       </section>
     </div>
@@ -283,11 +288,16 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           id="similar-title"
           title="Similar stores"
           count={detail.similar.length}
-          description="Compare with stores that share apps or the theme. Ranked by apps in common, with extra weight for the same theme; from the same scan."
-          href={store.theme.theme ? `/stores?theme=${store.theme.theme.slug}&scope=all` : undefined}
-          linkLabel={store.theme.theme ? `All stores on ${store.theme.theme.name}` : undefined}
+          href={store.theme.theme ? `${store.theme.theme.href}/stores` : undefined}
+          linkLabel={store.theme.theme ? `Stores using ${store.theme.theme.name}` : undefined}
           rule
-        />
+        >
+          {store.category && (
+            <a class="store__more" href={store.category.href}>
+              More in {store.category.name}
+            </a>
+          )}
+        </SectionHeader>
         <SimilarStores items={detail.similar} />
       </section>
     )}
@@ -297,6 +307,14 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 <style>
   .store {
     padding-bottom: var(--space-20);
+  }
+  .store__more {
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    text-decoration: none;
+  }
+  .store__more:hover {
+    color: var(--ink);
   }
 
   /* Identity row */
@@ -338,6 +356,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   }
   .sid__name {
     overflow-wrap: anywhere;
+  }
+  .sid__intro {
+    margin-block-start: var(--space-3);
+    max-inline-size: 62ch;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    line-height: 1.55;
   }
   .sid__meta {
     display: flex;

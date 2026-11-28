@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shopify-intel",
+  // Astro's server entry plus the scheduled crawler (src/server/crawl/scheduled.ts).
+  "main": "src/worker.ts",
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [
@@ -17,4 +19,7 @@
   // scheduled() handler, run it with POST /api/v1/admin/maintenance/purge-removal-records (admin
   // API token). A daily Cron Trigger can call it later; not enabled, no resources created:
   // "triggers": { "crons": ["17 3 * * *"] },
+  // Scheduled crawler: one store per run, every 10 minutes (≈ every store weekly). Needs the
+  // crawl rules in R2 (npm run crawl:export-rules, then upload; see docs/CRAWL.md).
+  "triggers": { "crons": ["*/10 * * * *"] },
 }

@@ -11,36 +11,30 @@ notes:
     device: desktop
     section_type: header
     title: 'Country and currency: Global-e CrossBorder'
-    body: Global-e CrossBorder was detected, together with EasyLocation, a second Currency & Translation app. Apps in this category usually add a country or currency selector to the header, so the header is attributed to Global-e. The capture will show the real placement.
+    body: Global-e CrossBorder was detected, together with EasyLocation, a second Currency & Translation app. Apps in this category usually add a country or currency selector to the header, so the header is attributed to Global-e.
   - n: 2
     page_type: home
     device: desktop
-    section_type: newsletter
-    title: 'Email capture: Attentive'
-    body: Two Email & SMS apps were detected, Attentive and AfterShip Email Marketing. We attribute the on-page signup to Attentive, the more widely detected of the two in this scan (38 vs 19 of 930 stores). Popups are not sliced as sections.
+    section_type: ugc-gallery
+    title: 'Customer photos above the footer'
+    body: 'After a slideshow, a featured collection and a collection list, the home page ends with a customer photo gallery. No on-page email signup was captured: Attentive and AfterShip Email Marketing were detected, so signup most likely happens in a popup, which we do not slice.'
   - n: 3
-    page_type: home
+    page_type: product
     device: desktop
-    section_type: loyalty
-    title: Two loyalty apps
-    body: Rise (gift cards and store credit) and Rivo (loyalty program) were both detected. Until the capture shows which one renders the loyalty block, it is attributed to Rise, the more widely detected app in this category (24 vs 18 of 930 stores).
+    section_type: upsell
+    title: 'A related-products row, with no upsell app'
+    body: 'Below the reviews, a row of related products sits before the footer. No upsell app was detected on youngla.com, so this row is most likely the theme’s own recommendations section.'
   - n: 4
     page_type: product
     device: desktop
     section_type: reviews
     title: 'Product reviews: Loox'
-    body: Loox is the one reviews app we identified on this store; the same scan found it on 54 of 930 stores. Product-review apps usually render a reviews block on the product page, so that section is attributed to Loox. The capture will show the real placement.
-  - n: 5
-    page_type: cart
-    device: mobile
-    section_type: cart-summary
-    title: 'Shipping protection: Navidium'
-    body: Navidium Shipping Protection was detected. Shipping-protection apps add an opt-in line near the cart total, which is why the cart summary is attributed to it.
+    body: Loox is the one reviews app we identified on this store; the same scan found it on 54 of 930 stores. Product-review apps usually render a reviews block on the product page, so that section is attributed to Loox.
 ---
 
-> **Sample teardown.** This page shows the teardown format. It is written only from what our scan
-> of 17 November 2026 detected on youngla.com. Screenshots have not been captured yet, so the page
-> layouts are placeholders and every app attribution is our expectation, not an observation.
+> **How this was written.** From our scan of 17 November 2026 and our captures of 25 November
+> 2026 (home, collection and product pages, desktop and mobile) of youngla.com. Apps are matched
+> to sections from the page code; where an app could render in more than one place, we say so.
 
 ## Theme
 
@@ -58,8 +52,8 @@ The scan picked up eleven app signatures. Ten are identified apps, grouped here 
 - **Shipping & Returns:** Navidium Shipping Protection
 - **Privacy & Security:** Consentmo GDPR Compliance and NoFraud
 
-Four categories hold two apps each: email, loyalty, currency and privacy. The capture will show
-whether both apps in each pair render on the storefront or one works behind the scenes.
+Four categories hold two apps each: email, loyalty, currency and privacy. In most pairs only one app
+renders on the storefront; the other works behind the scenes (sending email, scoring fraud, storing consent).
 
 The eleventh signature, `trustpilot`, is not attributed to any app. It was matched to an App Store
 listing that turned out to be a different app, so it stays unidentified until we can verify it.
@@ -68,7 +62,7 @@ listing that turned out to be a different app, so it stays unidentified until we
 
 One tracking tag was detected: **Northbeam**, a marketing attribution tool.
 
-## What we will check when screenshots land
+## Open questions
 
 1. Where the Global-e country selector sits in the header on desktop and mobile.
 2. Which loyalty app owns the on-page loyalty block, if there is one.

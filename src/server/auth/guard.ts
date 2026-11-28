@@ -119,6 +119,48 @@ export function withAdminHeaders(response: Response): Response {
   return out;
 }
 
+/** Baseline security headers applied to every non-admin response unless already set. */
+export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Frame-Options': 'SAMEORIGIN',
+};
+
+/**
+ * Pre-launch previews (build with PUBLIC_NOINDEX=1) tell crawlers to stay away from every
+ * response, on top of the robots.txt disallow. Existing X-Robots-Tag values are kept.
+ */
+export function withSecurityHeaders(response: Response, noindex = false): Response {
+  if (noindex && !response.headers.has('X-Robots-Tag')) {
+    try {
+      response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    } catch {
+      response = new Response(response.body, response);
+      response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    }
+  }
+  let missing = false;
+  for (const name of Object.keys(SECURITY_HEADERS)) {
+    if (!response.headers.has(name)) {
+      missing = true;
+      break;
+    }
+  }
+  if (!missing) return response;
+  try {
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      if (!response.headers.has(name)) response.headers.set(name, value);
+    }
+    return response;
+  } catch {
+    const out = new Response(response.body, response);
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      if (!out.headers.has(name)) out.headers.set(name, value);
+    }
+    return out;
+  }
+}
+
 export interface AuthInput {
   config: AuthConfig;
   request: Request;

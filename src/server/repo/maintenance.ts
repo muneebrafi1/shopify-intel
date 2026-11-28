@@ -166,8 +166,12 @@ const SEARCH_INDEX = [
   SELECT 'store', s.domain, COALESCE(s.name, s.domain),
     CASE
       WHEN s.current_theme_is_custom = 1 THEN 'Custom theme'
-      WHEN s.current_theme_name IS NOT NULL THEN s.current_theme_name || ' theme'
-      ELSE 'Theme not detected'
+      WHEN s.current_theme_name IS NULL THEN 'Theme not detected'
+      WHEN lower(replace(trim(s.current_theme_name, ' /'), '/', '-')) NOT GLOB '*[^a-z0-9._-]*'
+        AND lower(trim(s.current_theme_name, ' /')) GLOB '*[-/]*'
+        THEN 'Custom theme'
+      WHEN lower(trim(s.current_theme_name, ' /')) LIKE '% theme' THEN trim(s.current_theme_name, ' /')
+      ELSE s.current_theme_name || ' theme'
     END || ' · ' || s.app_count || CASE WHEN s.app_count = 1 THEN ' app' ELSE ' apps' END,
     s.domain || ' ' || COALESCE(sc.name, ''),
     s.is_curated * 1000 + s.app_count

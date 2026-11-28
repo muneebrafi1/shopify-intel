@@ -61,6 +61,23 @@ describe('scan ingest', () => {
     expect(scanRow).toEqual({ source: 'vitrine-crawl', rules_version: 'storepeek-signatures-v9' });
   });
 
+  it('fills a blank theme row in place instead of recording a switch', async () => {
+    await db.run(
+      `UPDATE store_themes SET theme_id = NULL, raw_name = NULL, version = NULL
+       WHERE replaced_at IS NULL AND store_id = (SELECT id FROM stores WHERE domain = 'thesill.com')`,
+    );
+    const before = await themeRows();
+    const res = await ingestScan(db, scan());
+    expect(res).toMatchObject({ status: 'ingested', theme: 'new' });
+    const after = await themeRows();
+    expect(after).toHaveLength(before.length);
+    expect(after.at(-1)).toMatchObject({
+      raw_name: 'Horizon',
+      version: '9.9.9',
+      replaced_at: null,
+    });
+  });
+
   it('extends the open theme row when nothing changed', async () => {
     await ingestScan(db, scan());
     const res = await ingestScan(db, scan({ scanned_at: '2026-11-27T10:00:00.000Z' }));

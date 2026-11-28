@@ -21,7 +21,6 @@ import Icon from '~/components/ui/Icon.astro';
 import Shot from '~/components/media/Shot.astro';
 import FullPage, { type FullPageSection } from '~/components/media/FullPage.astro';
 import { CORE_PAGE_TYPES, DEVICES, PAGE_TYPES, type Device, type PageType } from '~/lib/taxonomy';
-import { formatCount } from '~/lib/format';
 import type { CuratedStoreShots, ScreenshotThumb } from '~/server/api/v1/types';
 import { detailHref, type PlateState } from './params';
 
@@ -104,12 +103,6 @@ const metaFor = (f: Frame) => {
 const anyPlaceholder = frames.some((f) => f.shot.is_placeholder);
 // Beside a phone capture there is room for the page's section list (each links to its section).
 const ordered = [...sections].sort((a, b) => a.y - b.y);
-const description =
-  storeCount === 0
-    ? `No store running ${name} has been captured yet.`
-    : storeCount === 1
-      ? `Home, collection, product and cart pages of a curated store running ${name}, on desktop and mobile, with every section tagged.`
-      : `${name} on ${formatCount(storeCount)} curated stores, page by page, on desktop and mobile, with every section tagged.`;
 ---
 
 <section
@@ -119,7 +112,7 @@ const description =
   data-page={state.page}
   data-device={state.device}
 >
-  <SectionHeader id="seen-title" eyebrow="Seen on" title={`${name} on real stores`} {description} />
+  <SectionHeader id="seen-title" eyebrow="Seen on" title={`${name} on real stores`} />
 
   {storeCount === 0 ? (
     <EmptyState
@@ -271,16 +264,6 @@ const description =
           </div>
         )}
       </div>
-
-      {anyPlaceholder && (
-        <p class="seen__note">
-          <Icon name="info" size={14} />
-          <span>
-            Pages not captured yet are layout previews, drawn from each page’s detected sections.
-            Theme and section detection is real.
-          </span>
-        </p>
-      )}
     </>
   )}
 </section>

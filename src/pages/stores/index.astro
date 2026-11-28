@@ -12,13 +12,12 @@ import Segmented from '~/components/ui/Segmented.astro';
 import BrowseBar, { type FilterGroup } from '~/components/ui/BrowseBar.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Button from '~/components/ui/Button.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
 import StoreMark from '~/components/ui/StoreMark.astro';
 import StoreCard from '~/components/domain/StoreCard.astro';
 import StoreIndex from '~/components/stores/StoreIndex.astro';
 import { api, isApiError } from '~/server/api';
 import type { Facet, ListStoresOutput, PageInfo } from '~/server/api/v1/types';
-import { formatCount, formatDate } from '~/lib/format';
+import { formatCount } from '~/lib/format';
 import {
   STORE_SORTS,
   apiFilters,
@@ -163,6 +162,8 @@ const filterSummary = (() => {
   const themeLabel =
     facets.themes.find((f) => f.value === q.filters.theme)?.label ?? q.filters.theme;
   const appLabel = facets.apps.find((f) => f.value === q.filters.app)?.label;
+  const categoryLabel = facets.categories.find((f) => f.value === q.filters.category)?.label;
+  if (q.filters.category) parts.push(`in ${categoryLabel ?? q.filters.category}`);
   if (q.filters.theme) parts.push(`on ${themeLabel}`);
   if (q.filters.app) parts.push(`running ${appLabel ? shortAppName(appLabel) : q.filters.app}`);
   return parts.join(' ');
@@ -176,16 +177,20 @@ const noun =
     : total === 1
       ? 'store'
       : 'stores';
-const asOf = formatDate(meta.data_as_of);
 
 // ---- SEO ----------------------------------------------------------------------------------
 const singleParam =
   filterCount === 1 && !q.cursor && !q.q
     ? (['theme', 'app', 'category'] as const).find((k) => q.filters[k])
     : undefined;
-const canonical = singleParam
-  ? `/stores?${singleParam}=${encodeURIComponent(q.filters[singleParam]!)}`
-  : '/stores';
+const canonical =
+  singleParam === 'category' && q.scope === 'curated'
+    ? `/stores/category/${encodeURIComponent(q.filters.category!)}`
+    : singleParam === 'theme' && q.scope === 'curated'
+      ? `/themes/${encodeURIComponent(q.filters.theme!)}/stores`
+      : singleParam
+        ? `/stores?${singleParam}=${encodeURIComponent(q.filters[singleParam]!)}`
+        : '/stores';
 const noindex =
   filterCount >= 2 ||
   q.p > 1 ||
@@ -216,7 +221,11 @@ const title = hasFilters
 
 <BaseLayout
   title={title}
-  description={`${formatCount(counts.stores_scanned)} Shopify stores with their detected theme and apps. ${counts.stores_curated} curated stores are mapped page by page — home, collection, product and cart, on desktop and mobile.`}
+  description={
+    singleParam
+      ? `${formatCount(total)} ${q.scope === 'curated' ? 'curated ' : ''}Shopify ${total === 1 ? 'store' : 'stores'} ${filterSummary}, with the theme and apps we detected on each. Curated stores are mapped page by page: home, collection and product, on desktop and mobile.`
+      : `${formatCount(counts.stores_scanned)} Shopify stores with their detected theme and apps. ${counts.stores_curated} curated stores are mapped page by page — home, collection and product, on desktop and mobile.`
+  }
   canonical={canonical}
   noindex={noindex}
   jsonLd={jsonLd}
@@ -226,21 +235,7 @@ const title = hasFilters
     <PageHeader
       title="Stores"
       count={counts.stores_scanned}
-      description="Shopify stores with the theme and apps we detected on them. Curated stores are mapped page by page, section by section."
     >
-      <p slot="meta" class="stores__facts">
-        <span>{formatCount(facets.scope.curated)} curated</span>
-        <span class="stores__sep" aria-hidden="true">
-          ·
-        </span>
-        <span>{formatCount(counts.stores_scanned)} scanned</span>
-        <span class="stores__sep" aria-hidden="true">
-          ·
-        </span>
-        <span>
-          data <time datetime={meta.data_as_of}>{asOf}</time>
-        </span>
-      </p>
       <div slot="actions" class="stores__scope">
         <Segmented
           label="Which stores"
@@ -312,9 +307,7 @@ const title = hasFilters
           <EmptyState
             title="No stores match these filters"
             body={
-              q.filters.capture === 'captured' && facets.captured === 0
-                ? 'No store has real screenshots yet: the first capture run hasn’t happened. Curated stores show layout previews until then.'
-                : 'Try a shorter search or remove a filter.'
+              'Try a shorter search or remove a filter.'
             }
           >
             <Button href={clearHref} size="sm">
@@ -384,9 +377,6 @@ const title = hasFilters
             {formatCount(detectedOnly)} more {detectedOnly === 1 ? 'store' : 'stores'}
             {filterSummary ? ` ${filterSummary}` : ''}, detected but not captured
           </h2>
-          <p class="stores__more-body">
-            Theme, version and apps on file for each one. No page captures yet.
-          </p>
         </div>
         {(detectedRes?.data.items.length ?? 0) > 0 && (
           <ul class="stores__peek" aria-label="A few of them">
@@ -405,8 +395,6 @@ const title = hasFilters
         </Button>
       </aside>
     )}
-
-    <SourceNote class="stores__source" source={meta.source.label} asOf={asOf} />
   </div>
 </BaseLayout>
 

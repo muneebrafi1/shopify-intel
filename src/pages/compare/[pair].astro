@@ -15,6 +15,7 @@ import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
 import Icon from '~/components/ui/Icon.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import CompareHead from '~/components/compare/CompareHead.astro';
 import Stage from '~/components/compare/Stage.astro';
 import FactMatrix, { type ExtraRow } from '~/components/compare/FactMatrix.astro';
@@ -32,6 +33,7 @@ import type {
   ThemeListItem,
 } from '~/server/api/v1/types';
 import { formatCount, formatDate } from '~/lib/format';
+import { shareOgSrc } from '~/lib/share-og';
 import {
   appPairLine,
   appStage,
@@ -222,11 +224,15 @@ const related = cmp.related.map((r) => {
     a: {
       name: na ?? r.a.name,
       iconUrl: r.a.icon_url,
+      kind: isApp ? 'app' : 'theme',
+      slug: r.a.slug,
       stores: appA?.usage.stores ?? thA?.usage.stores ?? null,
     },
     b: {
       name: nb ?? r.b.name,
       iconUrl: r.b.icon_url,
+      kind: isApp ? 'app' : 'theme',
+      slug: r.b.slug,
       stores: appB?.usage.stores ?? thB?.usage.stores ?? null,
     },
     shared: r.shared_stores ?? null,
@@ -265,6 +271,9 @@ const jsonLd = [
   },
 ];
 const description = `${cmp.title}: ${isApp ? 'where each app renders on real Shopify stores' : 'the same pages on real stores using each theme'}, ${isApp ? 'ratings, plans' : 'prices, versions'} and how many of ${formatCount(a.denominator)} scanned stores run them. Facts only, no winner.`;
+const compareTitleLong = `${cmp.title}: ${isApp ? 'ratings, plans' : 'price, versions'} and real stores using each`;
+const compareTitle =
+  compareTitleLong.length <= 62 ? compareTitleLong : `${cmp.title}: compared on real stores`;
 const sections: Array<[string, string]> = [
   ['stage', 'Seen on'],
   ['facts', 'Facts'],
@@ -276,10 +285,12 @@ const sections: Array<[string, string]> = [
 ---
 
 <BaseLayout
-  title={`${cmp.title}: side by side on real stores`}
+  title={compareTitle}
   description={description}
   canonical={cmp.href}
   jsonLd={jsonLd}
+  ogImage={shareOgSrc('compare', pair)}
+  ogImageAlt={compareTitle}
 >
   <div class="container">
     <Breadcrumbs
@@ -299,11 +310,7 @@ const sections: Array<[string, string]> = [
 
   <div class="container cmp">
     <section class="cmp__block" id="facts" aria-labelledby="facts-title">
-      <SectionHeader
-        id="facts-title"
-        title="The listing and our scan, row by row"
-        description="Check marks are facts, not points. Nothing here is scored or added up."
-      />
+      <SectionHeader id="facts-title" title="Facts" />
       <FactMatrix rows={cmp.matrix} meta={meta} a={a} b={b} extra={extra} notes={notes} />
     </section>
 
@@ -312,11 +319,6 @@ const sections: Array<[string, string]> = [
         id="overlap-title"
         title={isApp ? 'Stores running both' : 'Stores that ran both'}
         count={cmp.shared_stores.total}
-        description={
-          isApp
-            ? `Of ${formatCount(a.denominator)} scanned stores, how many run one, the other, or both at the same time.`
-            : 'Stores we have seen on both themes, and how many run each one now.'
-        }
       />
       <Overlap
         a={a}
@@ -333,7 +335,6 @@ const sections: Array<[string, string]> = [
           id="stacks-title"
           title="Apps used on both themes"
           count={cmp.shared_apps.length}
-          description={`What stores add on top of ${a.name} or ${b.name}, by number of stores on each.`}
         />
         <table class="table cmp__apps">
           <caption class="visually-hidden">{`Apps used on both ${a.name} and ${b.name}`}</caption>
@@ -375,11 +376,6 @@ const sections: Array<[string, string]> = [
       <SectionHeader
         id="pricing-title"
         title={isApp ? 'Plans side by side' : 'Price and versions'}
-        description={
-          isApp
-            ? `As listed on the Shopify App Store${appStoreChecked ? `, checked ${formatDate(appStoreChecked)}` : ''}. Prices in USD.`
-            : 'List price from the vendor, and the versions we detect on live stores.'
-        }
       />
       <Diptych labels={[a.name, b.name]} name="cmp-plans">
         {(['a', 'b'] as const).map((side) => (
@@ -396,11 +392,7 @@ const sections: Array<[string, string]> = [
 
     <section class="cmp__block cmp__summary" id="summary" aria-labelledby="summary-title">
       <div class="cmp__summary-main">
-        <SectionHeader
-          id="summary-title"
-          title="What the data says"
-          description="The facts above in plain sentences. Which one fits depends on your store; we don’t pick."
-        />
+        <SectionHeader id="summary-title" title="In short" />
         <ul class="cmp__facts">
           {factSentences(cmp).map((f) => (
             <li>
@@ -422,7 +414,11 @@ const sections: Array<[string, string]> = [
         <p class="eyebrow">Looking for a replacement?</p>
         {[a, b].map((s) => (
           <a href={s.alternativesHref} class="cmp__alt">
-            <AppIcon src={s.iconUrl} name={s.name} size={32} />
+            {s.kind === 'theme' ? (
+              <ThemeMark slug={s.slug} name={s.name} size={32} />
+            ) : (
+              <AppIcon src={s.iconUrl} name={s.name} size={32} />
+            )}
             <span class="cmp__alt-text">
               <span class="cmp__alt-k">Alternatives to</span>
               <span class="cmp__alt-name">{s.name}</span>

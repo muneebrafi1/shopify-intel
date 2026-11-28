@@ -26,4 +26,6 @@ export interface Db {
   run(sql: string, params?: readonly SqlValue[]): Promise<RunResult>;
   /** Runs statements in order, atomically (D1 batches are transactions). */
   batch(statements: readonly Statement[]): Promise<RunResult[]>;
+  /** SELECT statements in one D1 batch / one SQLite transaction. Each result is all rows. */
+  allBatch<Row>(statements: readonly Statement[]): Promise<Row[][]>;
 }

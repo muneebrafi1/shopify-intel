@@ -79,11 +79,14 @@ export interface Ctx {
 export async function loadDataInfo(db: Db): Promise<DataInfo> {
   const rows = await db.all<{ key: string; value: string }>('SELECT key, value FROM meta');
   const m = new Map(rows.map((r) => [r.key, r.value]));
-  const dataAsOf = m.get('data_as_of') ?? '1970-01-01';
+  const crawlLastAt = m.get('crawl_last_at') ?? null;
+  // The latest scan in the data: the seed scan, or our own crawl once it has run since.
+  const seededAsOf = m.get('data_as_of') ?? '1970-01-01';
+  const crawlDay = crawlLastAt?.slice(0, 10) ?? null;
+  const dataAsOf = crawlDay && crawlDay > seededAsOf ? crawlDay : seededAsOf;
   const scanSourceId = m.get('source_id') ?? 'scan';
   const scanSourceLabel = m.get('source_label') ?? 'Store scan';
   const appStoreCheckedTo = m.get('app_store_checked_to') ?? null;
-  const crawlLastAt = m.get('crawl_last_at') ?? null;
   const themeStoreCheckedTo = m.get('theme_store_checked_to') ?? null;
   return {
     dataVersion: m.get('data_version') ?? 'empty',
@@ -97,7 +100,7 @@ export async function loadDataInfo(db: Db): Promise<DataInfo> {
     crawlLastAt,
     themeStoreCheckedTo,
     sources: {
-      [scanSourceId]: { label: scanSourceLabel, as_of: dataAsOf, url: '/methodology' },
+      [scanSourceId]: { label: scanSourceLabel, as_of: seededAsOf, url: '/methodology' },
       [SOURCE_IDS.appStore]: {
         label: 'Shopify App Store listing',
         as_of: appStoreCheckedTo ?? dataAsOf,
@@ -121,7 +124,7 @@ export async function loadDataInfo(db: Db): Promise<DataInfo> {
       ...(crawlLastAt
         ? {
             [SOURCE_IDS.crawl]: {
-              label: `Our storefront crawl (${m.get('crawl_rules_version') ?? 'StorePeek rules'})`,
+              label: 'Our storefront crawl',
               as_of: crawlLastAt.slice(0, 10),
               url: '/methodology',
             },

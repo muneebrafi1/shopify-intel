@@ -139,7 +139,7 @@ const title = state.q
     : 'Shopify themes on real stores';
 const description = facetFiltered
   ? `${formatCount(total)} ${heading.toLowerCase()} we track, each shown on the real Shopify stores that run it, with prices, vendors and usage in our scan of ${formatCount(scanned)} stores.`
-  : `Every Shopify theme we track (${allTotal}), shown on the real stores that run it: home, collection, product and cart pages, desktop and mobile, with price, vendor and usage in our scan.`;
+  : `Every Shopify theme we track (${allTotal}), shown on the real stores that run it: home, collection and product pages, desktop and mobile, with price, vendor and usage in our scan.`;
 
 const singleFilter = !state.q && (state.price ? 1 : 0) + (state.vendor ? 1 : 0) === 1;
 const canonical = singleFilter
@@ -205,30 +205,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
     <PageHeader
       title={state.q ? 'Themes' : facetFiltered ? heading : 'Themes'}
       count={filtered ? total : allTotal}
-      description={
-        state.q
-          ? `Matching “${state.q}”, shown on the real stores that run them.`
-          : 'Every Shopify theme we track, shown on the real stores that run it.'
-      }
     >
-      <p slot="meta" class="ti-facts">
-        {headerFacts.map((f, i) => (
-          <>
-            {i > 0 && (
-              <span class="ti-facts__sep" aria-hidden="true">
-                ·
-              </span>
-            )}
-            <span>{f}</span>
-          </>
-        ))}
-        <span class="ti-facts__sep" aria-hidden="true">
-          ·
-        </span>
-        <span>
-          data <time datetime={meta.data_as_of}>{asOf}</time>
-        </span>
-      </p>
       <Fragment slot="actions">
         <Button href="/compare?kind=theme" variant="secondary" icon="scales">
           Compare themes
@@ -325,7 +302,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           id="ti-vendors-title"
           eyebrow="By vendor"
           title={`${vendors.length} studios make the themes we track`}
-          description="Pick one to see only its themes."
         />
         <VendorStrip vendors={vendors} />
       </section>
@@ -337,10 +313,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         asOf={source.label.includes(asOf) ? undefined : asOf}
         href={source.url ?? '/methodology'}
       />
-      <p class="ti-source__bias">
-        Stores were found through Shopify Theme Store example lists, so a count shows reach in our
-        scan of {formatCount(scanned)} stores, not market share.
-      </p>
     </footer>
   </div>
 </BaseLayout>

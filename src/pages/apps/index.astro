@@ -17,13 +17,11 @@ import Button from '~/components/ui/Button.astro';
 import Card from '~/components/ui/Card.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
 import RankTable from '~/components/apps/RankTable.astro';
 import CaptureCard from '~/components/apps/CaptureCard.astro';
 import CategoryCard from '~/components/apps/CategoryCard.astro';
 import { api } from '~/server/api';
 import type { AppListItem } from '~/server/api/v1/types';
-import { formatDate } from '~/lib/format';
 import { allApps, sectionPerApp } from '~/components/apps/data';
 import {
   appStoreSource,
@@ -97,8 +95,6 @@ const items: AppListItem[] =
       ).items;
 
 const sources = first.meta.sources;
-const scan =
-  sources[items[0]?.usage.source ?? 'storepeek-scan-2026-11-17'] ?? Object.values(sources)[0];
 const appStore = sources['shopify-app-store'];
 const ratingSource = appStoreSource(appStore?.as_of);
 const denominator = siteMeta.counts.stores_scanned;
@@ -232,15 +228,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   jsonLd={jsonLd}
 >
   <div class="container apps">
-    <PageHeader
-      title="Shopify apps, ranked by use"
-      count={catalogue}
-      description={`Every app we detect, ranked by how many of ${denominator.toLocaleString('en-US')} scanned stores run it, with App Store ratings and prices.`}
-    >
-      <p slot="meta" class="apps__asof">
-        <span>Scan {formatDate(scan?.as_of)}</span>
-        <span>App Store checked {formatDate(appStore?.as_of)}</span>
-      </p>
+    <PageHeader title="Apps, ranked by use" count={catalogue}>
       <Fragment slot="actions">
         <Button href="/apps/categories" iconRight="arrow-right">
           Categories
@@ -405,7 +393,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         <SectionHeader
           title="Browse by category"
           id="cats-title"
-          description={`${cats.items.length} kinds of app, by how many stores run at least one.`}
           href="/apps/categories"
           linkLabel={`All ${cats.items.length} categories`}
         />
@@ -428,15 +415,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         </ul>
       </section>
     )}
-
-    <div class="apps__sources">
-      <SourceNote source={`${scan?.label ?? 'Our scan'}: stores, share and rank`} />
-      <SourceNote
-        source="Shopify App Store listing: rating, reviews, prices, Built for Shopify"
-        asOf={`checked ${formatDate(appStore?.as_of)}`}
-        href=""
-      />
-    </div>
   </div>
 </BaseLayout>
 

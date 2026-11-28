@@ -176,7 +176,7 @@ test.describe('store detail', () => {
 
   for (const path of [
     '/stores/youngla.com?page=product&device=mobile',
-    '/stores/thesill.com?page=cart',
+    '/stores/thesill.com?page=collection',
     '/stores/eatfishwife.com?page=collection&device=mobile',
   ]) {
     test(`healthy: ${path}`, async ({ page }) => {
@@ -289,7 +289,7 @@ test.describe('store detail', () => {
 
   test('non-canonical domain redirects to the store page', async ({ page }) => {
     await prepare(page);
-    await page.goto('/stores/WWW.YoungLA.com?page=cart');
-    await expect(page).toHaveURL(/\/stores\/youngla\.com\?page=cart$/);
+    await page.goto('/stores/WWW.YoungLA.com?page=product');
+    await expect(page).toHaveURL(/\/stores\/youngla\.com\?page=product$/);
   });
 });

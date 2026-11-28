@@ -7,11 +7,13 @@ interface Props {
   asOf?: string;
   href?: string;
   class?: string;
+  /** Source lines are not shown on pages (methodology lives on /methodology); opt in here. */
+  force?: boolean;
 }
-const { source, asOf, href = '/methodology', class: className } = Astro.props;
+const { source, asOf, href = '/methodology', class: className, force = false } = Astro.props;
 ---
 
-<p class:list={['source-note', className]}>
+{force && <p class:list={['source-note', className]}>
   <Icon name="info" size={13} />
   <span>
     Source: {source}
@@ -24,7 +26,7 @@ const { source, asOf, href = '/methodology', class: className } = Astro.props;
     .{href && ' '}
     {href && <a href={href}>How we detect</a>}
   </span>
-</p>
+</p>}
 
 <style>
   .source-note {

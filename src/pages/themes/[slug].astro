@@ -11,7 +11,9 @@
  * D1 budget: getTheme + listStores + getScreenshot + getMeta ≈ 33 queries (limit 50).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { shareOgSrc } from '~/lib/share-og';
 import PageHeader from '~/components/ui/PageHeader.astro';
+import ThemeMark from '~/components/ui/ThemeMark.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SourceNote from '~/components/ui/SourceNote.astro';
@@ -144,10 +146,6 @@ const comparisons = detail.comparisons;
 const compareHref =
   similar.length > 0 || comparisons.length > 0 ? '#compare' : `/alternatives/${slug}`;
 
-const lead =
-  usage.stores > 0
-    ? `Running on ${formatCount(usage.stores)} of the ${formatCount(usage.denominator)} Shopify stores in our scan, shown here on a real storefront, page by page.`
-    : `Not yet seen on the ${formatCount(usage.denominator)} Shopify stores in our scan.`;
 // Section types by how often they appear; the rest are one click away in the library.
 const TYPE_CHIPS = 10;
 const typeChips = [...detail.sections.by_type].sort((a, b) => b.count - a.count);
@@ -199,8 +197,9 @@ const storesTo = storesFrom + stores.length - 1;
 // ---- SEO ---------------------------------------------------------------------------------
 const site = Astro.site ?? Astro.url;
 const abs = (path: string) => new URL(path, site).href;
-const title = `${theme.name} theme${theme.vendor ? ` by ${theme.vendor}` : ''} on real Shopify stores`;
-const description = `${theme.name}${theme.vendor ? ` by ${theme.vendor}` : ''} (${priceText}) seen on ${formatCount(usage.stores)} of ${formatCount(usage.denominator)} scanned Shopify stores: home, collection, product and cart pages on desktop and mobile, the sections they use, apps installed alongside it and similar themes.`;
+const titleLong = `${theme.name} Shopify theme: stores using it, sections, apps`;
+const title = titleLong.length <= 62 ? titleLong : `${theme.name} Shopify theme on real stores`;
+const description = `${theme.name}${theme.vendor ? ` by ${theme.vendor}` : ''} (${priceText}) seen on ${formatCount(usage.stores)} of ${formatCount(usage.denominator)} scanned Shopify stores: home, collection and product pages on desktop and mobile, the sections they use, apps installed alongside it and similar themes.`;
 const jsonLd = [
   {
     '@type': 'BreadcrumbList',
@@ -240,10 +239,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   {description}
   canonical={meta.canonical ?? theme.href}
   noindex={listPage > 1}
+  ogImage={shareOgSrc('theme', theme.slug)}
+  ogImageAlt={`${theme.name} theme on real stores`}
   {jsonLd}
 >
   <div class="container th">
     <PageHeader title={theme.name} class="th-id">
+      <ThemeMark slot="mark" slug={theme.slug} name={theme.name} size={56} />
       <Breadcrumbs
         slot="top"
         items={[
@@ -272,9 +274,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           </Badge>
         )}
       </div>
-      <p slot="meta" class="th-lead lead">
-        {lead}
-      </p>
       <div slot="actions" class="th-actions">
         <Button href={compareHref} variant="secondary" icon="scales" class="th-act">
           Compare
@@ -306,21 +305,14 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
       />
 
       <aside class="th-side" aria-label={`${theme.name} facts`}>
-        <FactsCard
-          title="Theme facts"
-          items={facts}
-          source={sourceLabel}
-          asOf={asOf}
-          sourceHref={source?.url ?? '/methodology'}
-          sticky
-        >
+        <FactsCard title="Theme facts" items={facts} sticky>
           <div class="facts__row">
             <dt>Stores using it</dt>
             <dd class="th-fact">
               <span class="num">
                 {formatCount(usage.stores)} of {formatCount(usage.denominator)}
               </span>
-              <span class="th-fact__note num">{sharePct} of the scan</span>
+              <span class="th-fact__note num">{sharePct}</span>
             </dd>
           </div>
           {rank && (
@@ -336,7 +328,7 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
             <dd class="th-fact">
               {latest ? (
                 <>
-                  <span class="mono">{latest}</span>
+                  <span class="num">{latest}</span>
                   <span class="th-fact__note">
                     on {latestStores} {latestStores === 1 ? 'store' : 'stores'} · {asOf}
                   </span>
@@ -358,17 +350,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
               </dd>
             </div>
           ))}
-          <p slot="footer" class="th-side__bias">
-            Stores were found through Theme Store example lists, so counts show reach in our scan,
-            not market share.
-            {store && (
-              <>
-                {' '}
-                Presets, version and reviews: <a href={store.url}>Shopify Theme Store</a>, checked{' '}
-                {storeCheckedOn}.
-              </>
-            )}
-          </p>
         </FactsCard>
       </aside>
 
@@ -377,12 +358,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           id="th-stores-title"
           title={`Stores using ${theme.name}`}
           count={storesTotal}
-          description="Every active store in our scan where we detected this theme. Stores without a capture still have a page with their theme and apps."
+          href={curated.length > 0 ? `${theme.href}/stores` : undefined}
+          linkLabel="Gallery"
         />
         {stores.length === 0 ? (
           <EmptyState
-            title={`No store in our scan runs ${theme.name} right now`}
-            body="A theme drops out of this list when we stop detecting it on a store's storefront."
+            title={`No stores using ${theme.name}`}
+            body=""
             size="sm"
             level={3}
             class="th-empty"
@@ -395,18 +377,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <ThemeStores stores={stores} label={`Stores using ${theme.name}`} class="th-table" />
         )}
         <div class="th-pager">
-          <p class="th-pager__status">
-            {stores.length > 0 && (
-              <span class="num">
-                {storesTotal > stores.length
-                  ? `${formatCount(storesFrom)}–${formatCount(storesTo)} of `
-                  : ''}
-                {formatCount(storesTotal)} {storesTotal === 1 ? 'store' : 'stores'} ·{' '}
-              </span>
-            )}
-            Detected in the {sourceLabel} · {asOf}.{' '}
-            <a href={source?.url ?? '/methodology'}>How we detect</a>
-          </p>
           {(listPage > 1 || nextCursor) && (
             <div class="th-pager__buttons">
               {listPage > 1 && (
@@ -443,10 +413,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
             id="th-apps-title"
             title={`Apps most used with ${theme.name}`}
             count={detail.top_apps.length}
-            description={`Share of the ${formatCount(usage.stores)} ${theme.name} ${usage.stores === 1 ? 'store' : 'stores'} in our scan running each app.`}
           />
           <ThemeApps apps={detail.top_apps} of={usage.stores} />
-          <p class="th-note">Detected on storefronts · {asOf}.</p>
         </section>
       )}
 
@@ -455,20 +423,13 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           id="th-versions-title"
           title="Versions in the wild"
           count={detail.versions.filter((v) => v.version).length}
-          description="A version is recorded when the storefront exposes it; the rest count under “Not recorded”."
         />
         <VersionList versions={detail.versions} />
-        <p class="th-note">Detected on storefronts · {asOf}.</p>
       </section>
 
       {store && featureCount > 0 && (
         <section class="th-main th-block" id="features" aria-labelledby="th-features-title">
-          <SectionHeader
-            id="th-features-title"
-            title="Published features"
-            count={featureCount}
-            description={`What ${theme.name}'s Theme Store page lists, in its own groups. Listed by the vendor, not tested by us.`}
-          />
+          <SectionHeader id="th-features-title" title="Published features" count={featureCount} />
           <div class="th-features">
             {store.features.map((g) => (
               <div class="th-features__group">
@@ -481,9 +442,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
               </div>
             ))}
           </div>
-          <p class="th-note">
-            Source: <a href={store.url}>Shopify Theme Store</a> · checked {storeCheckedOn}.
-          </p>
         </section>
       )}
     </div>
@@ -494,7 +452,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           id="th-sections-title"
           title={`Sections from stores on ${theme.name}`}
           count={sections.total}
-          description={`Each captured page is sliced into tagged sections: ${sections.by_type.length} types so far. Start from a type, or open them all in the library.`}
           href={sectionsHref}
           linkLabel="Open in the library"
         />
@@ -529,7 +486,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         <SectionHeader
           id="th-compare-title"
           title={`Compare ${theme.name} with similar themes`}
-          description="Picked for the same vendor, a similar price, or apps their stores share."
           href={`/alternatives/${slug}`}
           linkLabel={`All ${theme.name} alternatives`}
         />

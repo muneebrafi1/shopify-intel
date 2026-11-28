@@ -13,10 +13,9 @@ import AppIcon from '~/components/ui/AppIcon.astro';
 import Button from '~/components/ui/Button.astro';
 import EmptyState from '~/components/ui/EmptyState.astro';
 import Icon from '~/components/ui/Icon.astro';
-import SourceNote from '~/components/ui/SourceNote.astro';
 import Shot from '~/components/media/Shot.astro';
 import { api } from '~/server/api';
-import { formatCount, formatDate } from '~/lib/format';
+import { formatCount } from '~/lib/format';
 
 const params = Astro.url.searchParams;
 const kindParam = params.get('kind');
@@ -30,9 +29,6 @@ const [{ data, meta }, { data: themes }] = await Promise.all([
   api.listThemes({ limit: 100, sort: 'usage' }),
 ]);
 const themeInfo = new Map(themes.items.map((t) => [t.slug, t]));
-const scan = Object.entries(meta.sources).find(([k]) => k.startsWith('storepeek-scan'))?.[1];
-const asOf = formatDate(meta.data_as_of);
-
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const nq = norm(q);
 const hit = (...parts: Array<string | null | undefined>) =>
@@ -194,13 +190,9 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   jsonLd={jsonLd}
 >
   <div class="container alti">
-    <PageHeader
-      title="Alternatives"
-      count={total}
-      description="Start from what you run now and see what else stores in the same category use, ranked by how many scanned stores run it. Usage, not quality."
-    >
+    <PageHeader title="Alternatives" count={total}>
       <a slot="actions" class="alti__cmp" href="/compare">
-        Or compare two side by side
+        Compare
         <Icon name="arrow-right" size={14} />
       </a>
     </PageHeader>
@@ -239,9 +231,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <h2 id="alti-apps" class="h2">
             Apps<span class="alti__kind-n num">{data.apps.length}</span>
           </h2>
-          <p class="alti__kind-desc">
-            Apps detected on at least one scanned store, grouped by category.
-          </p>
         </div>
         {appGroups.map((g) => (
           <section class="alti__group" aria-labelledby={`cat-${g.key}`}>
@@ -311,9 +300,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
           <h2 id="alti-themes" class="h2">
             Themes<span class="alti__kind-n num">{data.themes.length}</span>
           </h2>
-          <p class="alti__kind-desc">
-            Themes with at least one close match by vendor, price or app stack.
-          </p>
         </div>
         <ul class="alti__grid alti__grid--themes">
           {themeItems.map((t) => {
@@ -354,12 +340,6 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
         </ul>
       </section>
     )}
-
-    <footer class="alti__foot">
-      <SourceNote
-        source={`${scan?.label ?? 'Our scan of public storefronts'}. Ordered by usage, not quality; data as of ${asOf}`}
-      />
-    </footer>
   </div>
 </BaseLayout>
 
