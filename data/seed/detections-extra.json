@@ -454,20 +454,6 @@
     "detected_at": "2026-11-27T07:36:52.514Z"
   },
   {
-    "domain": "auraframes.com",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [
-      "applovin",
-      "cookiebot-cmp-gdpr-compliance",
-      "impact-1",
-      "klaviyo",
-      "superfiliate"
-    ],
-    "currency": null,
-    "detected_at": "2026-11-28T01:01:23.965Z"
-  },
-  {
     "domain": "auratenewyork.com",
     "theme": "Aurate New York",
     "theme_custom": false,
@@ -939,24 +925,6 @@
     ],
     "currency": "EUR",
     "detected_at": "2026-11-27T07:50:19.790Z"
-  },
-  {
-    "domain": "binibamba.com",
-    "theme": "Broadcast",
-    "theme_custom": false,
-    "apps": [
-      "blockify",
-      "freegifts",
-      "helpdesk",
-      "klaviyo",
-      "product-personalizer",
-      "rebuy",
-      "shopmy",
-      "tinycookie",
-      "yotpo"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-28T00:58:15.213Z"
   },
   {
     "domain": "bioliteenergy.com",
@@ -5245,21 +5213,6 @@
     "detected_at": "2026-11-27T16:49:11.768Z"
   },
   {
-    "domain": "madeincookware.com",
-    "theme": null,
-    "theme_custom": false,
-    "apps": [
-      "alia",
-      "applovin",
-      "attentive",
-      "bazaarvoice",
-      "gladly",
-      "truevault-polaris"
-    ],
-    "currency": null,
-    "detected_at": "2026-11-28T01:00:55.719Z"
-  },
-  {
     "domain": "magnatiles.com",
     "theme": "Concept",
     "theme_custom": false,
@@ -5579,21 +5532,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T19:50:26.099Z"
-  },
-  {
-    "domain": "meowmeowtweet.com",
-    "theme": "Broadcast",
-    "theme_custom": false,
-    "apps": [
-      "junip",
-      "klaviyo",
-      "recharge",
-      "swell",
-      "userway-accessibility",
-      "yotpo"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-28T01:01:25.313Z"
   },
   {
     "domain": "mgemi.com",
@@ -10031,22 +9969,6 @@
     ],
     "currency": "USD",
     "detected_at": "2026-11-27T07:45:16.570Z"
-  },
-  {
-    "domain": "uppercasemagazine.com",
-    "theme": "Motion",
-    "theme_custom": false,
-    "apps": [
-      "backinstock",
-      "bold-subscriptions",
-      "boldupsell",
-      "free-shipping-bar",
-      "gempages",
-      "product-upsell",
-      "sc-product-options"
-    ],
-    "currency": "USD",
-    "detected_at": "2026-11-28T01:01:37.007Z"
   },
   {
     "domain": "us.blundstone.com",
