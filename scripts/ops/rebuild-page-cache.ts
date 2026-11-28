@@ -391,40 +391,53 @@ if (values.upload) {
     CI: '1',
   };
   const cfg = process.env.WRANGLER_CONFIG ?? '/home/box/preview/wrangler.preview.jsonc';
-  const CHUNK = 400;
+  const CHUNK = 80;
+  const cwd = resolve(new URL('../../', import.meta.url).pathname);
+  const sleep = (ms: number) => spawnSync('sleep', [String(ms / 1000)]);
   for (let i = 0; i < manifestList.length; i += CHUNK) {
     const part = manifestList.slice(i, i + CHUNK);
-    const fn = join(outDir, `r2-chunk-${String(Math.floor(i / CHUNK) + 1).padStart(3, '0')}.json`);
+    const fn = join(outDir, `r2-chunk-${String(Math.floor(i / CHUNK) + 1).padStart(4, '0')}.json`);
     writeFileSync(fn, JSON.stringify(part));
-    const r = spawnSync(
-      'npx',
-      [
-        'wrangler',
-        'r2',
-        'bulk',
-        'put',
-        'vitrine-preview-media',
-        '--remote',
-        '-f',
-        fn,
-        '--ct',
-        'application/json',
-        '--cc',
-        'public, max-age=3600',
-        '--concurrency',
-        '16',
-        '-y',
-        '--config',
-        cfg,
-      ],
-      { env, cwd: resolve(new URL('../../', import.meta.url).pathname), encoding: 'utf8' },
-    );
-    const tail = ((r.stdout ?? '') + (r.stderr ?? '')).slice(-400);
-    if (r.status !== 0) {
-      console.error('upload FAIL', fn, tail);
-      process.exit(1);
+    let attempt = 0;
+    let ok = false;
+    while (attempt < 10 && !ok) {
+      attempt++;
+      const r = spawnSync(
+        'npx',
+        [
+          'wrangler',
+          'r2',
+          'bulk',
+          'put',
+          'vitrine-preview-media',
+          '--remote',
+          '-f',
+          fn,
+          '--ct',
+          'application/json',
+          '--cc',
+          'public, max-age=3600',
+          '--concurrency',
+          '4',
+          '-y',
+          '--config',
+          cfg,
+        ],
+        { env, cwd, encoding: 'utf8' },
+      );
+      const out = (r.stdout ?? '') + (r.stderr ?? '');
+      if (r.status === 0) {
+        ok = true;
+        console.log(`uploaded ${Math.min(i + CHUNK, manifestList.length)}/${manifestList.length}`);
+      } else {
+        const rate = /429|Too Many Requests/i.test(out);
+        const wait = rate ? Math.min(180, 20 * 2 ** (attempt - 1)) : Math.min(30, 5 * attempt);
+        console.error(`upload FAIL ${fn} attempt ${attempt} (retry in ${wait}s)`, out.slice(-400));
+        if (attempt >= 10) process.exit(1);
+        sleep(wait * 1000);
+      }
     }
-    console.log(`uploaded ${Math.min(i + CHUNK, manifestList.length)}/${manifestList.length}`);
+    sleep(3000);
   }
 }
 db.close();
