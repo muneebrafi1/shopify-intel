@@ -46,6 +46,10 @@ const snap =
     : join(ROOT, '.wrangler/state/v3/d1/miniflare-D1DatabaseObject'));
 const iconRoot = join(ROOT, '.data/icons');
 const captureRoot = join(ROOT, '.data/captures/objects');
+const iconsJson = existsSync(join(ROOT, 'data/curation/icons.json'))
+  ? JSON.parse(readFileSync(join(ROOT, 'data/curation/icons.json'), 'utf8'))
+  : { stores: {}, apps: {}, themes: {} };
+const BAD_ICON = /magazine|press[-_]?logo|award|badge|people[_-]?magazine/i;
 const limit = values.limit ? Number(values.limit) : Infinity;
 
 function esc(s) {
@@ -79,7 +83,12 @@ function sql(q) {
 }
 
 function latestIcon(kind, key) {
-  const dir = join(iconRoot, kind === 'store' ? 'stores' : kind === 'app' ? 'apps' : 'themes');
+  // Theme "icons" in this repo are often Theme Store screenshots, not marks.
+  if (kind === 'theme') return null;
+  const group = kind === 'store' ? 'stores' : kind === 'app' ? 'apps' : 'themes';
+  const meta = iconsJson[group]?.[key];
+  if (meta?.from && BAD_ICON.test(String(meta.from))) return null;
+  const dir = join(iconRoot, group);
   if (!existsSync(dir)) return null;
   const prefix = `${key}.`;
   const files = readdirSync(dir)
@@ -87,7 +96,7 @@ function latestIcon(kind, key) {
     .map((f) => join(dir, f))
     .filter((f) => {
       try {
-        return statSync(f).size >= 800;
+        return statSync(f).size >= 200;
       } catch {
         return false;
       }
