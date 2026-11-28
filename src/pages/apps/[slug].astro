@@ -9,7 +9,7 @@
  * URL state: ?device=mobile (Seen on), ?seen=<section id> (Seen on rail), ?p=<n> (stores).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { ogCaptureSrc } from '~/lib/media';
+import { shareOgSrc } from '~/lib/share-og';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
 import AppIcon from '~/components/ui/AppIcon.astro';
 import Badge from '~/components/ui/Badge.astro';
@@ -90,9 +90,6 @@ const shotStores: StoreListItem[] = await api
   .listStores({ app: app.slug, captured: true, limit: 12, facets: false })
   .then((r) => r.data.items.filter((s) => s.preview))
   .catch(() => []);
-
-const ogShot = shotStores.find((s) => s.preview?.device === 'desktop')?.preview;
-const ogImage = ogCaptureSrc(ogShot);
 
 const alternatives = await api.getAlternatives({ slug: app.slug, kind: 'app' }).catch(() => null);
 
@@ -340,8 +337,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   description={description}
   canonical={app.href}
   noindex={params.length > 0 || app.usage.stores === 0}
-  {ogImage}
-  ogImageAlt={ogImage ? `${name} on a real store` : undefined}
+  ogImage={shareOgSrc('app', slug)}
+  ogImageAlt={`${name} on real stores`}
   jsonLd={jsonLd}
 >
   <div class="container app">

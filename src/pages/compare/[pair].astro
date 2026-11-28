@@ -33,6 +33,7 @@ import type {
   ThemeListItem,
 } from '~/server/api/v1/types';
 import { formatCount, formatDate } from '~/lib/format';
+import { shareOgSrc } from '~/lib/share-og';
 import {
   appPairLine,
   appStage,
@@ -283,7 +284,14 @@ const sections: Array<[string, string]> = [
 ];
 ---
 
-<BaseLayout title={compareTitle} description={description} canonical={cmp.href} jsonLd={jsonLd}>
+<BaseLayout
+  title={compareTitle}
+  description={description}
+  canonical={cmp.href}
+  jsonLd={jsonLd}
+  ogImage={shareOgSrc('compare', pair)}
+  ogImageAlt={compareTitle}
+>
   <div class="container">
     <Breadcrumbs
       class="cmp__crumbs"

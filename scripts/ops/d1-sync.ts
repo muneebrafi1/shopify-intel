@@ -447,7 +447,7 @@ async function main() {
   ]);
   console.log('  rebuilt section_type_stats');
   console.log(
-    '  next: npm run ops:page-cache -- --local-file <snapshot> --out-dir <dir> [--upload]',
+    '  next: npm run ops:og-images -- --local-file <snapshot> --out-dir <dir> [--upload] && npm run ops:page-cache -- --local-file <snapshot> --out-dir <dir> [--upload]',
   );
 }
 

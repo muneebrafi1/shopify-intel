@@ -5,13 +5,16 @@
  */
 import StoreGallery from '~/components/stores/StoreGallery.astro';
 import { api, isApiError } from '~/server/api';
-import { ogCaptureSrc } from '~/lib/media';
+import { shareOgSrc } from '~/lib/share-og';
 
 const PAGE = 48;
 const slug = (Astro.params.slug ?? '').toLowerCase();
 if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(slug)) return Astro.rewrite('/404');
 const cursor = Astro.url.searchParams.get('cursor') || undefined;
-const p = Math.max(1, Math.min(999, Number.parseInt(Astro.url.searchParams.get('p') ?? '1', 10) || 1));
+const p = Math.max(
+  1,
+  Math.min(999, Number.parseInt(Astro.url.searchParams.get('p') ?? '1', 10) || 1),
+);
 
 let res;
 try {
@@ -23,7 +26,8 @@ try {
     ...(cursor ? { cursor } : {}),
   });
 } catch (e) {
-  if (isApiError(e) && e.status === 400 && cursor) return Astro.redirect(`/stores/category/${slug}`, 302);
+  if (isApiError(e) && e.status === 400 && cursor)
+    return Astro.redirect(`/stores/category/${slug}`, 302);
   throw e;
 }
 const items = res.data.items;
@@ -40,7 +44,6 @@ const pills = cats.map((c) => ({
   selected: c.value === slug,
   count: c.count,
 }));
-const ogShot = items.map((s) => (s.preview ? ogCaptureSrc({ image: s.preview.image }) : null)).find(Boolean);
 const lower = name.toLowerCase();
 const canonical = `/stores/category/${slug}`;
 ---
@@ -60,5 +63,5 @@ const canonical = `/stores/category/${slug}`;
   firstHref={cursor ? canonical : null}
   jsonLdName={`Best Shopify stores in ${name}`}
   offset={(p - 1) * PAGE}
-  ogImage={ogShot}
+  ogImage={shareOgSrc('gallery', slug)}
 />

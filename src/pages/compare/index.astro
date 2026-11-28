@@ -21,6 +21,7 @@ import { api, isApiError } from '~/server/api';
 import type { AppListItem, ComparisonLink, ThemeListItem } from '~/server/api/v1/types';
 import { formatCount, formatDate } from '~/lib/format';
 import { appPairLine, themePairLine } from '~/components/compare/compare';
+import { shareOgSrc } from '~/lib/share-og';
 
 const params = Astro.url.searchParams;
 
@@ -206,8 +207,20 @@ const cardFor = (c: ComparisonLink) => {
     const a = appBySlug.get(c.a.slug);
     const b = appBySlug.get(c.b.slug);
     return {
-      a: { name: a?.short_name ?? c.a.name, iconUrl: c.a.icon_url, kind: 'app', slug: c.a.slug, stores: a?.usage.stores },
-      b: { name: b?.short_name ?? c.b.name, iconUrl: c.b.icon_url, kind: 'app', slug: c.b.slug, stores: b?.usage.stores },
+      a: {
+        name: a?.short_name ?? c.a.name,
+        iconUrl: c.a.icon_url,
+        kind: 'app',
+        slug: c.a.slug,
+        stores: a?.usage.stores,
+      },
+      b: {
+        name: b?.short_name ?? c.b.name,
+        iconUrl: c.b.icon_url,
+        kind: 'app',
+        slug: c.b.slug,
+        stores: b?.usage.stores,
+      },
       line: a && b ? appPairLine(a, b) : c.title,
       preview: null,
     };
@@ -381,12 +394,11 @@ const groupId = (g: PairGroup) => `g-${g.key}`;
   canonical="/compare"
   noindex={!!kind || !!groupSel || !!pickError || notCurated}
   jsonLd={jsonLd}
+  ogImage={shareOgSrc('compare')}
+  ogImageAlt="Compare apps and themes on real stores"
 >
   <div class="container cmpi">
-    <PageHeader
-      title="Comparisons"
-      count={counts.all}
-    >
+    <PageHeader title="Comparisons" count={counts.all}>
       <div class="cmpi__find">
         <ComparePicker
           groups={pickerGroups}

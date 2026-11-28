@@ -16,6 +16,7 @@
  */
 import { queryMeter } from './server/db/d1.ts';
 import { defineMiddleware } from 'astro:middleware';
+import { pageCacheHeaderValue, withPageCacheContext } from '~/server/page-cache';
 import {
   adminAreaFor,
   authenticate,
@@ -78,16 +79,29 @@ async function cachedPublic(context: Ctx, next: Next): Promise<Response> {
     // caches.default is missing in some test / dev runtimes.
   }
 
-  const res = await next();
+  let pageCache: string | undefined;
+  const res = await withPageCacheContext(async () => {
+    const r = await next();
+    pageCache = pageCacheHeaderValue();
+    return r;
+  });
   const cc = res.headers.get('Cache-Control') ?? '';
   const cacheable =
     res.status === 200 &&
     !res.headers.has('Set-Cookie') &&
     !/no-store|private|no-cache/i.test(cc) &&
     /(?:s-maxage|max-age)=[1-9]\d*/i.test(cc);
-  if (!cacheable) return res;
+  if (!cacheable) {
+    if (pageCache) {
+      const headers = new Headers(res.headers);
+      headers.set('X-Vitrine-Page-Cache', pageCache);
+      return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+    }
+    return res;
+  }
   const headers = new Headers(res.headers);
   headers.set('X-Vitrine-Cache', 'MISS');
+  if (pageCache) headers.set('X-Vitrine-Page-Cache', pageCache);
   const miss = new Response(res.body, { status: res.status, statusText: res.statusText, headers });
   try {
     await caches.default.put(key, miss.clone());

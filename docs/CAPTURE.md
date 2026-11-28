@@ -114,3 +114,20 @@ Cache API layer) and fall back to D1 only on a miss. `/api/v1` and MCP keep usin
 
 `--skip-sections` skips the ~38k section-detail and current-screenshot payloads when you only
 need to refresh the rest. Re-run the full command before a crawl-facing deploy.
+
+## 9. Share images (after captures, with every batch)
+
+Catalog pages use typographic Open Graph / Twitter images (1200×630) stored in the media bucket
+under `og/`. Generate them from the local snapshot and captures after ingest, then upload:
+
+```bash
+npm run ops:og-images -- \
+  --local-file /path/to/snapshot.sqlite \
+  --out-dir /tmp/og-share \
+  --upload
+```
+
+This writes `og/home.jpg`, `og/store/<domain>.jpg`, `og/app/<slug>.jpg`, `og/theme/<slug>.jpg`,
+`og/gallery/<slug>.jpg`, `og/compare/<pair>.jpg` and `og/compare.jpg`, and refreshes
+`public/og-default.png`. Pages read `/media/og/...`. Run this in the same batch as
+`ops:page-cache`, before deploy.

@@ -42,6 +42,7 @@ import type {
 import { SITE_NAME } from '~/config/site';
 import { formatCount, formatDate } from '~/lib/format';
 import { pageTypeName } from '~/lib/taxonomy';
+import { shareOgSrc } from '~/lib/share-og';
 
 Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
 
@@ -390,7 +391,12 @@ const galleryTiles: GalleryTile[] = galleryManifest.tiles.flatMap((t) => {
   // The cut tiles belong to one specific capture; if the store was re-captured since, use the
   // regular top thumbnail of the current one instead.
   const fresh = shot.image.src.endsWith(t.desktop.src);
-  const live = { src: shot.image.src, width: shot.image.width, height: shot.image.height, tile: false };
+  const live = {
+    src: shot.image.src,
+    width: shot.image.width,
+    height: shot.image.height,
+    tile: false,
+  };
   return [
     {
       domain: st.domain,
@@ -457,6 +463,8 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
 ---
 
 <BaseLayout
+  ogImage={shareOgSrc('home')}
+  ogImageAlt="Themes and apps, on the stores that run them."
   description={`The theme and apps behind ${formatCount(c.stores_scanned)} Shopify stores, plus ${c.stores_curated} stores shown page by page and section by section, on desktop and mobile.`}
   jsonLd={jsonLd}
   navCounts={navCounts}
@@ -470,9 +478,19 @@ const dataNote = `${formatCount(c.stores_scanned)} stores scanned · ${c.stores_
         announcement={announcement}
         lead={`Real storefronts, page by page, with the theme and apps behind them.`}
         paths={[
-          { href: '/stores', label: 'Stores', count: formatCount(c.stores_curated), icon: 'squares-four' },
+          {
+            href: '/stores',
+            label: 'Stores',
+            count: formatCount(c.stores_curated),
+            icon: 'squares-four',
+          },
           { href: '/apps', label: 'Apps', count: formatCount(c.apps), icon: 'puzzle-piece' },
-          { href: '/compare', label: 'Compare', count: formatCount(c.comparisons), icon: 'arrows-down-up' },
+          {
+            href: '/compare',
+            label: 'Compare',
+            count: formatCount(c.comparisons),
+            icon: 'arrows-down-up',
+          },
         ]}
         asOf={asOf}
       />

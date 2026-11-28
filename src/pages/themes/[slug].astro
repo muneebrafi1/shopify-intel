@@ -11,7 +11,7 @@
  * D1 budget: getTheme + listStores + getScreenshot + getMeta ≈ 33 queries (limit 50).
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { ogCaptureSrc } from '~/lib/media';
+import { shareOgSrc } from '~/lib/share-og';
 import PageHeader from '~/components/ui/PageHeader.astro';
 import ThemeMark from '~/components/ui/ThemeMark.astro';
 import Breadcrumbs from '~/components/ui/Breadcrumbs.astro';
@@ -75,10 +75,6 @@ const leadShot = curated
   .map((c) => c.pages.find((p) => p.page_type === plate.page)?.[plate.device])
   .find(Boolean);
 
-const ogShot = curated
-  .map((c) => c.pages.find((p) => p.page_type === 'home')?.desktop)
-  .find((x) => x && !x.is_placeholder);
-const ogImage = ogCaptureSrc(ogShot);
 const [shotRes, metaRes] = await Promise.all([
   leadShot ? api.getScreenshot({ id: leadShot.id }).catch(() => null) : null,
   api.getMeta({}),
@@ -243,8 +239,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   {description}
   canonical={meta.canonical ?? theme.href}
   noindex={listPage > 1}
-  {ogImage}
-  ogImageAlt={ogImage ? `${theme.name} theme on a real store` : undefined}
+  ogImage={shareOgSrc('theme', theme.slug)}
+  ogImageAlt={`${theme.name} theme on real stores`}
   {jsonLd}
 >
   <div class="container th">

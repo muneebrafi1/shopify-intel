@@ -26,7 +26,7 @@ import { api, orNotFound } from '~/server/api';
 import { formatCount, formatDate } from '~/lib/format';
 import { parsePlate } from '~/components/stores/plates';
 import { themeName } from '~/components/stores/query';
-import { ogCaptureSrc } from '~/lib/media';
+import { shareOgSrc } from '~/lib/share-og';
 
 const param = (Astro.params.domain ?? '').trim();
 const res = param ? await orNotFound(api.getStore({ domain: param })) : null;
@@ -44,11 +44,6 @@ const teardownRes = detail.teardown
   : null;
 const basePath = store.href;
 const hasPlates = detail.pages.length > 0;
-const ogShot =
-  detail.pages.find((p) => p.page_type.slug === 'home')?.screenshots.desktop ??
-  detail.pages[0]?.screenshots.desktop ??
-  detail.pages[0]?.screenshots.mobile;
-const ogImage = ogCaptureSrc(ogShot);
 const { page, device } = parsePlate(
   Astro.url,
   detail.pages.map((p) => p.page_type.slug),
@@ -170,8 +165,8 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=600');
   description={description}
   canonical={basePath}
   noindex={!hasPlates}
-  ogImage={ogImage}
-  ogImageAlt={ogImage ? `${title} home page capture` : undefined}
+  ogImage={shareOgSrc('store', store.domain)}
+  ogImageAlt={`${title} on Vitrine`}
   jsonLd={jsonLd}
   wide
 >

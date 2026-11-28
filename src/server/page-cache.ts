@@ -6,12 +6,39 @@
  * Objects live at page-cache/<version>/<method>/<key>.json. version is the catalog data_version
  * written by scripts/ops/rebuild-page-cache.ts into page-cache/manifest.json.
  */
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 import type { MediaStore } from './admin/actions.ts';
 import type { ApiClient } from './api/v1/client.ts';
 import type { CallOptions } from './api/v1/client.ts';
 
 const MANIFEST_KEY = 'page-cache/manifest.json';
 const CACHE_ORIGIN = 'https://page-cache.vitrine.internal';
+
+type PageCacheSource = 'cache' | 'r2' | 'miss';
+const pageCacheAls = new AsyncLocalStorage<{ sources: PageCacheSource[] }>();
+
+/** Run a request so catalog reads can record Cache / R2 / D1 fallback. */
+export function withPageCacheContext<T>(fn: () => T): T {
+  return pageCacheAls.run({ sources: [] }, fn);
+}
+
+function notePageCache(source: PageCacheSource): void {
+  pageCacheAls.getStore()?.sources.push(source);
+}
+
+/** Header value for this request: R2, CACHE, MISS, or MIXED. */
+export function pageCacheHeaderValue(): string | undefined {
+  const sources = pageCacheAls.getStore()?.sources;
+  if (!sources?.length) return undefined;
+  const set = new Set(sources);
+  if (set.has('miss') && (set.has('r2') || set.has('cache'))) return 'MIXED';
+  if (set.has('miss')) return 'MISS';
+  if (set.has('r2') && !set.has('cache')) return 'R2';
+  if (set.has('cache') && !set.has('r2')) return 'CACHE';
+  return 'R2';
+}
+
 const MANIFEST_TTL_MS = 60_000;
 
 /** Endpoints that are request-specific or write paths: never served from the catalog cache. */
@@ -139,13 +166,17 @@ export async function readPageCache<T>(
   const r2Key = r2ObjectKey(man.version, type, key);
   const cacheUrl = `${CACHE_ORIGIN}/${man.version}/${type}/${encodeURIComponent(safeCacheKey(key))}`;
   const cached = await cacheGet<T>(cacheUrl);
-  if (cached) return cached;
+  if (cached) {
+    notePageCache('cache');
+    return cached;
+  }
   if (!store?.get) return null;
   try {
     const obj = await store.get(r2Key);
     if (!obj) return null;
     const text = await obj.text();
     await cachePut(cacheUrl, text, 3600);
+    notePageCache('r2');
     return JSON.parse(text) as T;
   } catch {
     return null;
@@ -162,6 +193,7 @@ export function withPageCache(inner: ApiClient, media: () => MediaStore | null):
       if (ref) {
         const hit = await readPageCache(media(), ref.type, ref.key);
         if (hit !== null) return hit;
+        notePageCache('miss');
       }
       const fn = inner[method] as (i?: unknown, o?: CallOptions) => Promise<unknown>;
       return fn(input, opts);
