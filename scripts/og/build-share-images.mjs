@@ -49,7 +49,8 @@ const captureRoot = join(ROOT, '.data/captures/objects');
 const iconsJson = existsSync(join(ROOT, 'data/curation/icons.json'))
   ? JSON.parse(readFileSync(join(ROOT, 'data/curation/icons.json'), 'utf8'))
   : { stores: {}, apps: {}, themes: {} };
-const BAD_ICON = /magazine|press[-_]?logo|award|badge|people[_-]?magazine/i;
+const BAD_ICON =
+  /magazine|(?:^|[^a-z])press[-_]?logo|award|badge|people[_-]?magazine|closeup|_tee[_-]|_hoodie_|lookbook|lifestyle|\/products\/|\/product[-_]/i;
 const limit = values.limit ? Number(values.limit) : Infinity;
 
 function esc(s) {
@@ -128,6 +129,17 @@ function latestShot(domain) {
   const og = files.filter((f) => f.endsWith('.og.jpg')).at(-1);
   const full = files.filter((f) => f.endsWith('.webp')).at(-1);
   return join(dir, og ?? full);
+}
+
+function shortCompareName(name, slug) {
+  const n = String(name ?? '').trim();
+  if (!n) return String(slug ?? '');
+  if (n.length <= 20) return n;
+  const cut = n.split(/[:–—]/)[0].trim();
+  if (cut.length >= 2 && cut.length <= 20) return cut;
+  const words = n.split(/\s+/);
+  if (words[0].length <= 3 && words[1]) return `${words[0]} ${words[1]}`;
+  return words[0];
 }
 
 function wrapText(text, maxChars) {
@@ -461,7 +473,7 @@ function entityLogo(kind, slug) {
 for (const p of take(pairs)) {
   await writeCard(`og/compare/${p.slug}.jpg`, {
     eyebrow: p.kind === 'theme' ? 'Theme compare' : 'App compare',
-    title: `${p.a_name ?? p.a_slug} vs ${p.b_name ?? p.b_slug}`,
+    title: `${shortCompareName(p.a_name, p.a_slug)} vs ${shortCompareName(p.b_name, p.b_slug)}`,
     meta: 'Side by side on real stores',
     footer: p.slug,
     logo: entityLogo(p.kind, p.a_slug),
